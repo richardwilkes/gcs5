@@ -15,13 +15,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/richardwilkes/gcs/internal"
+	"github.com/richardwilkes/gcs/internal/ui"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/log/jotrotate"
-	"github.com/richardwilkes/unison"
 )
-
-var fileList []string
 
 func main() {
 	cmdline.AppName = "GCS"
@@ -31,30 +28,6 @@ func main() {
 	cmdline.CopyrightHolder = "Richard A. Wilkes"
 	cmdline.AppIdentifier = "com.trollworks.gcs"
 	cl := cmdline.New(true)
-	fileList = jotrotate.ParseAndSetup(cl)
-	unison.Start(unison.StartupFinishedCallback(finishStartup),
-		unison.OpenURLsCallback(openURLs),
-		unison.AllowQuitCallback(checkQuit),
-	) // Never returns
-}
-
-func finishStartup() {
-	internal.NewWorkspace()
-	openURLs(fileList)
-}
-
-func openURLs(urls []string) {
-	for _, one := range urls {
-		fmt.Println(one)
-	}
-}
-
-func checkQuit() bool {
-	for _, wnd := range unison.Windows() {
-		wnd.AttemptClose()
-		if wnd.IsValid() {
-			return false
-		}
-	}
-	return true
+	fileList := jotrotate.ParseAndSetup(cl)
+	ui.Start(fileList) // Never returns
 }

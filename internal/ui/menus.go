@@ -7,7 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package menus
+package ui
 
 import (
 	"github.com/richardwilkes/unison"
@@ -16,6 +16,6 @@ import (
 // Setup the menu bar for the window.
 func Setup(wnd *unison.Window) {
 	unison.DefaultMenuFactory().BarForWindow(wnd, func(m unison.Menu) {
-		unison.InsertStdMenus(m, nil, nil, nil)
+		unison.InsertStdMenus(m, ShowAbout, nil, nil)
 	})
 }

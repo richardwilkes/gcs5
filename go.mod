@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/richardwilkes/toolbox v1.51.1
-	github.com/richardwilkes/unison v0.1.1-0.20210919161136-c1b13cd52a67
+	github.com/richardwilkes/unison v0.1.1-0.20210919175849-fe9404e4ba57
 )
 
 require (
