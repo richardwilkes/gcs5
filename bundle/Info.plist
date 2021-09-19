@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleDisplayName</key>
+	<string>GCS</string>
+	<key>CFBundleName</key>
+	<string>GCS</string>
+	<key>CFBundleExecutable</key>
+	<string>gcs</string>
+	<key>CFBundleIconFile</key>
+	<string>app.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.trollworks.gcs</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleVersion</key>
+	<string>LONG_APP_VERSION</string>
+	<key>CFBundleShortVersionString</key>
+	<string>SHORT_APP_VERSION</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>©COPYRIGHT_YEARS by Richard A. Wilkes
+All rights reserved</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.13</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSSupportsAutomaticGraphicsSwitching</key>
+	<true/>
+</dict>
+</plist>

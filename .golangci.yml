@@ -1,0 +1,79 @@
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+output:
+  sort-results: true
+linters-settings:
+  depguard:
+    list-type: blacklist
+    include-go-root: true
+    packages:
+      - log
+      - github.com/satori/go.uuid
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - performance
+      - style
+      - opinionated
+      - experimental
+    disabled-checks:
+      - sloppyReassign
+  gofumpt:
+    extra-rules: true
+  govet:
+    check-shadowing: true
+    enable-all: true
+    settings:
+      printf:
+        funcs:
+          - Errorf
+          - Warnf
+          - Infof
+          - Debugf
+          - Fatalf
+          - StartRootSpanf
+          - StartSubSpanf
+          - EndWithMsgf
+          - Newf
+          - NewWithCausef
+  misspell:
+    locale: US
+  unused:
+    check-exported: false
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - deadcode
+    - depguard
+    - errcheck
+    - errorlint
+    - exportloopref
+    - goconst
+    - gocritic
+    - gofumpt
+    - goimports
+    - gosec
+    - gosimple
+    - govet
+    - ifshort
+    - ineffassign
+    - misspell
+    - noctx
+    - prealloc
+    - predeclared
+    - revive
+    - staticcheck
+    - structcheck
+    - unconvert
+    - unused
+    - varcheck
+    - wastedassign
+issues:
+  exclude-use-default: false
+  exclude:
+    - "fieldalignment: struct with \\d+ pointer bytes could be"

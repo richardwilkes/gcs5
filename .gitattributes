@@ -1,0 +1,14 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+# Force text files to have LF
+*.go text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.plist text eol=lf
+
+# Denote all files that are truly binary and should not be modified.
+*.png binary
+*.psd binary
+*.icns binary
