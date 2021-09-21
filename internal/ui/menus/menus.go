@@ -11,12 +11,28 @@ package menus
 
 import (
 	"github.com/richardwilkes/gcs/internal/ui/about"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
 
 // Setup the menu bar for the window.
 func Setup(wnd *unison.Window) {
-	unison.DefaultMenuFactory().BarForWindow(wnd, func(m unison.Menu) {
-		unison.InsertStdMenus(m, about.Show, nil, nil)
+	unison.DefaultMenuFactory().BarForWindow(wnd, func(bar unison.Menu) {
+		unison.InsertStdMenus(bar, about.Show, nil, nil)
+		setupFileMenu(bar)
+		setupEditMenu(bar)
+		i := bar.Item(unison.EditMenuID).Index() + 1
+		f := bar.Factory()
+		bar.InsertMenu(i, createItemMenu(f))
+		i++
+		bar.InsertMenu(i, f.NewMenu(LibraryMenuID, i18n.Text("Library"), updateLibraryMenu))
+		i++
+		bar.InsertMenu(i, createSettingsMenu(f))
+		setupHelpMenu(bar)
 	})
+}
+
+// TODO: Implement each call site
+func unimplemented(a *unison.Action, _ interface{}) {
+	unison.ErrorDialogWithMessage("Unimplemented Action:", a.Title)
 }
