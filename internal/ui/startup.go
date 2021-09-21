@@ -14,6 +14,8 @@ package ui
 import (
 	"fmt"
 
+	"github.com/richardwilkes/gcs/internal/ui/menus"
+	"github.com/richardwilkes/gcs/internal/ui/trampolines"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
@@ -22,9 +24,10 @@ import (
 func Start(files []string) {
 	unison.Start(
 		unison.StartupFinishedCallback(func() {
+			trampolines.MenuSetup = menus.Setup
 			wnd, err := unison.NewWindow("GCS")
 			jot.FatalIfErr(err)
-			Setup(wnd)
+			menus.Setup(wnd)
 			wnd.SetFrameRect(unison.PrimaryDisplay().Usable)
 			wnd.ToFront()
 			openURLs(files)

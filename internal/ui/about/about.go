@@ -1,9 +1,10 @@
-package ui
+package about
 
 import (
 	_ "embed"
 	"runtime"
 
+	"github.com/richardwilkes/gcs/internal/ui/trampolines"
 	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/errs"
@@ -24,8 +25,8 @@ type aboutWindow struct {
 	img *unison.Image
 }
 
-// ShowAbout shows the about box.
-func ShowAbout(_ unison.MenuItem) {
+// Show the about box.
+func Show(_ unison.MenuItem) {
 	if aboutWnd.Window == nil {
 		if err := aboutWnd.prepare(); err != nil {
 			jot.Error(err)
@@ -45,6 +46,7 @@ func (w *aboutWindow) prepare() error {
 	if w.Window, err = unison.NewWindow(i18n.Text("About GCS"), unison.NotResizableWindowOption()); err != nil {
 		return errs.NewWithCause("unable to create about window", err)
 	}
+	trampolines.MenuSetup(w.Window)
 	content := w.Content()
 	content.DrawCallback = w.drawContentBackground
 	content.SetLayout(w)
