@@ -3,8 +3,8 @@ module github.com/richardwilkes/gcs
 go 1.17
 
 require (
-	github.com/richardwilkes/toolbox v1.51.1
-	github.com/richardwilkes/unison v0.1.1-0.20210919175849-fe9404e4ba57
+	github.com/richardwilkes/toolbox v1.52.0
+	github.com/richardwilkes/unison v0.2.0
 )
 
 require (
@@ -15,6 +15,6 @@ require (
 	github.com/progrium/macdriver v0.1.0 // indirect
 	github.com/yookoala/realpath v1.0.0 // indirect
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d // indirect
-	golang.org/x/sys v0.0.0-20210917161153-d61c044b1678 // indirect
+	golang.org/x/sys v0.0.0-20210923061019-b8560ed6a9b7 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

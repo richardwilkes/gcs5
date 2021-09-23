@@ -14,8 +14,10 @@ func setupHelpMenu(bar unison.Menu) {
 	m.InsertSeparator(-1, false)
 	m.InsertItem(-1, UpdateApp.NewMenuItem(f))
 	m.InsertItem(-1, ReleaseNotes.NewMenuItem(f))
+	m.InsertItem(-1, License.NewMenuItem(f))
 	m.InsertSeparator(-1, false)
 	m.InsertItem(-1, WebSite.NewMenuItem(f))
+	m.InsertItem(-1, MailingList.NewMenuItem(f))
 }
 
 // SponsorGCSDevelopment opens the web site for sponsoring GCS development.
@@ -23,7 +25,7 @@ var SponsorGCSDevelopment = &unison.Action{
 	ID:    SponsorGCSDevelopmentItemID,
 	Title: i18n.Text("Sponsor GCS Development"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		desktop.OpenBrowser("https://github.com/sponsors/richardwilkes")
+		showWebPage("https://github.com/sponsors/richardwilkes")
 	},
 }
 
@@ -32,7 +34,7 @@ var MakeDonation = &unison.Action{
 	ID:    MakeDonationItemID,
 	Title: i18n.Text("Make A Donation For GCS Development"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		desktop.OpenBrowser("https://paypal.me/GURPSCharacterSheet")
+		showWebPage("https://paypal.me/GURPSCharacterSheet")
 	},
 }
 
@@ -48,7 +50,7 @@ var ReleaseNotes = &unison.Action{
 	ID:    ReleaseNotesItemID,
 	Title: i18n.Text("Release Notes"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		desktop.OpenBrowser("https://github.com/richardwilkes/gcs/releases")
+		showWebPage("https://github.com/richardwilkes/gcs/releases")
 	},
 }
 
@@ -57,7 +59,7 @@ var License = &unison.Action{
 	ID:    ReleaseNotesItemID,
 	Title: i18n.Text("License"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		desktop.OpenBrowser("https://github.com/richardwilkes/gcs/blob/master/LICENSE")
+		showWebPage("https://github.com/richardwilkes/gcs/blob/master/LICENSE")
 	},
 }
 
@@ -66,7 +68,7 @@ var WebSite = &unison.Action{
 	ID:    WebSiteItemID,
 	Title: i18n.Text("Web Site"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		desktop.OpenBrowser("https://gurpscharactersheet.com")
+		showWebPage("https://gurpscharactersheet.com")
 	},
 }
 
@@ -75,6 +77,12 @@ var MailingList = &unison.Action{
 	ID:    MailingListItemID,
 	Title: i18n.Text("Mailing Lists"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		desktop.OpenBrowser("https://groups.io/g/gcs")
+		showWebPage("https://groups.io/g/gcs")
 	},
+}
+
+func showWebPage(uri string) {
+	if err := desktop.OpenBrowser(uri); err != nil {
+		unison.ErrorDialogWithError(i18n.Text("Unable to open link"), err)
+	}
 }

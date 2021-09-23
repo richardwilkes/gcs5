@@ -2,6 +2,7 @@ package menus
 
 import "github.com/richardwilkes/unison"
 
+// Menu, Item & Action IDs
 const (
 	NewFileMenuID = unison.UserBaseID + iota
 	NewSheetItemID

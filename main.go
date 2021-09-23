@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/richardwilkes/gcs/internal/settings"
 	"github.com/richardwilkes/gcs/internal/ui"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/log/jotrotate"
@@ -29,5 +30,6 @@ func main() {
 	cmdline.AppIdentifier = "com.trollworks.gcs"
 	cl := cmdline.New(true)
 	fileList := jotrotate.ParseAndSetup(cl)
-	ui.Start(fileList) // Never returns
+	s := settings.New()
+	ui.Start(s, fileList) // Never returns
 }
