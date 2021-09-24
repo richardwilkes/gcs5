@@ -25,7 +25,7 @@ const (
 // Settings holds the application settings.
 type Settings struct {
 	Version            int                              `json:"version"`
-	LastSeenGcsVersion library.Version                  `json:"last_seen_gcs_version"`
+	LastSeenGCSVersion library.Version                  `json:"last_seen_gcs_version"`
 	General            *General                         `json:"general"`
 	Libraries          []*library.Library               `json:"libraries,omitempty"`
 	LibraryExplorer    LibraryExplorer                  `json:"library_explorer"`
@@ -43,7 +43,7 @@ type Settings struct {
 func Default() *Settings {
 	return &Settings{
 		Version:            CurrentSettingsVersion,
-		LastSeenGcsVersion: library.VersionFromString(cmdline.AppVersion),
+		LastSeenGCSVersion: library.VersionFromString(cmdline.AppVersion),
 		General:            NewGeneral(),
 		Libraries:          []*library.Library{library.Master, library.User},
 		LibraryExplorer:    LibraryExplorer{DividerPosition: 300},

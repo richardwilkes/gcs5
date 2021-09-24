@@ -95,3 +95,17 @@ func (w Weight) Format(unit Units) string {
 		return pounds.String() + " " + string(Pound)
 	}
 }
+
+// MarshalText implements the encoding.TextMarshaler interface.
+func (w Weight) MarshalText() (text []byte, err error) {
+	return []byte(w.String()), nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+func (w *Weight) UnmarshalText(text []byte) error {
+	var err error
+	if *w, err = FromString(string(text), Pound); err != nil {
+		return err
+	}
+	return nil
+}

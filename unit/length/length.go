@@ -22,7 +22,7 @@ const (
 	Meter         = Units("m")
 	Kilometer     = Units("km")
 	Mile          = Units("mi")
-	FeetAndInches = Units(`'"`) // This one is special and not a suffix
+	FeetAndInches = Units(`ftin`) // This one is special and not a suffix
 )
 
 // Length contains a fixed-point value in inches.
@@ -47,8 +47,8 @@ func FromString(text string, defaultUnits Units) (Length, error) {
 		Inch,
 		Feet,
 		Yard,
-		Meter,
 		Kilometer,
+		Meter, // must come after Kilometer, as it's abbreviation is a subset
 		Mile,
 	} {
 		if strings.HasSuffix(text, string(unit)) {
@@ -147,4 +147,18 @@ func (l Length) Format(unit Units) string {
 	default: // Same as Inch
 		return inches.String() + " " + string(Inch)
 	}
+}
+
+// MarshalText implements the encoding.TextMarshaler interface.
+func (l Length) MarshalText() (text []byte, err error) {
+	return []byte(l.String()), nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+func (l *Length) UnmarshalText(text []byte) error {
+	var err error
+	if *l, err = FromString(string(text), FeetAndInches); err != nil {
+		return err
+	}
+	return nil
 }

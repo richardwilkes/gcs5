@@ -1,17 +1,21 @@
 package settings
 
+import (
+	"github.com/richardwilkes/gcs/unit/length"
+	"github.com/richardwilkes/gcs/unit/weight"
+)
+
 // Sheet settings.
 type Sheet struct {
-	DefaultLengthUnits         string        `json:"default_length_units"`
-	DefaultWeightUnits         string        `json:"default_weight_units"`
+	DefaultLengthUnits         length.Units  `json:"default_length_units"`
+	DefaultWeightUnits         weight.Units  `json:"default_weight_units"`
 	UserDescriptionDisplay     string        `json:"user_description_display"`
 	ModifiersDisplay           string        `json:"modifiers_display"`
 	NotesDisplay               string        `json:"notes_display"`
 	SkillLevelAdjDisplay       string        `json:"skill_level_adj_display"`
+	DamageProgression          string        `json:"damage_progression"`
 	UseMultiplicativeModifiers bool          `json:"use_multiplicative_modifiers"`
 	UseModifyingDicePlusAdds   bool          `json:"use_modifying_dice_plus_adds"`
-	DamageProgression          string        `json:"damage_progression"`
-	UseSimpleMetricConversions bool          `json:"use_simple_metric_conversions"`
 	ShowCollegeInSheetSpells   bool          `json:"show_college_in_sheet_spells"`
 	ShowDifficulty             bool          `json:"show_difficulty"`
 	ShowAdvantageModifierAdj   bool          `json:"show_advantage_modifier_adj"`
@@ -26,33 +30,32 @@ type Sheet struct {
 
 // Page settings.
 type Page struct {
-	PaperSize    string `json:"paper_size"`
-	TopMargin    string `json:"top_margin"`
-	LeftMargin   string `json:"left_margin"`
-	BottomMargin string `json:"bottom_margin"`
-	RightMargin  string `json:"right_margin"`
-	Orientation  string `json:"orientation"`
+	PaperSize    string        `json:"paper_size"`
+	TopMargin    length.Length `json:"top_margin"`
+	LeftMargin   length.Length `json:"left_margin"`
+	BottomMargin length.Length `json:"bottom_margin"`
+	RightMargin  length.Length `json:"right_margin"`
+	Orientation  string        `json:"orientation"`
 }
 
 // NewSheet returns new sheet settings.
 func NewSheet() *Sheet {
 	return &Sheet{
-		DefaultLengthUnits:         "ft_in",     // TODO: Use type
-		DefaultWeightUnits:         "lb",        // TODO: Use type
-		UserDescriptionDisplay:     "tooltip",   // TODO: Use type
-		ModifiersDisplay:           "inline",    // TODO: Use type
-		NotesDisplay:               "inline",    // TODO: Use type
-		SkillLevelAdjDisplay:       "tooltip",   // TODO: Use type
-		DamageProgression:          "basic_set", // TODO: Use type
-		UseSimpleMetricConversions: true,
-		ShowSpellAdj:               true,
+		DefaultLengthUnits:     length.FeetAndInches,
+		DefaultWeightUnits:     weight.Pound,
+		UserDescriptionDisplay: "tooltip",   // TODO: Use type
+		ModifiersDisplay:       "inline",    // TODO: Use type
+		NotesDisplay:           "inline",    // TODO: Use type
+		SkillLevelAdjDisplay:   "tooltip",   // TODO: Use type
+		DamageProgression:      "basic_set", // TODO: Use type
+		ShowSpellAdj:           true,
 		Page: Page{
 			PaperSize:    "na-letter", // TODO: Use type
-			TopMargin:    "0.25 in",   // TODO: Use type
-			LeftMargin:   "0.25 in",   // TODO: Use type
-			BottomMargin: "0.25 in",   // TODO: Use type
-			RightMargin:  "0.25 in",   // TODO: Use type
-			Orientation:  "portrait",  // TODO: Use type
+			TopMargin:    length.FromFloat64(0.25, length.Inch),
+			LeftMargin:   length.FromFloat64(0.25, length.Inch),
+			BottomMargin: length.FromFloat64(0.25, length.Inch),
+			RightMargin:  length.FromFloat64(0.25, length.Inch),
+			Orientation:  "portrait", // TODO: Use type
 		},
 		BlockLayout:  FactoryBlockLayout(),
 		Attributes:   FactoryAttributes(),
