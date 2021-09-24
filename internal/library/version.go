@@ -63,28 +63,30 @@ func (v *Version) UnmarshalText(text []byte) error {
 	v.Major = 0
 	v.Minor = 0
 	v.BugFix = 0
-	parts := strings.SplitN(string(text), ".", 3)
-	switch len(parts) {
-	case 3:
-		bugfix, err := strconv.ParseInt(parts[2], 10, 64)
-		if err != nil {
-			return errs.NewWithCausef(err, "unable to parse '%s'", parts[2])
+	if len(text) > 0 {
+		parts := strings.SplitN(string(text), ".", 3)
+		switch len(parts) {
+		case 3:
+			bugfix, err := strconv.ParseInt(parts[2], 10, 64)
+			if err != nil {
+				return errs.NewWithCausef(err, "unable to parse '%s'", parts[2])
+			}
+			v.BugFix = int(bugfix)
+			fallthrough
+		case 2:
+			minor, err := strconv.ParseInt(parts[1], 10, 64)
+			if err != nil {
+				return errs.NewWithCausef(err, "unable to parse '%s'", parts[1])
+			}
+			v.Minor = int(minor)
+			fallthrough
+		case 1:
+			major, err := strconv.ParseInt(parts[0], 10, 64)
+			if err != nil {
+				return errs.NewWithCausef(err, "unable to parse '%s'", parts[0])
+			}
+			v.Major = int(major)
 		}
-		v.BugFix = int(bugfix)
-		fallthrough
-	case 2:
-		minor, err := strconv.ParseInt(parts[1], 10, 64)
-		if err != nil {
-			return errs.NewWithCausef(err, "unable to parse '%s'", parts[1])
-		}
-		v.Minor = int(minor)
-		fallthrough
-	case 1:
-		major, err := strconv.ParseInt(parts[0], 10, 64)
-		if err != nil {
-			return errs.NewWithCausef(err, "unable to parse '%s'", parts[0])
-		}
-		v.Major = int(major)
 	}
 	return nil
 }

@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/richardwilkes/gcs/internal/settings"
 	"github.com/richardwilkes/gcs/internal/ui"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/log/jotrotate"
@@ -28,8 +27,10 @@ func main() {
 	cmdline.CopyrightYears = fmt.Sprintf("1998-%d", time.Now().Year())
 	cmdline.CopyrightHolder = "Richard A. Wilkes"
 	cmdline.AppIdentifier = "com.trollworks.gcs"
+	if cmdline.AppVersion == "" {
+		cmdline.AppVersion = "0.0"
+	}
 	cl := cmdline.New(true)
 	fileList := jotrotate.ParseAndSetup(cl)
-	s := settings.New()
-	ui.Start(s, fileList) // Never returns
+	ui.Start(fileList) // Never returns
 }

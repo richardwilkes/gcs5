@@ -85,4 +85,6 @@ const (
 	ReleaseNotesItemID
 	WebSiteItemID
 	MailingListItemID
+	ChangeLibraryLocationsItemID
+	LibraryBaseItemID
 )

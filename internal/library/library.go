@@ -11,6 +11,8 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -44,12 +46,13 @@ var (
 
 // Library holds information about a library of data files.
 type Library struct {
-	Title            string  `json:"title"`
-	GitHub           string  `json:"github"`
-	Repo             string  `json:"repo"`
-	Path             string  `json:"path"`
-	LastSeen         Version `json:"last_seen"`
-	AvailableUpgrade Release `json:"-"`
+	Title    string  `json:"title"`
+	GitHub   string  `json:"github"`
+	Repo     string  `json:"repo"`
+	Path     string  `json:"path"`
+	LastSeen Version `json:"last_seen"`
+	lock     sync.RWMutex
+	upgrade  *Release
 }
 
 // DefaultRootLibraryPath returns the default root library path.
@@ -73,6 +76,22 @@ func DefaultUserLibraryPath() string {
 	return filepath.Join(DefaultRootLibraryPath(), "User Library")
 }
 
+// PerformUpdateChecks checks each of the libraries for updates.
+func PerformUpdateChecks(libraries []*Library) {
+	client := &http.Client{}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	defer cancel()
+	var wg sync.WaitGroup
+	wg.Add(len(libraries))
+	for _, lib := range libraries {
+		go func(l *Library) {
+			defer wg.Done()
+			l.CheckForAvailableUpgrade(ctx, client)
+		}(lib)
+	}
+	wg.Wait()
+}
+
 // UpdatePath updates the path to the Library as well as the version.
 func (l *Library) UpdatePath(newPath string) {
 	p, err := filepath.Abs(newPath)
@@ -87,20 +106,44 @@ func (l *Library) UpdatePath(newPath string) {
 }
 
 // CheckForAvailableUpgrade returns releases that can be upgraded to.
-func (l *Library) CheckForAvailableUpgrade(ctx context.Context, client *http.Client) []Release {
-	return LoadReleases(ctx, client, l.GitHub, l.Repo, l.VersionOnDisk(), func(version Version, notes string) bool {
+func (l *Library) CheckForAvailableUpgrade(ctx context.Context, client *http.Client) {
+	l.lock.Lock()
+	l.upgrade = nil
+	l.lock.Unlock()
+	available, err := LoadReleases(ctx, client, l.GitHub, l.Repo, l.VersionOnDisk(), func(version Version, notes string) bool {
 		return version.Less(MinimumLibraryVersion) || IncompatibleFutureLibraryVersion.Less(version) || IncompatibleFutureLibraryVersion == version
 	})
-}
-
-// SetAvailableUpgrade updates the AvailableUpgrade based on the passed-in releases list.
-func (l *Library) SetAvailableUpgrade(releases []Release) {
-	if len(releases) > 1 {
-		if releases[len(releases)-1].Version == l.VersionOnDisk() {
-			releases = releases[:len(releases)-1]
+	var upgrade *Release
+	if err != nil {
+		jot.Error(err)
+		upgrade = &Release{CheckFailed: true}
+	} else {
+		switch len(available) {
+		case 0:
+			upgrade = &Release{}
+		case 1:
+			upgrade = &available[0]
+		default:
+			for _, one := range available[1:] {
+				available[0].Notes += "\n\n## Version " + one.Version.String() + "\n" + one.Notes
+			}
+			upgrade = &available[0]
 		}
 	}
-	l.AvailableUpgrade = DistillReleases(releases)
+	l.lock.Lock()
+	l.upgrade = upgrade
+	l.lock.Unlock()
+}
+
+// AvailableUpdate returns the available release that can be updated to.
+func (l *Library) AvailableUpdate() *Release {
+	l.lock.RLock()
+	defer l.lock.RUnlock()
+	if l.upgrade == nil {
+		return nil
+	}
+	r := *l.upgrade
+	return &r
 }
 
 // Less returns true if this Library should be placed before the other Library.

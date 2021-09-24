@@ -22,6 +22,9 @@ const (
 	MinimumSettingsVersion = 3
 )
 
+// Global settings.
+var Global = newGlobal()
+
 // Settings holds the application settings.
 type Settings struct {
 	Version            int                              `json:"version"`
@@ -57,8 +60,7 @@ func Default() *Settings {
 	}
 }
 
-// New returns new settings, loading from the saved settings file if present and valid.
-func New() *Settings {
+func newGlobal() *Settings {
 	s := Default()
 	s.Libraries = nil // reset so that we don't overwrite our master and user libraries
 	p := Path()

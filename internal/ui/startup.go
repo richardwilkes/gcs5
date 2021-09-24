@@ -14,6 +14,7 @@ package ui
 import (
 	"fmt"
 
+	"github.com/richardwilkes/gcs/internal/library"
 	"github.com/richardwilkes/gcs/internal/settings"
 	"github.com/richardwilkes/gcs/internal/ui/menus"
 	"github.com/richardwilkes/gcs/internal/ui/trampolines"
@@ -22,7 +23,8 @@ import (
 )
 
 // Start the UI.
-func Start(s *settings.Settings, files []string) {
+func Start(files []string) {
+	go library.PerformUpdateChecks(settings.Global.Libraries)
 	unison.Start(
 		unison.StartupFinishedCallback(func() {
 			trampolines.MenuSetup = menus.Setup
