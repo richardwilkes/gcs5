@@ -30,7 +30,7 @@ var (
 	IncompatibleFutureLibraryVersion = Version{Major: 4}
 	// Master holds information about the master library.
 	Master = &Library{
-		Title:  i18n.Text("Main Library"),
+		Title:  i18n.Text("Master Library"),
 		GitHub: "richardwilkes",
 		Repo:   "gcs_master_library",
 		Path:   DefaultMasterLibraryPath(),
