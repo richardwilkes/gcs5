@@ -3,11 +3,11 @@ package navigator
 import (
 	"io/fs"
 	"path"
+	"strings"
 
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
-	"github.com/richardwilkes/unison/fa"
 )
 
 // DirectoryNode holds a directory in the navigator.
@@ -32,21 +32,38 @@ func NewDirectoryNode(nav *Navigator, owningFS fs.FS, dirPath string) *Directory
 
 // Refresh the contents of this node.
 func (n *DirectoryNode) Refresh() {
-	n.children = nil
-	entries, err := fs.ReadDir(n.fs, n.path)
+	n.children = refreshChildren(n.nav, n.fs, n.path)
+}
+
+func refreshChildren(nav *Navigator, owningFS fs.FS, dirPath string) []unison.TableRowData {
+	entries, err := fs.ReadDir(owningFS, dirPath)
 	if err != nil {
-		jot.Error(errs.NewWithCausef(err, "unable to read the directory: %s", n.path))
-		return
+		jot.Error(errs.NewWithCausef(err, "unable to read the directory: %s", dirPath))
+		return nil
 	}
-	n.children = make([]unison.TableRowData, 0, len(entries))
+	children := make([]unison.TableRowData, 0, len(entries))
 	for _, entry := range entries {
-		p := path.Join(n.path, entry.Name())
-		if entry.IsDir() {
-			n.children = append(n.children, NewDirectoryNode(n.nav, n.fs, p))
-		} else {
-			n.children = append(n.children, NewFileNode(n.fs, p))
+		name := entry.Name()
+		if !strings.HasPrefix(name, ".") {
+			p := path.Join(dirPath, name)
+			isDir := entry.IsDir()
+			if entry.Type() == fs.ModeSymlink {
+				var sub []fs.DirEntry
+				if sub, err = fs.ReadDir(owningFS, p); err == nil && len(sub) > 0 {
+					isDir = true
+				}
+			}
+			if isDir {
+				dirNode := NewDirectoryNode(nav, owningFS, p)
+				if dirNode.recursiveFileCount() > 0 {
+					children = append(children, dirNode)
+				}
+			} else if _, exists := fileTypes[strings.ToLower(path.Ext(name))]; exists {
+				children = append(children, NewFileNode(owningFS, p))
+			}
 		}
 	}
+	return children
 }
 
 // CanHaveChildRows always returns true.
@@ -65,12 +82,12 @@ func (n *DirectoryNode) ColumnCell(index int) unison.Paneler {
 	case 0:
 		title := path.Base(n.path)
 		if n.open {
-			return createNodeLabel(fa.FolderOpen, title)
+			return createNodeCell(OpenFolder, title)
 		}
-		return createNodeLabel(fa.Folder, title)
+		return createNodeCell(ClosedFolder, title)
 	default:
-		jot.Errorf("column index out of range (0-0): %d", index)
-		return unison.NewLabel()
+		jot.Fatalf(1, "column index out of range (0-0): %d", index)
+		return nil
 	}
 }
 
@@ -85,4 +102,17 @@ func (n *DirectoryNode) SetOpen(open bool) {
 		n.open = open
 		n.nav.adjustTableSize()
 	}
+}
+
+func (n *DirectoryNode) recursiveFileCount() int {
+	count := 0
+	for _, child := range n.children {
+		switch node := child.(type) {
+		case *FileNode:
+			count++
+		case *DirectoryNode:
+			count += node.recursiveFileCount()
+		}
+	}
+	return count
 }

@@ -3,10 +3,10 @@ package navigator
 import (
 	"io/fs"
 	"path"
+	"strings"
 
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
-	"github.com/richardwilkes/unison/fa"
 )
 
 // FileNode holds a file in the navigator.
@@ -37,7 +37,8 @@ func (n *FileNode) ChildRows() []unison.TableRowData {
 func (n *FileNode) ColumnCell(index int) unison.Paneler {
 	switch index {
 	case 0:
-		return createNodeLabel(fa.File, path.Base(n.path))
+		name := path.Base(n.path)
+		return createNodeCell(strings.ToLower(path.Ext(name)), name)
 	default:
 		jot.Errorf("column index out of range (0-0): %d", index)
 		return unison.NewLabel()
@@ -51,37 +52,4 @@ func (n *FileNode) IsOpen() bool {
 
 // SetOpen does nothing.
 func (n *FileNode) SetOpen(_ bool) {
-}
-
-func createNodeLabel(icon, title string) *unison.Panel {
-	panel := unison.NewPanel()
-	panel.SetLayout(&unison.FlexLayout{
-		Columns:  2,
-		HSpacing: 8,
-	})
-	label := unison.NewLabel()
-	label.Text = icon
-	faDesc := unison.FontDescriptor{
-		Family:  unison.FontAwesomeFreeFamilyName,
-		Size:    10,
-		Weight:  unison.BlackFontWeight,
-		Spacing: unison.StandardSpacing,
-		Slant:   unison.NoSlant,
-	}
-	label.Font = faDesc.Font()
-	label.SetLayoutData(&unison.FlexLayoutData{
-		HSpan: 1,
-		VSpan: 1,
-	})
-	panel.AddChild(label)
-	label = unison.NewLabel()
-	label.Text = title
-	label.SetLayoutData(&unison.FlexLayoutData{
-		HSpan: 1,
-		VSpan: 1,
-		HGrab: true,
-	})
-	panel.AddChild(label)
-	panel.NeedsLayout = true
-	return panel
 }

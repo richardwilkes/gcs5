@@ -49,5 +49,6 @@ func NewNavigator() *Navigator {
 }
 
 func (n *Navigator) adjustTableSize() {
-	n.table.EventuallySizeColumnsToFit(true)
+	n.table.SyncToModel()
+	n.table.SizeColumnsToFit(true)
 }

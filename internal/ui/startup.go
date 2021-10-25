@@ -30,6 +30,7 @@ func Start(files []string) {
 	unison.Start(
 		unison.StartupFinishedCallback(func() {
 			trampolines.MenuSetup = menus.Setup
+			navigator.InitFileTypes()
 			wnd, err := unison.NewWindow("GCS")
 			jot.FatalIfErr(err)
 			menus.Setup(wnd)
@@ -37,7 +38,7 @@ func Start(files []string) {
 			content.SetLayout(&unison.FlexLayout{Columns: 1})
 			nav := navigator.NewNavigator()
 			nav.SetLayoutData(&unison.FlexLayoutData{
-				SizeHint: geom32.Size{Width: 200},
+				SizeHint: geom32.Size{Width: 300},
 				HSpan:    1,
 				VSpan:    1,
 				HAlign:   unison.FillAlignment,
