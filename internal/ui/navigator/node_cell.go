@@ -15,15 +15,15 @@ func createNodeCell(ext, title string) *unison.Panel {
 	panel.SetLayout(panelLayout)
 	s := unison.LabelFont.ResolvedFont().Size() + 5
 	size := geom32.NewSize(s, s)
-	svgPath, ok := fileTypes[ext]
+	info, ok := fileTypes[ext]
 	if !ok {
-		svgPath, ok = fileTypes["file"]
+		info, ok = fileTypes["file"]
 	}
 	if ok {
-		p := svgPath.PathForSize(size)
-		svgSize := svgPath.Size()
+		p := info.svgPath.PathForSize(size)
+		svgSize := info.svgPath.Size()
 		if svgSize.Width != svgSize.Height {
-			p = p.NewTranslatedPt(svgPath.OffsetToCenterWithinScaledSize(size))
+			p = p.NewTranslatedPt(info.svgPath.OffsetToCenterWithinScaledSize(size))
 		}
 		icon := widget.NewIcon()
 		icon.Path = p
