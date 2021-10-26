@@ -5,6 +5,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/richardwilkes/gcs/internal/library"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -13,18 +14,18 @@ import (
 // DirectoryNode holds a directory in the navigator.
 type DirectoryNode struct {
 	nav      *Navigator
-	fs       fs.FS
+	library  *library.Library
 	path     string
 	children []unison.TableRowData
 	open     bool
 }
 
 // NewDirectoryNode creates a new DirectoryNode.
-func NewDirectoryNode(nav *Navigator, owningFS fs.FS, dirPath string) *DirectoryNode {
+func NewDirectoryNode(nav *Navigator, lib *library.Library, dirPath string) *DirectoryNode {
 	n := &DirectoryNode{
-		nav:  nav,
-		fs:   owningFS,
-		path: dirPath,
+		nav:     nav,
+		library: lib,
+		path:    dirPath,
 	}
 	n.Refresh()
 	return n
@@ -32,11 +33,12 @@ func NewDirectoryNode(nav *Navigator, owningFS fs.FS, dirPath string) *Directory
 
 // Refresh the contents of this node.
 func (n *DirectoryNode) Refresh() {
-	n.children = refreshChildren(n.nav, n.fs, n.path)
+	n.children = refreshChildren(n.nav, n.library, n.path)
 }
 
-func refreshChildren(nav *Navigator, owningFS fs.FS, dirPath string) []unison.TableRowData {
-	entries, err := fs.ReadDir(owningFS, dirPath)
+func refreshChildren(nav *Navigator, lib *library.Library, dirPath string) []unison.TableRowData {
+	libFS := lib.FS()
+	entries, err := fs.ReadDir(libFS, dirPath)
 	if err != nil {
 		jot.Error(errs.NewWithCausef(err, "unable to read the directory: %s", dirPath))
 		return nil
@@ -49,17 +51,17 @@ func refreshChildren(nav *Navigator, owningFS fs.FS, dirPath string) []unison.Ta
 			isDir := entry.IsDir()
 			if entry.Type() == fs.ModeSymlink {
 				var sub []fs.DirEntry
-				if sub, err = fs.ReadDir(owningFS, p); err == nil && len(sub) > 0 {
+				if sub, err = fs.ReadDir(libFS, p); err == nil && len(sub) > 0 {
 					isDir = true
 				}
 			}
 			if isDir {
-				dirNode := NewDirectoryNode(nav, owningFS, p)
+				dirNode := NewDirectoryNode(nav, lib, p)
 				if dirNode.recursiveFileCount() > 0 {
 					children = append(children, dirNode)
 				}
 			} else if _, exists := fileTypes[strings.ToLower(path.Ext(name))]; exists {
-				children = append(children, NewFileNode(owningFS, p))
+				children = append(children, NewFileNode(lib, p))
 			}
 		}
 	}

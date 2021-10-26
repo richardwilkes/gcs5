@@ -15,7 +15,7 @@ func updateLibraryMenu(m unison.Menu) {
 	}
 	f := m.Factory()
 	for i, lib := range settings.Global.Libraries {
-		if lib != library.User {
+		if !lib.IsUser() {
 			m.InsertItem(-1, newUpdateLibraryAction(LibraryBaseItemID+i*2, lib).NewMenuItem(f))
 		}
 		m.InsertItem(-1, newShowLibraryFolderAction(LibraryBaseItemID+i*2+1, lib).NewMenuItem(f))
@@ -29,20 +29,20 @@ func newUpdateLibraryAction(id int, lib *library.Library) *unison.Action {
 	avail := lib.AvailableUpdate()
 	switch {
 	case avail == nil:
-		action.Title = fmt.Sprintf(i18n.Text("Checking for updates to %s"), lib.Title)
+		action.Title = fmt.Sprintf(i18n.Text("Checking for updates to %s"), lib.Title())
 		action.EnabledCallback = notEnabled
 	case avail.CheckFailed:
-		action.Title = fmt.Sprintf(i18n.Text("Unable to access the %s repo"), lib.Title)
+		action.Title = fmt.Sprintf(i18n.Text("Unable to access the %s repo"), lib.Title())
 		action.EnabledCallback = notEnabled
 	case avail.Version == library.Version{}:
-		action.Title = fmt.Sprintf(i18n.Text("No releases available for %s"), lib.Title)
+		action.Title = fmt.Sprintf(i18n.Text("No releases available for %s"), lib.Title())
 		action.EnabledCallback = notEnabled
 	default:
 		currentVersion := lib.VersionOnDisk()
 		if currentVersion != avail.Version {
-			action.Title = fmt.Sprintf(i18n.Text("Update %s to v%s"), lib.Title, avail.Version.String())
+			action.Title = fmt.Sprintf(i18n.Text("Update %s to v%s"), lib.Title(), avail.Version.String())
 		} else {
-			action.Title = fmt.Sprintf(i18n.Text("%s is up to date (re-download v%s)"), lib.Title, currentVersion)
+			action.Title = fmt.Sprintf(i18n.Text("%s is up to date (re-download v%s)"), lib.Title(), currentVersion)
 		}
 		action.ExecuteCallback = unimplemented
 	}
@@ -52,7 +52,7 @@ func newUpdateLibraryAction(id int, lib *library.Library) *unison.Action {
 func newShowLibraryFolderAction(id int, lib *library.Library) *unison.Action {
 	return &unison.Action{
 		ID:              id,
-		Title:           fmt.Sprintf(i18n.Text("Show %s on Disk"), lib.Title),
+		Title:           fmt.Sprintf(i18n.Text("Show %s on Disk"), lib.Title()),
 		ExecuteCallback: unimplemented,
 	}
 }

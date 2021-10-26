@@ -48,7 +48,7 @@ func Default() *Settings {
 		Version:            CurrentSettingsVersion,
 		LastSeenGCSVersion: library.VersionFromString(cmdline.AppVersion),
 		General:            NewGeneral(),
-		Libraries:          []*library.Library{library.Master, library.User},
+		Libraries:          []*library.Library{library.Master(), library.User()},
 		LibraryExplorer:    LibraryExplorer{DividerPosition: 300},
 		PageRefs:           make(map[string]FileRef),
 		KeyBindings:        make(map[string]string),
@@ -81,15 +81,15 @@ func newGlobal() *Settings {
 	}
 	hadMaster := false
 	hadUser := false
-	for i, lib := range s.Libraries {
-		if lib.GitHub == library.Master.GitHub && lib.Repo == library.Master.Repo {
-			s.Libraries[i] = library.Master
+	for _, lib := range s.Libraries {
+		if lib.IsMaster() {
+			library.ReplaceMaster(lib)
 			hadMaster = true
 			if hadUser {
 				break
 			}
-		} else if lib.GitHub == library.User.GitHub && lib.Repo == library.User.Repo {
-			s.Libraries[i] = library.User
+		} else if lib.IsUser() {
+			library.ReplaceUser(lib)
 			hadUser = true
 			if hadMaster {
 				break
@@ -97,10 +97,10 @@ func newGlobal() *Settings {
 		}
 	}
 	if !hadMaster {
-		s.Libraries = append(s.Libraries, library.Master)
+		s.Libraries = append(s.Libraries, library.Master())
 	}
 	if !hadUser {
-		s.Libraries = append(s.Libraries, library.User)
+		s.Libraries = append(s.Libraries, library.User())
 	}
 	sort.Slice(s.Libraries, func(i, j int) bool { return s.Libraries[i].Less(s.Libraries[j]) })
 	return s

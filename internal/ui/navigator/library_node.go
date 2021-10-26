@@ -1,9 +1,6 @@
 package navigator
 
 import (
-	"io/fs"
-	"os"
-
 	"github.com/richardwilkes/gcs/internal/library"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -13,7 +10,6 @@ import (
 type LibraryNode struct {
 	nav      *Navigator
 	library  *library.Library
-	fs       fs.FS
 	children []unison.TableRowData
 	open     bool
 }
@@ -23,7 +19,6 @@ func NewLibraryNode(nav *Navigator, lib *library.Library) *LibraryNode {
 	n := &LibraryNode{
 		nav:     nav,
 		library: lib,
-		fs:      os.DirFS(lib.Path), // Should change this to obtain it from the library on demand
 	}
 	n.Refresh()
 	return n
@@ -31,7 +26,7 @@ func NewLibraryNode(nav *Navigator, lib *library.Library) *LibraryNode {
 
 // Refresh the contents of this node.
 func (n *LibraryNode) Refresh() {
-	n.children = refreshChildren(n.nav, n.fs, ".")
+	n.children = refreshChildren(n.nav, n.library, ".")
 }
 
 // CanHaveChildRows always returns true.
@@ -49,9 +44,9 @@ func (n *LibraryNode) ColumnCell(index int) unison.Paneler {
 	switch index {
 	case 0:
 		if n.open {
-			return createNodeCell(OpenFolder, n.library.Title)
+			return createNodeCell(OpenFolder, n.library.Title())
 		}
-		return createNodeCell(ClosedFolder, n.library.Title)
+		return createNodeCell(ClosedFolder, n.library.Title())
 	default:
 		jot.Errorf("column index out of range (0-0): %d", index)
 		return unison.NewLabel()

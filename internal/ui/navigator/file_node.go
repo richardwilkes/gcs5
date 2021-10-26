@@ -1,25 +1,25 @@
 package navigator
 
 import (
-	"io/fs"
 	"path"
 	"strings"
 
+	"github.com/richardwilkes/gcs/internal/library"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
 
 // FileNode holds a file in the navigator.
 type FileNode struct {
-	fs   fs.FS
-	path string
+	library *library.Library
+	path    string
 }
 
 // NewFileNode creates a new FileNode.
-func NewFileNode(owningFS fs.FS, filePath string) *FileNode {
+func NewFileNode(lib *library.Library, filePath string) *FileNode {
 	return &FileNode{
-		fs:   owningFS,
-		path: filePath,
+		library: lib,
+		path:    filePath,
 	}
 }
 

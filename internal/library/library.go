@@ -4,11 +4,12 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/user"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -24,56 +25,63 @@ import (
 const releaseFile = "release.txt"
 
 var (
-	// MinimumLibraryVersion is the oldest version of the library data that can be loaded.
-	MinimumLibraryVersion = Version{}
-	// IncompatibleFutureLibraryVersion is the newest version at which the library data can no longer be loaded.
-	IncompatibleFutureLibraryVersion = Version{Major: 4}
-	// Master holds information about the master library.
-	Master = &Library{
+	masterLibrary = New(&Config{
 		Title:  i18n.Text("Master Library"),
 		GitHub: "richardwilkes",
 		Repo:   "gcs_master_library",
 		Path:   DefaultMasterLibraryPath(),
-	}
-	// User holds information about the user library.
-	User = &Library{
+	})
+	userLibrary = New(&Config{
 		Title:  i18n.Text("User Library"),
 		GitHub: "*",
 		Repo:   "gcs_user_library",
 		Path:   DefaultUserLibraryPath(),
-	}
+	})
 )
 
 // Library holds information about a library of data files.
 type Library struct {
-	Title    string  `json:"title"`
-	GitHub   string  `json:"github"`
-	Repo     string  `json:"repo"`
-	Path     string  `json:"path"`
-	LastSeen Version `json:"last_seen"`
-	lock     sync.RWMutex
-	upgrade  *Release
+	config  Config
+	fs      fs.FS
+	lock    sync.RWMutex
+	upgrade *Release
 }
 
-// DefaultRootLibraryPath returns the default root library path.
-func DefaultRootLibraryPath() string {
-	var home string
-	if u, err := user.Current(); err != nil {
-		home = os.Getenv("HOME")
-	} else {
-		home = u.HomeDir
+// New creates a new library. A copy of the configuration is made, so it may be changed after this call without
+// affecting the returned library.
+func New(cfg *Config) *Library {
+	return &Library{
+		config: *cfg,
+		fs:     os.DirFS(cfg.Path),
 	}
-	return filepath.Join(home, "GCS")
 }
 
-// DefaultMasterLibraryPath returns the default master library path.
-func DefaultMasterLibraryPath() string {
-	return filepath.Join(DefaultRootLibraryPath(), "Master Library")
+// Master holds information about the master library.
+func Master() *Library {
+	return masterLibrary
 }
 
-// DefaultUserLibraryPath returns the default user library path.
-func DefaultUserLibraryPath() string {
-	return filepath.Join(DefaultRootLibraryPath(), "User Library")
+// ReplaceMaster replaces the existing Master Library with the provided library if the GitHub and Repo internal fields
+// are a match.
+func ReplaceMaster(lib *Library) {
+	if lib.IsMaster() {
+		lib.config.Title = masterLibrary.config.Title
+		masterLibrary = lib
+	}
+}
+
+// User holds information about the user library.
+func User() *Library {
+	return userLibrary
+}
+
+// ReplaceUser replaces the existing User Library with the provided library if the GitHub and Repo internal fields
+// are a match.
+func ReplaceUser(lib *Library) {
+	if lib.IsUser() {
+		lib.config.Title = userLibrary.config.Title
+		userLibrary = lib
+	}
 }
 
 // PerformUpdateChecks checks each of the libraries for updates.
@@ -92,17 +100,70 @@ func PerformUpdateChecks(libraries []*Library) {
 	wg.Wait()
 }
 
+// Title returns the title of this library.
+func (l *Library) Title() string {
+	return l.config.Title
+}
+
+// FS returns the file system for the library.
+func (l *Library) FS() fs.FS {
+	return l.fs
+}
+
+// Config returns a copy of the current configuration.
+func (l *Library) Config() Config {
+	return l.config
+}
+
+// MarshalJSON implements the json.Marshaler interface.
+func (l *Library) MarshalJSON() ([]byte, error) {
+	data, err := json.Marshal(&l.config)
+	if err != nil {
+		return nil, errs.Wrap(err)
+	}
+	return data, nil
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+func (l *Library) UnmarshalJSON(data []byte) error {
+	var cfg Config
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return errs.Wrap(err)
+	}
+	p, err := filepath.Abs(cfg.Path)
+	if err != nil {
+		return errs.NewWithCause("unable to resolve library path: "+cfg.Path, err)
+	}
+	cfg.Path = p
+	l.config = cfg
+	l.fs = os.DirFS(p)
+	return nil
+}
+
 // UpdatePath updates the path to the Library as well as the version.
-func (l *Library) UpdatePath(newPath string) {
+func (l *Library) UpdatePath(newPath string) error {
 	p, err := filepath.Abs(newPath)
 	if err != nil {
-		jot.Warn(errs.NewWithCause("unable to update path to "+newPath, err))
-		return
+		return errs.NewWithCause("unable to update library path to "+newPath, err)
 	}
-	if l.Path != p {
-		l.Path = p
-		l.LastSeen = l.VersionOnDisk()
+	if l.config.Path != p {
+		l.config.Path = p
+		l.fs = os.DirFS(p)
+		l.config.LastSeen = l.VersionOnDisk()
 	}
+	return nil
+}
+
+// IsMaster returns true if this is the Master Library.
+func (l *Library) IsMaster() bool {
+	return l == masterLibrary ||
+		(l.config.GitHub == masterLibrary.config.GitHub && l.config.Repo == masterLibrary.config.Repo)
+}
+
+// IsUser returns true if this is the User Library.
+func (l *Library) IsUser() bool {
+	return l == userLibrary ||
+		(l.config.GitHub == userLibrary.config.GitHub && l.config.Repo == userLibrary.config.Repo)
 }
 
 // CheckForAvailableUpgrade returns releases that can be upgraded to.
@@ -110,9 +171,11 @@ func (l *Library) CheckForAvailableUpgrade(ctx context.Context, client *http.Cli
 	l.lock.Lock()
 	l.upgrade = nil
 	l.lock.Unlock()
-	available, err := LoadReleases(ctx, client, l.GitHub, l.Repo, l.VersionOnDisk(), func(version Version, notes string) bool {
-		return version.Less(MinimumLibraryVersion) || IncompatibleFutureLibraryVersion.Less(version) || IncompatibleFutureLibraryVersion == version
-	})
+	available, err := LoadReleases(ctx, client, l.config.GitHub, l.config.Repo, l.VersionOnDisk(),
+		func(version Version, notes string) bool {
+			incompatible := IncompatibleFutureLibraryVersion()
+			return version.Less(MinimumLibraryVersion()) || incompatible.Less(version) || incompatible == version
+		})
 	var upgrade *Release
 	if err != nil {
 		jot.Error(err)
@@ -148,34 +211,33 @@ func (l *Library) AvailableUpdate() *Release {
 
 // Less returns true if this Library should be placed before the other Library.
 func (l *Library) Less(other *Library) bool {
-	if Master == l {
+	if masterLibrary == l {
 		return true
 	}
 	if other == l {
 		return false
 	}
-	if User == l {
+	if userLibrary == l {
 		return true
 	}
 	if other == l {
 		return false
 	}
-	if txt.NaturalLess(l.GitHub, other.GitHub, true) {
+	if txt.NaturalLess(l.config.GitHub, other.config.GitHub, true) {
 		return true
 	}
-	if l.GitHub != other.GitHub {
+	if l.config.GitHub != other.config.GitHub {
 		return false
 	}
-	return txt.NaturalLess(l.Repo, other.Repo, true)
+	return txt.NaturalLess(l.config.Repo, other.config.Repo, true)
 }
 
 // VersionOnDisk returns the version of the data on disk, if it can be determined.
 func (l *Library) VersionOnDisk() Version {
-	releaseFilePath := filepath.Join(l.Path, releaseFile)
-	data, err := ioutil.ReadFile(releaseFilePath)
+	data, err := fs.ReadFile(l.fs, releaseFile)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			jot.Warn(errs.NewWithCause("unable to load "+releaseFilePath, err))
+			jot.Warn(errs.NewWithCause("unable to load "+releaseFile+" from library: "+l.config.Title, err))
 		}
 		return Version{}
 	}
@@ -184,8 +246,8 @@ func (l *Library) VersionOnDisk() Version {
 
 // Download the release onto the local disk.
 func (l *Library) Download(ctx context.Context, client *http.Client, release Release) error {
-	if err := os.MkdirAll(l.Path, 0o755); err != nil {
-		return errs.NewWithCause("unable to create "+l.Path, err)
+	if err := os.MkdirAll(l.config.Path, 0o755); err != nil {
+		return errs.NewWithCause("unable to create "+l.config.Path, err)
 	}
 	data, err := l.downloadRelease(ctx, client, release)
 	if err != nil {
@@ -195,7 +257,7 @@ func (l *Library) Download(ctx context.Context, client *http.Client, release Rel
 	if zr, err = zip.NewReader(bytes.NewReader(data), int64(len(data))); err != nil {
 		return errs.NewWithCause("unable to open archive "+release.ZipFileURL, err)
 	}
-	root := filepath.Clean(l.Path)
+	root := filepath.Clean(l.config.Path)
 	rootWithTrailingSep := root
 	if !strings.HasSuffix(rootWithTrailingSep, string(filepath.Separator)) {
 		rootWithTrailingSep += string(filepath.Separator)

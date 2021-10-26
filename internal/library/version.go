@@ -15,6 +15,16 @@ type Version struct {
 	BugFix int
 }
 
+// MinimumLibraryVersion is the oldest version of the library data that can be loaded.
+func MinimumLibraryVersion() Version {
+	return Version{}
+}
+
+// IncompatibleFutureLibraryVersion is the newest version at which the library data can no longer be loaded.
+func IncompatibleFutureLibraryVersion() Version {
+	return Version{Major: 4}
+}
+
 // VersionFromString parses the text for a version.
 func VersionFromString(text string) Version {
 	var v Version
