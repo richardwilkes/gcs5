@@ -20,10 +20,10 @@ func createNodeCell(ext, title string) *unison.Panel {
 		info, ok = fileTypes["file"]
 	}
 	if ok {
-		p := info.svgPath.PathForSize(size)
-		svgSize := info.svgPath.Size()
+		p := info.svg.PathForSize(size)
+		svgSize := info.svg.Size()
 		if svgSize.Width != svgSize.Height {
-			p = p.NewTranslatedPt(info.svgPath.OffsetToCenterWithinScaledSize(size))
+			p = p.NewTranslatedPt(info.svg.OffsetToCenterWithinScaledSize(size))
 		}
 		icon := widget.NewIcon()
 		icon.Path = p

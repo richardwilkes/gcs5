@@ -11,6 +11,8 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+var _ unison.TableRowData = &DirectoryNode{}
+
 // DirectoryNode holds a directory in the navigator.
 type DirectoryNode struct {
 	nav      *Navigator
@@ -76,6 +78,16 @@ func (n *DirectoryNode) CanHaveChildRows() bool {
 // ChildRows returns the children of this node.
 func (n *DirectoryNode) ChildRows() []unison.TableRowData {
 	return n.children
+}
+
+// CellDataForSort returns the string that represents the data in the specified cell.
+func (n *DirectoryNode) CellDataForSort(index int) string {
+	switch index {
+	case 0:
+		return path.Base(n.path)
+	default:
+		return ""
+	}
 }
 
 // ColumnCell returns the cell for the given column index.

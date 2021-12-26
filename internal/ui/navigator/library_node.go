@@ -6,6 +6,8 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+var _ unison.TableRowData = &LibraryNode{}
+
 // LibraryNode holds a library in the navigator.
 type LibraryNode struct {
 	nav      *Navigator
@@ -37,6 +39,16 @@ func (n *LibraryNode) CanHaveChildRows() bool {
 // ChildRows returns the children of this node.
 func (n *LibraryNode) ChildRows() []unison.TableRowData {
 	return n.children
+}
+
+// CellDataForSort returns the string that represents the data in the specified cell.
+func (n *LibraryNode) CellDataForSort(index int) string {
+	switch index {
+	case 0:
+		return n.library.Title()
+	default:
+		return ""
+	}
 }
 
 // ColumnCell returns the cell for the given column index.

@@ -9,6 +9,8 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+var _ unison.TableRowData = &FileNode{}
+
 // FileNode holds a file in the navigator.
 type FileNode struct {
 	library *library.Library
@@ -31,6 +33,16 @@ func (n *FileNode) CanHaveChildRows() bool {
 // ChildRows always returns nil.
 func (n *FileNode) ChildRows() []unison.TableRowData {
 	return nil
+}
+
+// CellDataForSort returns the string that represents the data in the specified cell.
+func (n *FileNode) CellDataForSort(index int) string {
+	switch index {
+	case 0:
+		return path.Base(n.path)
+	default:
+		return ""
+	}
 }
 
 // ColumnCell returns the cell for the given column index.
