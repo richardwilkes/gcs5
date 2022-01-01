@@ -91,7 +91,7 @@ func (n *DirectoryNode) CellDataForSort(index int) string {
 }
 
 // ColumnCell returns the cell for the given column index.
-func (n *DirectoryNode) ColumnCell(index int) unison.Paneler {
+func (n *DirectoryNode) ColumnCell(index int, _ bool) unison.Paneler {
 	switch index {
 	case 0:
 		title := path.Base(n.path)

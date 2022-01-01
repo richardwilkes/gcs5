@@ -46,7 +46,7 @@ func (n *FileNode) CellDataForSort(index int) string {
 }
 
 // ColumnCell returns the cell for the given column index.
-func (n *FileNode) ColumnCell(index int) unison.Paneler {
+func (n *FileNode) ColumnCell(index int, _ bool) unison.Paneler {
 	switch index {
 	case 0:
 		name := path.Base(n.path)

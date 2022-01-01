@@ -52,7 +52,7 @@ func (n *LibraryNode) CellDataForSort(index int) string {
 }
 
 // ColumnCell returns the cell for the given column index.
-func (n *LibraryNode) ColumnCell(index int) unison.Paneler {
+func (n *LibraryNode) ColumnCell(index int, _ bool) unison.Paneler {
 	switch index {
 	case 0:
 		if n.open {

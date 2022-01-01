@@ -3,8 +3,8 @@ module github.com/richardwilkes/gcs
 go 1.17
 
 require (
-	github.com/richardwilkes/toolbox v1.53.0
-	github.com/richardwilkes/unison v0.2.1-0.20211226184613-6438399b6b2a
+	github.com/richardwilkes/toolbox v1.54.0
+	github.com/richardwilkes/unison v0.2.1-0.20220101214844-a1d221a14120
 	github.com/stretchr/testify v1.7.0
 )
 
@@ -16,7 +16,6 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/pkg/term v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/progrium/macdriver v0.2.0 // indirect
 	github.com/yookoala/realpath v1.0.0 // indirect
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410 // indirect
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
