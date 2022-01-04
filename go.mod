@@ -3,8 +3,8 @@ module github.com/richardwilkes/gcs
 go 1.17
 
 require (
-	github.com/richardwilkes/toolbox v1.54.0
-	github.com/richardwilkes/unison v0.2.1-0.20220101214844-a1d221a14120
+	github.com/richardwilkes/toolbox v1.56.0
+	github.com/richardwilkes/unison v0.3.1-0.20220104231720-68ae678ff6e4
 	github.com/stretchr/testify v1.7.0
 )
 

@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package navigator
+package workspace
 
 import (
 	"io/fs"
@@ -73,7 +73,7 @@ func refreshChildren(nav *Navigator, lib *library.Library, dirPath string) []uni
 				if dirNode.recursiveFileCount() > 0 {
 					children = append(children, dirNode)
 				}
-			} else if _, exists := fileTypes[strings.ToLower(path.Ext(name))]; exists {
+			} else if _, exists := library.FileTypes[strings.ToLower(path.Ext(name))]; exists {
 				children = append(children, NewFileNode(lib, p))
 			}
 		}
@@ -107,9 +107,9 @@ func (n *DirectoryNode) ColumnCell(index int, _ bool) unison.Paneler {
 	case 0:
 		title := path.Base(n.path)
 		if n.open {
-			return createNodeCell(OpenFolder, title)
+			return createNodeCell(library.OpenFolder, title)
 		}
-		return createNodeCell(ClosedFolder, title)
+		return createNodeCell(library.ClosedFolder, title)
 	default:
 		jot.Fatalf(1, "column index out of range (0-0): %d", index)
 		return nil

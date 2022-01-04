@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package navigator
+package workspace
 
 import (
 	"github.com/richardwilkes/gcs/internal/library"
@@ -67,9 +67,9 @@ func (n *LibraryNode) ColumnCell(index int, _ bool) unison.Paneler {
 	switch index {
 	case 0:
 		if n.open {
-			return createNodeCell(OpenFolder, n.library.Title())
+			return createNodeCell(library.OpenFolder, n.library.Title())
 		}
-		return createNodeCell(ClosedFolder, n.library.Title())
+		return createNodeCell(library.ClosedFolder, n.library.Title())
 	default:
 		jot.Errorf("column index out of range (0-0): %d", index)
 		return unison.NewLabel()

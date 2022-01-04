@@ -17,10 +17,9 @@ import (
 	"github.com/richardwilkes/gcs/internal/library"
 	"github.com/richardwilkes/gcs/internal/settings"
 	"github.com/richardwilkes/gcs/internal/ui/menus"
-	"github.com/richardwilkes/gcs/internal/ui/navigator"
 	"github.com/richardwilkes/gcs/internal/ui/trampolines"
+	"github.com/richardwilkes/gcs/internal/ui/workspace"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
@@ -30,23 +29,10 @@ func Start(files []string) {
 	unison.Start(
 		unison.StartupFinishedCallback(func() {
 			trampolines.MenuSetup = menus.Setup
-			navigator.InitFileTypes()
 			wnd, err := unison.NewWindow("GCS")
 			jot.FatalIfErr(err)
 			menus.Setup(wnd)
-			content := wnd.Content()
-			content.SetLayout(&unison.FlexLayout{Columns: 1})
-			nav := navigator.NewNavigator()
-			nav.SetLayoutData(&unison.FlexLayoutData{
-				SizeHint: geom32.Size{Width: 300},
-				HSpan:    1,
-				VSpan:    1,
-				HAlign:   unison.FillAlignment,
-				VAlign:   unison.FillAlignment,
-				HGrab:    false,
-				VGrab:    true,
-			})
-			content.AddChild(nav)
+			workspace.NewWorkspace(wnd)
 			wnd.SetFrameRect(unison.PrimaryDisplay().Usable)
 			wnd.ToFront()
 			openURLs(files)

@@ -9,9 +9,12 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package navigator
+package library
 
 import (
+	"path"
+	"strings"
+
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -24,18 +27,18 @@ const (
 	OpenFolder   = "folder-open"
 )
 
-type fileInfo struct {
-	svg       *unison.SVG
-	isGCSData bool
-	isImage   bool
-	isPDF     bool
+// FileInfo contains some static information about a given file type.
+type FileInfo struct {
+	SVG       *unison.SVG
+	IsGCSData bool
+	IsImage   bool
+	IsPDF     bool
 }
 
-var fileTypes map[string]*fileInfo
+// FileTypes holds a map of keys to FileInfo data.
+var FileTypes = make(map[string]*FileInfo)
 
-// InitFileTypes initializes the file type associations.
-func InitFileTypes() {
-	fileTypes = make(map[string]*fileInfo)
+func init() {
 	addSpecialFileType(ClosedFolder, "M464 128H272l-64-64H48C21.49 64 0 85.49 0 112v288c0 26.51 21.49 48 48 48h416c26.51 0 48-21.49 48-48V176c0-26.51-21.49-48-48-48z", 512, 512)
 	addSpecialFileType(OpenFolder, "M572.694 292.093L500.27 416.248A63.997 63.997 0 0 1 444.989 448H45.025c-18.523 0-30.064-20.093-20.731-36.093l72.424-124.155A64 64 0 0 1 152 256h399.964c18.523 0 30.064 20.093 20.73 36.093zM152 224h328v-48c0-26.51-21.49-48-48-48H272l-64-64H48C21.49 64 0 85.49 0 112v278.046l69.077-118.418C86.214 242.25 117.989 224 152 224z", 576, 512)
 	fileSvg := "M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm160-14.1v6.1H256V0h6.1c6.4 0 12.5 2.5 17 7l97.9 98c4.5 4.5 7 10.6 7 16.9z"
@@ -61,23 +64,32 @@ func InitFileTypes() {
 func addSpecialFileType(ext, svgPath string, width, height float32) {
 	p, err := unison.NewSVG(geom32.NewSize(width, height), svgPath)
 	jot.FatalIfErr(err)
-	fileTypes[ext] = &fileInfo{svg: p}
+	FileTypes[ext] = &FileInfo{SVG: p}
 }
 
 func addGCSFileType(ext, svgPath string, width, height float32) {
 	p, err := unison.NewSVG(geom32.NewSize(width, height), svgPath)
 	jot.FatalIfErr(err)
-	fileTypes[ext] = &fileInfo{svg: p, isGCSData: true}
+	FileTypes[ext] = &FileInfo{SVG: p, IsGCSData: true}
 }
 
 func addImageFileType(ext, svgPath string, width, height float32) {
 	p, err := unison.NewSVG(geom32.NewSize(width, height), svgPath)
 	jot.FatalIfErr(err)
-	fileTypes[ext] = &fileInfo{svg: p, isImage: true}
+	FileTypes[ext] = &FileInfo{SVG: p, IsImage: true}
 }
 
 func addPDFFileType(ext, svgPath string, width, height float32) {
 	p, err := unison.NewSVG(geom32.NewSize(width, height), svgPath)
 	jot.FatalIfErr(err)
-	fileTypes[ext] = &fileInfo{svg: p, isPDF: true}
+	FileTypes[ext] = &FileInfo{SVG: p, IsPDF: true}
+}
+
+// FileInfoFor returns the FileInfo for the given file path's extension.
+func FileInfoFor(filePath string) *FileInfo {
+	info, ok := FileTypes[strings.ToLower(path.Ext(filePath))]
+	if !ok {
+		info = FileTypes[GenericFile]
+	}
+	return info
 }
