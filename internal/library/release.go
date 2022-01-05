@@ -42,7 +42,7 @@ func LoadReleases(ctx context.Context, client *http.Client, githubAccountName, r
 	}
 	var versions []Release
 	uri := "https://api.github.com/repos/" + githubAccountName + "/" + repoName + "/releases"
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, http.NoBody)
 	if err != nil {
 		return nil, errs.NewWithCause("unable to create GitHub API request "+uri, err)
 	}

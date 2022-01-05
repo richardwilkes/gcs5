@@ -56,6 +56,7 @@ linters:
     - gocritic
     - gofumpt
     - goimports
+    - gosec
     - gosimple
     - govet
     - ifshort
@@ -75,3 +76,6 @@ issues:
   exclude-use-default: false
   exclude:
     - "fieldalignment: struct with \\d+ pointer bytes could be"
+    - "G110:"
+    - "G304:"
+    - "G306:"

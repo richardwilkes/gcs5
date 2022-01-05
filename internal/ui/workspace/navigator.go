@@ -159,10 +159,10 @@ func (n *Navigator) openRow(row unison.TableRowData) {
 }
 
 func createNodeCell(ext, title string) *unison.Panel {
-	size := unison.LabelFont.ResolvedFont().Size() + 5
+	size := unison.LabelFont.Size() + 5
 	info, ok := library.FileTypes[ext]
 	if !ok {
-		info, ok = library.FileTypes[library.GenericFile]
+		info = library.FileTypes[library.GenericFile]
 	}
 	label := unison.NewLabel()
 	label.Text = title

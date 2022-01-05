@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/richardwilkes/toolbox v1.56.0
-	github.com/richardwilkes/unison v0.3.1-0.20220104231720-68ae678ff6e4
+	github.com/richardwilkes/unison v0.3.1-0.20220105221919-2e9a6f14a952
 	github.com/stretchr/testify v1.7.0
 )
 

@@ -71,12 +71,12 @@ func (w *aboutWindow) prepare() error {
 	return nil
 }
 
-func (w *aboutWindow) LayoutSizes(_ unison.Layoutable, _ geom32.Size) (min, pref, max geom32.Size) {
+func (w *aboutWindow) LayoutSizes(_ *unison.Panel, _ geom32.Size) (min, pref, max geom32.Size) {
 	pref = w.img.LogicalSize()
 	return pref, pref, pref
 }
 
-func (w *aboutWindow) PerformLayout(target unison.Layoutable) {
+func (w *aboutWindow) PerformLayout(target *unison.Panel) {
 	target.SetFrameRect(geom32.Rect{Size: w.img.LogicalSize()})
 }
 

@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -257,7 +256,7 @@ func (l *Library) VersionOnDisk() Version {
 
 // Download the release onto the local disk.
 func (l *Library) Download(ctx context.Context, client *http.Client, release Release) error {
-	if err := os.MkdirAll(l.config.Path, 0o755); err != nil {
+	if err := os.MkdirAll(l.config.Path, 0o750); err != nil {
 		return errs.NewWithCause("unable to create "+l.config.Path, err)
 	}
 	data, err := l.downloadRelease(ctx, client, release)
@@ -289,7 +288,7 @@ func (l *Library) Download(ctx context.Context, client *http.Client, release Rel
 				return errs.Newf("path outside of root is not permitted: %s", fullPath)
 			}
 			parent := filepath.Dir(fullPath)
-			if err = os.MkdirAll(parent, 0o755); err != nil {
+			if err = os.MkdirAll(parent, 0o750); err != nil {
 				return errs.NewWithCause("unable to create "+parent, err)
 			}
 			if err = extractFile(f, fullPath); err != nil {
@@ -298,7 +297,7 @@ func (l *Library) Download(ctx context.Context, client *http.Client, release Rel
 		}
 	}
 	f := filepath.Join(root, releaseFile)
-	if err = ioutil.WriteFile(f, []byte(release.Version.String()+"\n"), 0o644); err != nil {
+	if err = os.WriteFile(f, []byte(release.Version.String()+"\n"), 0o640); err != nil {
 		return errs.NewWithCause("unable to create "+f, err)
 	}
 	return nil
@@ -311,22 +310,20 @@ func extractFile(f *zip.File, dst string) (err error) {
 	}
 	defer xio.CloseIgnoringErrors(r)
 	var file *os.File
-	if file, err = os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, f.FileInfo().Mode().Perm()&0o755); err != nil {
+	if file, err = os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, f.FileInfo().Mode().Perm()&0o750); err != nil {
 		return errs.Wrap(err)
 	}
-	defer func() {
-		if closeErr := file.Close(); closeErr != nil && err == nil {
-			err = errs.Wrap(closeErr)
-		}
-	}()
 	if _, err = io.Copy(file, r); err != nil {
 		err = errs.Wrap(err)
+	}
+	if closeErr := file.Close(); closeErr != nil && err == nil {
+		err = errs.Wrap(closeErr)
 	}
 	return
 }
 
 func (l *Library) downloadRelease(ctx context.Context, client *http.Client, release Release) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, release.ZipFileURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, release.ZipFileURL, http.NoBody)
 	if err != nil {
 		return nil, errs.NewWithCause("unable to create request for "+release.ZipFileURL, err)
 	}
@@ -336,7 +333,7 @@ func (l *Library) downloadRelease(ctx context.Context, client *http.Client, rele
 	}
 	defer xio.DiscardAndCloseIgnoringErrors(rsp.Body)
 	var data []byte
-	if data, err = ioutil.ReadAll(rsp.Body); err != nil {
+	if data, err = io.ReadAll(rsp.Body); err != nil {
 		return nil, errs.NewWithCause("unable to download "+release.ZipFileURL, err)
 	}
 	return data, nil

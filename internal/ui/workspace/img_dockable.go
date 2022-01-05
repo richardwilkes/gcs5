@@ -115,42 +115,43 @@ func (d *ImageDockable) mouseWheel(_, delta geom32.Point, _ unison.Modifiers) bo
 }
 
 func (d *ImageDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bool) bool {
-	oldScale := d.scale
+	var scale float32
 	switch keyCode {
 	case unison.Key1:
-		d.scale = 1
+		scale = 1
 	case unison.Key2:
-		d.scale = 2
+		scale = 2
 	case unison.Key3:
-		d.scale = 3
+		scale = 3
 	case unison.Key4:
-		d.scale = 4
+		scale = 4
 	case unison.Key5:
-		d.scale = 5
+		scale = 5
 	case unison.Key6:
-		d.scale = 6
+		scale = 6
 	case unison.Key7:
-		d.scale = 7
+		scale = 7
 	case unison.Key8:
-		d.scale = 8
+		scale = 8
 	case unison.Key9:
-		d.scale = 9
+		scale = 9
 	case unison.Key0:
-		d.scale = maxImageDockableScale
+		scale = maxImageDockableScale
 	case unison.KeyMinus:
-		d.scale -= imageDockableScaleDelta
-		if d.scale < minImageDockableScale {
-			d.scale = minImageDockableScale
+		scale -= imageDockableScaleDelta
+		if scale < minImageDockableScale {
+			scale = minImageDockableScale
 		}
 	case unison.KeyEqual:
-		d.scale += imageDockableScaleDelta
-		if d.scale > maxImageDockableScale {
-			d.scale = maxImageDockableScale
+		scale += imageDockableScaleDelta
+		if scale > maxImageDockableScale {
+			scale = maxImageDockableScale
 		}
 	default:
 		return false
 	}
-	if oldScale != d.scale {
+	if d.scale != scale {
+		d.scale = scale
 		d.scroll.MarkForLayoutAndRedraw()
 	}
 	return true

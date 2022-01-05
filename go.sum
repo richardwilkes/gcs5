@@ -34,6 +34,8 @@ github.com/richardwilkes/unison v0.3.1-0.20220103000738-5fa57bce5798 h1:vZZqwa0K
 github.com/richardwilkes/unison v0.3.1-0.20220103000738-5fa57bce5798/go.mod h1:PIGLcAP/lZr018hDVVvUsEzHZ/Ny1ZbLWy4XVe49XF0=
 github.com/richardwilkes/unison v0.3.1-0.20220104231720-68ae678ff6e4 h1:RfLzOwUwRNjM0rXCjMclWLPRc9bbWmyF/6+Nwg2r+zg=
 github.com/richardwilkes/unison v0.3.1-0.20220104231720-68ae678ff6e4/go.mod h1:PIGLcAP/lZr018hDVVvUsEzHZ/Ny1ZbLWy4XVe49XF0=
+github.com/richardwilkes/unison v0.3.1-0.20220105221919-2e9a6f14a952 h1:s5Rlvy6oavnrQlxexH3/7t9mCOx3aTecgj1KemalCZM=
+github.com/richardwilkes/unison v0.3.1-0.20220105221919-2e9a6f14a952/go.mod h1:PIGLcAP/lZr018hDVVvUsEzHZ/Ny1ZbLWy4XVe49XF0=
 github.com/rogpeppe/go-internal v1.6.1/go.mod h1:xXDCJY+GAPziupqXw64V24skbSoqbTEfhy4qGm1nDQc=
 github.com/rogpeppe/go-internal v1.8.0 h1:FCbCCtXNOY3UtUuHUYaghJg4y7Fd14rXifAYUAtL9R8=
 github.com/rogpeppe/go-internal v1.8.0/go.mod h1:WmiCO8CzOY8rg0OYDC4/i/2WRWAB6poM+XZ2dLUbcbE=
