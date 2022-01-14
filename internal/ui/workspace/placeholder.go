@@ -19,8 +19,8 @@ import (
 )
 
 var (
-	_ unison.Dockable  = &placeholder{}
-	_ unison.TabCloser = &placeholder{}
+	_ FileBackedDockable = &placeholder{}
+	_ unison.TabCloser   = &placeholder{}
 )
 
 type placeholder struct {
@@ -48,6 +48,10 @@ func (p *placeholder) Title() string {
 }
 
 func (p *placeholder) Tooltip() string {
+	return p.path
+}
+
+func (p *placeholder) BackingFilePath() string {
 	return p.path
 }
 

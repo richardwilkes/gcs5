@@ -25,8 +25,8 @@ const (
 )
 
 var (
-	_ unison.Dockable  = &ImageDockable{}
-	_ unison.TabCloser = &ImageDockable{}
+	_ FileBackedDockable = &ImageDockable{}
+	_ unison.TabCloser   = &ImageDockable{}
 )
 
 type ImageDockable struct {
@@ -115,7 +115,7 @@ func (d *ImageDockable) mouseWheel(_, delta geom32.Point, _ unison.Modifiers) bo
 }
 
 func (d *ImageDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bool) bool {
-	var scale float32
+	scale := d.scale
 	switch keyCode {
 	case unison.Key1:
 		scale = 1
@@ -182,6 +182,10 @@ func (d *ImageDockable) Title() string {
 }
 
 func (d *ImageDockable) Tooltip() string {
+	return d.path
+}
+
+func (d *ImageDockable) BackingFilePath() string {
 	return d.path
 }
 

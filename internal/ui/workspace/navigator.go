@@ -13,6 +13,7 @@ package workspace
 
 import (
 	"path"
+	"strings"
 
 	"github.com/richardwilkes/gcs/internal/library"
 	"github.com/richardwilkes/gcs/internal/settings"
@@ -22,6 +23,12 @@ import (
 )
 
 var _ unison.Dockable = &Navigator{}
+
+// FileBackedDockable defines methods a Dockable that is based on a file should implement.
+type FileBackedDockable interface {
+	unison.Dockable
+	BackingFilePath() string
+}
 
 // Navigator holds the workspace navigation panel.
 type Navigator struct {
@@ -114,16 +121,8 @@ func (n *Navigator) openRow(row unison.TableRowData) {
 			filePath := path.Clean(path.Join(t.library.Config().Path, t.path))
 			workspace.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
 				for _, d := range dc.Dockables() {
-					switch actual := d.(type) {
-					case *placeholder:
-						if filePath == actual.path {
-							found = true
-							dc.SetCurrentDockable(d)
-							dc.AcquireFocus()
-							return true
-						}
-					case *ImageDockable:
-						if filePath == actual.path {
+					if f, ok := d.(FileBackedDockable); ok {
+						if filePath == f.BackingFilePath() {
 							found = true
 							dc.SetCurrentDockable(d)
 							dc.AcquireFocus()
@@ -142,6 +141,12 @@ func (n *Navigator) openRow(row unison.TableRowData) {
 					var err error
 					if d, err = NewImageDockable(filePath); err != nil {
 						unison.ErrorDialogWithMessage(i18n.Text("Unable to open image file"), err.Error())
+						return
+					}
+				} else if strings.ToLower(path.Ext(filePath)) == ".pdf" {
+					var err error
+					if d, err = NewPDFDockable(filePath); err != nil {
+						unison.ErrorDialogWithMessage(i18n.Text("Unable to open PDF"), err.Error())
 						return
 					}
 				} else {
