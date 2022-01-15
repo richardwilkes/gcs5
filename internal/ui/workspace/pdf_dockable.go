@@ -12,7 +12,6 @@
 package workspace
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/richardwilkes/gcs/internal/library"
@@ -69,7 +68,7 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 		pageCount:        doc.PageCount(),
 		loadedPageNumber: -1,
 		scale:            1,
-		hidpiScale:       0.5, // TODO: Use monitor info to set this?
+		hidpiScale:       0.5,
 	}
 	d.Self = d
 	d.SetLayout(&unison.FlexLayout{Columns: 1})
@@ -245,7 +244,6 @@ func (d *PDFDockable) draw(gc *unison.Canvas, dirty geom32.Rect) {
 		}
 	} else {
 		// TODO: Show error message
-		fmt.Println("d.pageImg was nil")
 	}
 }
 

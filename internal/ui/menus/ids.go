@@ -26,6 +26,7 @@ const (
 	NewSkillsLibraryItemID
 	NewSpellsLibraryItemID
 	OpenItemID
+	CloseTabID
 	RecentFilesMenuID
 	SaveItemID
 	SaveAsItemID

@@ -76,9 +76,9 @@ func NewImageDockable(filePath string) (*ImageDockable, error) {
 
 func (d *ImageDockable) updateCursor(_ geom32.Point) *unison.Cursor {
 	if d.inDrag {
-		return unison.ClosedHandCursor()
+		return unison.MoveCursor()
 	}
-	return unison.OpenHandCursor()
+	return unison.ArrowCursor()
 }
 
 func (d *ImageDockable) mouseDown(where geom32.Point, _, _ int, _ unison.Modifiers) bool {

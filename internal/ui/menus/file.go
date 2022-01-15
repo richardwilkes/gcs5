@@ -32,7 +32,10 @@ func setupFileMenu(bar unison.Menu) {
 	m.InsertMenu(0, newFileMenu)
 	m.InsertItem(1, Open.NewMenuItem(f))
 	m.InsertMenu(2, f.NewMenu(RecentFilesMenuID, i18n.Text("Recent Files"), recentFilesUpdater))
-	i := m.Item(unison.CloseItemID).Index() + 1
+	i := m.Item(unison.CloseItemID).Index()
+	m.RemoveItem(i)
+	m.InsertItem(i, CloseTab.NewMenuItem(f))
+	i++
 	m.InsertSeparator(i, false)
 	i++
 	m.InsertItem(i, Save.NewMenuItem(f))
@@ -126,6 +129,37 @@ var Open = &unison.Action{
 	HotKey:          unison.KeyO,
 	HotKeyMods:      unison.OSMenuCmdModifier(),
 	ExecuteCallback: unimplemented,
+}
+
+// CloseTab closes a workspace tab.
+var CloseTab = &unison.Action{
+	ID:         CloseTabID,
+	Title:      i18n.Text("Close Tab"),
+	HotKey:     unison.KeyW,
+	HotKeyMods: unison.OSMenuCmdModifier(),
+	EnabledCallback: func(_ *unison.Action, _ interface{}) bool {
+		if wnd := unison.ActiveWindow(); wnd != nil {
+			if dc := unison.FocusedDockContainerFor(wnd); dc != nil {
+				if current := dc.CurrentDockable(); current != nil {
+					if _, ok := current.(unison.TabCloser); ok {
+						return true
+					}
+				}
+			}
+		}
+		return false
+	},
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+		if wnd := unison.ActiveWindow(); wnd != nil {
+			if dc := unison.FocusedDockContainerFor(wnd); dc != nil {
+				if current := dc.CurrentDockable(); current != nil {
+					if closer, ok := current.(unison.TabCloser); ok {
+						closer.AttemptClose()
+					}
+				}
+			}
+		}
+	},
 }
 
 // Save a file.
