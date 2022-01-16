@@ -12,6 +12,10 @@
 package workspace
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/richardwilkes/gcs/internal/library"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
@@ -19,9 +23,9 @@ import (
 )
 
 const (
-	minImageDockableScale   = 0.1
-	maxImageDockableScale   = 10
-	imageDockableScaleDelta = 0.1
+	minImageDockableScale   = 10
+	maxImageDockableScale   = 1000
+	deltaImageDockableScale = 10
 )
 
 var (
@@ -36,9 +40,10 @@ type ImageDockable struct {
 	img        *unison.Image
 	imgPanel   *unison.Panel
 	scroll     *unison.ScrollPanel
+	scaleField *unison.Field
 	dragStart  geom32.Point
 	dragOrigin geom32.Point
-	scale      float32
+	scale      int
 	inDrag     bool
 }
 
@@ -51,10 +56,12 @@ func NewImageDockable(filePath string) (*ImageDockable, error) {
 	d := &ImageDockable{
 		path:  filePath,
 		img:   img,
-		scale: 1,
+		scale: 100,
 	}
 	d.Self = d
+	d.KeyDownCallback = d.keyDown
 	d.SetLayout(&unison.FlexLayout{Columns: 1})
+
 	d.imgPanel = unison.NewPanel()
 	d.imgPanel.SetSizer(d.imageSizer)
 	d.imgPanel.DrawCallback = d.draw
@@ -63,8 +70,9 @@ func NewImageDockable(filePath string) (*ImageDockable, error) {
 	d.imgPanel.MouseUpCallback = d.mouseUp
 	d.imgPanel.UpdateCursorCallback = d.updateCursor
 	d.imgPanel.MouseWheelCallback = d.mouseWheel
-	d.KeyDownCallback = d.keyDown
+
 	d.scroll = unison.NewScrollPanel()
+	d.scroll.MouseWheelMultiplier = 4
 	d.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
@@ -72,7 +80,60 @@ func NewImageDockable(filePath string) (*ImageDockable, error) {
 		VGrab:  true,
 	})
 	d.scroll.SetContent(d.imgPanel, unison.FillBehavior)
+
+	d.scaleField = unison.NewField()
+	d.scaleField.MinimumTextWidth = d.scaleField.Font.Width(strconv.Itoa(maxImageDockableScale) + "%")
+	d.scaleField.SetText(strconv.Itoa(d.scale) + "%")
+	d.scaleField.ModifiedCallback = func() {
+		if s, e := strconv.Atoi(strings.TrimRight(d.scaleField.Text(), "%")); e == nil && s >= minImageDockableScale && s <= maxImageDockableScale {
+			viewRect := d.scroll.View().ContentRect(false)
+			center := d.imgPanel.PointFromRoot(d.scroll.View().PointToRoot(viewRect.Center()))
+			center.X /= float32(d.scale) / 100
+			center.X *= float32(s) / 100
+			center.Y /= float32(d.scale) / 100
+			center.Y *= float32(s) / 100
+			d.scale = s
+			d.scroll.MarkForLayoutAndRedraw()
+			d.scroll.ValidateLayout()
+			viewRect.X = center.X - viewRect.Width/2
+			viewRect.Y = center.Y - viewRect.Height/2
+			d.imgPanel.ScrollRectIntoView(viewRect)
+		}
+	}
+	d.scaleField.ValidateCallback = func() bool {
+		if s, e := strconv.Atoi(strings.TrimRight(d.scaleField.Text(), "%")); e != nil || s < minImageDockableScale || s > maxImageDockableScale {
+			return false
+		}
+		return true
+	}
+
+	sizeLabel := unison.NewLabel()
+	size := img.Size()
+	sizeLabel.Text = fmt.Sprintf("%d x %d pixels", int(size.Width), int(size.Height))
+	sizeLabel.Font = unison.DefaultFieldTheme.Font
+
+	toolbar := unison.NewPanel()
+	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, geom32.Insets{Bottom: 1}, false),
+		unison.NewEmptyBorder(geom32.Insets{
+			Top:    unison.StdVSpacing,
+			Left:   unison.StdHSpacing,
+			Bottom: unison.StdVSpacing,
+			Right:  unison.StdHSpacing,
+		})))
+	toolbar.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		HGrab:  true,
+	})
+	toolbar.AddChild(d.scaleField)
+	toolbar.AddChild(sizeLabel)
+	toolbar.SetLayout(&unison.FlexLayout{
+		Columns:  len(toolbar.Children()),
+		HSpacing: unison.StdHSpacing,
+	})
+
+	d.AddChild(toolbar)
 	d.AddChild(d.scroll)
+
 	return d, nil
 }
 
@@ -105,14 +166,17 @@ func (d *ImageDockable) mouseUp(_ geom32.Point, _ int, _ unison.Modifiers) bool 
 	return true
 }
 
-func (d *ImageDockable) mouseWheel(_, delta geom32.Point, _ unison.Modifiers) bool {
-	d.scale += delta.Y * imageDockableScaleDelta
-	if d.scale < minImageDockableScale {
-		d.scale = minImageDockableScale
-	} else if d.scale > maxImageDockableScale {
-		d.scale = maxImageDockableScale
+func (d *ImageDockable) mouseWheel(_, delta geom32.Point, mod unison.Modifiers) bool {
+	if !mod.OptionDown() {
+		return false
 	}
-	d.scroll.MarkForLayoutAndRedraw()
+	scale := d.scale + int(delta.Y*deltaImageDockableScale)
+	if scale < minImageDockableScale {
+		scale = minImageDockableScale
+	} else if scale > maxImageDockableScale {
+		scale = maxImageDockableScale
+	}
+	d.scaleField.SetText(strconv.Itoa(scale) + "%")
 	return true
 }
 
@@ -120,32 +184,32 @@ func (d *ImageDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bo
 	scale := d.scale
 	switch keyCode {
 	case unison.Key1:
-		scale = 1
+		scale = 100
 	case unison.Key2:
-		scale = 2
+		scale = 200
 	case unison.Key3:
-		scale = 3
+		scale = 300
 	case unison.Key4:
-		scale = 4
+		scale = 400
 	case unison.Key5:
-		scale = 5
+		scale = 500
 	case unison.Key6:
-		scale = 6
+		scale = 600
 	case unison.Key7:
-		scale = 7
+		scale = 700
 	case unison.Key8:
-		scale = 8
+		scale = 800
 	case unison.Key9:
-		scale = 9
+		scale = 900
 	case unison.Key0:
-		scale = maxImageDockableScale
+		scale = 1000
 	case unison.KeyMinus:
-		scale -= imageDockableScaleDelta
+		scale -= deltaImageDockableScale
 		if scale < minImageDockableScale {
 			scale = minImageDockableScale
 		}
 	case unison.KeyEqual:
-		scale += imageDockableScaleDelta
+		scale += deltaImageDockableScale
 		if scale > maxImageDockableScale {
 			scale = maxImageDockableScale
 		}
@@ -153,23 +217,22 @@ func (d *ImageDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bo
 		return false
 	}
 	if d.scale != scale {
-		d.scale = scale
-		d.scroll.MarkForLayoutAndRedraw()
+		d.scaleField.SetText(strconv.Itoa(scale) + "%")
 	}
 	return true
 }
 
 func (d *ImageDockable) imageSizer(_ geom32.Size) (min, pref, max geom32.Size) {
 	pref = d.img.Size()
-	pref.Width *= d.scale
-	pref.Height *= d.scale
+	pref.Width *= float32(d.scale) / 100
+	pref.Height *= float32(d.scale) / 100
 	return geom32.NewSize(50, 50), pref, unison.MaxSize(pref)
 }
 
 func (d *ImageDockable) draw(gc *unison.Canvas, dirty geom32.Rect) {
 	gc.DrawRect(dirty, unison.ContentColor.Paint(gc, dirty, unison.Fill))
 	size := d.img.Size()
-	gc.DrawImageInRect(d.img, geom32.NewRect(0, 0, size.Width*d.scale, size.Height*d.scale), nil, nil)
+	gc.DrawImageInRect(d.img, geom32.NewRect(0, 0, size.Width*float32(d.scale)/100, size.Height*float32(d.scale)/100), nil, nil)
 }
 
 // TitleIcon implements FileBackedDockable
