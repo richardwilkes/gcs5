@@ -12,74 +12,76 @@
 package workspace
 
 import (
-	"os"
+	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/richardwilkes/gcs/internal/library"
-	"github.com/richardwilkes/pdf"
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/gcs/internal/pdf"
+	"github.com/richardwilkes/gcs/internal/ui/icons"
+	"github.com/richardwilkes/toolbox/desktop"
+	"github.com/richardwilkes/toolbox/i18n"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
 const (
-	minPDFDockableScale   = 0.5
-	maxPDFDockableScale   = 3
-	PDFDockableScaleDelta = 0.1
+	minPDFDockableScale   = 30
+	maxPDFDockableScale   = 300
+	PDFDockableScaleDelta = 10
 )
 
 var (
-	_ FileBackedDockable = &PDFDockable{}
-	_ unison.TabCloser   = &PDFDockable{}
+	_                 FileBackedDockable = &PDFDockable{}
+	_                 unison.TabCloser   = &PDFDockable{}
+	pdfMatchHighlight *unison.Paint
+	pdfLinkHighlight  *unison.Paint
 )
 
 type PDFDockable struct {
 	unison.Panel
-	path             string
-	doc              *pdf.Document
-	pageCount        int
-	pageNumber       int
-	loadedPageNumber int
-	toc              []*pdf.TOCEntry
-	docPanel         *unison.Panel
-	page             *pdf.RenderedPage
-	pageError        string
-	pageImg          *unison.Image
-	scroll           *unison.ScrollPanel
-	rolloverRect     geom32.Rect
-	link             *pdf.PageLink
-	scale            float32
-	loadedScale      float32
-	hidpiScale       float32
+	path               string
+	pdf                *pdf.PDF
+	scroll             *unison.ScrollPanel
+	docPanel           *unison.Panel
+	pageNumberField    *unison.Field
+	scaleField         *unison.Field
+	searchField        *unison.Field
+	matchesLabel       *unison.Label
+	firstPageButton    *unison.Button
+	previousPageButton *unison.Button
+	nextPageButton     *unison.Button
+	lastPageButton     *unison.Button
+	page               *pdf.Page
+	link               *pdf.Link
+	rolloverRect       geom32.Rect
+	scale              int
 }
 
 func NewPDFDockable(filePath string) (*PDFDockable, error) {
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, errs.Wrap(err)
-	}
-	var doc *pdf.Document
-	if doc, err = pdf.New(data, 0); err != nil {
-		return nil, errs.Wrap(err)
-	}
 	d := &PDFDockable{
-		path:             filePath,
-		doc:              doc,
-		pageCount:        doc.PageCount(),
-		loadedPageNumber: -1,
-		scale:            1,
-		hidpiScale:       0.5,
+		path:  filePath,
+		scale: 100,
 	}
 	d.Self = d
+	var err error
+	if d.pdf, err = pdf.NewPDF(filePath, 0.5, 100, func() {
+		unison.InvokeTask(d.pageLoaded)
+	}); err != nil {
+		return nil, err
+	}
+	d.KeyDownCallback = d.keyDown
 	d.SetLayout(&unison.FlexLayout{Columns: 1})
+
 	d.docPanel = unison.NewPanel()
 	d.docPanel.SetSizer(d.docSizer)
 	d.docPanel.DrawCallback = d.draw
 	d.docPanel.MouseDownCallback = d.mouseDown
 	d.docPanel.MouseMoveCallback = d.mouseMove
 	d.docPanel.MouseUpCallback = d.mouseUp
-	d.docPanel.UpdateCursorCallback = d.updateCursor
-	d.KeyDownCallback = d.keyDown
+	d.docPanel.SetFocusable(true)
+
 	d.scroll = unison.NewScrollPanel()
 	d.scroll.MouseWheelMultiplier = 4
 	d.scroll.SetLayoutData(&unison.FlexLayoutData{
@@ -89,59 +91,190 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 		VGrab:  true,
 	})
 	d.scroll.SetContent(d.docPanel, unison.FillBehavior)
+
+	d.firstPageButton = icons.NewIconButton(icons.FirstSVG(), 16)
+	d.firstPageButton.ClickCallback = func() { d.loadPage(0) }
+
+	d.previousPageButton = icons.NewIconButton(icons.PreviousSVG(), 16)
+	d.previousPageButton.ClickCallback = func() { d.loadPage(d.pdf.MostRecentPageNumber() - 1) }
+
+	d.nextPageButton = icons.NewIconButton(icons.NextSVG(), 16)
+	d.nextPageButton.ClickCallback = func() { d.loadPage(d.pdf.MostRecentPageNumber() + 1) }
+
+	d.lastPageButton = icons.NewIconButton(icons.LastSVG(), 16)
+	d.lastPageButton.ClickCallback = func() { d.loadPage(d.pdf.PageCount() - 1) }
+
+	pageLabel := unison.NewLabel()
+	pageLabel.Font = unison.DefaultFieldTheme.Font
+	pageLabel.Text = i18n.Text("Page")
+
+	d.pageNumberField = unison.NewField()
+	d.pageNumberField.MinimumTextWidth = d.pageNumberField.Font.Width(strconv.Itoa(d.pdf.PageCount() * 10))
+	d.pageNumberField.ModifiedCallback = func() {
+		if pageNum, e := strconv.Atoi(d.pageNumberField.Text()); e == nil && pageNum > 0 && pageNum <= d.pdf.PageCount() {
+			d.loadPage(pageNum - 1)
+		}
+	}
+	d.pageNumberField.ValidateCallback = func() bool {
+		pageNum, e := strconv.Atoi(d.pageNumberField.Text())
+		if e != nil || pageNum < 1 || pageNum > d.pdf.PageCount() {
+			return false
+		}
+		return true
+	}
+
+	ofLabel := unison.NewLabel()
+	ofLabel.Font = unison.DefaultFieldTheme.Font
+	ofLabel.Text = fmt.Sprintf(i18n.Text("of %d"), d.pdf.PageCount())
+
+	d.scaleField = unison.NewField()
+	d.scaleField.MinimumTextWidth = d.scaleField.Font.Width(strconv.Itoa(maxPDFDockableScale) + "%")
+	d.scaleField.SetText(strconv.Itoa(d.scale) + "%")
+	d.scaleField.ModifiedCallback = func() {
+		if s, e := strconv.Atoi(strings.TrimRight(d.scaleField.Text(), "%")); e == nil && s >= minPDFDockableScale && s <= maxPDFDockableScale {
+			d.scale = s
+			d.loadPage(d.pdf.MostRecentPageNumber())
+		}
+	}
+	d.scaleField.ValidateCallback = func() bool {
+		if s, e := strconv.Atoi(strings.TrimRight(d.scaleField.Text(), "%")); e != nil || s < minPDFDockableScale || s > maxPDFDockableScale {
+			return false
+		}
+		return true
+	}
+
+	d.searchField = unison.NewField()
+	d.searchField.Watermark = i18n.Text("Search")
+	d.searchField.SetLayoutData(&unison.FlexLayoutData{
+		SizeHint: geom32.Size{Width: 200},
+		MinSize:  geom32.Size{Width: 50},
+	})
+	d.searchField.ModifiedCallback = func() {
+		d.loadPage(d.pdf.MostRecentPageNumber())
+	}
+
+	d.matchesLabel = unison.NewLabel()
+	d.matchesLabel.Text = "-"
+	d.matchesLabel.Tooltip = unison.NewTooltipWithText(i18n.Text("Number of matches found"))
+
+	toolbar := unison.NewPanel()
+	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, geom32.Insets{Bottom: 1}, false),
+		unison.NewEmptyBorder(geom32.Insets{
+			Top:    unison.StdVSpacing,
+			Left:   unison.StdHSpacing,
+			Bottom: unison.StdVSpacing,
+			Right:  unison.StdHSpacing,
+		})))
+	toolbar.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		HGrab:  true,
+	})
+	toolbar.AddChild(d.firstPageButton)
+	toolbar.AddChild(d.previousPageButton)
+	toolbar.AddChild(d.nextPageButton)
+	toolbar.AddChild(d.lastPageButton)
+	toolbar.AddChild(unison.NewPanel())
+	toolbar.AddChild(pageLabel)
+	toolbar.AddChild(d.pageNumberField)
+	toolbar.AddChild(ofLabel)
+	toolbar.AddChild(unison.NewPanel())
+	toolbar.AddChild(d.scaleField)
+	toolbar.AddChild(unison.NewPanel())
+	toolbar.AddChild(d.searchField)
+	toolbar.AddChild(d.matchesLabel)
+	toolbar.SetLayout(&unison.FlexLayout{
+		Columns:  len(toolbar.Children()),
+		HSpacing: unison.StdHSpacing,
+	})
+
+	d.AddChild(toolbar)
 	d.AddChild(d.scroll)
+
+	d.loadPage(0)
+
 	return d, nil
 }
 
-func (d *PDFDockable) updateCursor(_ geom32.Point) *unison.Cursor {
-	// TODO: change cursor when over clickable link
-	return unison.ArrowCursor()
+func (d *PDFDockable) loadPage(pageNumber int) {
+	d.pdf.LoadPage(pageNumber, float32(d.scale)/100, d.searchField.Text())
+	pageNumber = d.pdf.MostRecentPageNumber()
+	lastPageNumber := d.pdf.PageCount() - 1
+	d.firstPageButton.SetEnabled(pageNumber != 0)
+	d.previousPageButton.SetEnabled(pageNumber > 0)
+	d.nextPageButton.SetEnabled(pageNumber < lastPageNumber)
+	d.lastPageButton.SetEnabled(pageNumber != lastPageNumber)
 }
 
-func (d *PDFDockable) overLink(where geom32.Point) (rect geom32.Rect, link *pdf.PageLink) {
+func (d *PDFDockable) pageLoaded() {
+	d.page = d.pdf.CurrentPage()
+
+	pageText := ""
+	if d.page.PageNumber >= 0 {
+		pageText = strconv.Itoa(d.page.PageNumber + 1)
+	}
+	if pageText != d.pageNumberField.Text() {
+		d.pageNumberField.SetText(pageText)
+		d.pageNumberField.Parent().MarkForLayoutAndRedraw()
+	}
+
+	scaleText := strconv.Itoa(d.scale) + "%"
+	if scaleText != d.scaleField.Text() {
+		d.scaleField.SetText(scaleText)
+		d.scaleField.Parent().MarkForLayoutAndRedraw()
+	}
+
+	matchText := "-"
+	if d.searchField.Text() != "" {
+		matchText = strconv.Itoa(len(d.page.Matches))
+	}
+	if matchText != d.matchesLabel.Text {
+		d.matchesLabel.Text = matchText
+		d.matchesLabel.Parent().MarkForLayoutAndRedraw()
+	}
+
+	d.docPanel.MarkForLayoutAndRedraw()
+	d.scroll.MarkForLayoutAndRedraw()
+	d.link = nil
+}
+
+func (d *PDFDockable) overLink(where geom32.Point) (rect geom32.Rect, link *pdf.Link) {
 	if d.page != nil && d.page.Links != nil {
 		for _, link = range d.page.Links {
-			rect.X = float32(link.Bounds.Min.X) * d.hidpiScale
-			rect.Y = float32(link.Bounds.Min.Y) * d.hidpiScale
-			rect.Width = float32(link.Bounds.Dx()) * d.hidpiScale
-			rect.Height = float32(link.Bounds.Dy()) * d.hidpiScale
-			if rect.ContainsPoint(where) {
-				return rect, link
+			if link.Bounds.ContainsPoint(where) {
+				return link.Bounds, link
 			}
 		}
 	}
 	return rect, nil
 }
 
-func (d *PDFDockable) mouseDown(where geom32.Point, _, _ int, _ unison.Modifiers) bool {
-	d.RequestFocus()
-	d.UpdateCursorNow()
-	return true
-}
-
-func (d *PDFDockable) mouseMove(where geom32.Point, mod unison.Modifiers) bool {
+func (d *PDFDockable) checkForLinkAt(where geom32.Point) {
 	r, link := d.overLink(where)
 	if r != d.rolloverRect || link != d.link {
 		d.rolloverRect = r
 		d.link = link
 		d.MarkForRedraw()
 	}
+}
+
+func (d *PDFDockable) mouseDown(_ geom32.Point, _, _ int, _ unison.Modifiers) bool {
+	d.RequestFocus()
+	return true
+}
+
+func (d *PDFDockable) mouseMove(where geom32.Point, _ unison.Modifiers) bool {
+	d.checkForLinkAt(where)
 	return true
 }
 
 func (d *PDFDockable) mouseUp(where geom32.Point, button int, _ unison.Modifiers) bool {
-	r, link := d.overLink(where)
-	if r != d.rolloverRect || link != d.link {
-		d.rolloverRect = r
-		d.link = link
-		d.MarkForRedraw()
-	}
-	d.UpdateCursorNow()
+	d.checkForLinkAt(where)
 	if button == unison.ButtonLeft && d.link != nil {
 		if d.link.PageNumber >= 0 {
-			d.pageNumber = d.link.PageNumber
-			d.MarkForRedraw()
+			d.loadPage(d.link.PageNumber)
 			// TODO: Use d.link.PageX & PageY to ensure location is scrolled into place
+		} else if err := desktop.OpenBrowser(d.link.URI); err != nil {
+			unison.ErrorDialogWithError(i18n.Text("Unable to open link"), err)
 		}
 	}
 	return true
@@ -151,11 +284,11 @@ func (d *PDFDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bool
 	scale := d.scale
 	switch keyCode {
 	case unison.Key1:
-		scale = 1
+		scale = 100
 	case unison.Key2:
-		scale = 2
+		scale = 200
 	case unison.Key3:
-		scale = 3
+		scale = 300
 	case unison.KeyMinus:
 		scale -= PDFDockableScaleDelta
 		if scale < minPDFDockableScale {
@@ -167,83 +300,54 @@ func (d *PDFDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bool
 			scale = maxPDFDockableScale
 		}
 	case unison.KeyLeft:
-		if d.pageNumber > 0 {
-			d.pageNumber--
-			d.MarkForRedraw()
-		}
+		d.loadPage(d.pdf.MostRecentPageNumber() - 1)
 	case unison.KeyRight:
-		if d.pageNumber < d.pageCount-1 {
-			d.pageNumber++
-			d.MarkForRedraw()
-		}
+		d.loadPage(d.pdf.MostRecentPageNumber() + 1)
 	default:
 		return false
 	}
 	if d.scale != scale {
 		d.scale = scale
-		d.scroll.MarkForLayoutAndRedraw()
+		f := d.scaleField.ModifiedCallback
+		d.scaleField.ModifiedCallback = nil
+		d.scaleField.SetText(strconv.Itoa(d.scale) + "%")
+		d.scaleField.ModifiedCallback = f
+		d.loadPage(d.pdf.MostRecentPageNumber())
 	}
 	return true
 }
 
-func (d *PDFDockable) dpi() int {
-	// Using a baseline dpi of 96, since that's what most software does nowadays, rather than 72.
-	// Multiplied by 2 to support crisp rendering on high-dpi displays.
-	// TODO: Consider using the scale from the monitor instead of just multiplying by 2.
-	return int(d.scale * 96 * 2)
-}
-
-func (d *PDFDockable) ensurePageIsLoaded() {
-	dpi := d.dpi()
-	if d.scale != d.loadedScale {
-		d.toc = d.doc.TableOfContents(dpi)
-	}
-	if d.pageNumber != d.loadedPageNumber || d.scale != d.loadedScale {
-		d.pageImg = nil
-		d.page = nil
-		d.link = nil
-		var err error
-		if d.page, err = d.doc.RenderPage(d.pageNumber, dpi, 0, ""); err != nil {
-			d.pageImg = nil
-			d.pageError = err.Error()
-		} else {
-			if d.pageImg, err = unison.NewImageFromPixels(d.page.Image.Rect.Dx(), d.page.Image.Rect.Dy(),
-				d.page.Image.Pix, d.hidpiScale); err != nil {
-				d.pageImg = nil
-				d.pageError = err.Error()
-			} else {
-				d.pageError = ""
-			}
-		}
-	}
-	d.loadedPageNumber = d.pageNumber
-	d.loadedScale = d.scale
-}
-
 func (d *PDFDockable) docSizer(_ geom32.Size) (min, pref, max geom32.Size) {
-	d.ensurePageIsLoaded()
-	if d.pageImg != nil {
-		pref = d.pageImg.LogicalSize()
-	} else {
-		// TODO: Size based on error message
+	if d.page == nil || d.page.Error != nil {
 		pref.Width = 400
 		pref.Height = 300
+	} else {
+		pref = d.page.Image.LogicalSize()
 	}
 	return geom32.NewSize(50, 50), pref, unison.MaxSize(pref)
 }
 
 func (d *PDFDockable) draw(gc *unison.Canvas, dirty geom32.Rect) {
-	d.ensurePageIsLoaded()
 	gc.DrawRect(dirty, unison.ContentColor.Paint(gc, dirty, unison.Fill))
-	if d.pageImg != nil {
-		r := geom32.Rect{Size: d.pageImg.LogicalSize()}
-		gc.DrawRect(r, unison.White.Paint(gc, r, unison.Fill))
-		gc.DrawImageInRect(d.pageImg, r, nil, nil)
-		if d.link != nil {
-			gc.DrawRect(d.rolloverRect, unison.GreenYellow.SetAlphaIntensity(0.3).Paint(gc, d.rolloverRect, unison.Fill))
-		}
-	} else {
-		// TODO: Show error message
+	if d.page == nil {
+		return
+	}
+	if d.page.Error != nil {
+		r := d.docPanel.ContentRect(false)
+		r.Inset(geom32.NewUniformInsets(unison.StdHSpacing))
+		unison.DrawLabel(gc, r, unison.MiddleAlignment, unison.StartAlignment, fmt.Sprintf("%s", d.page.Error),
+			unison.SystemFont, unison.OnContentColor, unison.DefaultDialogTheme.ErrorIcon, unison.LeftSide,
+			unison.StdHSpacing, false)
+		return
+	}
+	r := geom32.Rect{Size: d.page.Image.LogicalSize()}
+	gc.DrawRect(r, unison.White.Paint(gc, r, unison.Fill))
+	gc.DrawImageInRect(d.page.Image, r, nil, nil)
+	for _, match := range d.page.Matches {
+		gc.DrawRect(match, getPDFMatchHighlightPaint())
+	}
+	if d.link != nil {
+		gc.DrawRect(d.rolloverRect, getPDFLinkHighlightPaint())
 	}
 }
 
@@ -278,4 +382,24 @@ func (d *PDFDockable) AttemptClose() {
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.Close(d)
 	}
+}
+
+func getPDFMatchHighlightPaint() *unison.Paint {
+	if pdfMatchHighlight == nil {
+		pdfMatchHighlight = unison.NewPaint()
+		pdfMatchHighlight.SetStyle(unison.Fill)
+		pdfMatchHighlight.SetBlendMode(unison.DarkenBlendMode)
+		pdfMatchHighlight.SetColor(unison.Yellow.SetAlphaIntensity(0.3))
+	}
+	return pdfMatchHighlight
+}
+
+func getPDFLinkHighlightPaint() *unison.Paint {
+	if pdfLinkHighlight == nil {
+		pdfLinkHighlight = unison.NewPaint()
+		pdfLinkHighlight.SetStyle(unison.Fill)
+		pdfLinkHighlight.SetBlendMode(unison.DarkenBlendMode)
+		pdfLinkHighlight.SetColor(unison.GreenYellow.SetAlphaIntensity(0.3))
+	}
+	return pdfLinkHighlight
 }

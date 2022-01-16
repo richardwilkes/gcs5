@@ -3,7 +3,7 @@ module github.com/richardwilkes/gcs
 go 1.17
 
 require (
-	github.com/richardwilkes/pdf v0.0.0-20220114043134-a531aca47e6b
+	github.com/richardwilkes/pdf v0.0.0-20220115194011-2380c98780aa
 	github.com/richardwilkes/toolbox v1.56.0
 	github.com/richardwilkes/unison v0.4.0
 	github.com/stretchr/testify v1.7.0
