@@ -113,57 +113,64 @@ func (n *Navigator) openRow(row unison.TableRowData) {
 			n.openRow(child)
 		}
 	case *FileNode:
-		wnd := n.Window()
-		if workspace := FromWindow(wnd); workspace != nil {
-			var defaultDockContainer *unison.DockContainer
-			if focus := wnd.Focus(); focus != nil {
-				if dc := unison.DockContainerFor(focus); dc != nil && dc.Dock == workspace.DocumentDock.Dock {
-					defaultDockContainer = dc
+		OpenFile(n.Window(), path.Join(t.library.Config().Path, t.path))
+	}
+}
+
+// OpenFile attempts to open the given file path in the given window.
+func OpenFile(wnd *unison.Window, filePath string) {
+	workspace := FromWindow(wnd)
+	if workspace == nil {
+		return
+	}
+	var defaultDockContainer *unison.DockContainer
+	if focus := wnd.Focus(); focus != nil {
+		if dc := unison.DockContainerFor(focus); dc != nil && dc.Dock == workspace.DocumentDock.Dock {
+			defaultDockContainer = dc
+		}
+	}
+	found := false
+	filePath = path.Clean(filePath)
+	workspace.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
+		for _, d := range dc.Dockables() {
+			if f, ok := d.(FileBackedDockable); ok {
+				if filePath == f.BackingFilePath() {
+					found = true
+					dc.SetCurrentDockable(d)
+					dc.AcquireFocus()
+					return true
 				}
 			}
-			found := false
-			filePath := path.Clean(path.Join(t.library.Config().Path, t.path))
-			workspace.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
-				for _, d := range dc.Dockables() {
-					if f, ok := d.(FileBackedDockable); ok {
-						if filePath == f.BackingFilePath() {
-							found = true
-							dc.SetCurrentDockable(d)
-							dc.AcquireFocus()
-							return true
-						}
-					}
-					if defaultDockContainer == nil {
-						defaultDockContainer = dc
-					}
-				}
-				return false
-			})
-			if !found {
-				var d unison.Dockable
-				switch {
-				case unison.EncodedImageFormatForPath(filePath).CanRead():
-					var err error
-					if d, err = NewImageDockable(filePath); err != nil {
-						unison.ErrorDialogWithMessage(i18n.Text("Unable to open image file"), err.Error())
-						return
-					}
-				case strings.ToLower(path.Ext(filePath)) == ".pdf":
-					var err error
-					if d, err = NewPDFDockable(filePath); err != nil {
-						unison.ErrorDialogWithMessage(i18n.Text("Unable to open PDF"), err.Error())
-						return
-					}
-				default:
-					d = newPlaceholder(filePath)
-				}
-				if defaultDockContainer != nil {
-					defaultDockContainer.Stack(d, -1)
-				} else {
-					workspace.DocumentDock.DockTo(d, nil, unison.LeftSide)
-					d.AsPanel().RequestFocus()
-				}
+			if defaultDockContainer == nil {
+				defaultDockContainer = dc
 			}
+		}
+		return false
+	})
+	if !found {
+		var d unison.Dockable
+		switch {
+		case unison.EncodedImageFormatForPath(filePath).CanRead():
+			var err error
+			if d, err = NewImageDockable(filePath); err != nil {
+				unison.ErrorDialogWithMessage(i18n.Text("Unable to open image file"), err.Error())
+				return
+			}
+		case strings.ToLower(path.Ext(filePath)) == ".pdf":
+			var err error
+			if d, err = NewPDFDockable(filePath); err != nil {
+				unison.ErrorDialogWithMessage(i18n.Text("Unable to open PDF"), err.Error())
+				return
+			}
+		default:
+			unison.ErrorDialogWithMessage(i18n.Text("Unable to open file"), filePath)
+			return
+		}
+		if defaultDockContainer != nil {
+			defaultDockContainer.Stack(d, -1)
+		} else {
+			workspace.DocumentDock.DockTo(d, nil, unison.LeftSide)
+			d.AsPanel().RequestFocus()
 		}
 	}
 }

@@ -12,13 +12,14 @@
 package ui
 
 import (
-	"fmt"
+	"path/filepath"
 
 	"github.com/richardwilkes/gcs/internal/library"
 	"github.com/richardwilkes/gcs/internal/settings"
 	"github.com/richardwilkes/gcs/internal/ui/menus"
 	"github.com/richardwilkes/gcs/internal/ui/trampolines"
 	"github.com/richardwilkes/gcs/internal/ui/workspace"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
@@ -35,9 +36,9 @@ func Start(files []string) {
 			workspace.NewWorkspace(wnd)
 			wnd.SetFrameRect(unison.PrimaryDisplay().Usable)
 			wnd.ToFront()
-			openURLs(files)
+			openFiles(files)
 		}),
-		unison.OpenURLsCallback(openURLs),
+		unison.OpenFilesCallback(openFiles),
 		unison.AllowQuitCallback(func() bool {
 			for _, wnd := range unison.Windows() {
 				wnd.AttemptClose()
@@ -50,8 +51,16 @@ func Start(files []string) {
 	) // Never returns
 }
 
-func openURLs(urls []string) {
-	for _, one := range urls {
-		fmt.Println(one)
+func openFiles(urls []string) {
+	for _, wnd := range unison.Windows() {
+		if ws := workspace.FromWindow(wnd); ws != nil {
+			for _, one := range urls {
+				if p, err := filepath.Abs(one); err != nil {
+					unison.ErrorDialogWithError(i18n.Text("Unable to open ")+one, err)
+				} else {
+					workspace.OpenFile(wnd, p)
+				}
+			}
+		}
 	}
 }
