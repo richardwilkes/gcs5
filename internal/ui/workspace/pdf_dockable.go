@@ -388,8 +388,8 @@ func getPDFMatchHighlightPaint() *unison.Paint {
 	if pdfMatchHighlight == nil {
 		pdfMatchHighlight = unison.NewPaint()
 		pdfMatchHighlight.SetStyle(unison.Fill)
-		pdfMatchHighlight.SetBlendMode(unison.DarkenBlendMode)
-		pdfMatchHighlight.SetColor(unison.Yellow.SetAlphaIntensity(0.3))
+		pdfMatchHighlight.SetBlendMode(unison.ModulateBlendMode)
+		pdfMatchHighlight.SetColor(unison.Yellow)
 	}
 	return pdfMatchHighlight
 }
@@ -398,8 +398,8 @@ func getPDFLinkHighlightPaint() *unison.Paint {
 	if pdfLinkHighlight == nil {
 		pdfLinkHighlight = unison.NewPaint()
 		pdfLinkHighlight.SetStyle(unison.Fill)
-		pdfLinkHighlight.SetBlendMode(unison.DarkenBlendMode)
-		pdfLinkHighlight.SetColor(unison.GreenYellow.SetAlphaIntensity(0.3))
+		pdfLinkHighlight.SetBlendMode(unison.ModulateBlendMode)
+		pdfLinkHighlight.SetColor(unison.GreenYellow)
 	}
 	return pdfLinkHighlight
 }
