@@ -17,10 +17,14 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+var _ unison.Dockable = &DocumentDock{}
+
+// DocumentDock holds the document dock.
 type DocumentDock struct {
 	*unison.Dock
 }
 
+// NewDocumentDock creates a new DocumentDock.
 func NewDocumentDock() *DocumentDock {
 	d := &DocumentDock{
 		Dock: unison.NewDock(),
@@ -29,6 +33,7 @@ func NewDocumentDock() *DocumentDock {
 	return d
 }
 
+// TitleIcon implements unison.Dockable
 func (d *DocumentDock) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  unison.DocumentSVG(),
@@ -36,14 +41,17 @@ func (d *DocumentDock) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	}
 }
 
+// Title implements unison.Dockable
 func (d *DocumentDock) Title() string {
 	return i18n.Text("Document Workspace")
 }
 
+// Tooltip implements unison.Dockable
 func (d *DocumentDock) Tooltip() string {
 	return ""
 }
 
+// Modified implements unison.Dockable
 func (d *DocumentDock) Modified() bool {
 	return false
 }

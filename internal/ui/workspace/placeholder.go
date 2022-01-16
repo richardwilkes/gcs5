@@ -28,7 +28,7 @@ type placeholder struct {
 	path string
 }
 
-func NewPlaceholder(filePath string) *placeholder {
+func newPlaceholder(filePath string) *placeholder {
 	p := &placeholder{
 		path: filePath,
 	}

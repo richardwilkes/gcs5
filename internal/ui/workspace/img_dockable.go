@@ -29,6 +29,7 @@ var (
 	_ unison.TabCloser   = &ImageDockable{}
 )
 
+// ImageDockable holds the view for an image file.
 type ImageDockable struct {
 	unison.Panel
 	path       string
@@ -41,6 +42,7 @@ type ImageDockable struct {
 	inDrag     bool
 }
 
+// NewImageDockable creates a new FileBackedDockable for image files.
 func NewImageDockable(filePath string) (*ImageDockable, error) {
 	img, err := unison.NewImageFromFilePathOrURL(filePath, 1)
 	if err != nil {
@@ -170,6 +172,7 @@ func (d *ImageDockable) draw(gc *unison.Canvas, dirty geom32.Rect) {
 	gc.DrawImageInRect(d.img, geom32.NewRect(0, 0, size.Width*d.scale, size.Height*d.scale), nil, nil)
 }
 
+// TitleIcon implements FileBackedDockable
 func (d *ImageDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
@@ -177,26 +180,32 @@ func (d *ImageDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	}
 }
 
+// Title implements FileBackedDockable
 func (d *ImageDockable) Title() string {
 	return xfs.BaseName(d.path)
 }
 
+// Tooltip implements FileBackedDockable
 func (d *ImageDockable) Tooltip() string {
 	return d.path
 }
 
+// BackingFilePath implements FileBackedDockable
 func (d *ImageDockable) BackingFilePath() string {
 	return d.path
 }
 
+// Modified implements FileBackedDockable
 func (d *ImageDockable) Modified() bool {
 	return false
 }
 
+// MayAttemptClose implements unison.TabCloser
 func (d *ImageDockable) MayAttemptClose() bool {
 	return true
 }
 
+// AttemptClose implements unison.TabCloser
 func (d *ImageDockable) AttemptClose() {
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.Close(d)

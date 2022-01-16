@@ -19,6 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/internal/library"
 	"github.com/richardwilkes/gcs/internal/pdf"
 	"github.com/richardwilkes/gcs/internal/ui/icons"
+	"github.com/richardwilkes/gcs/internal/ui/search"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
@@ -29,7 +30,7 @@ import (
 const (
 	minPDFDockableScale   = 30
 	maxPDFDockableScale   = 300
-	PDFDockableScaleDelta = 10
+	deltaPDFDockableScale = 10
 )
 
 var (
@@ -39,6 +40,7 @@ var (
 	pdfLinkHighlight  *unison.Paint
 )
 
+// PDFDockable holds the view for a PDF file.
 type PDFDockable struct {
 	unison.Panel
 	path               string
@@ -59,6 +61,7 @@ type PDFDockable struct {
 	scale              int
 }
 
+// NewPDFDockable creates a new FileBackedDockable for PDF files.
 func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	d := &PDFDockable{
 		path:  filePath,
@@ -143,14 +146,16 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 		return true
 	}
 
-	d.searchField = unison.NewField()
-	d.searchField.Watermark = i18n.Text("Search")
+	d.searchField = search.NewField()
 	d.searchField.SetLayoutData(&unison.FlexLayoutData{
-		SizeHint: geom32.Size{Width: 200},
-		MinSize:  geom32.Size{Width: 50},
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+		HGrab:  true,
 	})
+	existingCallback := d.searchField.ModifiedCallback
 	d.searchField.ModifiedCallback = func() {
 		d.loadPage(d.pdf.MostRecentPageNumber())
+		existingCallback()
 	}
 
 	d.matchesLabel = unison.NewLabel()
@@ -290,12 +295,12 @@ func (d *PDFDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bool
 	case unison.Key3:
 		scale = 300
 	case unison.KeyMinus:
-		scale -= PDFDockableScaleDelta
+		scale -= deltaPDFDockableScale
 		if scale < minPDFDockableScale {
 			scale = minPDFDockableScale
 		}
 	case unison.KeyEqual:
-		scale += PDFDockableScaleDelta
+		scale += deltaPDFDockableScale
 		if scale > maxPDFDockableScale {
 			scale = maxPDFDockableScale
 		}
@@ -335,7 +340,7 @@ func (d *PDFDockable) draw(gc *unison.Canvas, dirty geom32.Rect) {
 	if d.page.Error != nil {
 		r := d.docPanel.ContentRect(false)
 		r.Inset(geom32.NewUniformInsets(unison.StdHSpacing))
-		unison.DrawLabel(gc, r, unison.MiddleAlignment, unison.StartAlignment, fmt.Sprintf("%s", d.page.Error),
+		unison.DrawLabel(gc, r, unison.MiddleAlignment, unison.StartAlignment, fmt.Sprintf("%s", d.page.Error), //nolint:gocritic // Want the special handling %s provides
 			unison.SystemFont, unison.OnContentColor, unison.DefaultDialogTheme.ErrorIcon, unison.LeftSide,
 			unison.StdHSpacing, false)
 		return
@@ -351,6 +356,7 @@ func (d *PDFDockable) draw(gc *unison.Canvas, dirty geom32.Rect) {
 	}
 }
 
+// TitleIcon implements FileBackedDockable
 func (d *PDFDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
@@ -358,26 +364,32 @@ func (d *PDFDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	}
 }
 
+// Title implements FileBackedDockable
 func (d *PDFDockable) Title() string {
 	return xfs.BaseName(d.path)
 }
 
+// Tooltip implements FileBackedDockable
 func (d *PDFDockable) Tooltip() string {
 	return d.path
 }
 
+// BackingFilePath implements FileBackedDockable
 func (d *PDFDockable) BackingFilePath() string {
 	return d.path
 }
 
+// Modified implements FileBackedDockable
 func (d *PDFDockable) Modified() bool {
 	return false
 }
 
+// MayAttemptClose implements unison.TabCloser
 func (d *PDFDockable) MayAttemptClose() bool {
 	return true
 }
 
+// AttemptClose implements unison.TabCloser
 func (d *PDFDockable) AttemptClose() {
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.Close(d)

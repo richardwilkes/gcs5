@@ -77,6 +77,7 @@ func (n *Navigator) adjustTableSize() {
 	n.table.SizeColumnsToFit(true)
 }
 
+// TitleIcon implements unison.Dockable
 func (n *Navigator) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  unison.DocumentSVG(),
@@ -84,14 +85,17 @@ func (n *Navigator) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	}
 }
 
+// Title implements unison.Dockable
 func (n *Navigator) Title() string {
 	return i18n.Text("Library Explorer")
 }
 
+// Tooltip implements unison.Dockable
 func (n *Navigator) Tooltip() string {
 	return ""
 }
 
+// Modified implements unison.Dockable
 func (n *Navigator) Modified() bool {
 	return false
 }
@@ -137,20 +141,21 @@ func (n *Navigator) openRow(row unison.TableRowData) {
 			})
 			if !found {
 				var d unison.Dockable
-				if unison.EncodedImageFormatForPath(filePath).CanRead() {
+				switch {
+				case unison.EncodedImageFormatForPath(filePath).CanRead():
 					var err error
 					if d, err = NewImageDockable(filePath); err != nil {
 						unison.ErrorDialogWithMessage(i18n.Text("Unable to open image file"), err.Error())
 						return
 					}
-				} else if strings.ToLower(path.Ext(filePath)) == ".pdf" {
+				case strings.ToLower(path.Ext(filePath)) == ".pdf":
 					var err error
 					if d, err = NewPDFDockable(filePath); err != nil {
 						unison.ErrorDialogWithMessage(i18n.Text("Unable to open PDF"), err.Error())
 						return
 					}
-				} else {
-					d = NewPlaceholder(filePath)
+				default:
+					d = newPlaceholder(filePath)
 				}
 				if defaultDockContainer != nil {
 					defaultDockContainer.Stack(d, -1)

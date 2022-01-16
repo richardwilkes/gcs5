@@ -22,6 +22,7 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+// PDF holds a PDF page renderer.
 type PDF struct {
 	doc                *pdf.Document
 	pageCount          int
@@ -35,6 +36,8 @@ type PDF struct {
 	sequence           int
 }
 
+// NewPDF creates a new PDF page renderer. 'baseScale' should be set to the inverse of the scale of the monitor. For
+// example, on macOS with a Retina display, this would be 0.5.
 func NewPDF(filePath string, baseScale float32, maxSearchMatches int, pageLoadedCallback func()) (*PDF, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -53,16 +56,19 @@ func NewPDF(filePath string, baseScale float32, maxSearchMatches int, pageLoaded
 	}, nil
 }
 
+// PageCount returns the total page count.
 func (p *PDF) PageCount() int {
 	return p.pageCount
 }
 
+// CurrentPage returns the currently rendered page.
 func (p *PDF) CurrentPage() *Page {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
 	return p.page
 }
 
+// MostRecentPageNumber returns the most recent page number that has been asked to be rendered.
 func (p *PDF) MostRecentPageNumber() int {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
@@ -75,6 +81,7 @@ func (p *PDF) MostRecentPageNumber() int {
 	return 0
 }
 
+// LoadPage requests the given page to be loaded and rendered at the specified scale.
 func (p *PDF) LoadPage(pageNumber int, scale float32, search string) {
 	if pageNumber < 0 || pageNumber >= p.pageCount {
 		return

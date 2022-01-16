@@ -16,6 +16,7 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+// NewIconButton creates a standard icon button.
 func NewIconButton(svg *unison.SVG, size float32) *unison.Button {
 	b := unison.NewButton()
 	b.Drawable = &unison.DrawableSVG{

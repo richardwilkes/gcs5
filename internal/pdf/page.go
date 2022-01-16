@@ -16,6 +16,7 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+// Page holds a rendered PDF page.
 type Page struct {
 	Error      error
 	PageNumber int

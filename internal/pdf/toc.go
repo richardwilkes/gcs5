@@ -15,6 +15,7 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 )
 
+// TOC holds a table of contents entry.
 type TOC struct {
 	Title        string
 	PageNumber   int

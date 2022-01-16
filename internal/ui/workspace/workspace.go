@@ -17,6 +17,7 @@ import (
 
 const workspaceClientDataKey = "workspace"
 
+// Workspace holds the data necessary to track the Workspace.
 type Workspace struct {
 	Window       *unison.Window
 	TopDock      *unison.Dock
@@ -24,6 +25,7 @@ type Workspace struct {
 	DocumentDock *DocumentDock
 }
 
+// FromWindow returns the Workspace associated with the given Window, or nil.
 func FromWindow(wnd *unison.Window) *Workspace {
 	if wnd != nil {
 		if data, ok := wnd.ClientData()[workspaceClientDataKey]; ok {
@@ -35,6 +37,7 @@ func FromWindow(wnd *unison.Window) *Workspace {
 	return nil
 }
 
+// NewWorkspace creates a new Workspace for the given Window.
 func NewWorkspace(wnd *unison.Window) *Workspace {
 	w := &Workspace{
 		Window:       wnd,
