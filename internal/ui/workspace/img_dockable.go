@@ -107,6 +107,10 @@ func NewImageDockable(filePath string) (*ImageDockable, error) {
 		return true
 	}
 
+	typeLabel := unison.NewLabel()
+	typeLabel.Text = unison.EncodedImageFormatForPath(filePath).String()
+	typeLabel.Font = unison.DefaultFieldTheme.Font
+
 	sizeLabel := unison.NewLabel()
 	size := img.Size()
 	sizeLabel.Text = fmt.Sprintf("%d x %d pixels", int(size.Width), int(size.Height))
@@ -125,6 +129,7 @@ func NewImageDockable(filePath string) (*ImageDockable, error) {
 		HGrab:  true,
 	})
 	toolbar.AddChild(d.scaleField)
+	toolbar.AddChild(typeLabel)
 	toolbar.AddChild(sizeLabel)
 	toolbar.SetLayout(&unison.FlexLayout{
 		Columns:  len(toolbar.Children()),
@@ -183,6 +188,12 @@ func (d *ImageDockable) mouseWheel(_, delta geom32.Point, mod unison.Modifiers) 
 func (d *ImageDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bool) bool {
 	scale := d.scale
 	switch keyCode {
+	case unison.KeyQ:
+		scale = 25
+	case unison.KeyH:
+		scale = 50
+	case unison.KeyT:
+		scale = 75
 	case unison.Key1:
 		scale = 100
 	case unison.Key2:

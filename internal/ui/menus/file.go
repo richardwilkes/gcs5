@@ -12,6 +12,8 @@
 package menus
 
 import (
+	"github.com/richardwilkes/gcs/internal/library"
+	"github.com/richardwilkes/gcs/internal/ui/workspace"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -124,11 +126,19 @@ var NewSpellsLibrary = &unison.Action{
 
 // Open a file.
 var Open = &unison.Action{
-	ID:              OpenItemID,
-	Title:           i18n.Text("Open…"),
-	HotKey:          unison.KeyO,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
-	ExecuteCallback: unimplemented,
+	ID:         OpenItemID,
+	Title:      i18n.Text("Open…"),
+	HotKey:     unison.KeyO,
+	HotKeyMods: unison.OSMenuCmdModifier(),
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+		dialog := unison.NewOpenDialog()
+		dialog.SetAllowsMultipleSelection(true)
+		dialog.SetResolvesAliases(true)
+		dialog.SetAllowedExtensions(library.AcceptableExtensions()...)
+		if dialog.RunModal() {
+			workspace.OpenFiles(dialog.Paths())
+		}
+	},
 }
 
 // CloseTab closes a workspace tab.

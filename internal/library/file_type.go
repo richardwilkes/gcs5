@@ -13,6 +13,7 @@ package library
 
 import (
 	"path"
+	"sort"
 	"strings"
 
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -30,6 +31,7 @@ const (
 // FileInfo contains some static information about a given file type.
 type FileInfo struct {
 	SVG       *unison.SVG
+	IsSpecial bool
 	IsGCSData bool
 	IsImage   bool
 	IsPDF     bool
@@ -64,7 +66,7 @@ func init() {
 func addSpecialFileType(ext, svgPath string, width, height float32) {
 	p, err := unison.NewSVG(geom32.NewSize(width, height), svgPath)
 	jot.FatalIfErr(err)
-	FileTypes[ext] = &FileInfo{SVG: p}
+	FileTypes[ext] = &FileInfo{SVG: p, IsSpecial: true}
 }
 
 func addGCSFileType(ext, svgPath string, width, height float32) {
@@ -92,4 +94,16 @@ func FileInfoFor(filePath string) *FileInfo {
 		info = FileTypes[GenericFile]
 	}
 	return info
+}
+
+// AcceptableExtensions returns the file extensions that we should be able to open.
+func AcceptableExtensions() []string {
+	list := make([]string, 0, len(FileTypes))
+	for k, v := range FileTypes {
+		if !v.IsSpecial {
+			list = append(list, k)
+		}
+	}
+	sort.Strings(list)
+	return list
 }

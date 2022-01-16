@@ -13,6 +13,7 @@ package workspace
 
 import (
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/richardwilkes/gcs/internal/library"
@@ -114,6 +115,21 @@ func (n *Navigator) openRow(row unison.TableRowData) {
 		}
 	case *FileNode:
 		OpenFile(n.Window(), path.Join(t.library.Config().Path, t.path))
+	}
+}
+
+// OpenFiles attempts to open the given file paths.
+func OpenFiles(filePaths []string) {
+	for _, wnd := range unison.Windows() {
+		if ws := FromWindow(wnd); ws != nil {
+			for _, one := range filePaths {
+				if p, err := filepath.Abs(one); err != nil {
+					unison.ErrorDialogWithError(i18n.Text("Unable to open ")+one, err)
+				} else {
+					OpenFile(wnd, p)
+				}
+			}
+		}
 	}
 }
 
