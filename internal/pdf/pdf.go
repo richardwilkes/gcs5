@@ -22,12 +22,46 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+// TOC holds a table of contents entry.
+type TOC struct {
+	Title        string
+	PageNumber   int
+	PageLocation geom32.Point
+	Children     []*TOC
+}
+
+// Page holds a rendered PDF page.
+type Page struct {
+	Error      error
+	PageNumber int
+	Image      *unison.Image
+	TOC        []*TOC
+	Links      []*Link
+	Matches    []geom32.Rect
+}
+
+// Link holds a single link on a page. If PageNumber if >= 0, then this is an internal link and the URI will be empty.
+type Link struct {
+	Bounds       geom32.Rect
+	PageNumber   int
+	PageLocation geom32.Point
+	URI          string
+}
+
+type params struct {
+	sequence   int
+	pageNumber int
+	search     string
+	scale      float32
+}
+
 // PDF holds a PDF page renderer.
 type PDF struct {
+	MaxSearchMatches   int
+	PPI                int
+	DisplayScaleAdjust float32
 	doc                *pdf.Document
 	pageCount          int
-	maxSearchMatches   int
-	baseScale          float32
 	pageLoadedCallback func()
 	lock               sync.RWMutex
 	page               *Page
@@ -36,9 +70,8 @@ type PDF struct {
 	sequence           int
 }
 
-// NewPDF creates a new PDF page renderer. 'baseScale' should be set to the inverse of the scale of the monitor. For
-// example, on macOS with a Retina display, this would be 0.5.
-func NewPDF(filePath string, baseScale float32, maxSearchMatches int, pageLoadedCallback func()) (*PDF, error) {
+// New creates a new PDF page renderer.
+func New(filePath string, pageLoadedCallback func()) (*PDF, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, errs.Wrap(err)
@@ -47,11 +80,13 @@ func NewPDF(filePath string, baseScale float32, maxSearchMatches int, pageLoaded
 	if doc, err = pdf.New(data, 0); err != nil {
 		return nil, errs.Wrap(err)
 	}
+	display := unison.PrimaryDisplay()
 	return &PDF{
+		MaxSearchMatches:   100,
+		PPI:                display.PPI(),
+		DisplayScaleAdjust: 1 / display.ScaleX,
 		doc:                doc,
 		pageCount:          doc.PageCount(),
-		maxSearchMatches:   maxSearchMatches,
-		baseScale:          baseScale,
 		pageLoadedCallback: pageLoadedCallback,
 	}, nil
 }
@@ -88,7 +123,8 @@ func (p *PDF) LoadPage(pageNumber int, scale float32, search string) {
 	}
 	p.lock.Lock()
 	defer p.lock.Unlock()
-	if p.lastRequest != nil && p.lastRequest.sameAs(pageNumber, scale, search) {
+	if p.lastRequest != nil && p.lastRequest.pageNumber == pageNumber && p.lastRequest.scale == scale &&
+		p.lastRequest.search == search {
 		return
 	}
 	p.sequence++
@@ -109,14 +145,13 @@ func (p *PDF) render(state *params) {
 		return
 	}
 
-	// Using a baseline dpi of 96, since that's what most software does nowadays, rather than 72.
-	dpi := int(state.scale * 96 / p.baseScale)
+	dpi := int(state.scale * float32(p.PPI) / p.DisplayScaleAdjust)
 	toc := p.doc.TableOfContents(dpi)
 	if p.shouldAbortRender() {
 		return
 	}
 
-	page, err := p.doc.RenderPage(state.pageNumber, dpi, p.maxSearchMatches, state.search)
+	page, err := p.doc.RenderPage(state.pageNumber, dpi, p.MaxSearchMatches, state.search)
 	if err != nil {
 		p.errorDuringRender(state.pageNumber, err)
 		return
@@ -126,7 +161,7 @@ func (p *PDF) render(state *params) {
 	}
 
 	var img *unison.Image
-	img, err = unison.NewImageFromPixels(page.Image.Rect.Dx(), page.Image.Rect.Dy(), page.Image.Pix, p.baseScale)
+	img, err = unison.NewImageFromPixels(page.Image.Rect.Dx(), page.Image.Rect.Dy(), page.Image.Pix, p.DisplayScaleAdjust)
 	if err != nil {
 		p.errorDuringRender(state.pageNumber, err)
 		return
@@ -223,10 +258,10 @@ func (p *PDF) convertMatches(hits []image.Rectangle) []geom32.Rect {
 }
 
 func (p *PDF) pointFromPagePoint(x, y int) geom32.Point {
-	return geom32.NewPoint(float32(x)*p.baseScale, float32(y)*p.baseScale)
+	return geom32.NewPoint(float32(x)*p.DisplayScaleAdjust, float32(y)*p.DisplayScaleAdjust)
 }
 
 func (p *PDF) rectFromPageRect(r image.Rectangle) geom32.Rect {
-	return geom32.NewRect(float32(r.Min.X)*p.baseScale, float32(r.Min.Y)*p.baseScale, float32(r.Dx())*p.baseScale,
-		float32(r.Dy())*p.baseScale)
+	return geom32.NewRect(float32(r.Min.X)*p.DisplayScaleAdjust, float32(r.Min.Y)*p.DisplayScaleAdjust, float32(r.Dx())*p.DisplayScaleAdjust,
+		float32(r.Dy())*p.DisplayScaleAdjust)
 }

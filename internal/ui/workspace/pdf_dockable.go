@@ -69,7 +69,7 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	}
 	d.Self = d
 	var err error
-	if d.pdf, err = pdf.NewPDF(filePath, 0.5, 100, func() {
+	if d.pdf, err = pdf.New(filePath, func() {
 		unison.InvokeTask(d.pageLoaded)
 	}); err != nil {
 		return nil, err
