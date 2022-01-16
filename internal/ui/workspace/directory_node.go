@@ -102,14 +102,14 @@ func (n *DirectoryNode) CellDataForSort(index int) string {
 }
 
 // ColumnCell returns the cell for the given column index.
-func (n *DirectoryNode) ColumnCell(index int, _ bool) unison.Paneler {
+func (n *DirectoryNode) ColumnCell(index int, selected bool) unison.Paneler {
 	switch index {
 	case 0:
 		title := path.Base(n.path)
 		if n.open {
-			return createNodeCell(library.OpenFolder, title)
+			return createNodeCell(library.OpenFolder, title, selected)
 		}
-		return createNodeCell(library.ClosedFolder, title)
+		return createNodeCell(library.ClosedFolder, title, selected)
 	default:
 		jot.Fatalf(1, "column index out of range (0-0): %d", index)
 		return nil

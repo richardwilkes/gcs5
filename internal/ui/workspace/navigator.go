@@ -163,7 +163,7 @@ func (n *Navigator) openRow(row unison.TableRowData) {
 	}
 }
 
-func createNodeCell(ext, title string) *unison.Panel {
+func createNodeCell(ext, title string, selected bool) *unison.Panel {
 	size := unison.LabelFont.Size() + 5
 	info, ok := library.FileTypes[ext]
 	if !ok {
@@ -174,6 +174,9 @@ func createNodeCell(ext, title string) *unison.Panel {
 	label.Drawable = &unison.DrawableSVG{
 		SVG:  info.SVG,
 		Size: geom32.NewSize(size, size),
+	}
+	if selected {
+		label.LabelTheme.OnBackgroundInk = unison.OnSelectionColor
 	}
 	return label.AsPanel()
 }
