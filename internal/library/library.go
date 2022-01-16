@@ -221,17 +221,11 @@ func (l *Library) AvailableUpdate() *Release {
 
 // Less returns true if this Library should be placed before the other Library.
 func (l *Library) Less(other *Library) bool {
-	if masterLibrary == l {
-		return true
-	}
-	if other == l {
-		return false
-	}
 	if userLibrary == l {
 		return true
 	}
-	if other == l {
-		return false
+	if masterLibrary == l && other != userLibrary {
+		return true
 	}
 	if txt.NaturalLess(l.config.GitHub, other.config.GitHub, true) {
 		return true

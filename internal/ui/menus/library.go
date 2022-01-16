@@ -25,7 +25,7 @@ func updateLibraryMenu(m unison.Menu) {
 		m.RemoveItem(i)
 	}
 	f := m.Factory()
-	for i, lib := range settings.Global.Libraries {
+	for i, lib := range settings.Global().Libraries {
 		if !lib.IsUser() {
 			m.InsertItem(-1, newUpdateLibraryAction(LibraryBaseItemID+i*2, lib).NewMenuItem(f))
 		}

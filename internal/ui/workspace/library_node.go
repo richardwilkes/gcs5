@@ -17,7 +17,10 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-var _ unison.TableRowData = &LibraryNode{}
+var (
+	_ unison.TableRowData = &LibraryNode{}
+	_ Pather              = &LibraryNode{}
+)
 
 // LibraryNode holds a library in the navigator.
 type LibraryNode struct {
@@ -35,6 +38,11 @@ func NewLibraryNode(nav *Navigator, lib *library.Library) *LibraryNode {
 	}
 	n.Refresh()
 	return n
+}
+
+// Path returns the full path for this library.
+func (n *LibraryNode) Path() string {
+	return n.library.Config().Path
 }
 
 // Refresh the contents of this node.

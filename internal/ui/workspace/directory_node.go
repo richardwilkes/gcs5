@@ -14,6 +14,7 @@ package workspace
 import (
 	"io/fs"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/richardwilkes/gcs/internal/library"
@@ -22,7 +23,10 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-var _ unison.TableRowData = &DirectoryNode{}
+var (
+	_ unison.TableRowData = &DirectoryNode{}
+	_ Pather              = &DirectoryNode{}
+)
 
 // DirectoryNode holds a directory in the navigator.
 type DirectoryNode struct {
@@ -42,6 +46,11 @@ func NewDirectoryNode(nav *Navigator, lib *library.Library, dirPath string) *Dir
 	}
 	n.Refresh()
 	return n
+}
+
+// Path returns the full path for this directory.
+func (n *DirectoryNode) Path() string {
+	return filepath.Join(n.library.Config().Path, n.path)
 }
 
 // Refresh the contents of this node.

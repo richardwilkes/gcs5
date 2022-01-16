@@ -14,7 +14,7 @@ package settings
 // LibraryExplorer holds settings for the library explorer view.
 type LibraryExplorer struct {
 	DividerPosition float32  `json:"divider_position"`
-	OpenRowKeys     []string `json:"open_row_keys"`
+	OpenRowKeys     []string `json:"open_row_keys,omitempty"`
 }
 
 // FileRef holds a path to a file and an offset for all page references within that file.

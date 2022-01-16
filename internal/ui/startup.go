@@ -23,7 +23,7 @@ import (
 
 // Start the UI.
 func Start(files []string) {
-	go library.PerformUpdateChecks(settings.Global.Libraries)
+	go library.PerformUpdateChecks(settings.Global().Libraries)
 	unison.Start(
 		unison.StartupFinishedCallback(func() {
 			trampolines.MenuSetup = menus.Setup

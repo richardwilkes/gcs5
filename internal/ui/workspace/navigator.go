@@ -31,6 +31,11 @@ type FileBackedDockable interface {
 	BackingFilePath() string
 }
 
+// Pather defines the method for returning a path from an object.
+type Pather interface {
+	Path() string
+}
+
 // Navigator holds the workspace navigation panel.
 type Navigator struct {
 	unison.Panel
@@ -46,11 +51,13 @@ func newNavigator() *Navigator {
 	n.Self = n
 
 	n.table.ColumnSizes = make([]unison.ColumnSize, 1)
-	rows := make([]unison.TableRowData, 0, len(settings.Global.Libraries))
-	for _, one := range settings.Global.Libraries {
+	globalSettings := settings.Global()
+	rows := make([]unison.TableRowData, 0, len(globalSettings.Libraries))
+	for _, one := range globalSettings.Libraries {
 		rows = append(rows, NewLibraryNode(n, one))
 	}
 	n.table.SetTopLevelRows(rows)
+	n.ApplyDisclosedPaths(globalSettings.LibraryExplorer.OpenRowKeys)
 	n.table.SizeColumnsToFit(true)
 
 	n.scroll.MouseWheelMultiplier = 2
@@ -115,6 +122,44 @@ func (n *Navigator) openRow(row unison.TableRowData) {
 		}
 	case *FileNode:
 		OpenFile(n.Window(), path.Join(t.library.Config().Path, t.path))
+	}
+}
+
+// DisclosedPaths returns a list of paths that are currently disclosed.
+func (n *Navigator) DisclosedPaths() []string {
+	return n.accumulateDisclosedPaths(n.table.TopLevelRows(), nil)
+}
+
+func (n *Navigator) accumulateDisclosedPaths(rows []unison.TableRowData, disclosedPaths []string) []string {
+	for _, row := range rows {
+		if row.IsOpen() {
+			if p, ok := row.(Pather); ok {
+				disclosedPaths = append(disclosedPaths, p.Path())
+			}
+		}
+		disclosedPaths = n.accumulateDisclosedPaths(row.ChildRows(), disclosedPaths)
+	}
+	return disclosedPaths
+}
+
+// ApplyDisclosedPaths closes all nodes except the ones provided, which are explicitly opened.
+func (n *Navigator) ApplyDisclosedPaths(paths []string) {
+	m := make(map[string]bool, len(paths))
+	for _, one := range paths {
+		m[one] = true
+	}
+	n.applyDisclosedPaths(n.table.TopLevelRows(), m)
+}
+
+func (n *Navigator) applyDisclosedPaths(rows []unison.TableRowData, paths map[string]bool) {
+	for _, row := range rows {
+		if p, ok := row.(Pather); ok {
+			open := paths[p.Path()]
+			if row.IsOpen() != open {
+				row.SetOpen(open)
+			}
+		}
+		n.applyDisclosedPaths(row.ChildRows(), paths)
 	}
 }
 

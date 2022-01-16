@@ -13,6 +13,7 @@ package settings
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -20,9 +21,11 @@ import (
 	"github.com/richardwilkes/gcs/internal/library"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xio/fs/paths"
+	"github.com/richardwilkes/toolbox/xio/fs/safe"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
@@ -33,8 +36,7 @@ const (
 	MinimumSettingsVersion = 3
 )
 
-// Global settings.
-var Global = newGlobal()
+var global *Settings
 
 // Settings holds the application settings.
 type Settings struct {
@@ -69,6 +71,14 @@ func Default() *Settings {
 		QuickExports:       make(map[string]*ExportInfo),
 		Sheet:              NewSheet(),
 	}
+}
+
+// Global returns the global settings.
+func Global() *Settings {
+	if global == nil {
+		global = newGlobal()
+	}
+	return global
 }
 
 func newGlobal() *Settings {
@@ -115,6 +125,26 @@ func newGlobal() *Settings {
 	}
 	sort.Slice(s.Libraries, func(i, j int) bool { return s.Libraries[i].Less(s.Libraries[j]) })
 	return s
+}
+
+// Save to the standard path.
+func (s *Settings) Save() {
+	s.SaveTo(Path())
+}
+
+// SaveTo the provided path.
+func (s *Settings) SaveTo(filePath string) {
+	if err := os.MkdirAll(filepath.Dir(filePath), 0o750); err != nil {
+		unison.ErrorDialogWithError(i18n.Text("Unable to create settings directory"), err)
+		return
+	}
+	if err := safe.WriteFileWithMode(filePath, func(w io.Writer) error {
+		encoder := json.NewEncoder(w)
+		encoder.SetIndent("", "  ")
+		return encoder.Encode(s)
+	}, 0o640); err != nil {
+		unison.ErrorDialogWithError(i18n.Text("Unable to save settings"), err)
+	}
 }
 
 // Path returns the path to our settings file.

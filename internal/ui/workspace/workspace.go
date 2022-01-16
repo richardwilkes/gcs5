@@ -12,6 +12,7 @@
 package workspace
 
 import (
+	"github.com/richardwilkes/gcs/internal/settings"
 	"github.com/richardwilkes/unison"
 )
 
@@ -52,5 +53,12 @@ func NewWorkspace(wnd *unison.Window) *Workspace {
 	w.TopDock.DockTo(w.DocumentDock, dc, unison.RightSide)
 	dc.SetCurrentDockable(w.Navigator)
 	wnd.ClientData()[workspaceClientDataKey] = w
+	wnd.WillCloseCallback = w.willClose
 	return w
+}
+
+func (w *Workspace) willClose() {
+	globalSettings := settings.Global()
+	globalSettings.LibraryExplorer.OpenRowKeys = w.Navigator.DisclosedPaths()
+	globalSettings.Save()
 }
