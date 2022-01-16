@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	minPDFDockableScale   = 30
+	minPDFDockableScale   = 25
 	maxPDFDockableScale   = 300
 	deltaPDFDockableScale = 10
 )
@@ -288,6 +288,12 @@ func (d *PDFDockable) mouseUp(where geom32.Point, button int, _ unison.Modifiers
 func (d *PDFDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bool) bool {
 	scale := d.scale
 	switch keyCode {
+	case unison.KeyQ:
+		scale = 25
+	case unison.KeyH:
+		scale = 50
+	case unison.KeyT:
+		scale = 75
 	case unison.Key1:
 		scale = 100
 	case unison.Key2:
@@ -304,9 +310,13 @@ func (d *PDFDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bool
 		if scale > maxPDFDockableScale {
 			scale = maxPDFDockableScale
 		}
-	case unison.KeyLeft:
+	case unison.KeyHome:
+		d.loadPage(0)
+	case unison.KeyEnd:
+		d.loadPage(d.pdf.PageCount() - 1)
+	case unison.KeyLeft, unison.KeyUp:
 		d.loadPage(d.pdf.MostRecentPageNumber() - 1)
-	case unison.KeyRight:
+	case unison.KeyRight, unison.KeyDown:
 		d.loadPage(d.pdf.MostRecentPageNumber() + 1)
 	default:
 		return false
