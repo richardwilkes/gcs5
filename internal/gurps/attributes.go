@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package settings
+package gurps
 
 // Attribute holds the definition of an attribute.
 type Attribute struct {

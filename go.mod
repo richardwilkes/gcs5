@@ -4,9 +4,11 @@ go 1.17
 
 require (
 	github.com/richardwilkes/pdf v0.0.0-20220115194011-2380c98780aa
+	github.com/richardwilkes/rpgtools v1.3.0
 	github.com/richardwilkes/toolbox v1.56.0
 	github.com/richardwilkes/unison v0.4.0
 	github.com/stretchr/testify v1.7.0
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
 
 require (
@@ -20,7 +22,9 @@ require (
 	github.com/yookoala/realpath v1.0.0 // indirect
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410 // indirect
 	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
 
-replace github.com/richardwilkes/unison => ../unison
+replace (
+	github.com/richardwilkes/unison => ../unison
+	github.com/richardwilkes/toolbox => ../toolbox
+)

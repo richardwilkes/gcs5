@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package settings
+package gurps
 
 import (
 	"encoding/json"
@@ -19,9 +19,9 @@ import (
 	"sort"
 
 	"github.com/richardwilkes/gcs/internal/library"
+	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xio/fs/paths"
@@ -42,9 +42,9 @@ var global *Settings
 type Settings struct {
 	Version            int                              `json:"version"`
 	LastSeenGCSVersion library.Version                  `json:"last_seen_gcs_version"`
-	General            *General                         `json:"general"`
+	General            *GeneralSettings                 `json:"general"`
 	Libraries          []*library.Library               `json:"libraries,omitempty"`
-	LibraryExplorer    LibraryExplorer                  `json:"library_explorer"`
+	LibraryExplorer    NavigatorSettings                `json:"library_explorer"`
 	RecentFiles        []string                         `json:"recent_files,omitempty"`
 	PageRefs           map[string]FileRef               `json:"page_refs,omitempty"`
 	KeyBindings        map[string]string                `json:"key_bindings,omitempty"`
@@ -52,7 +52,7 @@ type Settings struct {
 	Colors             map[string]unison.Color          `json:"colors,omitempty"`
 	Fonts              map[string]unison.FontDescriptor `json:"fonts,omitempty"`
 	QuickExports       map[string]*ExportInfo           `json:"quick_exports,omitempty"`
-	Sheet              *Sheet                           `json:"sheet_settings"`
+	Sheet              *SheetSettings                   `json:"sheet_settings"`
 }
 
 // Default returns new default settings.
@@ -60,22 +60,23 @@ func Default() *Settings {
 	return &Settings{
 		Version:            CurrentSettingsVersion,
 		LastSeenGCSVersion: library.VersionFromString(cmdline.AppVersion),
-		General:            NewGeneral(),
+		General:            NewGeneralSettings(),
 		Libraries:          []*library.Library{library.Master(), library.User()},
-		LibraryExplorer:    LibraryExplorer{DividerPosition: 300},
+		LibraryExplorer:    NavigatorSettings{DividerPosition: 300},
 		PageRefs:           make(map[string]FileRef),
 		KeyBindings:        make(map[string]string),
 		WindowPositions:    make(map[string]geom32.Rect),
 		Colors:             make(map[string]unison.Color),
 		Fonts:              make(map[string]unison.FontDescriptor),
 		QuickExports:       make(map[string]*ExportInfo),
-		Sheet:              NewSheet(),
+		Sheet:              FactorySheetSettings(),
 	}
 }
 
 // Global returns the global settings.
 func Global() *Settings {
 	if global == nil {
+		dice.GURPSFormat = true
 		global = newGlobal()
 	}
 	return global
@@ -128,23 +129,23 @@ func newGlobal() *Settings {
 }
 
 // Save to the standard path.
-func (s *Settings) Save() {
-	s.SaveTo(Path())
+func (s *Settings) Save() error {
+	return s.SaveTo(Path())
 }
 
 // SaveTo the provided path.
-func (s *Settings) SaveTo(filePath string) {
+func (s *Settings) SaveTo(filePath string) error {
 	if err := os.MkdirAll(filepath.Dir(filePath), 0o750); err != nil {
-		unison.ErrorDialogWithError(i18n.Text("Unable to create settings directory"), err)
-		return
+		return errs.NewWithCause(filePath, err)
 	}
 	if err := safe.WriteFileWithMode(filePath, func(w io.Writer) error {
 		encoder := json.NewEncoder(w)
 		encoder.SetIndent("", "  ")
 		return encoder.Encode(s)
 	}, 0o640); err != nil {
-		unison.ErrorDialogWithError(i18n.Text("Unable to save settings"), err)
+		return errs.NewWithCause(filePath, err)
 	}
+	return nil
 }
 
 // Path returns the path to our settings file.

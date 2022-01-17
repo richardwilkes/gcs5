@@ -9,38 +9,38 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package settings
+package gurps
 
 import (
 	"github.com/richardwilkes/gcs/unit/length"
 	"github.com/richardwilkes/gcs/unit/weight"
 )
 
-// Sheet settings.
-type Sheet struct {
-	DefaultLengthUnits         length.Units  `json:"default_length_units"`
-	DefaultWeightUnits         weight.Units  `json:"default_weight_units"`
-	UserDescriptionDisplay     string        `json:"user_description_display"`
-	ModifiersDisplay           string        `json:"modifiers_display"`
-	NotesDisplay               string        `json:"notes_display"`
-	SkillLevelAdjDisplay       string        `json:"skill_level_adj_display"`
-	DamageProgression          string        `json:"damage_progression"`
-	UseMultiplicativeModifiers bool          `json:"use_multiplicative_modifiers"`
-	UseModifyingDicePlusAdds   bool          `json:"use_modifying_dice_plus_adds"`
-	ShowCollegeInSheetSpells   bool          `json:"show_college_in_sheet_spells"`
-	ShowDifficulty             bool          `json:"show_difficulty"`
-	ShowAdvantageModifierAdj   bool          `json:"show_advantage_modifier_adj"`
-	ShowEquipmentModifierAdj   bool          `json:"show_equipment_modifier_adj"`
-	ShowSpellAdj               bool          `json:"show_spell_adj"`
-	UseTitleInFooter           bool          `json:"use_title_in_footer"`
-	Page                       Page          `json:"page"`
-	BlockLayout                []string      `json:"block_layout"`
-	Attributes                 []*Attribute  `json:"attributes"`
-	HitLocations               *HitLocations `json:"hit_locations"`
+// SheetSettings holds sheet settings.
+type SheetSettings struct {
+	DefaultLengthUnits         length.Units `json:"default_length_units"`
+	DefaultWeightUnits         weight.Units `json:"default_weight_units"`
+	UserDescriptionDisplay     string       `json:"user_description_display"`
+	ModifiersDisplay           string       `json:"modifiers_display"`
+	NotesDisplay               string       `json:"notes_display"`
+	SkillLevelAdjDisplay       string       `json:"skill_level_adj_display"`
+	DamageProgression          string       `json:"damage_progression"`
+	UseMultiplicativeModifiers bool         `json:"use_multiplicative_modifiers"`
+	UseModifyingDicePlusAdds   bool         `json:"use_modifying_dice_plus_adds"`
+	ShowCollegeInSheetSpells   bool         `json:"show_college_in_sheet_spells"`
+	ShowDifficulty             bool         `json:"show_difficulty"`
+	ShowAdvantageModifierAdj   bool         `json:"show_advantage_modifier_adj"`
+	ShowEquipmentModifierAdj   bool         `json:"show_equipment_modifier_adj"`
+	ShowSpellAdj               bool         `json:"show_spell_adj"`
+	UseTitleInFooter           bool         `json:"use_title_in_footer"`
+	Page                       PageSettings `json:"page"`
+	BlockLayout                []string     `json:"block_layout"`
+	Attributes                 []*Attribute `json:"attributes"`
+	HitLocations               *BodyType    `json:"hit_locations"`
 }
 
-// Page settings.
-type Page struct {
+// PageSettings holds page settings.
+type PageSettings struct {
 	PaperSize    string        `json:"paper_size"`
 	TopMargin    length.Length `json:"top_margin"`
 	LeftMargin   length.Length `json:"left_margin"`
@@ -49,9 +49,9 @@ type Page struct {
 	Orientation  string        `json:"orientation"`
 }
 
-// NewSheet returns new sheet settings.
-func NewSheet() *Sheet {
-	return &Sheet{
+// FactorySheetSettings returns a new SheetSettings will factory defaults.
+func FactorySheetSettings() *SheetSettings {
+	return &SheetSettings{
 		DefaultLengthUnits:     length.FeetAndInches,
 		DefaultWeightUnits:     weight.Pound,
 		UserDescriptionDisplay: "tooltip",   // TODO: Use type
@@ -60,7 +60,7 @@ func NewSheet() *Sheet {
 		SkillLevelAdjDisplay:   "tooltip",   // TODO: Use type
 		DamageProgression:      "basic_set", // TODO: Use type
 		ShowSpellAdj:           true,
-		Page: Page{
+		Page: PageSettings{
 			PaperSize:    "na-letter", // TODO: Use type
 			TopMargin:    length.FromFloat64(0.25, length.Inch),
 			LeftMargin:   length.FromFloat64(0.25, length.Inch),
@@ -70,7 +70,7 @@ func NewSheet() *Sheet {
 		},
 		BlockLayout:  FactoryBlockLayout(),
 		Attributes:   FactoryAttributes(),
-		HitLocations: FactoryHitLocations(),
+		HitLocations: FactoryBodyType(),
 	}
 }
 

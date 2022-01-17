@@ -16,8 +16,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/richardwilkes/gcs/internal/gurps"
 	"github.com/richardwilkes/gcs/internal/library"
-	"github.com/richardwilkes/gcs/internal/settings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -51,7 +51,7 @@ func newNavigator() *Navigator {
 	n.Self = n
 
 	n.table.ColumnSizes = make([]unison.ColumnSize, 1)
-	globalSettings := settings.Global()
+	globalSettings := gurps.Global()
 	rows := make([]unison.TableRowData, 0, len(globalSettings.Libraries))
 	for _, one := range globalSettings.Libraries {
 		rows = append(rows, NewLibraryNode(n, one))

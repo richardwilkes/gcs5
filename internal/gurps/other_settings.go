@@ -9,10 +9,10 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package settings
+package gurps
 
-// LibraryExplorer holds settings for the library explorer view.
-type LibraryExplorer struct {
+// NavigatorSettings holds settings for the navigator view.
+type NavigatorSettings struct {
 	DividerPosition float32  `json:"divider_position"`
 	OpenRowKeys     []string `json:"open_row_keys,omitempty"`
 }

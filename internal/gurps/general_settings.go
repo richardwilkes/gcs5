@@ -9,15 +9,15 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package settings
+package gurps
 
 import (
 	"os"
 	"os/user"
 )
 
-// General settings
-type General struct {
+// GeneralSettings holds general settings for a sheet.
+type GeneralSettings struct {
 	DefaultPlayerName           string  `json:"default_player_name"`
 	DefaultTechLevel            string  `json:"default_tech_level"`
 	PDFViewer                   string  `json:"pdf_viewer"`
@@ -29,15 +29,15 @@ type General struct {
 	IncludeUnspentPointsInTotal bool    `json:"include_unspent_points_in_total"`
 }
 
-// NewGeneral return new general settings.
-func NewGeneral() *General {
+// NewGeneralSettings return new GeneralSettings.
+func NewGeneralSettings() *GeneralSettings {
 	var name string
 	if u, err := user.Current(); err != nil {
 		name = os.Getenv("USER")
 	} else {
 		name = u.Name
 	}
-	return &General{
+	return &GeneralSettings{
 		DefaultPlayerName:           name,
 		DefaultTechLevel:            "3",
 		PDFViewer:                   "", // TODO: get default for platform

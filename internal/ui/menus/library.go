@@ -14,8 +14,8 @@ package menus
 import (
 	"fmt"
 
+	"github.com/richardwilkes/gcs/internal/gurps"
 	"github.com/richardwilkes/gcs/internal/library"
-	"github.com/richardwilkes/gcs/internal/settings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -25,7 +25,7 @@ func updateLibraryMenu(m unison.Menu) {
 		m.RemoveItem(i)
 	}
 	f := m.Factory()
-	for i, lib := range settings.Global().Libraries {
+	for i, lib := range gurps.Global().Libraries {
 		if !lib.IsUser() {
 			m.InsertItem(-1, newUpdateLibraryAction(LibraryBaseItemID+i*2, lib).NewMenuItem(f))
 		}
