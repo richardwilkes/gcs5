@@ -151,6 +151,9 @@ func (l Length) Format(unit Units) string {
 			buffer.WriteByte('\'')
 		}
 		if inches > 0 {
+			if feet > 0 {
+				buffer.WriteByte(' ')
+			}
 			buffer.WriteString(inches.String())
 			buffer.WriteByte('"')
 		}
