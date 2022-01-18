@@ -18,15 +18,16 @@ import (
 )
 
 // Units holds the weight unit type. Note that conversions to/from metric are done using the simplified GURPS metric
-// conversion of 1 lb = 0.5 kg. For consistency, all metric weights are converted to kilograms, then to pounds, rather
-// than the variations at different weights that the GURPS rules suggest.
+// conversion of 1# = 0.5kg. For consistency, all metric weights are converted to kilograms, then to pounds, rather than
+// the variations at different weights that the GURPS rules suggest.
 type Units string
 
 // Possible Units values.
 const (
 	Gram     = Units("g")
 	Ounce    = Units("oz")
-	Pound    = Units("lb")
+	Pound    = Units("#")
+	PoundAlt = Units("lb")
 	Kilogram = Units("kg")
 	Ton      = Units("ton")
 )
@@ -51,6 +52,7 @@ func FromString(text string, defaultUnits Units) (Weight, error) {
 	for _, unit := range []Units{
 		Ounce,
 		Pound,
+		PoundAlt,
 		Kilogram,
 		Gram, // must come after Kilogram, as it's abbreviation is a subset
 		Ton,
@@ -95,15 +97,15 @@ func (w Weight) Format(unit Units) string {
 	pounds := fixed.F64d4(w)
 	switch unit {
 	case Gram:
-		return pounds.Mul(fixed.F64d4FromInt64(500)).String() + " " + string(unit)
+		return pounds.Mul(fixed.F64d4FromInt64(500)).String() + string(unit)
 	case Ounce:
-		return pounds.Mul(fixed.F64d4FromInt64(16)).String() + " " + string(unit)
+		return pounds.Mul(fixed.F64d4FromInt64(16)).String() + string(unit)
 	case Kilogram:
-		return pounds.Div(fixed.F64d4FromInt64(2)).String() + " " + string(unit)
+		return pounds.Div(fixed.F64d4FromInt64(2)).String() + string(unit)
 	case Ton:
-		return pounds.Div(fixed.F64d4FromInt64(2000)).String() + " " + string(unit)
+		return pounds.Div(fixed.F64d4FromInt64(2000)).String() + string(unit)
 	default: // Same as Pound
-		return pounds.String() + " " + string(Pound)
+		return pounds.String() + string(Pound)
 	}
 }
 

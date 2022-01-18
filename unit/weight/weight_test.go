@@ -25,29 +25,29 @@ type embeddedWeight struct {
 }
 
 func TestWeightConversion(t *testing.T) {
-	assert.Equal(t, "1 lb", weight.FromInt64(1, weight.Pound).Format(weight.Pound))
-	assert.Equal(t, "15 lb", weight.FromInt64(15, weight.Pound).Format(weight.Pound))
-	assert.Equal(t, "0.5 kg", weight.FromInt64(1, weight.Pound).Format(weight.Kilogram))
-	assert.Equal(t, "7.5 kg", weight.FromInt64(15, weight.Pound).Format(weight.Kilogram))
+	assert.Equal(t, "1#", weight.FromInt64(1, weight.Pound).Format(weight.Pound))
+	assert.Equal(t, "15#", weight.FromInt64(15, weight.Pound).Format(weight.Pound))
+	assert.Equal(t, "0.5kg", weight.FromInt64(1, weight.Pound).Format(weight.Kilogram))
+	assert.Equal(t, "7.5kg", weight.FromInt64(15, weight.Pound).Format(weight.Kilogram))
 
 	w, err := weight.FromString("1", weight.Pound)
 	assert.NoError(t, err)
-	assert.Equal(t, "1 lb", w.String())
+	assert.Equal(t, "1#", w.String())
 	w, err = weight.FromString("1", weight.Kilogram)
 	assert.NoError(t, err)
-	assert.Equal(t, "2 lb", w.String())
+	assert.Equal(t, "2#", w.String())
 	w, err = weight.FromString("22.34 lb", weight.Pound)
 	assert.NoError(t, err)
-	assert.Equal(t, "22.34 lb", w.String())
+	assert.Equal(t, "22.34#", w.String())
 	w, err = weight.FromString(" +22.34   lb  ", weight.Pound)
 	assert.NoError(t, err)
-	assert.Equal(t, "22.34 lb", w.String())
+	assert.Equal(t, "22.34#", w.String())
 	w, err = weight.FromString("0.5kg", weight.Pound)
 	assert.NoError(t, err)
-	assert.Equal(t, "0.5 kg", w.Format(weight.Kilogram))
-	w, err = weight.FromString("15.25kg", weight.Pound)
+	assert.Equal(t, "0.5kg", w.Format(weight.Kilogram))
+	w, err = weight.FromString(" 15.25 kg ", weight.Pound)
 	assert.NoError(t, err)
-	assert.Equal(t, "15.25 kg", w.Format(weight.Kilogram))
+	assert.Equal(t, "15.25kg", w.Format(weight.Kilogram))
 }
 
 func TestWeightJSON(t *testing.T) {

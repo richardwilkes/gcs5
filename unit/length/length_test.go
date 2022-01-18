@@ -27,24 +27,24 @@ type embeddedLength struct {
 func TestLengthConversion(t *testing.T) {
 	assert.Equal(t, `1"`, length.FromInt64(1, length.Inch).Format(length.FeetAndInches))
 	assert.Equal(t, `1'3"`, length.FromInt64(15, length.Inch).Format(length.FeetAndInches))
-	assert.Equal(t, "2.5 cm", length.FromFloat64(2.5, length.Centimeter).Format(length.Centimeter))
-	assert.Equal(t, "37.5 cm", length.FromFloat64(37.5, length.Centimeter).Format(length.Centimeter))
+	assert.Equal(t, "2.5cm", length.FromFloat64(2.5, length.Centimeter).Format(length.Centimeter))
+	assert.Equal(t, "37.5cm", length.FromFloat64(37.5, length.Centimeter).Format(length.Centimeter))
 
 	w, err := length.FromString("1", length.Inch)
 	assert.NoError(t, err)
 	assert.Equal(t, `1"`, w.Format(length.FeetAndInches))
-	w, err = length.FromString(`6'2"`, length.Inch)
+	w, err = length.FromString(`6'         2"`, length.Inch)
 	assert.NoError(t, err)
 	assert.Equal(t, `6'2"`, w.Format(length.FeetAndInches))
-	w, err = length.FromString(" +32yd  ", length.Inch)
+	w, err = length.FromString(" +32   yd  ", length.Inch)
 	assert.NoError(t, err)
 	assert.Equal(t, "96'", w.Format(length.FeetAndInches))
 	w, err = length.FromString("0.5m", length.Inch)
 	assert.NoError(t, err)
-	assert.Equal(t, "50 cm", w.Format(length.Centimeter))
+	assert.Equal(t, "50cm", w.Format(length.Centimeter))
 	w, err = length.FromString("1cm", length.Inch)
 	assert.NoError(t, err)
-	assert.Equal(t, "1 cm", w.Format(length.Centimeter))
+	assert.Equal(t, "1cm", w.Format(length.Centimeter))
 }
 
 func TestHeightJSON(t *testing.T) {

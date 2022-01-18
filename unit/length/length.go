@@ -129,15 +129,15 @@ func (l Length) Format(unit Units) string {
 	inches := fixed.F64d4(l)
 	switch unit {
 	case Centimeter:
-		return inches.Div(fixed.F64d4FromInt64(36)).Mul(fixed.F64d4FromInt64(100)).String() + " " + string(unit)
+		return inches.Div(fixed.F64d4FromInt64(36)).Mul(fixed.F64d4FromInt64(100)).String() + string(unit)
 	case Feet:
-		return inches.Div(fixed.F64d4FromInt64(12)).String() + " " + string(unit)
+		return inches.Div(fixed.F64d4FromInt64(12)).String() + string(unit)
 	case Yard, Meter:
-		return inches.Div(fixed.F64d4FromInt64(36)).String() + " " + string(unit)
+		return inches.Div(fixed.F64d4FromInt64(36)).String() + string(unit)
 	case Kilometer:
-		return inches.Div(fixed.F64d4FromInt64(36000)).String() + " " + string(unit)
+		return inches.Div(fixed.F64d4FromInt64(36000)).String() + string(unit)
 	case Mile:
-		return inches.Div(fixed.F64d4FromInt64(5280)).String() + " " + string(unit)
+		return inches.Div(fixed.F64d4FromInt64(5280)).String() + string(unit)
 	case FeetAndInches:
 		oneFoot := fixed.F64d4FromInt64(12)
 		feet := inches.Div(oneFoot).Trunc()
@@ -151,15 +151,12 @@ func (l Length) Format(unit Units) string {
 			buffer.WriteByte('\'')
 		}
 		if inches > 0 {
-			if feet > 0 {
-				buffer.WriteByte(' ')
-			}
 			buffer.WriteString(inches.String())
 			buffer.WriteByte('"')
 		}
 		return buffer.String()
 	default: // Same as Inch
-		return inches.String() + " " + string(Inch)
+		return inches.String() + string(Inch)
 	}
 }
 
