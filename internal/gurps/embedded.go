@@ -11,7 +11,9 @@
 
 package gurps
 
-import "embed"
+import (
+	"embed"
+)
 
-//go:embed embedded
+//go:embed data
 var embeddedFS embed.FS

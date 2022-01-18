@@ -16,131 +16,121 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"path"
 	"path/filepath"
-	"strings"
 
 	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xio/fs/safe"
-	"gopkg.in/yaml.v3"
 )
 
-// BodyTypeCurrentVersion holds the current data format version.
-const BodyTypeCurrentVersion = 2
-
-type bodyTypeFile struct {
-	Type     string    `json:"type" yaml:"type"`
-	Version  int       `json:"version" yaml:"version"`
-	BodyType *BodyType `json:"hit_locations" yaml:"hit_locations"`
-}
+// The data format versions for BodyType.
+const (
+	BodyTypeCurrentVersion = 3
+	BodyTypeJavaVersion    = 2
+)
 
 // BodyType holds a set of hit locations.
 type BodyType struct {
-	ID             string         `json:"id" yaml:"id"`
-	Name           string         `json:"name" yaml:"name"`
-	Roll           dice.Dice      `json:"roll" yaml:"roll"`
-	Locations      []*HitLocation `json:"locations" yaml:"locations,omitempty"`
+	BodyTypeStorage
 	owningLocation *HitLocation
+}
+
+// BodyTypeStorage defines the current BodyType data format.
+type BodyTypeStorage struct {
+	Version   int            `json:"version"`
+	ID        string         `json:"id"`
+	Name      string         `json:"name,omitempty"`
+	Roll      dice.Dice      `json:"roll"`
+	Locations []*HitLocation `json:"locations,omitempty"`
 }
 
 // FactoryBodyType returns a new copy of the factory BodyType.
 func FactoryBodyType() *BodyType {
-	b, err := LoadBodyType(embeddedFS, "embedded/body_types/Humanoid.yaml")
+	b, err := LoadBodyType(embeddedFS, "data/body_types/Humanoid.body")
 	jot.FatalIfErr(err)
 	return b
 }
 
 // LoadBodyType creates a BodyType from a file.
-func LoadBodyType(fsys fs.FS, filePath string) (*BodyType, error) {
-	f, err := fsys.Open(filePath)
+func LoadBodyType(fileSystem fs.FS, filePath string) (*BodyType, error) {
+	f, err := fileSystem.Open(filePath)
 	if err != nil {
 		return nil, errs.NewWithCause("unable to open body type file", err)
 	}
 	defer xio.CloseIgnoringErrors(f)
-	var content bodyTypeFile
-	switch strings.ToLower(path.Ext(filePath)) {
-	case ".json", ".ghl":
-		if err = json.NewDecoder(f).Decode(&content); err != nil {
-			return nil, errs.NewWithCause("unable to read body type file: "+filePath, err)
-		}
-	case ".yaml":
-		if err = yaml.NewDecoder(f).Decode(&content); err != nil {
-			return nil, errs.NewWithCause("unable to read body type file: "+filePath, err)
-		}
-	default:
-		return nil, errs.New("unexpected file extension: " + filePath)
+	var bt BodyType
+	if err = json.NewDecoder(f).Decode(&bt); err != nil {
+		return nil, errs.NewWithCause("invalid body type file: "+filePath, err)
 	}
-	if content.BodyType == nil {
-		return nil, errs.New("no hit locations in file: " + filePath)
-	}
-	return content.BodyType, nil
+	return &bt, nil
 }
 
-// SaveTo saves the BodyType data to the specified file. If 'calc' is true, then the calculation fields for third parties
-// will be filled in. 'entity' may be nil and is only used if 'calc' is true.
-func (h *BodyType) SaveTo(filePath string, calc bool, entity *Entity) error {
+// MarshalJSON implements json.Marshaler. Sets the current version on the output.
+func (b *BodyType) MarshalJSON() ([]byte, error) {
+	b.Version = BodyTypeCurrentVersion
+	return json.Marshal(&b.BodyTypeStorage)
+}
+
+// UnmarshalJSON implements json.Unmarshaler. Loads the current format as well as older variants.
+func (b *BodyType) UnmarshalJSON(data []byte) error {
+	var variants struct {
+		BodyTypeStorage `json:",inline"` // v3+, except for the Version field, which is v0+
+		Type            string           `json:"type"`          // v0-2
+		HitLocations    BodyTypeStorage  `json:"hit_locations"` // v0-2
+	}
+	if err := json.Unmarshal(data, &variants); err != nil {
+		return err
+	}
+	if variants.Version <= BodyTypeJavaVersion && variants.Type == "hit_locations" {
+		b.BodyTypeStorage = variants.HitLocations
+	} else {
+		b.BodyTypeStorage = variants.BodyTypeStorage
+	}
+	return nil
+}
+
+// SaveTo saves the BodyType data to the specified file. 'entity' may be nil.
+func (b *BodyType) SaveTo(filePath string, entity *Entity) error {
 	if err := os.MkdirAll(filepath.Dir(filePath), 0o750); err != nil {
 		return errs.NewWithCause(filePath, err)
 	}
 	if err := safe.WriteFileWithMode(filePath, func(w io.Writer) error {
-		if calc {
-			h.FillCalc(entity)
-			defer h.ClearCalc()
-		} else {
-			h.ClearCalc()
-		}
-		content := &bodyTypeFile{
-			Type:     "hit_locations",
-			Version:  BodyTypeCurrentVersion,
-			BodyType: h,
-		}
-		switch strings.ToLower(path.Ext(filePath)) {
-		case ".json", ".ghl":
-			encoder := json.NewEncoder(w)
-			encoder.SetIndent("", "  ")
-			return encoder.Encode(&content)
-		case ".yaml":
-			encoder := yaml.NewEncoder(w)
-			encoder.SetIndent(2)
-			if e := encoder.Encode(&content); e != nil {
-				return e
-			}
-			return encoder.Close()
-		default:
-			return errs.New("unexpected file extension")
-		}
+		b.FillCalc(entity)
+		defer b.ClearCalc()
+		encoder := json.NewEncoder(w)
+		encoder.SetIndent("", "  ")
+		return encoder.Encode(b)
 	}, 0o640); err != nil {
 		return errs.NewWithCause(filePath, err)
 	}
 	return nil
 }
 
-func (h *BodyType) updateRollRanges() {
-	start := h.Roll.Minimum(false)
-	for _, location := range h.Locations {
+func (b *BodyType) updateRollRanges() {
+	start := b.Roll.Minimum(false)
+	for _, location := range b.Locations {
 		start = location.updateRollRange(start)
 	}
 }
 
-func (h *BodyType) updateDR(entity *Entity) {
-	for _, location := range h.Locations {
+func (b *BodyType) updateDR(entity *Entity) {
+	for _, location := range b.Locations {
 		location.updateDR(entity)
 	}
 }
 
 // FillCalc fills in the calculation fields for third parties. 'entity' may be nil.
-func (h *BodyType) FillCalc(entity *Entity) {
-	h.ClearCalc()
-	h.updateRollRanges()
-	h.updateDR(entity)
+func (b *BodyType) FillCalc(entity *Entity) {
+	b.ClearCalc()
+	b.updateRollRanges()
+	b.updateDR(entity)
 }
 
 // ClearCalc clears the calculation fields.
-func (h *BodyType) ClearCalc() {
-	for _, loc := range h.Locations {
+func (b *BodyType) ClearCalc() {
+	for _, loc := range b.Locations {
 		loc.clearCalc()
 	}
 }

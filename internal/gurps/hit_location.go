@@ -26,23 +26,23 @@ const HitLocationPrefix = "hit_location."
 
 // HitLocation holds a single hit location.
 type HitLocation struct {
-	ID          string           `json:"id" yaml:"id"`
-	ChoiceName  string           `json:"choice_name" yaml:"choice_name"`
-	TableName   string           `json:"table_name" yaml:"table_name"`
-	Slots       int              `json:"slots" yaml:"slots,omitempty"`
-	HitPenalty  int              `json:"hit_penalty" yaml:"hit_penalty,omitempty"`
-	DRBonus     int              `json:"dr_bonus" yaml:"dr_bonus,omitempty"`
-	Description string           `json:"description" yaml:"description,omitempty"`
-	Calc        *HitLocationCalc `json:"calc,omitempty" yaml:"calc,omitempty"`
-	SubTable    *BodyType        `json:"sub_table,omitempty" yaml:"sub_table,omitempty"`
+	ID          string           `json:"id"`
+	ChoiceName  string           `json:"choice_name"`
+	TableName   string           `json:"table_name"`
+	Slots       int              `json:"slots,omitempty"`
+	HitPenalty  int              `json:"hit_penalty,omitempty"`
+	DRBonus     int              `json:"dr_bonus,omitempty"`
+	Description string           `json:"description,omitempty"`
+	Calc        *HitLocationCalc `json:"calc,omitempty"`
+	SubTable    *BodyType        `json:"sub_table,omitempty"`
 	owningTable *BodyType
 }
 
 // HitLocationCalc holds values GCS calculates for a HitLocation, but that we want to be present in any json output so
 // that other uses of the data don't have to replicate the code to calculate it.
 type HitLocationCalc struct {
-	RollRange string         `json:"roll_range" yaml:"roll_range"`
-	DR        map[string]int `json:"dr,omitempty" yaml:"dr,omitempty"`
+	RollRange string         `json:"roll_range"`
+	DR        map[string]int `json:"dr,omitempty"`
 }
 
 // DR computes the DR coverage for this HitLocation. If 'tooltip' isn't nil, the buffer will be updated with details on
