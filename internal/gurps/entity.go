@@ -15,7 +15,7 @@ import (
 	"github.com/richardwilkes/toolbox/xio"
 )
 
-// Entity holds the base information for various types of entities: PC, NPC, Monster, etc.
+// Entity holds the base information for various types of entities: PC, NPC, Creature, etc.
 type Entity struct{}
 
 // AddDRBonusesFor locates any active DR bonuses and adds them to the map. If 'drMap' isn't nil, it will be returned.
