@@ -26,13 +26,34 @@ import (
 var profileTestSample []byte
 
 func TestProfileImage(t *testing.T) {
-	var profile gurps.Profile
+	var profile gurps.PCProfile
 	assert.NoError(t, json.Unmarshal(profileTestSample, &profile))
-	img := profile.Portrait()
-	require.NotNil(t, img)
-	assert.Equal(t, geom32.NewSize(gurps.PortraitWidth, gurps.PortraitHeight), img.LogicalSize())
+	assert.NotEmpty(t, profile.Name)
+	assert.NotEmpty(t, profile.TechLevel)
+	assert.NotEmpty(t, profile.SizeModifier)
+	assert.NotEmpty(t, profile.PortraitData)
+	assert.NotEmpty(t, profile.Title)
+	assert.NotEmpty(t, profile.Organization)
+	assert.NotEmpty(t, profile.Religion)
+	assert.NotEmpty(t, profile.Age)
+	assert.NotEmpty(t, profile.Eyes)
+	assert.NotEmpty(t, profile.Hair)
+	assert.NotEmpty(t, profile.Skin)
+	assert.NotEmpty(t, profile.Handedness)
+	assert.NotEmpty(t, profile.Gender)
+	assert.NotEmpty(t, profile.Height)
+	assert.NotEmpty(t, profile.Weight)
+	assert.NotEmpty(t, profile.PlayerName)
+	assert.NotEmpty(t, profile.Birthday)
 
 	data, err := json.MarshalIndent(&profile, "", "  ")
 	assert.NoError(t, err)
-	assert.Equal(t, profileTestSample, data)
+
+	var roundTripProfile gurps.PCProfile
+	assert.NoError(t, json.Unmarshal(data, &roundTripProfile))
+	assert.Equal(t, profile, roundTripProfile)
+
+	img := profile.Portrait()
+	require.NotNil(t, img)
+	assert.Equal(t, geom32.NewSize(gurps.PortraitWidth, gurps.PortraitHeight), img.LogicalSize())
 }

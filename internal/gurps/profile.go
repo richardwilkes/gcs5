@@ -12,8 +12,6 @@
 package gurps
 
 import (
-	_ "embed"
-
 	"github.com/richardwilkes/gcs/unit/length"
 	"github.com/richardwilkes/gcs/unit/weight"
 	"github.com/richardwilkes/toolbox/errs"
@@ -27,30 +25,40 @@ const (
 	PortraitWidth  = 3 * PortraitHeight / 4
 )
 
-// Profile holds the profile information for an Entity.
-type Profile struct {
-	PlayerName   string        `json:"player_name,omitempty"`
-	Name         string        `json:"name,omitempty"`
+// BaseProfile holds the base profile information.
+type BaseProfile struct {
+	Name         string `json:"name,omitempty"`
+	TechLevel    string `json:"tech_level,omitempty"`
+	SizeModifier int    `json:"SM,omitempty"`
+	PortraitData []byte `json:"portrait,omitempty"`
+	portrait     *unison.Image
+}
+
+// NPCProfile holds the profile information for an NPC.
+type NPCProfile struct {
+	BaseProfile  `json:",inline"`
 	Title        string        `json:"title,omitempty"`
 	Organization string        `json:"organization,omitempty"`
+	Religion     string        `json:"religion,omitempty"`
 	Age          string        `json:"age,omitempty"`
-	Birthday     string        `json:"birthday,omitempty"`
 	Eyes         string        `json:"eyes,omitempty"`
 	Hair         string        `json:"hair,omitempty"`
 	Skin         string        `json:"skin,omitempty"`
 	Handedness   string        `json:"handedness,omitempty"`
+	Gender       string        `json:"gender,omitempty"`
 	Height       length.Length `json:"height,omitempty"`
 	Weight       weight.Weight `json:"weight,omitempty"`
-	SizeModifier int           `json:"SM,omitempty"`
-	Gender       string        `json:"gender,omitempty"`
-	TechLevel    string        `json:"tech_level,omitempty"`
-	Religion     string        `json:"religion,omitempty"`
-	PortraitData []byte        `json:"portrait,omitempty"`
-	portrait     *unison.Image
+}
+
+// PCProfile holds the profile information for a PC.
+type PCProfile struct {
+	NPCProfile `json:",inline"`
+	PlayerName string `json:"player_name,omitempty"`
+	Birthday   string `json:"birthday,omitempty"`
 }
 
 // Portrait returns the portrait image, if there is one.
-func (p *Profile) Portrait() *unison.Image {
+func (p *BaseProfile) Portrait() *unison.Image {
 	if p.portrait == nil && len(p.PortraitData) > 0 {
 		var err error
 		p.portrait, err = unison.NewImageFromBytes(p.PortraitData, 0.5)

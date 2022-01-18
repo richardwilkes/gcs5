@@ -16,7 +16,9 @@ import (
 )
 
 // Entity holds the base information for various types of entities: PC, NPC, Creature, etc.
-type Entity struct{}
+type Entity struct {
+	Profile PCProfile
+}
 
 // AddDRBonusesFor locates any active DR bonuses and adds them to the map. If 'drMap' isn't nil, it will be returned.
 func (e *Entity) AddDRBonusesFor(id string, tooltip *xio.ByteBuffer, drMap map[string]int) map[string]int {
