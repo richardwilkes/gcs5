@@ -14,11 +14,14 @@ package gurps
 import (
 	"encoding/json"
 	"os"
+	"path"
 	"path/filepath"
+	"sort"
 
 	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
+	"github.com/richardwilkes/toolbox/txt"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
 )
 
@@ -30,17 +33,35 @@ type BodyType struct {
 
 // BodyTypeStorage defines the current BodyType data format.
 type BodyTypeStorage struct {
-	ID        string         `json:"id"`
 	Name      string         `json:"name"`
 	Roll      dice.Dice      `json:"roll"`
 	Locations []*HitLocation `json:"locations,omitempty"`
 }
 
-// FactoryBodyType returns a new copy of the factory BodyType.
+// FactoryBodyType returns a new copy of the default factory BodyType.
 func FactoryBodyType() *BodyType {
 	var bodyType BodyType
 	jot.FatalIfErr(xfs.LoadJSONFromFS(embeddedFS, "data/body_types/Humanoid.body", &bodyType))
 	return &bodyType
+}
+
+// FactoryBodyTypes returns the list of the known factory BodyTypes.
+func FactoryBodyTypes() []*BodyType {
+	entries, err := embeddedFS.ReadDir("data/body_types")
+	jot.FatalIfErr(err)
+	list := make([]*BodyType, 0, len(entries))
+	for _, entry := range entries {
+		name := entry.Name()
+		if path.Ext(name) == ".body" {
+			var bodyType BodyType
+			jot.FatalIfErr(xfs.LoadJSONFromFS(embeddedFS, "data/body_types/"+name, &bodyType))
+			list = append(list, &bodyType)
+		}
+	}
+	sort.Slice(list, func(i, j int) bool {
+		return txt.NaturalLess(list[i].Name, list[j].Name, true)
+	})
+	return list
 }
 
 // UnmarshalJSON implements json.Unmarshaler. Loads the current format as well as older variants.

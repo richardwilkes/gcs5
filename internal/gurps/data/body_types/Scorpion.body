@@ -1,6 +1,4 @@
 {
-  "version": 3,
-  "id": "scorpion",
   "name": "Scorpion",
   "roll": "3d",
   "locations": [

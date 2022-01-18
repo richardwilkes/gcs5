@@ -1,6 +1,4 @@
 {
-  "version": 3,
-  "id": "squid",
   "name": "Squid",
   "roll": "3d",
   "locations": [

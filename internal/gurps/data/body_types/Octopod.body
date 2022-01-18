@@ -1,6 +1,4 @@
 {
-  "version": 3,
-  "id": "octopod",
   "name": "Octopod",
   "roll": "3d",
   "locations": [

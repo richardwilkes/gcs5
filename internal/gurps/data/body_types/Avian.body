@@ -1,6 +1,4 @@
 {
-  "version": 3,
-  "id": "avian",
   "name": "Avian",
   "roll": "3d",
   "locations": [

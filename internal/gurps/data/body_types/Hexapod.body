@@ -1,6 +1,4 @@
 {
-  "version": 3,
-  "id": "hexapod",
   "name": "Hexapod",
   "roll": "3d",
   "locations": [

@@ -1,6 +1,4 @@
 {
-  "version": 3,
-  "id": "hexapod_winged",
   "name": "Hexapod, Winged",
   "roll": "3d",
   "locations": [

@@ -1,6 +1,4 @@
 {
-  "version": 3,
-  "id": "quadruped",
   "name": "Quadruped",
   "roll": "3d",
   "locations": [

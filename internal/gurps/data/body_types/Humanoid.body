@@ -1,6 +1,4 @@
 {
-  "version": 3,
-  "id": "humanoid",
   "name": "Humanoid",
   "roll": "3d",
   "locations": [

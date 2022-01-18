@@ -1,6 +1,4 @@
 {
-  "version": 3,
-  "id": "snakemen",
   "name": "Snakemen",
   "roll": "3d",
   "locations": [

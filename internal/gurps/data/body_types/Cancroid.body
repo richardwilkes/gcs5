@@ -1,6 +1,4 @@
 {
-  "version": 3,
-  "id": "cancroid",
   "name": "Cancroid",
   "roll": "3d",
   "locations": [

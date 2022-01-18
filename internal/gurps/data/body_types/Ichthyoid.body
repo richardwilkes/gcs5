@@ -1,6 +1,4 @@
 {
-  "version": 3,
-  "id": "ichthyoid",
   "name": "Ichthyoid",
   "roll": "3d",
   "locations": [

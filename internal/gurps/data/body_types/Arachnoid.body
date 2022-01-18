@@ -1,6 +1,4 @@
 {
-  "version": 3,
-  "id": "arachnoid",
   "name": "Arachnoid",
   "roll": "3d",
   "locations": [

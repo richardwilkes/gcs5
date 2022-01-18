@@ -1,6 +1,4 @@
 {
-  "version": 3,
-  "id": "centaur",
   "name": "Centaur",
   "roll": "3d",
   "locations": [

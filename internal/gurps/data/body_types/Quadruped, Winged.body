@@ -1,6 +1,4 @@
 {
-  "version": 3,
-  "id": "quadruped_winged",
   "name": "Quadruped, Winged",
   "roll": "3d",
   "locations": [
