@@ -26,15 +26,15 @@ const HitLocationPrefix = "hit_location."
 
 // HitLocation holds a single hit location.
 type HitLocation struct {
-	ID          string           `json:"id"`
-	ChoiceName  string           `json:"choice_name"`
-	TableName   string           `json:"table_name"`
-	Slots       int              `json:"slots,omitempty"`
-	HitPenalty  int              `json:"hit_penalty,omitempty"`
-	DRBonus     int              `json:"dr_bonus,omitempty"`
-	Description string           `json:"description,omitempty"`
-	Calc        *HitLocationCalc `json:"calc,omitempty"`
-	SubTable    *BodyType        `json:"sub_table,omitempty"`
+	ID          string          `json:"id"`
+	ChoiceName  string          `json:"choice_name"`
+	TableName   string          `json:"table_name"`
+	Slots       int             `json:"slots,omitempty"`
+	HitPenalty  int             `json:"hit_penalty,omitempty"`
+	DRBonus     int             `json:"dr_bonus,omitempty"`
+	Description string          `json:"description,omitempty"`
+	Calc        HitLocationCalc `json:"calc"`
+	SubTable    *BodyType       `json:"sub_table,omitempty"`
 	owningTable *BodyType
 }
 
@@ -84,9 +84,6 @@ func (h *HitLocation) DR(entity *Entity, tooltip *xio.ByteBuffer, drMap map[stri
 }
 
 func (h *HitLocation) updateRollRange(start int) int {
-	if h.Calc == nil {
-		h.Calc = &HitLocationCalc{}
-	}
 	switch h.Slots {
 	case 0:
 		h.Calc.RollRange = "-"
@@ -102,9 +99,7 @@ func (h *HitLocation) updateRollRange(start int) int {
 }
 
 func (h *HitLocation) updateDR(entity *Entity) {
-	if h.Calc == nil {
-		h.Calc = &HitLocationCalc{}
-	}
+	h.Calc.DR = nil
 	if entity != nil {
 		h.Calc.DR = h.DR(entity, nil, nil)
 		if _, exists := h.Calc.DR[All]; !exists {
@@ -113,12 +108,5 @@ func (h *HitLocation) updateDR(entity *Entity) {
 	}
 	if h.SubTable != nil {
 		h.SubTable.updateDR(entity)
-	}
-}
-
-func (h *HitLocation) clearCalc() {
-	h.Calc = nil
-	if h.SubTable != nil {
-		h.SubTable.ClearCalc()
 	}
 }

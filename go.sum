@@ -26,8 +26,6 @@ github.com/richardwilkes/pdf v0.0.0-20220115194011-2380c98780aa h1:jMZDX5eFUy7pc
 github.com/richardwilkes/pdf v0.0.0-20220115194011-2380c98780aa/go.mod h1:aN1tva752mG3No50feQpoIhvMfYnhBj+JmIevlNd6Js=
 github.com/richardwilkes/rpgtools v1.3.0 h1:rpYa3x23qyoBanqos7JGA40DlL6S868omfu8CLA0W/k=
 github.com/richardwilkes/rpgtools v1.3.0/go.mod h1:QpATPyo6ivHIzpybc98BNQyVAwcgKdmVxauyP0pURwY=
-github.com/richardwilkes/toolbox v1.56.0 h1:2Hg+TsIkR+4ReoInmcJZOY4/V4HuoxyUrg5gLkW/NKU=
-github.com/richardwilkes/toolbox v1.56.0/go.mod h1:PJe2CGtD+8r+PnwiLBZVCvLm3d5lDSnJgH167+zWWhk=
 github.com/rogpeppe/go-internal v1.6.1/go.mod h1:xXDCJY+GAPziupqXw64V24skbSoqbTEfhy4qGm1nDQc=
 github.com/rogpeppe/go-internal v1.8.0 h1:FCbCCtXNOY3UtUuHUYaghJg4y7Fd14rXifAYUAtL9R8=
 github.com/rogpeppe/go-internal v1.8.0/go.mod h1:WmiCO8CzOY8rg0OYDC4/i/2WRWAB6poM+XZ2dLUbcbE=

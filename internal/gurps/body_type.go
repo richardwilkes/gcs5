@@ -41,7 +41,7 @@ type BodyType struct {
 type BodyTypeStorage struct {
 	Version   int            `json:"version"`
 	ID        string         `json:"id"`
-	Name      string         `json:"name,omitempty"`
+	Name      string         `json:"name"`
 	Roll      dice.Dice      `json:"roll"`
 	Locations []*HitLocation `json:"locations,omitempty"`
 }
@@ -97,8 +97,7 @@ func (b *BodyType) SaveTo(filePath string, entity *Entity) error {
 		return errs.NewWithCause(filePath, err)
 	}
 	if err := safe.WriteFileWithMode(filePath, func(w io.Writer) error {
-		b.FillCalc(entity)
-		defer b.ClearCalc()
+		b.calc(entity)
 		encoder := json.NewEncoder(w)
 		encoder.SetIndent("", "  ")
 		return encoder.Encode(b)
@@ -106,6 +105,11 @@ func (b *BodyType) SaveTo(filePath string, entity *Entity) error {
 		return errs.NewWithCause(filePath, err)
 	}
 	return nil
+}
+
+func (b *BodyType) calc(entity *Entity) {
+	b.updateRollRanges()
+	b.updateDR(entity)
 }
 
 func (b *BodyType) updateRollRanges() {
@@ -118,19 +122,5 @@ func (b *BodyType) updateRollRanges() {
 func (b *BodyType) updateDR(entity *Entity) {
 	for _, location := range b.Locations {
 		location.updateDR(entity)
-	}
-}
-
-// FillCalc fills in the calculation fields for third parties. 'entity' may be nil.
-func (b *BodyType) FillCalc(entity *Entity) {
-	b.ClearCalc()
-	b.updateRollRanges()
-	b.updateDR(entity)
-}
-
-// ClearCalc clears the calculation fields.
-func (b *BodyType) ClearCalc() {
-	for _, loc := range b.Locations {
-		loc.clearCalc()
 	}
 }
