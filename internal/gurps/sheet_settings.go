@@ -18,25 +18,25 @@ import (
 
 // SheetSettings holds sheet settings.
 type SheetSettings struct {
-	DefaultLengthUnits         length.Units `json:"default_length_units"`
-	DefaultWeightUnits         weight.Units `json:"default_weight_units"`
-	UserDescriptionDisplay     string       `json:"user_description_display"`
-	ModifiersDisplay           string       `json:"modifiers_display"`
-	NotesDisplay               string       `json:"notes_display"`
-	SkillLevelAdjDisplay       string       `json:"skill_level_adj_display"`
-	DamageProgression          string       `json:"damage_progression"`
-	UseMultiplicativeModifiers bool         `json:"use_multiplicative_modifiers"`
-	UseModifyingDicePlusAdds   bool         `json:"use_modifying_dice_plus_adds"`
-	ShowCollegeInSheetSpells   bool         `json:"show_college_in_sheet_spells"`
-	ShowDifficulty             bool         `json:"show_difficulty"`
-	ShowAdvantageModifierAdj   bool         `json:"show_advantage_modifier_adj"`
-	ShowEquipmentModifierAdj   bool         `json:"show_equipment_modifier_adj"`
-	ShowSpellAdj               bool         `json:"show_spell_adj"`
-	UseTitleInFooter           bool         `json:"use_title_in_footer"`
-	Page                       PageSettings `json:"page"`
-	BlockLayout                []string     `json:"block_layout"`
-	Attributes                 []*Attribute `json:"attributes"`
-	HitLocations               *BodyType    `json:"hit_locations"`
+	DefaultLengthUnits         length.Units      `json:"default_length_units"`
+	DefaultWeightUnits         weight.Units      `json:"default_weight_units"`
+	UserDescriptionDisplay     string            `json:"user_description_display"`
+	ModifiersDisplay           string            `json:"modifiers_display"`
+	NotesDisplay               string            `json:"notes_display"`
+	SkillLevelAdjDisplay       string            `json:"skill_level_adj_display"`
+	DamageProgression          DamageProgression `json:"damage_progression"`
+	UseMultiplicativeModifiers bool              `json:"use_multiplicative_modifiers"`
+	UseModifyingDicePlusAdds   bool              `json:"use_modifying_dice_plus_adds"`
+	ShowCollegeInSheetSpells   bool              `json:"show_college_in_sheet_spells"`
+	ShowDifficulty             bool              `json:"show_difficulty"`
+	ShowAdvantageModifierAdj   bool              `json:"show_advantage_modifier_adj"`
+	ShowEquipmentModifierAdj   bool              `json:"show_equipment_modifier_adj"`
+	ShowSpellAdj               bool              `json:"show_spell_adj"`
+	UseTitleInFooter           bool              `json:"use_title_in_footer"`
+	Page                       PageSettings      `json:"page"`
+	BlockLayout                []string          `json:"block_layout"`
+	Attributes                 AttributeDefs     `json:"attributes"`
+	HitLocations               *BodyType         `json:"hit_locations"`
 }
 
 // PageSettings holds page settings.
@@ -54,11 +54,11 @@ func FactorySheetSettings() *SheetSettings {
 	return &SheetSettings{
 		DefaultLengthUnits:     length.FeetAndInches,
 		DefaultWeightUnits:     weight.Pound,
-		UserDescriptionDisplay: "tooltip",   // TODO: Use type
-		ModifiersDisplay:       "inline",    // TODO: Use type
-		NotesDisplay:           "inline",    // TODO: Use type
-		SkillLevelAdjDisplay:   "tooltip",   // TODO: Use type
-		DamageProgression:      "basic_set", // TODO: Use type
+		UserDescriptionDisplay: "tooltip", // TODO: Use type
+		ModifiersDisplay:       "inline",  // TODO: Use type
+		NotesDisplay:           "inline",  // TODO: Use type
+		SkillLevelAdjDisplay:   "tooltip", // TODO: Use type
+		DamageProgression:      BasicSet,
 		ShowSpellAdj:           true,
 		Page: PageSettings{
 			PaperSize:    "na-letter", // TODO: Use type
@@ -69,7 +69,7 @@ func FactorySheetSettings() *SheetSettings {
 			Orientation:  "portrait", // TODO: Use type
 		},
 		BlockLayout:  FactoryBlockLayout(),
-		Attributes:   FactoryAttributes(),
+		Attributes:   FactoryAttributeDefs(),
 		HitLocations: FactoryBodyType(),
 	}
 }

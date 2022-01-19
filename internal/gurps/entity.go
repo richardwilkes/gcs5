@@ -17,7 +17,8 @@ import (
 
 // Entity holds the base information for various types of entities: PC, NPC, Creature, etc.
 type Entity struct {
-	Profile PCProfile
+	Profile       PCProfile
+	SheetSettings *SheetSettings
 }
 
 // AddDRBonusesFor locates any active DR bonuses and adds them to the map. If 'drMap' isn't nil, it will be returned.
