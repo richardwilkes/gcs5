@@ -17,8 +17,9 @@ import (
 
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/eval"
-	"github.com/richardwilkes/toolbox/eval/float64eval"
+	"github.com/richardwilkes/toolbox/eval/f64d4eval"
 	"github.com/richardwilkes/toolbox/log/jot"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 // ReservedAttributeDefIDs holds a list of IDs that aren't permitted for an AttributeDef.
@@ -27,7 +28,7 @@ var ReservedAttributeDefIDs = []string{"skill", "parry", "block", "dodge", "sm"}
 // AttributeDef holds the definition of an attribute.
 type AttributeDef struct {
 	ID                  string           `json:"id"`
-	Type                string           `json:"type"`
+	Type                AttributeType    `json:"type"`
 	Name                string           `json:"name"`
 	FullName            string           `json:"full_name,omitempty"`
 	AttributeBase       string           `json:"attribute_base,omitempty"`
@@ -57,13 +58,13 @@ func (a *AttributeDef) Primary() bool {
 }
 
 // BaseValue returns the resolved base value.
-func (a *AttributeDef) BaseValue(resolver eval.VariableResolver) float64 {
-	result, err := float64eval.NewEvaluator(resolver, true).Evaluate(a.AttributeBase)
+func (a *AttributeDef) BaseValue(resolver eval.VariableResolver) fixed.F64d4 {
+	result, err := f64d4eval.NewEvaluator(resolver, true).Evaluate(a.AttributeBase)
 	if err != nil {
 		jot.Warn(errs.NewWithCausef(err, "unable to resolve '%s'", a.AttributeBase))
 		return 0
 	}
-	if value, ok := result.(float64); ok {
+	if value, ok := result.(fixed.F64d4); ok {
 		return value
 	}
 	jot.Warn(errs.Newf("unable to resolve '%s' to a number", a.AttributeBase))
@@ -71,8 +72,8 @@ func (a *AttributeDef) BaseValue(resolver eval.VariableResolver) float64 {
 }
 
 // ComputeCost returns the value adjusted for a cost reduction.
-func (a *AttributeDef) ComputeCost(entity *Entity, value float64, sizeModifier, costReduction int) int {
-	cost := int(float64(a.CostPerPoint) * value)
+func (a *AttributeDef) ComputeCost(entity *Entity, value fixed.F64d4, sizeModifier, costReduction int) int {
+	cost := int(value.Mul(fixed.F64d4FromInt64(int64(a.CostPerPoint))).AsInt64())
 	if sizeModifier > 0 && a.CostAdjPercentPerSM > 0 && !(a.ID == "hp" && entity.SheetSettings.DamageProgression == KnowingYourOwnStrength) {
 		costReduction += sizeModifier * a.CostAdjPercentPerSM
 		if costReduction < 0 {

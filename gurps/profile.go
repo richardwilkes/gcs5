@@ -27,11 +27,12 @@ const (
 
 // BaseProfile holds the base profile information.
 type BaseProfile struct {
-	Name         string `json:"name,omitempty"`
-	TechLevel    string `json:"tech_level,omitempty"`
-	SizeModifier int    `json:"SM,omitempty"`
-	PortraitData []byte `json:"portrait,omitempty"`
-	portrait     *unison.Image
+	Name              string `json:"name,omitempty"`
+	TechLevel         string `json:"tech_level,omitempty"`
+	SizeModifier      int    `json:"SM,omitempty"`
+	SizeModifierBonus int    `json:"-"`
+	PortraitData      []byte `json:"portrait,omitempty"`
+	portrait          *unison.Image
 }
 
 // NPCProfile holds the profile information for an NPC.
@@ -69,4 +70,9 @@ func (p *BaseProfile) Portrait() *unison.Image {
 		}
 	}
 	return p.portrait
+}
+
+// SM returns the adjusted size modifier.
+func (p *BaseProfile) SM() int {
+	return p.SizeModifier + p.SizeModifierBonus
 }

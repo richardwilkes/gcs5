@@ -3,6 +3,7 @@ module github.com/richardwilkes/gcs
 go 1.17
 
 require (
+	github.com/goccy/go-json v0.9.3
 	github.com/richardwilkes/pdf v0.0.0-20220115194011-2380c98780aa
 	github.com/richardwilkes/rpgtools v1.3.0
 	github.com/richardwilkes/toolbox v1.56.0

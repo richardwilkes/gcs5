@@ -12,14 +12,12 @@
 package gurps
 
 import (
-	"encoding/json"
-	"os"
+	"context"
 	"path"
-	"path/filepath"
 	"sort"
 
+	"github.com/goccy/go-json"
 	"github.com/richardwilkes/rpgtools/dice"
-	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
@@ -64,6 +62,14 @@ func FactoryBodyTypes() []*BodyType {
 	return list
 }
 
+// MarshalJSON implements json.MarshalerContext.
+func (b *BodyType) MarshalJSON(ctx context.Context) ([]byte, error) {
+	if entity, ok := ctx.Value(EntityCtxKey).(*Entity); ok {
+		b.calc(entity, false)
+	}
+	return json.MarshalContext(ctx, b.BodyTypeStorage)
+}
+
 // UnmarshalJSON implements json.Unmarshaler. Loads the current format as well as older variants.
 func (b *BodyType) UnmarshalJSON(data []byte) error {
 	var variants struct {
@@ -82,29 +88,20 @@ func (b *BodyType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// SaveTo saves the BodyType data to the specified file. 'entity' may be nil.
-func (b *BodyType) SaveTo(filePath string, entity *Entity) error {
-	if err := os.MkdirAll(filepath.Dir(filePath), 0o750); err != nil {
-		return errs.NewWithCause(filePath, err)
-	}
-	b.calc(entity)
-	return xfs.SaveJSONWithMode(filePath, b, true, 0o640)
+func (b *BodyType) calc(entity *Entity, recursive bool) {
+	b.updateRollRanges(recursive)
+	b.updateDR(entity, recursive)
 }
 
-func (b *BodyType) calc(entity *Entity) {
-	b.updateRollRanges()
-	b.updateDR(entity)
-}
-
-func (b *BodyType) updateRollRanges() {
+func (b *BodyType) updateRollRanges(recursive bool) {
 	start := b.Roll.Minimum(false)
 	for _, location := range b.Locations {
-		start = location.updateRollRange(start)
+		start = location.updateRollRange(start, recursive)
 	}
 }
 
-func (b *BodyType) updateDR(entity *Entity) {
+func (b *BodyType) updateDR(entity *Entity, recursive bool) {
 	for _, location := range b.Locations {
-		location.updateDR(entity)
+		location.updateDR(entity, recursive)
 	}
 }

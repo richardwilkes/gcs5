@@ -16,7 +16,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/richardwilkes/gcs/internal/gurps"
+	"github.com/richardwilkes/gcs/gurps"
 	"github.com/richardwilkes/gcs/internal/library"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"

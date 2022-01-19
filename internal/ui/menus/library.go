@@ -14,7 +14,7 @@ package menus
 import (
 	"fmt"
 
-	"github.com/richardwilkes/gcs/internal/gurps"
+	"github.com/richardwilkes/gcs/gurps"
 	"github.com/richardwilkes/gcs/internal/library"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"

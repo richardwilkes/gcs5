@@ -12,8 +12,11 @@
 package gurps
 
 import (
+	"github.com/richardwilkes/toolbox/eval"
 	"github.com/richardwilkes/toolbox/xio"
 )
+
+var _ eval.VariableResolver = &Entity{}
 
 // Entity holds the base information for various types of entities: PC, NPC, Creature, etc.
 type Entity struct {
@@ -47,4 +50,10 @@ func (e *Entity) AddDRBonusesFor(id string, tooltip *xio.ByteBuffer, drMap map[s
 	   }
 	*/
 	return drMap
+}
+
+// ResolveVariable implements eval.VariableResolver.
+func (e *Entity) ResolveVariable(variableName string) string {
+	// TODO implement me
+	return variableName
 }

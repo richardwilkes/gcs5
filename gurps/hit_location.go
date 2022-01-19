@@ -83,7 +83,7 @@ func (h *HitLocation) DR(entity *Entity, tooltip *xio.ByteBuffer, drMap map[stri
 	return drMap
 }
 
-func (h *HitLocation) updateRollRange(start int) int {
+func (h *HitLocation) updateRollRange(start int, recursive bool) int {
 	switch h.Slots {
 	case 0:
 		h.Calc.RollRange = "-"
@@ -92,13 +92,13 @@ func (h *HitLocation) updateRollRange(start int) int {
 	default:
 		h.Calc.RollRange = fmt.Sprintf("%d-%d", start, start+h.Slots-1)
 	}
-	if h.SubTable != nil {
-		h.SubTable.updateRollRanges()
+	if recursive && h.SubTable != nil {
+		h.SubTable.updateRollRanges(true)
 	}
 	return start + h.Slots
 }
 
-func (h *HitLocation) updateDR(entity *Entity) {
+func (h *HitLocation) updateDR(entity *Entity, recursive bool) {
 	h.Calc.DR = nil
 	if entity != nil {
 		h.Calc.DR = h.DR(entity, nil, nil)
@@ -106,7 +106,7 @@ func (h *HitLocation) updateDR(entity *Entity) {
 			h.Calc.DR[All] = 0
 		}
 	}
-	if h.SubTable != nil {
-		h.SubTable.updateDR(entity)
+	if recursive && h.SubTable != nil {
+		h.SubTable.updateDR(entity, true)
 	}
 }

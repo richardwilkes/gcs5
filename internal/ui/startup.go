@@ -12,7 +12,7 @@
 package ui
 
 import (
-	"github.com/richardwilkes/gcs/internal/gurps"
+	"github.com/richardwilkes/gcs/gurps"
 	"github.com/richardwilkes/gcs/internal/library"
 	"github.com/richardwilkes/gcs/internal/ui/menus"
 	"github.com/richardwilkes/gcs/internal/ui/trampolines"

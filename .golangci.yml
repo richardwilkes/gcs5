@@ -85,6 +85,8 @@ issues:
   exclude-use-default: false
   exclude:
     - "fieldalignment: struct with \\d+ pointer bytes could be"
+    - "stdmethods: method MarshalJSON"
+    - "stdmethods: method UnmarshalJSON"
     - "G104:"
     - "G110:"
     - "G304:"

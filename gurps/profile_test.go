@@ -13,10 +13,10 @@ package gurps_test
 
 import (
 	_ "embed"
-	"encoding/json"
 	"testing"
 
-	"github.com/richardwilkes/gcs/internal/gurps"
+	"github.com/goccy/go-json"
+	"github.com/richardwilkes/gcs/gurps"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

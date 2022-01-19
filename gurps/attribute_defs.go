@@ -12,11 +12,8 @@
 package gurps
 
 import (
-	"encoding/json"
-	"os"
-	"path/filepath"
-
-	"github.com/richardwilkes/gcs/internal/id"
+	"github.com/goccy/go-json"
+	"github.com/richardwilkes/gcs/id"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
@@ -30,6 +27,16 @@ func FactoryAttributeDefs() AttributeDefs {
 	var defs AttributeDefs
 	jot.FatalIfErr(xfs.LoadJSONFromFS(embeddedFS, "data/standard.attr", &defs))
 	return defs
+}
+
+// Lookup the given identifier and return the matching AttributeDef or nil.
+func (a AttributeDefs) Lookup(identifier string) *AttributeDef {
+	for _, one := range a {
+		if one.ID == identifier {
+			return one
+		}
+	}
+	return nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler. Loads the current format as well as older variants.
@@ -55,12 +62,4 @@ func (a *AttributeDefs) UnmarshalJSON(data []byte) error {
 		set[one.ID] = true
 	}
 	return nil
-}
-
-// SaveTo saves the AttributeDefs data to the specified file.
-func (a AttributeDefs) SaveTo(filePath string) error {
-	if err := os.MkdirAll(filepath.Dir(filePath), 0o750); err != nil {
-		return errs.NewWithCause(filePath, err)
-	}
-	return xfs.SaveJSONWithMode(filePath, a, true, 0o640)
 }
