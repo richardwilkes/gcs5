@@ -12,25 +12,17 @@
 package gurps
 
 import (
-	"encoding/json"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/gcs/internal/id"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/eval"
 	"github.com/richardwilkes/toolbox/eval/float64eval"
 	"github.com/richardwilkes/toolbox/log/jot"
-	xfs "github.com/richardwilkes/toolbox/xio/fs"
 )
 
 // ReservedAttributeDefIDs holds a list of IDs that aren't permitted for an AttributeDef.
 var ReservedAttributeDefIDs = []string{"skill", "parry", "block", "dodge", "sm"}
-
-// AttributeDefs holds a slice of AttributeDef.
-type AttributeDefs []*AttributeDef
 
 // AttributeDef holds the definition of an attribute.
 type AttributeDef struct {
@@ -43,46 +35,6 @@ type AttributeDef struct {
 	CostAdjPercentPerSM int              `json:"cost_adj_percent_per_sm,omitempty"`
 	Order               int              `json:"-"`
 	Thresholds          []*PoolThreshold `json:"thresholds,omitempty"`
-}
-
-// FactoryAttributeDefs returns the attribute factory settings.
-func FactoryAttributeDefs() AttributeDefs {
-	var defs AttributeDefs
-	jot.FatalIfErr(xfs.LoadJSONFromFS(embeddedFS, "data/standard.attr", &defs))
-	return defs
-}
-
-// UnmarshalJSON implements json.Unmarshaler. Loads the current format as well as older variants.
-func (a *AttributeDefs) UnmarshalJSON(data []byte) error {
-	var current []*AttributeDef
-	if err := json.Unmarshal(data, &current); err != nil {
-		var variants struct {
-			JavaVersion []*AttributeDef `json:"attributes"`
-		}
-		if err2 := json.Unmarshal(data, &variants); err2 != nil {
-			return err
-		}
-		*a = variants.JavaVersion
-	} else {
-		*a = current
-	}
-	set := make(map[string]bool)
-	for _, one := range *a {
-		one.ID = id.Sanitize(one.ID, false, ReservedAttributeDefIDs...)
-		if set[one.ID] {
-			return errs.New("duplicate ID in attributes: " + one.ID)
-		}
-		set[one.ID] = true
-	}
-	return nil
-}
-
-// SaveTo saves the AttributeDefs data to the specified file.
-func (a AttributeDefs) SaveTo(filePath string) error {
-	if err := os.MkdirAll(filepath.Dir(filePath), 0o750); err != nil {
-		return errs.NewWithCause(filePath, err)
-	}
-	return xfs.SaveJSONWithMode(filePath, a, true, 0o640)
 }
 
 // CombinedName returns the combined FullName and Name, as appropriate.
