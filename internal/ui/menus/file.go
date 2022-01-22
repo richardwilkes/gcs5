@@ -12,8 +12,8 @@
 package menus
 
 import (
-	"github.com/richardwilkes/gcs/internal/library"
 	"github.com/richardwilkes/gcs/internal/ui/workspace"
+	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )

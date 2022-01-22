@@ -16,8 +16,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/richardwilkes/gcs/gurps"
-	"github.com/richardwilkes/gcs/internal/library"
+	"github.com/richardwilkes/gcs/model/gurps/library"
+	"github.com/richardwilkes/gcs/settings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -51,9 +51,10 @@ func newNavigator() *Navigator {
 	n.Self = n
 
 	n.table.ColumnSizes = make([]unison.ColumnSize, 1)
-	globalSettings := gurps.Global()
-	rows := make([]unison.TableRowData, 0, len(globalSettings.Libraries))
-	for _, one := range globalSettings.Libraries {
+	globalSettings := settings.Global()
+	libs := globalSettings.Libraries.List()
+	rows := make([]unison.TableRowData, 0, len(libs))
+	for _, one := range libs {
 		rows = append(rows, NewLibraryNode(n, one))
 	}
 	n.table.SetTopLevelRows(rows)
@@ -121,7 +122,7 @@ func (n *Navigator) openRow(row unison.TableRowData) {
 			n.openRow(child)
 		}
 	case *FileNode:
-		OpenFile(n.Window(), path.Join(t.library.Config().Path, t.path))
+		OpenFile(n.Window(), path.Join(t.library.Path(), t.path))
 	}
 }
 

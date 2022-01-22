@@ -13,11 +13,12 @@ package workspace
 
 import (
 	"io/fs"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
-	"github.com/richardwilkes/gcs/internal/library"
+	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -50,7 +51,7 @@ func NewDirectoryNode(nav *Navigator, lib *library.Library, dirPath string) *Dir
 
 // Path returns the full path for this directory.
 func (n *DirectoryNode) Path() string {
-	return filepath.Join(n.library.Config().Path, n.path)
+	return filepath.Join(n.library.Path(), n.path)
 }
 
 // Refresh the contents of this node.
@@ -59,8 +60,8 @@ func (n *DirectoryNode) Refresh() {
 }
 
 func refreshChildren(nav *Navigator, lib *library.Library, dirPath string) []unison.TableRowData {
-	libFS := lib.FS()
-	entries, err := fs.ReadDir(libFS, dirPath)
+	libPath := lib.Path()
+	entries, err := os.ReadDir(filepath.Join(libPath, dirPath))
 	if err != nil {
 		jot.Error(errs.NewWithCausef(err, "unable to read the directory: %s", dirPath))
 		return nil
@@ -73,7 +74,7 @@ func refreshChildren(nav *Navigator, lib *library.Library, dirPath string) []uni
 			isDir := entry.IsDir()
 			if entry.Type() == fs.ModeSymlink {
 				var sub []fs.DirEntry
-				if sub, err = fs.ReadDir(libFS, p); err == nil && len(sub) > 0 {
+				if sub, err = os.ReadDir(filepath.Join(libPath, p)); err == nil && len(sub) > 0 {
 					isDir = true
 				}
 			}

@@ -12,19 +12,18 @@
 package ui
 
 import (
-	"github.com/richardwilkes/gcs/gurps"
-	"github.com/richardwilkes/gcs/internal/library"
 	"github.com/richardwilkes/gcs/internal/ui/menus"
 	"github.com/richardwilkes/gcs/internal/ui/trampolines"
 	"github.com/richardwilkes/gcs/internal/ui/workspace"
+	"github.com/richardwilkes/gcs/settings"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
 
 // Start the UI.
 func Start(files []string) {
-	libs := gurps.Global().Libraries
-	go library.PerformUpdateChecks(libs)
+	libs := settings.Global().Libraries
+	go libs.PerformUpdateChecks()
 	unison.Start(
 		unison.StartupFinishedCallback(func() {
 			trampolines.MenuSetup = menus.Setup

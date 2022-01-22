@@ -16,10 +16,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/gcs/internal/library"
 	"github.com/richardwilkes/gcs/internal/pdf"
 	"github.com/richardwilkes/gcs/internal/ui/icons"
 	"github.com/richardwilkes/gcs/internal/ui/search"
+	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"

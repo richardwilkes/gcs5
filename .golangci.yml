@@ -14,6 +14,9 @@ linters-settings:
     check-type-assertions: true
     check-blank: true
     exclude-functions:
+      - (*bufio.Writer).WriteByte
+      - (*bufio.Writer).WriteRune
+      - (*bufio.Writer).WriteString
       - (*github.com/richardwilkes/toolbox/xio.ByteBuffer).Insert
       - (*github.com/richardwilkes/toolbox/xio.ByteBuffer).InsertByte
       - (*github.com/richardwilkes/toolbox/xio.ByteBuffer).InsertRune

@@ -12,7 +12,7 @@
 package workspace
 
 import (
-	"github.com/richardwilkes/gcs/internal/library"
+	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
@@ -42,7 +42,7 @@ func NewLibraryNode(nav *Navigator, lib *library.Library) *LibraryNode {
 
 // Path returns the full path for this library.
 func (n *LibraryNode) Path() string {
-	return n.library.Config().Path
+	return n.library.Path()
 }
 
 // Refresh the contents of this node.
@@ -64,7 +64,7 @@ func (n *LibraryNode) ChildRows() []unison.TableRowData {
 func (n *LibraryNode) CellDataForSort(index int) string {
 	switch index {
 	case 0:
-		return n.library.Title()
+		return n.library.Title
 	default:
 		return ""
 	}
@@ -75,9 +75,9 @@ func (n *LibraryNode) ColumnCell(index int, selected bool) unison.Paneler {
 	switch index {
 	case 0:
 		if n.open {
-			return createNodeCell(library.OpenFolder, n.library.Title(), selected)
+			return createNodeCell(library.OpenFolder, n.library.Title, selected)
 		}
-		return createNodeCell(library.ClosedFolder, n.library.Title(), selected)
+		return createNodeCell(library.ClosedFolder, n.library.Title, selected)
 	default:
 		jot.Errorf("column index out of range (0-0): %d", index)
 		return unison.NewLabel()

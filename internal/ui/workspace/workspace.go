@@ -12,7 +12,7 @@
 package workspace
 
 import (
-	"github.com/richardwilkes/gcs/gurps"
+	"github.com/richardwilkes/gcs/settings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -59,7 +59,7 @@ func NewWorkspace(wnd *unison.Window) *Workspace {
 }
 
 func (w *Workspace) willClose() {
-	globalSettings := gurps.Global()
+	globalSettings := settings.Global()
 	globalSettings.LibraryExplorer.OpenRowKeys = w.Navigator.DisclosedPaths()
 	if err := globalSettings.Save(); err != nil {
 		unison.ErrorDialogWithError(i18n.Text("Unable to save global settings"), err)
