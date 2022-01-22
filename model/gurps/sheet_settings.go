@@ -48,7 +48,7 @@ type SheetSettings struct {
 	NotesDisplay               string
 	SkillLevelAdjDisplay       string
 	DamageProgression          DamageProgression
-	Page                       PageSettings
+	Page                       *PageSettings
 	BlockLayout                []string
 	Attributes                 map[string]*AttributeDef
 	HitLocations               *BodyType
@@ -62,17 +62,7 @@ type SheetSettings struct {
 	UseTitleInFooter           bool
 }
 
-// PageSettings holds page settings.
-type PageSettings struct {
-	PaperSize    string        `json:"paper_size"`
-	TopMargin    length.Length `json:"top_margin"`
-	LeftMargin   length.Length `json:"left_margin"`
-	BottomMargin length.Length `json:"bottom_margin"`
-	RightMargin  length.Length `json:"right_margin"`
-	Orientation  string        `json:"orientation"`
-}
-
-// FactorySheetSettings returns a new SheetSettings will factory defaults.
+// FactorySheetSettings returns a new SheetSettings with factory defaults.
 func FactorySheetSettings() *SheetSettings {
 	return &SheetSettings{
 		DefaultLengthUnits:     length.FeetAndInches,
@@ -83,17 +73,10 @@ func FactorySheetSettings() *SheetSettings {
 		SkillLevelAdjDisplay:   "tooltip", // TODO: Use type
 		DamageProgression:      BasicSet,
 		ShowSpellAdj:           true,
-		Page: PageSettings{
-			PaperSize:    "na-letter", // TODO: Use type
-			TopMargin:    length.FromFloat64(0.25, length.Inch),
-			LeftMargin:   length.FromFloat64(0.25, length.Inch),
-			BottomMargin: length.FromFloat64(0.25, length.Inch),
-			RightMargin:  length.FromFloat64(0.25, length.Inch),
-			Orientation:  "portrait", // TODO: Use type
-		},
-		BlockLayout:  FactoryBlockLayout(),
-		Attributes:   FactoryAttributeDefs(),
-		HitLocations: FactoryBodyType(),
+		Page:                   FactoryPageSettings(),
+		BlockLayout:            FactoryBlockLayout(),
+		Attributes:             FactoryAttributeDefs(),
+		HitLocations:           FactoryBodyType(),
 	}
 }
 
