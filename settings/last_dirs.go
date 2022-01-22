@@ -15,10 +15,12 @@ import (
 	"github.com/richardwilkes/gcs/model/encoding"
 )
 
+// LastDirs holds the last directory used for a given key.
 type LastDirs struct {
 	Map map[string]string
 }
 
+// NewLastDirs creates a new, empty, LastDirs.
 func NewLastDirs() *LastDirs {
 	return &LastDirs{Map: make(map[string]string)}
 }

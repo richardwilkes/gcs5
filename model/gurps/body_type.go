@@ -124,12 +124,14 @@ func (b *BodyType) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
 	encoder.EndObject()
 }
 
+// Update the role ranges and populate the lookup map.
 func (b *BodyType) Update() {
 	b.updateRollRanges()
 	b.locationLookup = make(map[string]*HitLocation)
 	b.populateMap(b.locationLookup)
 }
 
+// SetOwningLocation sets the owning HitLocation.
 func (b *BodyType) SetOwningLocation(loc *HitLocation) {
 	b.owningLocation = loc
 	if loc != nil {
@@ -150,11 +152,13 @@ func (b *BodyType) populateMap(m map[string]*HitLocation) {
 	}
 }
 
+// AddLocation adds a HitLocation to the end of list.
 func (b *BodyType) AddLocation(loc *HitLocation) {
 	b.locations = append(b.locations, loc)
 	loc.owningTable = b
 }
 
+// RemoveLocation removes a HitLocation.
 func (b *BodyType) RemoveLocation(loc *HitLocation) {
 	for i, one := range b.locations {
 		if one == loc {
@@ -166,6 +170,7 @@ func (b *BodyType) RemoveLocation(loc *HitLocation) {
 	}
 }
 
+// UniqueHitLocations returns the list of unique hit locations.
 func (b *BodyType) UniqueHitLocations() []*HitLocation {
 	if len(b.locationLookup) == 0 {
 		b.Update()
@@ -186,6 +191,7 @@ func (b *BodyType) UniqueHitLocations() []*HitLocation {
 	return locations
 }
 
+// LookupLocationByID returns the HitLocation that matches the given ID.
 func (b *BodyType) LookupLocationByID(idStr string) *HitLocation {
 	if len(b.locationLookup) == 0 {
 		b.Update()

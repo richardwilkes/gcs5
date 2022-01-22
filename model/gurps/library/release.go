@@ -38,7 +38,7 @@ func (r *Release) HasUpdate() bool {
 
 // LoadReleases loads the list of releases available from a given GitHub repo.
 func LoadReleases(ctx context.Context, client *http.Client, githubAccountName, repoName, currentVersion string,
-	filter func(version string, notes string) bool) ([]Release, error) {
+	filter func(version, notes string) bool) ([]Release, error) {
 	if githubAccountName == "*" {
 		return nil, nil
 	}

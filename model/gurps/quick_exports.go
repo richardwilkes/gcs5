@@ -24,6 +24,7 @@ const (
 	quickExportsExportsKey = "exports"
 )
 
+// QuickExports holds a list containing information about previous exports.
 type QuickExports struct {
 	max  int
 	info []*ExportInfo

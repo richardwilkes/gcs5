@@ -12,9 +12,6 @@
 package settings
 
 import (
-	"encoding/json"
-	"io"
-	"os"
 	"path/filepath"
 
 	"github.com/richardwilkes/gcs/model/encoding"
@@ -22,9 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox/cmdline"
-	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio/fs/paths"
-	"github.com/richardwilkes/toolbox/xio/fs/safe"
 )
 
 const (
@@ -106,6 +101,11 @@ func Global() *Settings {
 	return global
 }
 
+// Save to the standard path.
+func (s *Settings) Save() error {
+	return encoding.SaveJSON(Path(), true, s.toJSON)
+}
+
 func (s *Settings) toJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()
 	encoder.KeyedString(settingsLastSeenGCSVersionKey, s.LastSeenGCSVersion, false, false)
@@ -121,22 +121,6 @@ func (s *Settings) toJSON(encoder *encoding.JSONEncoder) {
 	s.QuickExports.ToKeyedJSON(settingsQuickExportsKey, encoder)
 	s.Sheet.ToKeyedJSON(settingsSheetKey, encoder)
 	encoder.EndObject()
-}
-
-// Save to the standard path.
-func (s *Settings) Save() error {
-	filePath := Path()
-	if err := os.MkdirAll(filepath.Dir(filePath), 0o750); err != nil {
-		return errs.NewWithCause(filePath, err)
-	}
-	if err := safe.WriteFileWithMode(filePath, func(w io.Writer) error {
-		encoder := json.NewEncoder(w)
-		encoder.SetIndent("", "  ")
-		return encoder.Encode(s)
-	}, 0o640); err != nil {
-		return errs.NewWithCause(filePath, err)
-	}
-	return nil
 }
 
 // Path returns the path to our settings file.

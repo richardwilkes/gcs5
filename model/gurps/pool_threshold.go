@@ -39,6 +39,7 @@ type PoolThreshold struct {
 	// TODO: Turn the Multiplier, Divisor & Addition fields into an expression field instead
 }
 
+// NewPoolThresholdFromJSON creates a new PoolThreshold from a JSON object.
 func NewPoolThresholdFromJSON(data map[string]interface{}) *PoolThreshold {
 	p := &PoolThreshold{
 		State:       encoding.String(data[poolThresholdStateKey]),

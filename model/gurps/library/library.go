@@ -134,7 +134,7 @@ func (l *Library) CheckForAvailableUpgrade(ctx context.Context, client *http.Cli
 	l.upgrade = nil
 	l.lock.Unlock()
 	available, err := LoadReleases(ctx, client, l.GitHubAccountName, l.RepoName, l.VersionOnDisk(),
-		func(version string, notes string) bool {
+		func(version, notes string) bool {
 			return IncompatibleFutureLibraryVersion == version ||
 				txt.NaturalLess(version, MinimumLibraryVersion, true) ||
 				txt.NaturalLess(IncompatibleFutureLibraryVersion, version, true)

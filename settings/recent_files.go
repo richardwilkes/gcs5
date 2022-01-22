@@ -30,6 +30,7 @@ const (
 	recentFilesPathsKey = "paths"
 )
 
+// RecentFiles holds a list of recently opened files.
 type RecentFiles struct {
 	max   int
 	paths []string
@@ -86,10 +87,12 @@ func (p *RecentFiles) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.EndObject()
 }
 
+// Max returns the maximum number of recently opened files to track.
 func (p *RecentFiles) Max() int {
 	return p.max
 }
 
+// SetMax sets the maximum number of recently opened files to track.
 func (p *RecentFiles) SetMax(max int) {
 	if max < 0 {
 		max = 0
@@ -105,6 +108,7 @@ func (p *RecentFiles) SetMax(max int) {
 	}
 }
 
+// List returns the current list of recently opened files. Files that are no longer readable for any reason are omitted.
 func (p *RecentFiles) List() []string {
 	list := make([]string, 0, len(p.paths))
 	for _, one := range p.paths {
@@ -119,10 +123,12 @@ func (p *RecentFiles) List() []string {
 	return list
 }
 
+// Clear the list of recently opened files.
 func (p *RecentFiles) Clear() {
 	p.paths = nil
 }
 
+// Add a file path to the list of recently opened files.
 func (p *RecentFiles) Add(filePath string) {
 	ext := path.Ext(filePath)
 	if runtime.GOOS == toolbox.MacOS || runtime.GOOS == toolbox.WindowsOS {

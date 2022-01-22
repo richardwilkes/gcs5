@@ -61,6 +61,7 @@ func FactoryAttributeDefs() map[string]*AttributeDef {
 	return defs
 }
 
+// AttributeDefsAsOrderedList returns the map of AttributeDef objects as an ordered list.
 func AttributeDefsAsOrderedList(in map[string]*AttributeDef) []*AttributeDef {
 	list := make([]*AttributeDef, 0, len(in))
 	for _, v := range in {
@@ -93,6 +94,7 @@ func NewAttributeDefsFromFile(fsys fs.FS, filePath string) (map[string]*Attribut
 	return defs, nil
 }
 
+// NewAttributeDefFromJSON creates a new AttributeDef from a JSON object.
 func NewAttributeDefFromJSON(data map[string]interface{}, order int) *AttributeDef {
 	a := &AttributeDef{
 		Type:                AttributeTypeFromString(encoding.String(data[attributeDefTypeKey])),

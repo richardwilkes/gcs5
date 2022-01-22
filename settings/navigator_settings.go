@@ -27,6 +27,7 @@ type NavigatorSettings struct {
 	OpenRowKeys     []string
 }
 
+// NewNavigatorSettings creates a new, default, NavigatorSettings.
 func NewNavigatorSettings() *NavigatorSettings {
 	return &NavigatorSettings{DividerPosition: 300}
 }

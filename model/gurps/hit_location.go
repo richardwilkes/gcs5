@@ -190,6 +190,7 @@ func (h *HitLocation) DisplayDR(entity *Entity, tooltip *xio.ByteBuffer) string 
 	return buffer.String()
 }
 
+// SetSubTable sets the BodyType as a sub-table.
 func (h *HitLocation) SetSubTable(bodyType *BodyType) {
 	if bodyType == nil && h.SubTable != nil {
 		h.SubTable.SetOwningLocation(nil)

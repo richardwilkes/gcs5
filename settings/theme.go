@@ -28,11 +28,13 @@ const (
 	fontDescriptorSlantKey   = "slant"
 )
 
+// Theme holds colors and fonts used in the UI.
 type Theme struct {
 	Colors map[string]unison.Color
 	Fonts  map[string]unison.FontDescriptor
 }
 
+// NewTheme creates a new Theme.
 func NewTheme() *Theme {
 	return &Theme{
 		Colors: make(map[string]unison.Color),

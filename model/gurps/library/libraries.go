@@ -29,6 +29,7 @@ const (
 	userRepoName            = "gcs_user_library"
 )
 
+// Libraries holds a Library set.
 type Libraries struct {
 	libs map[string]*Library
 }
@@ -99,6 +100,7 @@ func (l *Libraries) User() *Library {
 	return lib
 }
 
+// List returns an ordered list of Library objects.
 func (l *Libraries) List() []*Library {
 	libs := make([]*Library, 0, len(l.libs))
 	for _, lib := range l.libs {
