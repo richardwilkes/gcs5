@@ -13,6 +13,8 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/richardwilkes/gcs/model/enums/display"
+	"github.com/richardwilkes/gcs/model/enums/dmg"
 	"github.com/richardwilkes/gcs/model/unit/length"
 	"github.com/richardwilkes/gcs/model/unit/weight"
 )
@@ -43,15 +45,15 @@ const (
 type SheetSettings struct {
 	DefaultLengthUnits         length.Units
 	DefaultWeightUnits         weight.Units
-	UserDescriptionDisplay     string
-	ModifiersDisplay           string
-	NotesDisplay               string
-	SkillLevelAdjDisplay       string
-	DamageProgression          DamageProgression
 	Page                       *PageSettings
 	BlockLayout                []string
-	Attributes                 map[string]*AttributeDef
+	Attributes                 *AttributeDefs
 	HitLocations               *BodyType
+	DamageProgression          dmg.Progression
+	UserDescriptionDisplay     display.Option
+	ModifiersDisplay           display.Option
+	NotesDisplay               display.Option
+	SkillLevelAdjDisplay       display.Option
 	UseMultiplicativeModifiers bool
 	UseModifyingDicePlusAdds   bool
 	ShowCollegeInSheetSpells   bool
@@ -67,16 +69,16 @@ func FactorySheetSettings() *SheetSettings {
 	return &SheetSettings{
 		DefaultLengthUnits:     length.FeetAndInches,
 		DefaultWeightUnits:     weight.Pound,
-		UserDescriptionDisplay: "tooltip", // TODO: Use type
-		ModifiersDisplay:       "inline",  // TODO: Use type
-		NotesDisplay:           "inline",  // TODO: Use type
-		SkillLevelAdjDisplay:   "tooltip", // TODO: Use type
-		DamageProgression:      BasicSet,
-		ShowSpellAdj:           true,
 		Page:                   FactoryPageSettings(),
 		BlockLayout:            FactoryBlockLayout(),
 		Attributes:             FactoryAttributeDefs(),
 		HitLocations:           FactoryBodyType(),
+		DamageProgression:      dmg.BasicSet,
+		UserDescriptionDisplay: display.Tooltip,
+		ModifiersDisplay:       display.Inline,
+		NotesDisplay:           display.Inline,
+		SkillLevelAdjDisplay:   display.Tooltip,
+		ShowSpellAdj:           true,
 	}
 }
 

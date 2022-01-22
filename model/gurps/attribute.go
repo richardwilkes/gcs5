@@ -83,7 +83,7 @@ func (a *Attribute) SetID(value string) {
 
 // AttributeDef looks up the AttributeDef this Attribute references from the Entity. May return nil.
 func (a *Attribute) AttributeDef(entity *Entity) *AttributeDef {
-	return entity.SheetSettings.Attributes[a.id]
+	return entity.SheetSettings.Attributes.Set[a.id]
 }
 
 // Maximum returns the maximum value of a pool or the adjusted attribute value for other types.

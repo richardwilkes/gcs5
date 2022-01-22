@@ -47,8 +47,8 @@ func SizeFromString(str string) Size {
 }
 
 // Key returns the key used to represent this ThresholdOp.
-func (a Size) Key() string {
-	switch a {
+func (s Size) Key() string {
+	switch s {
 	case Legal:
 		return "legal"
 	case Tabloid:
@@ -73,8 +73,8 @@ func (a Size) Key() string {
 }
 
 // String implements fmt.Stringer.
-func (a Size) String() string {
-	switch a {
+func (s Size) String() string {
+	switch s {
 	case Legal:
 		return i18n.Text("Legal")
 	case Tabloid:
@@ -99,8 +99,8 @@ func (a Size) String() string {
 }
 
 // Dimensions returns the paper dimensions.
-func (a Size) Dimensions() (width, height length.Length) {
-	switch a {
+func (s Size) Dimensions() (width, height length.Length) {
+	switch s {
 	case Legal:
 		return length.FromFloat64(8.5, length.Inch), length.FromInt64(14, length.Inch)
 	case Tabloid:

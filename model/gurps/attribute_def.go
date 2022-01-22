@@ -12,12 +12,11 @@
 package gurps
 
 import (
-	"io/fs"
-	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/richardwilkes/gcs/model/enums/dmg"
 	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/errs"
@@ -54,46 +53,6 @@ type AttributeDef struct {
 	Thresholds          []*PoolThreshold
 }
 
-// FactoryAttributeDefs returns the factory AttributeDef set.
-func FactoryAttributeDefs() map[string]*AttributeDef {
-	defs, err := NewAttributeDefsFromFile(embeddedFS, "data/standard.attr")
-	jot.FatalIfErr(err)
-	return defs
-}
-
-// AttributeDefsAsOrderedList returns the map of AttributeDef objects as an ordered list.
-func AttributeDefsAsOrderedList(in map[string]*AttributeDef) []*AttributeDef {
-	list := make([]*AttributeDef, 0, len(in))
-	for _, v := range in {
-		list = append(list, v)
-	}
-	sort.Slice(list, func(i, j int) bool { return list[i].Order < list[j].Order })
-	return list
-}
-
-// NewAttributeDefsFromFile loads an AttributeDef set from a file.
-func NewAttributeDefsFromFile(fsys fs.FS, filePath string) (map[string]*AttributeDef, error) {
-	data, err := encoding.LoadJSONFromFS(fsys, filePath)
-	if err != nil {
-		return nil, err
-	}
-	// Check for older formats
-	if obj := encoding.Object(data); obj != nil {
-		var exists bool
-		if data, exists = obj["attributes"]; !exists {
-			if data, exists = obj["attribute_settings"]; !exists {
-				return nil, errs.New("invalid attribute definitions file: " + filePath)
-			}
-		}
-	}
-	defs := make(map[string]*AttributeDef)
-	for i, one := range encoding.Array(data) {
-		def := NewAttributeDefFromJSON(encoding.Object(one), i+1)
-		defs[def.ID()] = def
-	}
-	return defs, nil
-}
-
 // NewAttributeDefFromJSON creates a new AttributeDef from a JSON object.
 func NewAttributeDefFromJSON(data map[string]interface{}, order int) *AttributeDef {
 	a := &AttributeDef{
@@ -116,17 +75,6 @@ func NewAttributeDefFromJSON(data map[string]interface{}, order int) *AttributeD
 		}
 	}
 	return a
-}
-
-// SaveAttributeDefs writes the AttributeDef set to the file as JSON.
-func SaveAttributeDefs(filePath string, defs map[string]*AttributeDef) error {
-	return encoding.SaveJSON(filePath, true, func(encoder *encoding.JSONEncoder) {
-		encoder.StartArray()
-		for _, def := range AttributeDefsAsOrderedList(defs) {
-			def.ToJSON(encoder)
-		}
-		encoder.EndArray()
-	})
 }
 
 // ToJSON emits this object as JSON.
@@ -197,7 +145,7 @@ func (a *AttributeDef) BaseValue(resolver eval.VariableResolver) fixed.F64d4 {
 // ComputeCost returns the value adjusted for a cost reduction.
 func (a *AttributeDef) ComputeCost(entity *Entity, value, sizeModifier, costReduction fixed.F64d4) fixed.F64d4 {
 	cost := value.Mul(a.CostPerPoint)
-	if sizeModifier > 0 && a.CostAdjPercentPerSM > 0 && !(a.id == "hp" && entity.SheetSettings.DamageProgression == KnowingYourOwnStrength) {
+	if sizeModifier > 0 && a.CostAdjPercentPerSM > 0 && !(a.id == "hp" && entity.SheetSettings.DamageProgression == dmg.KnowingYourOwnStrength) {
 		costReduction += sizeModifier.Mul(a.CostAdjPercentPerSM)
 	}
 	if costReduction > 0 {
