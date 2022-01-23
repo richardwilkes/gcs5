@@ -113,6 +113,40 @@ func (s *SheetSettings) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
 // ToJSON emits this object as JSON.
 func (s *SheetSettings) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()
-	// TODO: Implement
+	encoder.KeyedString(sheetSettingsDefaultLengthUnitsKey, s.DefaultLengthUnits)
+
+	/*
+	   w.keyValue(KEY_DEFAULT_LENGTH_UNITS, Enums.toId(mDefaultLengthUnits));
+	   w.keyValue(KEY_DEFAULT_WEIGHT_UNITS, Enums.toId(mDefaultWeightUnits));
+	   w.keyValue(KEY_USER_DESCRIPTION_DISPLAY, Enums.toId(mUserDescriptionDisplay));
+	   w.keyValue(KEY_MODIFIERS_DISPLAY, Enums.toId(mModifiersDisplay));
+	   w.keyValue(KEY_NOTES_DISPLAY, Enums.toId(mNotesDisplay));
+	   w.keyValue(KEY_SKILL_LEVEL_ADJ_DISPLAY, Enums.toId(mSkillLevelAdjustmentsDisplay));
+	   w.keyValue(KEY_USE_MULTIPLICATIVE_MODIFIERS, mUseMultiplicativeModifiers);
+	   w.keyValue(KEY_USE_MODIFYING_DICE_PLUS_ADDS, mUseModifyingDicePlusAdds);
+	   w.keyValue(KEY_DAMAGE_PROGRESSION, Enums.toId(mDamageProgression));
+	   w.keyValue(KEY_USE_SIMPLE_METRIC_CONVERSIONS, mUseSimpleMetricConversions);
+	   w.keyValue(KEY_SHOW_COLLEGE_IN_SPELLS, mShowCollegeInSpells);
+	   w.keyValue(KEY_SHOW_DIFFICULTY, mShowDifficulty);
+	   w.keyValue(KEY_SHOW_ADVANTAGE_MODIFIER_ADJ, mShowAdvantageModifierAdj);
+	   w.keyValue(KEY_SHOW_EQUIPMENT_MODIFIER_ADJ, mShowEquipmentModifierAdj);
+	   w.keyValue(KEY_SHOW_SPELL_ADJ, mShowSpellAdj);
+	   w.keyValue(KEY_USE_TITLE_IN_FOOTER, mUseTitleInFooter);
+	   w.key(KEY_PAGE);
+	   mPageSettings.toJSON(w);
+	   w.key(KEY_BLOCK_LAYOUT);
+	   w.startArray();
+	   for (String one : mBlockLayout) {
+	       w.value(one);
+	   }
+	   w.endArray();
+	   if (full) {
+	       w.key(KEY_ATTRIBUTES);
+	       AttributeDef.writeOrdered(w, mAttributes);
+	       w.key(KEY_HIT_LOCATIONS);
+	       mHitLocations.toJSON(w, mCharacter);
+	   }
+	*/
+
 	encoder.EndObject()
 }
