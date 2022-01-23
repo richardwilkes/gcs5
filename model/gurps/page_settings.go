@@ -14,6 +14,7 @@ package gurps
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/enums/paper"
+	"github.com/richardwilkes/gcs/model/enums/units"
 	"github.com/richardwilkes/gcs/model/unit/length"
 )
 
@@ -30,10 +31,10 @@ const (
 type PageSettings struct {
 	Size         paper.Size
 	Orientation  paper.Orientation
-	TopMargin    length.Length
-	LeftMargin   length.Length
-	BottomMargin length.Length
-	RightMargin  length.Length
+	TopMargin    length.Real
+	LeftMargin   length.Real
+	BottomMargin length.Real
+	RightMargin  length.Real
 }
 
 // FactoryPageSettings returns a new PageSettings with factory defaults.
@@ -41,10 +42,10 @@ func FactoryPageSettings() *PageSettings {
 	return &PageSettings{
 		Size:         paper.Letter,
 		Orientation:  paper.Portrait,
-		TopMargin:    length.FromFloat64(0.25, length.Inch),
-		LeftMargin:   length.FromFloat64(0.25, length.Inch),
-		BottomMargin: length.FromFloat64(0.25, length.Inch),
-		RightMargin:  length.FromFloat64(0.25, length.Inch),
+		TopMargin:    length.Real{Length: 0.25, Units: units.RealInch},
+		LeftMargin:   length.Real{Length: 0.25, Units: units.RealInch},
+		BottomMargin: length.Real{Length: 0.25, Units: units.RealInch},
+		RightMargin:  length.Real{Length: 0.25, Units: units.RealInch},
 	}
 }
 
@@ -53,10 +54,10 @@ func NewPageSettingsFromJSON(data map[string]interface{}) *PageSettings {
 	s := FactoryPageSettings()
 	s.Size = paper.SizeFromString(encoding.String(data[pageSettingsPaperSizeKey]))
 	s.Orientation = paper.OrientationFromString(encoding.String(data[pageSettingsOrientationKey]))
-	s.TopMargin = length.FromStringForced(encoding.String(data[pageSettingsTopMarginKey]), length.Inch)
-	s.LeftMargin = length.FromStringForced(encoding.String(data[pageSettingsLeftMarginKey]), length.Inch)
-	s.BottomMargin = length.FromStringForced(encoding.String(data[pageSettingsBottomMarginKey]), length.Inch)
-	s.RightMargin = length.FromStringForced(encoding.String(data[pageSettingsRightMarginKey]), length.Inch)
+	s.TopMargin = length.RealFromString(encoding.String(data[pageSettingsTopMarginKey]), units.RealInch)
+	s.LeftMargin = length.RealFromString(encoding.String(data[pageSettingsLeftMarginKey]), units.RealInch)
+	s.BottomMargin = length.RealFromString(encoding.String(data[pageSettingsBottomMarginKey]), units.RealInch)
+	s.RightMargin = length.RealFromString(encoding.String(data[pageSettingsRightMarginKey]), units.RealInch)
 	return s
 }
 

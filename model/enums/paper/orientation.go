@@ -58,7 +58,7 @@ func (a Orientation) String() string {
 }
 
 // Dimensions returns the paper dimensions after orienting the paper.
-func (a Orientation) Dimensions(size Size) (width, height length.Length) {
+func (a Orientation) Dimensions(size Size) (width, height length.GURPS) {
 	switch a {
 	case Landscape:
 		return height, width

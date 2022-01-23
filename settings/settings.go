@@ -92,7 +92,7 @@ func Global() *Settings {
 				WindowPositions:    NewWindowPositionsFromJSON(encoding.Object(obj[settingsWindowPositionsKey])),
 				Theme:              NewThemeFromJSON(encoding.Object(obj[settingsThemeKey])),
 				QuickExports:       gurps.NewQuickExportsFromJSON(encoding.Object(obj[settingsQuickExportsKey])),
-				Sheet:              gurps.NewSheetSettingsFromJSON(encoding.Object(obj[settingsSheetKey])),
+				Sheet:              gurps.NewSheetSettingsFromJSON(encoding.Object(obj[settingsSheetKey]), nil),
 			}
 		} else {
 			global = Default()
@@ -119,7 +119,7 @@ func (s *Settings) toJSON(encoder *encoding.JSONEncoder) {
 	s.WindowPositions.ToKeyedJSON(settingsWindowPositionsKey, encoder)
 	s.Theme.ToKeyedJSON(settingsThemeKey, encoder)
 	s.QuickExports.ToKeyedJSON(settingsQuickExportsKey, encoder)
-	s.Sheet.ToKeyedJSON(settingsSheetKey, encoder)
+	s.Sheet.ToKeyedJSON(settingsSheetKey, encoder, nil)
 	encoder.EndObject()
 }
 

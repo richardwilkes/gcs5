@@ -14,40 +14,26 @@ package weight
 import (
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/enums/units"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
-)
-
-// Units holds the weight unit type. Note that conversions to/from metric are done using the simplified GURPS metric
-// conversion of 1# = 0.5kg. For consistency, all metric weights are converted to kilograms, then to pounds, rather than
-// the variations at different weights that the GURPS rules suggest.
-type Units string
-
-// Possible Units values.
-const (
-	Gram     = Units("g")
-	Ounce    = Units("oz")
-	Pound    = Units("#")
-	PoundAlt = Units("lb")
-	Kilogram = Units("kg")
-	Ton      = Units("ton")
 )
 
 // Weight contains a fixed-point value in pounds.
 type Weight fixed.F64d4
 
 // FromInt64 creates a new Weight.
-func FromInt64(value int64, unit Units) Weight {
+func FromInt64(value int64, unit units.GURPSWeight) Weight {
 	return convertToPounds(fixed.F64d4FromInt64(value), unit)
 }
 
 // FromFloat64 creates a new Weight.
-func FromFloat64(value float64, unit Units) Weight {
+func FromFloat64(value float64, unit units.GURPSWeight) Weight {
 	return convertToPounds(fixed.F64d4FromFloat64(value), unit)
 }
 
-// FromStringForced creates a new Weight. May have any of the known Units suffixes or no notation at all, in which case
-// defaultUnits is used.
-func FromStringForced(text string, defaultUnits Units) Weight {
+// FromStringForced creates a new Weight. May have any of the known GURPSWeight suffixes or no notation at all, in which
+// case defaultUnits is used.
+func FromStringForced(text string, defaultUnits units.GURPSWeight) Weight {
 	weight, err := FromString(text, defaultUnits)
 	if err != nil {
 		return 0
@@ -55,20 +41,13 @@ func FromStringForced(text string, defaultUnits Units) Weight {
 	return weight
 }
 
-// FromString creates a new Weight. May have any of the known Units suffixes or no notation at all, in which case
+// FromString creates a new Weight. May have any of the known GURPSWeight suffixes or no notation at all, in which case
 // defaultUnits is used.
-func FromString(text string, defaultUnits Units) (Weight, error) {
+func FromString(text string, defaultUnits units.GURPSWeight) (Weight, error) {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
-	for _, unit := range []Units{
-		Ounce,
-		Pound,
-		PoundAlt,
-		Kilogram,
-		Gram, // must come after Kilogram, as it's abbreviation is a subset
-		Ton,
-	} {
-		if strings.HasSuffix(text, string(unit)) {
-			value, err := fixed.F64d4FromString(strings.TrimSpace(strings.TrimSuffix(text, string(unit))))
+	for unit := units.Pound; unit <= units.Gram; unit++ {
+		if strings.HasSuffix(text, unit.Key()) {
+			value, err := fixed.F64d4FromString(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())))
 			if err != nil {
 				return 0, err
 			}
@@ -83,52 +62,38 @@ func FromString(text string, defaultUnits Units) (Weight, error) {
 	return convertToPounds(value, defaultUnits), nil
 }
 
-func convertToPounds(value fixed.F64d4, unit Units) Weight {
+func convertToPounds(value fixed.F64d4, unit units.GURPSWeight) Weight {
 	switch unit {
-	case Gram:
-		value = value.Div(fixed.F64d4FromInt64(500))
-	case Ounce:
+	case units.Ounce:
 		value = value.Div(fixed.F64d4FromInt64(16))
-	case Kilogram:
-		value = value.Mul(fixed.F64d4FromInt64(2))
-	case Ton:
+	case units.Ton:
 		value = value.Mul(fixed.F64d4FromInt64(2000))
+	case units.Kilogram:
+		value = value.Mul(fixed.F64d4FromInt64(2))
+	case units.Gram:
+		value = value.Div(fixed.F64d4FromInt64(500))
 	default: // Same as Pound
 	}
 	return Weight(value)
 }
 
 func (w Weight) String() string {
-	return w.Format(Pound)
+	return w.Format(units.Pound)
 }
 
 // Format the weight as the given units.
-func (w Weight) Format(unit Units) string {
+func (w Weight) Format(unit units.GURPSWeight) string {
 	pounds := fixed.F64d4(w)
 	switch unit {
-	case Gram:
-		return pounds.Mul(fixed.F64d4FromInt64(500)).String() + string(unit)
-	case Ounce:
-		return pounds.Mul(fixed.F64d4FromInt64(16)).String() + string(unit)
-	case Kilogram:
-		return pounds.Div(fixed.F64d4FromInt64(2)).String() + string(unit)
-	case Ton:
-		return pounds.Div(fixed.F64d4FromInt64(2000)).String() + string(unit)
+	case units.Ounce:
+		return pounds.Mul(fixed.F64d4FromInt64(16)).String() + unit.Key()
+	case units.Ton:
+		return pounds.Div(fixed.F64d4FromInt64(2000)).String() + unit.Key()
+	case units.Kilogram:
+		return pounds.Div(fixed.F64d4FromInt64(2)).String() + unit.Key()
+	case units.Gram:
+		return pounds.Mul(fixed.F64d4FromInt64(500)).String() + unit.Key()
 	default: // Same as Pound
-		return pounds.String() + string(Pound)
+		return pounds.String() + units.Pound.Key()
 	}
-}
-
-// MarshalText implements the encoding.TextMarshaler interface.
-func (w Weight) MarshalText() (text []byte, err error) {
-	return []byte(w.String()), nil
-}
-
-// UnmarshalText implements the encoding.TextUnmarshaler interface.
-func (w *Weight) UnmarshalText(text []byte) error {
-	var err error
-	if *w, err = FromString(string(text), Pound); err != nil {
-		return err
-	}
-	return nil
 }

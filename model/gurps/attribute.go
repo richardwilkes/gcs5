@@ -13,6 +13,7 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/richardwilkes/gcs/model/enums/attr"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -52,7 +53,7 @@ func (a *Attribute) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
 		encoder.StartObject()
 		encoder.KeyedString(attributeIDKey, a.id, false, false)
 		encoder.KeyedNumber(attributeAdjKey, a.adjustment, false)
-		if def.Type == PoolAttributeType {
+		if def.Type == attr.Pool {
 			encoder.KeyedNumber(attributeDamageKey, a.Damage, false)
 		}
 
@@ -60,7 +61,7 @@ func (a *Attribute) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
 		encoder.Key(calcKey)
 		encoder.StartObject()
 		encoder.KeyedNumber(attributeCalcValueKey, a.Maximum(entity), false)
-		if def.Type == PoolAttributeType {
+		if def.Type == attr.Pool {
 			encoder.KeyedNumber(attributeCalcCurrentKey, a.Current(entity), false)
 		}
 		encoder.KeyedNumber(attributeCalcPointsKey, a.PointCost(entity), false)
@@ -93,7 +94,7 @@ func (a *Attribute) Maximum(entity *Entity) fixed.F64d4 {
 		return 0
 	}
 	max := def.BaseValue(entity) + a.adjustment + a.Bonus
-	if def.Type != DecimalAttributeType {
+	if def.Type != attr.Decimal {
 		max = max.Trunc()
 	}
 	return max

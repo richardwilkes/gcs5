@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/richardwilkes/gcs/model/enums/attr"
 	"github.com/richardwilkes/gcs/model/enums/dmg"
 	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/id"
@@ -43,7 +44,7 @@ var ReservedIDs = []string{"skill", "parry", "block", "dodge", "sm"}
 // AttributeDef holds the definition of an attribute.
 type AttributeDef struct {
 	id                  string
-	Type                AttributeType
+	Type                attr.Type
 	Name                string
 	FullName            string
 	AttributeBase       string
@@ -56,7 +57,7 @@ type AttributeDef struct {
 // NewAttributeDefFromJSON creates a new AttributeDef from a JSON object.
 func NewAttributeDefFromJSON(data map[string]interface{}, order int) *AttributeDef {
 	a := &AttributeDef{
-		Type:                AttributeTypeFromString(encoding.String(data[attributeDefTypeKey])),
+		Type:                attr.TypeFromString(encoding.String(data[attributeDefTypeKey])),
 		Name:                encoding.String(data[attributeDefNameKey]),
 		FullName:            encoding.String(data[attributeDefFullNameKey]),
 		AttributeBase:       encoding.String(data[attributeDefBaseKey]),
@@ -65,7 +66,7 @@ func NewAttributeDefFromJSON(data map[string]interface{}, order int) *AttributeD
 		Order:               order,
 	}
 	a.SetID(encoding.String(data[attributeDefIDKey]))
-	if a.Type == PoolAttributeType {
+	if a.Type == attr.Pool {
 		array := encoding.Array(data[attributeDefThresholdsKey])
 		if len(array) != 0 {
 			a.Thresholds = make([]*PoolThreshold, 0, len(array))
@@ -87,7 +88,7 @@ func (a *AttributeDef) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.KeyedString(attributeDefBaseKey, a.AttributeBase, false, false)
 	encoder.KeyedNumber(attributeDefCostPerPointKey, a.CostPerPoint, false)
 	encoder.KeyedNumber(attributeDefCostAdjPercentPerSMKey, a.CostAdjPercentPerSM, true)
-	if a.Type == PoolAttributeType && len(a.Thresholds) != 0 {
+	if a.Type == attr.Pool && len(a.Thresholds) != 0 {
 		encoder.Key(attributeDefThresholdsKey)
 		encoder.StartArray()
 		for _, threshold := range a.Thresholds {

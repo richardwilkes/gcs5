@@ -15,6 +15,7 @@ import (
 	"encoding/base64"
 
 	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/richardwilkes/gcs/model/enums/units"
 	"github.com/richardwilkes/gcs/model/unit/length"
 	"github.com/richardwilkes/gcs/model/unit/weight"
 	"github.com/richardwilkes/toolbox/errs"
@@ -66,7 +67,7 @@ type Profile struct {
 	TechLevel         string
 	PortraitData      string
 	portrait          *unison.Image
-	Height            length.Length
+	Height            length.GURPS
 	Weight            weight.Weight
 	SizeModifier      fixed.F64d4
 	SizeModifierBonus fixed.F64d4
@@ -88,8 +89,8 @@ func NewProfileFromJSON(data map[string]interface{}) *Profile {
 		Handedness:   encoding.String(data[profileHandednessKey]),
 		Gender:       encoding.String(data[profileGenderKey]),
 		TechLevel:    encoding.String(data[profileTechLevelKey]),
-		Height:       length.FromStringForced(encoding.String(data[profileHeightKey]), length.FeetAndInches),
-		Weight:       weight.FromStringForced(encoding.String(data[profileWeightKey]), weight.Pound),
+		Height:       length.GURPSFromStringForced(encoding.String(data[profileHeightKey]), units.FeetAndInches),
+		Weight:       weight.FromStringForced(encoding.String(data[profileWeightKey]), units.Pound),
 		SizeModifier: encoding.Number(data[profileSizeModifierKey]),
 		PortraitData: encoding.String(data[profilePortraitKey]),
 	}

@@ -108,6 +108,12 @@ func (b *BodyType) Save(filePath string) error {
 	})
 }
 
+// ToKeyedJSON emits this object as JSON with the specified key.
+func (b *BodyType) ToKeyedJSON(key string, encoder *encoding.JSONEncoder, entity *Entity) {
+	encoder.Key(key)
+	b.ToJSON(encoder, entity)
+}
+
 // ToJSON emits this object as JSON.
 func (b *BodyType) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
 	encoder.StartObject()

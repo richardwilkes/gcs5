@@ -65,6 +65,12 @@ func (a *AttributeDefs) Save(filePath string) error {
 	return encoding.SaveJSON(filePath, true, a.ToJSON)
 }
 
+// ToKeyedJSON emits this object as JSON with the specified key.
+func (a *AttributeDefs) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
+	encoder.Key(key)
+	a.ToJSON(encoder)
+}
+
 // ToJSON emits this object as JSON.
 func (a *AttributeDefs) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartArray()

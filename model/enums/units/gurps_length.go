@@ -11,13 +11,16 @@
 
 package units
 
-import (
-	"strings"
-)
+import "strings"
 
-// Possible Length values.
+// GURPSLength holds the length unit type. Note that conversions to/from metric are done using the simplified GURPS
+// metric conversion of 1 yd = 1 meter. For consistency, all metric lengths are converted to meters, then to yards,
+// rather than the variations at different lengths that the GURPS rules suggest.
+type GURPSLength uint8
+
+// Possible GURPSLength values.
 const (
-	FeetAndInches Length = iota // This one is special and not a suffix
+	FeetAndInches GURPSLength = iota // This one is special and not a suffix
 	Centimeter
 	Inch
 	Feet
@@ -27,24 +30,19 @@ const (
 	Mile
 )
 
-// Length holds the length unit type. Note that conversions to/from metric are done using the simplified GURPS metric
-// conversion of 1 yd = 1 meter. For consistency, all metric lengths are converted to meters, then to yards, rather than
-// the variations at different lengths that the GURPS rules suggest.
-type Length uint8
-
-// LengthFromString extracts an Length from a string.
-func LengthFromString(str string, def Length) Length {
-	for one := Centimeter; one <= FeetAndInches; one++ {
-		if strings.EqualFold(one.Key(), str) {
-			return one
+// GURPSLengthFromString extracts a GURPSLength from a string.
+func GURPSLengthFromString(str string) GURPSLength {
+	for p := FeetAndInches; p <= Mile; p++ {
+		if strings.EqualFold(p.Key(), str) {
+			return p
 		}
 	}
-	return def
+	return FeetAndInches
 }
 
-// Key returns the key used to represent this Length.
-func (o Length) Key() string {
-	switch o {
+// Key returns the key used to represent this GURPSLength.
+func (l GURPSLength) Key() string {
+	switch l {
 	case Centimeter:
 		return "cm"
 	case Inch:

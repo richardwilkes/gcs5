@@ -15,8 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/enums/display"
 	"github.com/richardwilkes/gcs/model/enums/dmg"
-	"github.com/richardwilkes/gcs/model/unit/length"
-	"github.com/richardwilkes/gcs/model/unit/weight"
+	"github.com/richardwilkes/gcs/model/enums/units"
 )
 
 const (
@@ -43,13 +42,13 @@ const (
 
 // SheetSettings holds sheet settings.
 type SheetSettings struct {
-	DefaultLengthUnits         length.Units
-	DefaultWeightUnits         weight.Units
 	Page                       *PageSettings
-	BlockLayout                []string
+	BlockLayout                *BlockLayout
 	Attributes                 *AttributeDefs
 	HitLocations               *BodyType
 	DamageProgression          dmg.Progression
+	DefaultLengthUnits         units.GURPSLength
+	DefaultWeightUnits         units.GURPSWeight
 	UserDescriptionDisplay     display.Option
 	ModifiersDisplay           display.Option
 	NotesDisplay               display.Option
@@ -67,13 +66,13 @@ type SheetSettings struct {
 // FactorySheetSettings returns a new SheetSettings with factory defaults.
 func FactorySheetSettings() *SheetSettings {
 	return &SheetSettings{
-		DefaultLengthUnits:     length.FeetAndInches,
-		DefaultWeightUnits:     weight.Pound,
 		Page:                   FactoryPageSettings(),
 		BlockLayout:            FactoryBlockLayout(),
 		Attributes:             FactoryAttributeDefs(),
 		HitLocations:           FactoryBodyType(),
 		DamageProgression:      dmg.BasicSet,
+		DefaultLengthUnits:     units.FeetAndInches,
+		DefaultWeightUnits:     units.Pound,
 		UserDescriptionDisplay: display.Tooltip,
 		ModifiersDisplay:       display.Inline,
 		NotesDisplay:           display.Inline,
@@ -82,71 +81,62 @@ func FactorySheetSettings() *SheetSettings {
 	}
 }
 
-// FactoryBlockLayout returns the block layout factory settings.
-func FactoryBlockLayout() []string {
-	return []string{
-		// TODO: Use constants
-		"reactions conditional_modifiers",
-		"melee",
-		"ranged",
-		"advantages skills",
-		"spells",
-		"equipment",
-		"other_equipment",
-		"notes",
-	}
-}
-
 // NewSheetSettingsFromJSON creates a new SheetSettings from a JSON object.
-func NewSheetSettingsFromJSON(data map[string]interface{}) *SheetSettings {
+func NewSheetSettingsFromJSON(data map[string]interface{}, entity *Entity) *SheetSettings {
 	s := FactorySheetSettings()
-	// TODO: Implement
+	s.Page = NewPageSettingsFromJSON(encoding.Object(data[sheetSettingsPageKey]))
+	s.BlockLayout = NewBlockLayoutFromJSON(encoding.Object(data[sheetSettingsBlockLayoutKey]))
+	if entity != nil {
+		s.Attributes = NewAttributeDefsFromJSON(encoding.Array(data[sheetSettingsAttributesKey]))
+		s.HitLocations = NewBodyTypeFromJSON(encoding.Object(data[sheetSettingsHitLocationsKey]))
+	}
+	s.DamageProgression = dmg.ProgressionFromString(encoding.String(data[sheetSettingsDamageProgressionKey]))
+	s.DefaultLengthUnits = units.GURPSLengthFromString(encoding.String(data[sheetSettingsDefaultLengthUnitsKey]))
+	s.DefaultWeightUnits = units.GURPSWeightFromString(encoding.String(data[sheetSettingsDefaultWeightUnitsKey]))
+	s.UserDescriptionDisplay = display.OptionFromString(encoding.String(data[sheetSettingsUserDescriptionDisplayKey]), s.UserDescriptionDisplay)
+	s.ModifiersDisplay = display.OptionFromString(encoding.String(data[sheetSettingsModifiersDisplayKey]), s.ModifiersDisplay)
+	s.NotesDisplay = display.OptionFromString(encoding.String(data[sheetSettingsNotesDisplayKey]), s.NotesDisplay)
+	s.SkillLevelAdjDisplay = display.OptionFromString(encoding.String(data[sheetSettingsSkillLevelAdjDisplayKey]), s.SkillLevelAdjDisplay)
+	s.UseMultiplicativeModifiers = encoding.Bool(data[sheetSettingsUseMultiplicativeModifiersKey])
+	s.UseModifyingDicePlusAdds = encoding.Bool(data[sheetSettingsUseModifyingDicePlusAddsKey])
+	s.ShowCollegeInSheetSpells = encoding.Bool(data[sheetSettingsShowCollegeInSheetSpellsKey])
+	s.ShowDifficulty = encoding.Bool(data[sheetSettingsShowDifficultyKey])
+	s.ShowAdvantageModifierAdj = encoding.Bool(data[sheetSettingsShowAdvantageModifierAdjKey])
+	s.ShowEquipmentModifierAdj = encoding.Bool(data[sheetSettingsShowEquipmentModifierAdjKey])
+	s.ShowSpellAdj = encoding.Bool(data[sheetSettingsShowSpellAdjKey])
+	s.UseTitleInFooter = encoding.Bool(data[sheetSettingsUseTitleInFooterKey])
 	return s
 }
 
 // ToKeyedJSON emits this object as JSON with the specified key.
-func (s *SheetSettings) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
+func (s *SheetSettings) ToKeyedJSON(key string, encoder *encoding.JSONEncoder, entity *Entity) {
 	encoder.Key(key)
-	s.ToJSON(encoder)
+	s.ToJSON(encoder, entity)
 }
 
 // ToJSON emits this object as JSON.
-func (s *SheetSettings) ToJSON(encoder *encoding.JSONEncoder) {
+func (s *SheetSettings) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
 	encoder.StartObject()
-	encoder.KeyedString(sheetSettingsDefaultLengthUnitsKey, s.DefaultLengthUnits)
-
-	/*
-	   w.keyValue(KEY_DEFAULT_LENGTH_UNITS, Enums.toId(mDefaultLengthUnits));
-	   w.keyValue(KEY_DEFAULT_WEIGHT_UNITS, Enums.toId(mDefaultWeightUnits));
-	   w.keyValue(KEY_USER_DESCRIPTION_DISPLAY, Enums.toId(mUserDescriptionDisplay));
-	   w.keyValue(KEY_MODIFIERS_DISPLAY, Enums.toId(mModifiersDisplay));
-	   w.keyValue(KEY_NOTES_DISPLAY, Enums.toId(mNotesDisplay));
-	   w.keyValue(KEY_SKILL_LEVEL_ADJ_DISPLAY, Enums.toId(mSkillLevelAdjustmentsDisplay));
-	   w.keyValue(KEY_USE_MULTIPLICATIVE_MODIFIERS, mUseMultiplicativeModifiers);
-	   w.keyValue(KEY_USE_MODIFYING_DICE_PLUS_ADDS, mUseModifyingDicePlusAdds);
-	   w.keyValue(KEY_DAMAGE_PROGRESSION, Enums.toId(mDamageProgression));
-	   w.keyValue(KEY_USE_SIMPLE_METRIC_CONVERSIONS, mUseSimpleMetricConversions);
-	   w.keyValue(KEY_SHOW_COLLEGE_IN_SPELLS, mShowCollegeInSpells);
-	   w.keyValue(KEY_SHOW_DIFFICULTY, mShowDifficulty);
-	   w.keyValue(KEY_SHOW_ADVANTAGE_MODIFIER_ADJ, mShowAdvantageModifierAdj);
-	   w.keyValue(KEY_SHOW_EQUIPMENT_MODIFIER_ADJ, mShowEquipmentModifierAdj);
-	   w.keyValue(KEY_SHOW_SPELL_ADJ, mShowSpellAdj);
-	   w.keyValue(KEY_USE_TITLE_IN_FOOTER, mUseTitleInFooter);
-	   w.key(KEY_PAGE);
-	   mPageSettings.toJSON(w);
-	   w.key(KEY_BLOCK_LAYOUT);
-	   w.startArray();
-	   for (String one : mBlockLayout) {
-	       w.value(one);
-	   }
-	   w.endArray();
-	   if (full) {
-	       w.key(KEY_ATTRIBUTES);
-	       AttributeDef.writeOrdered(w, mAttributes);
-	       w.key(KEY_HIT_LOCATIONS);
-	       mHitLocations.toJSON(w, mCharacter);
-	   }
-	*/
-
+	s.Page.ToKeyedJSON(sheetSettingsPageKey, encoder)
+	s.BlockLayout.ToKeyedJSON(sheetSettingsBlockLayoutKey, encoder)
+	if entity != nil {
+		s.Attributes.ToKeyedJSON(sheetSettingsAttributesKey, encoder)
+		s.HitLocations.ToKeyedJSON(sheetSettingsHitLocationsKey, encoder, nil)
+	}
+	encoder.KeyedString(sheetSettingsDamageProgressionKey, s.DamageProgression.Key(), false, false)
+	encoder.KeyedString(sheetSettingsDefaultLengthUnitsKey, s.DefaultLengthUnits.Key(), false, false)
+	encoder.KeyedString(sheetSettingsDefaultWeightUnitsKey, s.DefaultWeightUnits.Key(), false, false)
+	encoder.KeyedString(sheetSettingsUserDescriptionDisplayKey, s.UserDescriptionDisplay.Key(), false, false)
+	encoder.KeyedString(sheetSettingsModifiersDisplayKey, s.ModifiersDisplay.Key(), false, false)
+	encoder.KeyedString(sheetSettingsNotesDisplayKey, s.NotesDisplay.Key(), false, false)
+	encoder.KeyedString(sheetSettingsSkillLevelAdjDisplayKey, s.SkillLevelAdjDisplay.Key(), false, false)
+	encoder.KeyedBool(sheetSettingsUseMultiplicativeModifiersKey, s.UseMultiplicativeModifiers, true)
+	encoder.KeyedBool(sheetSettingsUseModifyingDicePlusAddsKey, s.UseModifyingDicePlusAdds, true)
+	encoder.KeyedBool(sheetSettingsShowCollegeInSheetSpellsKey, s.ShowCollegeInSheetSpells, true)
+	encoder.KeyedBool(sheetSettingsShowDifficultyKey, s.ShowDifficulty, true)
+	encoder.KeyedBool(sheetSettingsShowAdvantageModifierAdjKey, s.ShowAdvantageModifierAdj, true)
+	encoder.KeyedBool(sheetSettingsShowEquipmentModifierAdjKey, s.ShowEquipmentModifierAdj, true)
+	encoder.KeyedBool(sheetSettingsShowSpellAdjKey, s.ShowSpellAdj, true)
+	encoder.KeyedBool(sheetSettingsUseTitleInFooterKey, s.UseTitleInFooter, true)
 	encoder.EndObject()
 }

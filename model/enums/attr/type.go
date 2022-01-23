@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package attr
 
 import (
 	"strings"
@@ -17,46 +17,46 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-// Possible AttributeType values.
+// Possible Type values.
 const (
-	IntegerAttributeType AttributeType = iota
-	DecimalAttributeType
-	PoolAttributeType
+	Integer Type = iota
+	Decimal
+	Pool
 )
 
-// AttributeType holds the type of an AttributeDef.
-type AttributeType uint8
+// Type holds the type of an attribute definition.
+type Type uint8
 
-// AttributeTypeFromString extracts a AttributeType from a string.
-func AttributeTypeFromString(str string) AttributeType {
-	for op := IntegerAttributeType; op <= PoolAttributeType; op++ {
+// TypeFromString extracts a Type from a string.
+func TypeFromString(str string) Type {
+	for op := Integer; op <= Pool; op++ {
 		if strings.EqualFold(op.Key(), str) {
 			return op
 		}
 	}
-	return IntegerAttributeType
+	return Integer
 }
 
-// Key returns the key used to represent this ThresholdOp.
-func (a AttributeType) Key() string {
+// Key returns the key used to represent this Type.
+func (a Type) Key() string {
 	switch a {
-	case DecimalAttributeType:
+	case Decimal:
 		return "decimal"
-	case PoolAttributeType:
+	case Pool:
 		return "pool"
-	default: // IntegerAttributeType
+	default: // Integer
 		return "integer"
 	}
 }
 
 // String implements fmt.Stringer.
-func (a AttributeType) String() string {
+func (a Type) String() string {
 	switch a {
-	case DecimalAttributeType:
+	case Decimal:
 		return i18n.Text("Decimal")
-	case PoolAttributeType:
+	case Pool:
 		return i18n.Text("Pool")
-	default: // IntegerAttributeType
+	default: // Integer
 		return i18n.Text("Integer")
 	}
 }

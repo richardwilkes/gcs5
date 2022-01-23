@@ -14,6 +14,7 @@ package paper
 import (
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/enums/units"
 	"github.com/richardwilkes/gcs/model/unit/length"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -99,12 +100,12 @@ func (s Size) String() string {
 }
 
 // Dimensions returns the paper dimensions.
-func (s Size) Dimensions() (width, height length.Length) {
+func (s Size) Dimensions() (width, height length.GURPS) {
 	switch s {
 	case Legal:
-		return length.FromFloat64(8.5, length.Inch), length.FromInt64(14, length.Inch)
+		return length.GURPSFromFloat64(8.5, units.Inch), length.GURPSFromInt64(14, units.Inch)
 	case Tabloid:
-		return length.FromInt64(11, length.Inch), length.FromInt64(17, length.Inch)
+		return length.GURPSFromInt64(11, units.Inch), length.GURPSFromInt64(17, units.Inch)
 	case A0:
 		return mmToInches(841), mmToInches(1189)
 	case A1:
@@ -120,11 +121,11 @@ func (s Size) Dimensions() (width, height length.Length) {
 	case A6:
 		return mmToInches(105), mmToInches(148)
 	default: // Letter
-		return length.FromFloat64(8.5, length.Inch), length.FromInt64(11, length.Inch)
+		return length.GURPSFromFloat64(8.5, units.Inch), length.GURPSFromInt64(11, units.Inch)
 	}
 }
 
-func mmToInches(mm int) length.Length {
+func mmToInches(mm int) length.GURPS {
 	// Do our own conversion to inches, since the metric values are using GURPS' simplified values
-	return length.Length(fixed.F64d4FromInt64(int64(mm)*10) / fixed.F64d4FromInt64(254))
+	return length.GURPS(fixed.F64d4FromInt64(int64(mm)*10) / fixed.F64d4FromInt64(254))
 }
