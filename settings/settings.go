@@ -97,6 +97,7 @@ func Global() *Settings {
 		} else {
 			global = Default()
 		}
+		gurps.GlobalSheetSettingsProvider = func() *gurps.SheetSettings { return global.Sheet }
 	}
 	return global
 }
@@ -109,17 +110,17 @@ func (s *Settings) Save() error {
 func (s *Settings) toJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()
 	encoder.KeyedString(settingsLastSeenGCSVersionKey, s.LastSeenGCSVersion, false, false)
-	s.General.ToKeyedJSON(settingsGeneralKey, encoder)
-	s.Libraries.ToKeyedJSON(settingsLibrariesKey, encoder)
-	s.LibraryExplorer.ToKeyedJSON(settingsLibraryExplorerKey, encoder)
-	s.RecentFiles.ToKeyedJSON(settingsRecentFilesKey, encoder)
-	s.LastDirs.ToKeyedJSON(settingsLastDirsKey, encoder)
-	s.PageRefs.ToKeyedJSON(settingsPageRefsKey, encoder)
-	s.KeyBindings.ToKeyedJSON(settingsKeyBindingsKey, encoder)
-	s.WindowPositions.ToKeyedJSON(settingsWindowPositionsKey, encoder)
-	s.Theme.ToKeyedJSON(settingsThemeKey, encoder)
-	s.QuickExports.ToKeyedJSON(settingsQuickExportsKey, encoder)
-	s.Sheet.ToKeyedJSON(settingsSheetKey, encoder, nil)
+	encoding.ToKeyedJSON(s.General, settingsGeneralKey, encoder)
+	encoding.ToKeyedJSON(s.Libraries, settingsLibrariesKey, encoder)
+	encoding.ToKeyedJSON(s.LibraryExplorer, settingsLibraryExplorerKey, encoder)
+	encoding.ToKeyedJSON(s.RecentFiles, settingsRecentFilesKey, encoder)
+	encoding.ToKeyedJSON(s.LastDirs, settingsLastDirsKey, encoder)
+	encoding.ToKeyedJSON(s.PageRefs, settingsPageRefsKey, encoder)
+	encoding.ToKeyedJSON(s.KeyBindings, settingsKeyBindingsKey, encoder)
+	encoding.ToKeyedJSON(s.WindowPositions, settingsWindowPositionsKey, encoder)
+	encoding.ToKeyedJSON(s.Theme, settingsThemeKey, encoder)
+	encoding.ToKeyedJSON(s.QuickExports, settingsQuickExportsKey, encoder)
+	gurps.ToKeyedJSON(s.Sheet, settingsSheetKey, encoder, nil)
 	encoder.EndObject()
 }
 

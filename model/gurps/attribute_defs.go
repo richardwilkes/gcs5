@@ -25,6 +25,14 @@ type AttributeDefs struct {
 	Set map[string]*AttributeDef
 }
 
+// AttributeDefsFor returns the AttributeDefs for the given Entity, or the global settings if the Entity is nil.
+func AttributeDefsFor(entity *Entity) *AttributeDefs {
+	if entity == nil {
+		return GlobalSheetSettingsProvider().Attributes
+	}
+	return entity.SheetSettings.Attributes
+}
+
 // FactoryAttributeDefs returns the factory AttributeDef set.
 func FactoryAttributeDefs() *AttributeDefs {
 	defs, err := NewAttributeDefsFromFile(embeddedFS, "data/standard.attr")
@@ -63,12 +71,6 @@ func NewAttributeDefsFromJSON(data []interface{}) *AttributeDefs {
 // Save writes the AttributeDefs to the file as JSON.
 func (a *AttributeDefs) Save(filePath string) error {
 	return encoding.SaveJSON(filePath, true, a.ToJSON)
-}
-
-// ToKeyedJSON emits this object as JSON with the specified key.
-func (a *AttributeDefs) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
-	encoder.Key(key)
-	a.ToJSON(encoder)
 }
 
 // ToJSON emits this object as JSON.

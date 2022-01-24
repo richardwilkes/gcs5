@@ -47,12 +47,6 @@ func NewNavigatorSettingsFromJSON(data map[string]interface{}) *NavigatorSetting
 	return s
 }
 
-// ToKeyedJSON emits this object as JSON with the specified key.
-func (s *NavigatorSettings) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
-	encoder.Key(key)
-	s.ToJSON(encoder)
-}
-
 // ToJSON emits this object as JSON.
 func (s *NavigatorSettings) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()

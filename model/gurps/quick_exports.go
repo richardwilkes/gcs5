@@ -56,12 +56,9 @@ func NewQuickExportsFromJSON(data map[string]interface{}) *QuickExports {
 	return q
 }
 
-// ToKeyedJSON emits this object as JSON with the specified key, but only if not empty.
-func (q *QuickExports) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
-	if len(q.info) != 0 {
-		encoder.Key(key)
-		q.ToJSON(encoder)
-	}
+// Empty implements encoding.Empty.
+func (q *QuickExports) Empty() bool {
+	return len(q.info) == 0
 }
 
 // ToJSON emits this object as JSON.

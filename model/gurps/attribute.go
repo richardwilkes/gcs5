@@ -28,6 +28,9 @@ const (
 	attributeCalcCurrentKey = "current"
 )
 
+// AttributeIDPrefix is the prefix all references to attribute IDs should use.
+const AttributeIDPrefix = "attr."
+
 // Attribute holds the current state of an AttributeDef.
 type Attribute struct {
 	id            string

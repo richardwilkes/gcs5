@@ -73,12 +73,6 @@ func NewLibraryFromJSON(key string, data map[string]interface{}) *Library {
 	return lib
 }
 
-// ToKeyedJSON emits this object as JSON with the specified key.
-func (l *Library) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
-	encoder.Key(key)
-	l.ToJSON(encoder)
-}
-
 // ToJSON emits this object as JSON.
 func (l *Library) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()

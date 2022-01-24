@@ -40,6 +40,10 @@ const (
 	sheetSettingsHitLocationsKey               = "hit_locations"
 )
 
+// GlobalSheetSettingsProvider must be initialized prior to using this package. It provides access to the global sheet
+// settings that should be used when an Entity is not available to provide them.
+var GlobalSheetSettingsProvider func() *SheetSettings
+
 // SheetSettings holds sheet settings.
 type SheetSettings struct {
 	Page                       *PageSettings
@@ -108,20 +112,14 @@ func NewSheetSettingsFromJSON(data map[string]interface{}, entity *Entity) *Shee
 	return s
 }
 
-// ToKeyedJSON emits this object as JSON with the specified key.
-func (s *SheetSettings) ToKeyedJSON(key string, encoder *encoding.JSONEncoder, entity *Entity) {
-	encoder.Key(key)
-	s.ToJSON(encoder, entity)
-}
-
 // ToJSON emits this object as JSON.
 func (s *SheetSettings) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
 	encoder.StartObject()
-	s.Page.ToKeyedJSON(sheetSettingsPageKey, encoder)
-	s.BlockLayout.ToKeyedJSON(sheetSettingsBlockLayoutKey, encoder)
+	encoding.ToKeyedJSON(s.Page, sheetSettingsPageKey, encoder)
+	encoding.ToKeyedJSON(s.BlockLayout, sheetSettingsBlockLayoutKey, encoder)
 	if entity != nil {
-		s.Attributes.ToKeyedJSON(sheetSettingsAttributesKey, encoder)
-		s.HitLocations.ToKeyedJSON(sheetSettingsHitLocationsKey, encoder, nil)
+		encoding.ToKeyedJSON(s.Attributes, sheetSettingsAttributesKey, encoder)
+		ToKeyedJSON(s.HitLocations, sheetSettingsHitLocationsKey, encoder, nil)
 	}
 	encoder.KeyedString(sheetSettingsDamageProgressionKey, s.DamageProgression.Key(), false, false)
 	encoder.KeyedString(sheetSettingsDefaultLengthUnitsKey, s.DefaultLengthUnits.Key(), false, false)

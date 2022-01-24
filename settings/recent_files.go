@@ -65,12 +65,6 @@ func NewRecentFilesFromJSON(data map[string]interface{}) *RecentFiles {
 	return p
 }
 
-// ToKeyedJSON emits this object as JSON with the specified key.
-func (p *RecentFiles) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
-	encoder.Key(key)
-	p.ToJSON(encoder)
-}
-
 // ToJSON emits this object as JSON.
 func (p *RecentFiles) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()

@@ -35,12 +35,9 @@ func NewWindowPositionsFromJSON(data map[string]interface{}) *WindowPositions {
 	return p
 }
 
-// ToKeyedJSON emits this object as JSON with the specified key, but only if not empty.
-func (p *WindowPositions) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
-	if len(p.Map) != 0 {
-		encoder.Key(key)
-		p.ToJSON(encoder)
-	}
+// Empty implements encoding.Empty.
+func (p *WindowPositions) Empty() bool {
+	return len(p.Map) == 0
 }
 
 // ToJSON emits this object as JSON.

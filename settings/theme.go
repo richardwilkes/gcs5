@@ -63,12 +63,9 @@ func NewThemeFromJSON(data map[string]interface{}) *Theme {
 	return p
 }
 
-// ToKeyedJSON emits this object as JSON with the specified key, but only if not empty.
-func (p *Theme) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
-	if len(p.Colors) != 0 || len(p.Fonts) != 0 {
-		encoder.Key(key)
-		p.ToJSON(encoder)
-	}
+// Empty implements encoding.Empty.
+func (p *Theme) Empty() bool {
+	return len(p.Colors) == 0 && len(p.Fonts) == 0
 }
 
 // ToJSON emits this object as JSON.

@@ -116,12 +116,6 @@ func (s *GeneralSettings) Save(filePath string) error {
 	})
 }
 
-// ToKeyedJSON emits this object as JSON with the specified key.
-func (s *GeneralSettings) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
-	encoder.Key(key)
-	s.ToJSON(encoder)
-}
-
 // ToJSON emits this object as JSON.
 func (s *GeneralSettings) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()

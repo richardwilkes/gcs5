@@ -38,12 +38,9 @@ func NewPageRefsFromJSON(data map[string]interface{}) *PageRefs {
 	return p
 }
 
-// ToKeyedJSON emits this object as JSON with the specified key, but only if not empty.
-func (p *PageRefs) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
-	if len(p.refs) != 0 {
-		encoder.Key(key)
-		p.ToJSON(encoder)
-	}
+// Empty implements encoding.Empty.
+func (p *PageRefs) Empty() bool {
+	return len(p.refs) == 0
 }
 
 // ToJSON emits this object as JSON.

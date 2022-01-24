@@ -66,12 +66,6 @@ func NewBlockLayoutFromJSON(data map[string]interface{}) *BlockLayout {
 	return l
 }
 
-// ToKeyedJSON emits this object as JSON with the specified key.
-func (l *BlockLayout) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
-	encoder.Key(key)
-	l.ToJSON(encoder)
-}
-
 // ToJSON emits this object as JSON.
 func (l *BlockLayout) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()

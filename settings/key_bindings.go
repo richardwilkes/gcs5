@@ -39,12 +39,9 @@ func NewKeyBindingsFromJSON(data map[string]interface{}) *KeyBindings {
 	return p
 }
 
-// ToKeyedJSON emits this object as JSON with the specified key, but only if not empty.
-func (p *KeyBindings) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
-	if len(p.bindings) != 0 {
-		encoder.Key(key)
-		p.ToJSON(encoder)
-	}
+// Empty implements encoding.Empty.
+func (p *KeyBindings) Empty() bool {
+	return len(p.bindings) == 0
 }
 
 // ToJSON emits this object as JSON.

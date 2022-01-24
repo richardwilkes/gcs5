@@ -34,12 +34,9 @@ func NewLastDirsFromJSON(data map[string]interface{}) *LastDirs {
 	return d
 }
 
-// ToKeyedJSON emits this object as JSON with the specified key, but only if not empty.
-func (d *LastDirs) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
-	if len(d.Map) != 0 {
-		encoder.Key(key)
-		d.ToJSON(encoder)
-	}
+// Empty implements encoding.Empty.
+func (d *LastDirs) Empty() bool {
+	return len(d.Map) == 0
 }
 
 // ToJSON emits this object as JSON.

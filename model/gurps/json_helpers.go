@@ -1,0 +1,28 @@
+/*
+ * Copyright ©1998-2022 by Richard A. Wilkes. All rights reserved.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, version 2.0. If a copy of the MPL was not distributed with
+ * this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, version 2.0.
+ */
+
+package gurps
+
+import "github.com/richardwilkes/gcs/model/encoding"
+
+// JSONerWithEntity defines the method for objects that can turn themselves into JSON, but want an entity passed in.
+type JSONerWithEntity interface {
+	ToJSON(encoder *encoding.JSONEncoder, entity *Entity)
+}
+
+// ToKeyedJSON adds a key and emits the object, unless it is empty.
+func ToKeyedJSON(obj JSONerWithEntity, key string, encoder *encoding.JSONEncoder, entity *Entity) {
+	if empty, ok := obj.(encoding.Empty); ok && empty.Empty() {
+		return
+	}
+	encoder.Key(key)
+	obj.ToJSON(encoder, entity)
+}
