@@ -84,7 +84,7 @@ func (a *AttributeBonus) FeatureKey() string {
 }
 
 // FillWithNameableKeys implements Feature.
-func (a *AttributeBonus) FillWithNameableKeys(_ map[string]bool) {
+func (a *AttributeBonus) FillWithNameableKeys(_ map[string]string) {
 	// Does nothing
 }
 

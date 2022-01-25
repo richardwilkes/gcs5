@@ -71,7 +71,7 @@ func (c *ContainedWeight) FeatureKey() string {
 }
 
 // FillWithNameableKeys implements Feature.
-func (c *ContainedWeight) FillWithNameableKeys(_ map[string]bool) {
+func (c *ContainedWeight) FillWithNameableKeys(_ map[string]string) {
 	// Does nothing
 }
 

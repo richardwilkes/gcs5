@@ -26,7 +26,7 @@ type Feature interface {
 	// FeatureKey returns the key used in the Feature map for things this Feature applies to.
 	FeatureKey() string
 	// FillWithNameableKeys adds any nameable keys found in this Feature to the provided map.
-	FillWithNameableKeys(set map[string]bool)
+	FillWithNameableKeys(nameables map[string]string)
 	// ApplyNameableKeys replaces any nameable keys found in this Feature with the corresponding values in the provided map.
 	ApplyNameableKeys(nameables map[string]string)
 }

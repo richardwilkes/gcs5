@@ -74,7 +74,7 @@ func (c *CostReduction) FeatureKey() string {
 }
 
 // FillWithNameableKeys implements Feature.
-func (c *CostReduction) FillWithNameableKeys(_ map[string]bool) {
+func (c *CostReduction) FillWithNameableKeys(_ map[string]string) {
 	// Does nothing
 }
 
