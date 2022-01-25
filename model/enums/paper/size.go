@@ -102,7 +102,7 @@ func (s Size) String() string {
 func (s Size) Dimensions() (width, height measure.Length) {
 	switch s {
 	case Legal:
-		return measure.LengthFromString("8.5in"), measure.Length{Length: 14, Units: units.Inch}
+		return measure.Length{Length: 8.5, Units: units.Inch}, measure.Length{Length: 14, Units: units.Inch}
 	case Tabloid:
 		return measure.Length{Length: 11, Units: units.Inch}, measure.Length{Length: 17, Units: units.Inch}
 	case A0:
@@ -120,6 +120,6 @@ func (s Size) Dimensions() (width, height measure.Length) {
 	case A6:
 		return measure.Length{Length: 105, Units: units.Millimeter}, measure.Length{Length: 148, Units: units.Millimeter}
 	default: // Letter
-		return measure.LengthFromString("8.5in"), measure.Length{Length: 11, Units: units.Inch}
+		return measure.Length{Length: 8.5, Units: units.Inch}, measure.Length{Length: 11, Units: units.Inch}
 	}
 }
