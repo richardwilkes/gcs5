@@ -14,21 +14,19 @@ package measure
 import (
 	"strconv"
 	"strings"
-
-	"github.com/richardwilkes/gcs/model/enums/units"
 )
 
 // Length contains a real-world length value with an attached units.
 type Length struct {
 	Length float64
-	Units  units.Length
+	Units  Units
 }
 
-// LengthFromString creates a new Length. May have any of the known units.Length suffixes or no notation at all, in which
+// LengthFromString creates a new Length. May have any of the known units.Units suffixes or no notation at all, in which
 // case units.Inch is used.
 func LengthFromString(text string) Length {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
-	for unit := units.Millimeter; unit <= units.Inch; unit++ {
+	for unit := Millimeter; unit <= Inch; unit++ {
 		if strings.HasSuffix(text, unit.Key()) {
 			value, err := strconv.ParseFloat(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())), 64)
 			if err != nil {
@@ -40,9 +38,9 @@ func LengthFromString(text string) Length {
 	// Didn't match any of the Units types, assume the default
 	value, err := strconv.ParseFloat(text, 64)
 	if err != nil {
-		return Length{Units: units.Inch}
+		return Length{Units: Inch}
 	}
-	return Length{Length: value, Units: units.Inch}
+	return Length{Length: value, Units: Inch}
 }
 
 func (l Length) String() string {
@@ -53,9 +51,9 @@ func (l Length) String() string {
 func (l Length) Pixels() float32 {
 	length := l.Length * 72
 	switch l.Units {
-	case units.Millimeter:
+	case Millimeter:
 		return float32(length / 25.4)
-	case units.Centimeter:
+	case Centimeter:
 		return float32(length / 2.54)
 	default:
 		return float32(length)

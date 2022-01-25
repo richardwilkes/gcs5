@@ -9,20 +9,20 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package units
+package measure
 
-// Possible Length values.
+// Possible Units values.
 const (
-	Millimeter Length = iota
+	Millimeter Units = iota
 	Centimeter
 	Inch
 )
 
-// Length holds the real-world length unit type.
-type Length uint8
+// Units holds the real-world length unit type.
+type Units uint8
 
-// Key returns the key used to represent this GURPSLength.
-func (l Length) Key() string {
+// Key returns the key used to represent this.
+func (l Units) Key() string {
 	switch l {
 	case Millimeter:
 		return "mm"

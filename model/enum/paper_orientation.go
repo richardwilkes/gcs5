@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package paper
+package enum
 
 import (
 	"strings"
@@ -18,17 +18,17 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-// Possible Orientation values.
+// Possible PaperOrientation values.
 const (
-	Portrait Orientation = iota
+	Portrait PaperOrientation = iota
 	Landscape
 )
 
-// Orientation holds the orientation of the page.
-type Orientation uint8
+// PaperOrientation holds the orientation of the page.
+type PaperOrientation uint8
 
-// OrientationFromString extracts a Orientation from a string.
-func OrientationFromString(str string) Orientation {
+// PaperOrientationFromString extracts a PaperOrientation from a string.
+func PaperOrientationFromString(str string) PaperOrientation {
 	for one := Portrait; one <= Landscape; one++ {
 		if strings.EqualFold(one.Key(), str) {
 			return one
@@ -38,7 +38,7 @@ func OrientationFromString(str string) Orientation {
 }
 
 // Key returns the key used to represent this ThresholdOp.
-func (a Orientation) Key() string {
+func (a PaperOrientation) Key() string {
 	switch a {
 	case Landscape:
 		return "landscape"
@@ -48,7 +48,7 @@ func (a Orientation) Key() string {
 }
 
 // String implements fmt.Stringer.
-func (a Orientation) String() string {
+func (a PaperOrientation) String() string {
 	switch a {
 	case Landscape:
 		return i18n.Text("Landscape")
@@ -58,7 +58,7 @@ func (a Orientation) String() string {
 }
 
 // Dimensions returns the paper dimensions after orienting the paper.
-func (a Orientation) Dimensions(size Size) (width, height measure.Length) {
+func (a PaperOrientation) Dimensions(size PaperSize) (width, height measure.Length) {
 	width, height = size.Dimensions()
 	switch a {
 	case Landscape:

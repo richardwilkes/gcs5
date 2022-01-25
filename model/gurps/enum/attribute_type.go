@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package attr
+package enum
 
 import (
 	"strings"
@@ -17,18 +17,18 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-// Possible Type values.
+// Possible AttributeType values.
 const (
-	Integer Type = iota
+	Integer AttributeType = iota
 	Decimal
 	Pool
 )
 
-// Type holds the type of an attribute definition.
-type Type uint8
+// AttributeType holds the type of an attribute definition.
+type AttributeType uint8
 
-// TypeFromString extracts a Type from a string.
-func TypeFromString(str string) Type {
+// AttributeTypeFromString extracts a AttributeType from a string.
+func AttributeTypeFromString(str string) AttributeType {
 	for op := Integer; op <= Pool; op++ {
 		if strings.EqualFold(op.Key(), str) {
 			return op
@@ -37,8 +37,8 @@ func TypeFromString(str string) Type {
 	return Integer
 }
 
-// Key returns the key used to represent this Type.
-func (a Type) Key() string {
+// Key returns the key used to represent this AttributeType.
+func (a AttributeType) Key() string {
 	switch a {
 	case Decimal:
 		return "decimal"
@@ -50,7 +50,7 @@ func (a Type) Key() string {
 }
 
 // String implements fmt.Stringer.
-func (a Type) String() string {
+func (a AttributeType) String() string {
 	switch a {
 	case Decimal:
 		return i18n.Text("Decimal")

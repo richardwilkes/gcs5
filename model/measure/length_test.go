@@ -14,20 +14,19 @@ package measure_test
 import (
 	"testing"
 
-	"github.com/richardwilkes/gcs/model/enums/units"
 	"github.com/richardwilkes/gcs/model/measure"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRealLengthConversion(t *testing.T) {
-	assert.Equal(t, `0.25in`, measure.Length{Length: 0.25, Units: units.Inch}.String())
-	assert.Equal(t, float32(18), measure.Length{Length: 0.25, Units: units.Inch}.Pixels())
-	assert.Equal(t, `1in`, measure.Length{Length: 1, Units: units.Inch}.String())
-	assert.Equal(t, float32(72), measure.Length{Length: 1, Units: units.Inch}.Pixels())
-	assert.Equal(t, `15in`, measure.Length{Length: 15, Units: units.Inch}.String())
-	assert.Equal(t, float32(1080), measure.Length{Length: 15, Units: units.Inch}.Pixels())
-	assert.Equal(t, "1cm", measure.Length{Length: 1, Units: units.Centimeter}.String())
-	assert.Equal(t, float32(28.3464566929), measure.Length{Length: 1, Units: units.Centimeter}.Pixels())
-	assert.Equal(t, "1mm", measure.Length{Length: 1, Units: units.Millimeter}.String())
-	assert.Equal(t, float32(2.8346456693), measure.Length{Length: 1, Units: units.Millimeter}.Pixels())
+	assert.Equal(t, `0.25in`, measure.Length{Length: 0.25, Units: measure.Inch}.String())
+	assert.Equal(t, float32(18), measure.Length{Length: 0.25, Units: measure.Inch}.Pixels())
+	assert.Equal(t, `1in`, measure.Length{Length: 1, Units: measure.Inch}.String())
+	assert.Equal(t, float32(72), measure.Length{Length: 1, Units: measure.Inch}.Pixels())
+	assert.Equal(t, `15in`, measure.Length{Length: 15, Units: measure.Inch}.String())
+	assert.Equal(t, float32(1080), measure.Length{Length: 15, Units: measure.Inch}.Pixels())
+	assert.Equal(t, "1cm", measure.Length{Length: 1, Units: measure.Centimeter}.String())
+	assert.Equal(t, float32(28.3464566929), measure.Length{Length: 1, Units: measure.Centimeter}.Pixels())
+	assert.Equal(t, "1mm", measure.Length{Length: 1, Units: measure.Millimeter}.String())
+	assert.Equal(t, float32(2.8346456693), measure.Length{Length: 1, Units: measure.Millimeter}.Pixels())
 }

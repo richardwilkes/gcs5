@@ -13,7 +13,7 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/gcs/model/gurps/enums/attr"
+	"github.com/richardwilkes/gcs/model/gurps/enum"
 )
 
 // AttributeBonusType is the data type key for an AttributeBonus.
@@ -29,7 +29,7 @@ var _ Bonus = &AttributeBonus{}
 // AttributeBonus holds a bonus to an Attribute.
 type AttributeBonus struct {
 	Attribute  string
-	Limitation attr.BonusLimitation
+	Limitation enum.AttributeBonusLimitation
 	Amount     *LeveledAmount
 }
 
@@ -45,7 +45,7 @@ func NewAttributeBonus(entity *Entity) *AttributeBonus {
 func NewAttributeBonusFromJSON(data map[string]interface{}) *AttributeBonus {
 	return &AttributeBonus{
 		Attribute:  encoding.String(data[attributeBonusAttributeKey]),
-		Limitation: attr.BonusLimitationFromString(encoding.String(data[attributeBonusLimitationKey])),
+		Limitation: enum.AttributeBonusLimitationFromString(encoding.String(data[attributeBonusLimitationKey])),
 		Amount:     NewLeveledAmountFromJSON(data),
 	}
 }
@@ -54,7 +54,7 @@ func NewAttributeBonusFromJSON(data map[string]interface{}) *AttributeBonus {
 func (a *AttributeBonus) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()
 	encoder.KeyedString(attributeBonusAttributeKey, a.Attribute, false, false)
-	if a.Limitation != attr.None {
+	if a.Limitation != enum.None {
 		encoder.KeyedString(attributeBonusLimitationKey, a.Limitation.Key(), false, false)
 	}
 	a.Amount.ToInlineJSON(encoder)
@@ -77,7 +77,7 @@ func (a *AttributeBonus) DataType() string {
 // FeatureKey implements Feature.
 func (a *AttributeBonus) FeatureKey() string {
 	key := AttributeIDPrefix + a.Attribute
-	if a.Limitation != attr.None {
+	if a.Limitation != enum.None {
 		key += "." + a.Limitation.Key()
 	}
 	return key

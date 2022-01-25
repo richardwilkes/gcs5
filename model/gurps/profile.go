@@ -15,7 +15,6 @@ import (
 	"encoding/base64"
 
 	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/gcs/model/gurps/enums/units"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -88,8 +87,8 @@ func NewProfileFromJSON(data map[string]interface{}) *Profile {
 		Handedness:   encoding.String(data[profileHandednessKey]),
 		Gender:       encoding.String(data[profileGenderKey]),
 		TechLevel:    encoding.String(data[profileTechLevelKey]),
-		Height:       measure.LengthFromStringForced(encoding.String(data[profileHeightKey]), units.FeetAndInches),
-		Weight:       measure.WeightFromStringForced(encoding.String(data[profileWeightKey]), units.Pound),
+		Height:       measure.LengthFromStringForced(encoding.String(data[profileHeightKey]), measure.FeetAndInches),
+		Weight:       measure.WeightFromStringForced(encoding.String(data[profileWeightKey]), measure.Pound),
 		SizeModifier: encoding.Number(data[profileSizeModifierKey]),
 		PortraitData: encoding.String(data[profilePortraitKey]),
 	}

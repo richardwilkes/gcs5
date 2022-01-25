@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package dmg
+package enum
 
 import (
 	"strings"
@@ -18,9 +18,9 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-// Possible Progression values.
+// Possible DamageProgression values.
 const (
-	BasicSet Progression = iota
+	BasicSet DamageProgression = iota
 	KnowingYourOwnStrength
 	NoSchoolGrognardDamage
 	ThrustEqualsSwingMinus2
@@ -28,11 +28,11 @@ const (
 	PhoenixFlameD3
 )
 
-// Progression controls how Thrust and Swing are calculated.
-type Progression uint8
+// DamageProgression controls how Thrust and Swing are calculated.
+type DamageProgression uint8
 
-// ProgressionFromString extracts a Progression from a string.
-func ProgressionFromString(str string) Progression {
+// DamageProgressionFromString extracts a DamageProgression from a string.
+func DamageProgressionFromString(str string) DamageProgression {
 	for p := BasicSet; p <= PhoenixFlameD3; p++ {
 		if strings.EqualFold(p.Key(), str) {
 			return p
@@ -41,8 +41,8 @@ func ProgressionFromString(str string) Progression {
 	return BasicSet
 }
 
-// Key returns the key used to represent this Progression.
-func (p Progression) Key() string {
+// Key returns the key used to represent this DamageProgression.
+func (p DamageProgression) Key() string {
 	switch p {
 	case KnowingYourOwnStrength:
 		return "knowing_your_own_strength"
@@ -60,7 +60,7 @@ func (p Progression) Key() string {
 }
 
 // String implements fmt.Stringer.
-func (p Progression) String() string {
+func (p DamageProgression) String() string {
 	switch p {
 	case KnowingYourOwnStrength:
 		return i18n.Text("Knowing Your Own Strength")
@@ -77,8 +77,8 @@ func (p Progression) String() string {
 	}
 }
 
-// Tooltip returns the tooltip for the Progression.
-func (p Progression) Tooltip() string {
+// Tooltip returns the tooltip for the DamageProgression.
+func (p DamageProgression) Tooltip() string {
 	tooltip := i18n.Text("Determines the method used to calculate thrust and swing damage")
 	if footnote := p.Footnote(); footnote != "" {
 		return tooltip + ".\n" + footnote
@@ -86,8 +86,8 @@ func (p Progression) Tooltip() string {
 	return tooltip
 }
 
-// Footnote returns a footnote for the Progression, if any.
-func (p Progression) Footnote() string {
+// Footnote returns a footnote for the DamageProgression, if any.
+func (p DamageProgression) Footnote() string {
 	switch p {
 	case KnowingYourOwnStrength:
 		return i18n.Text("Pyramid 3-83, pages 16-19")
@@ -105,7 +105,7 @@ func (p Progression) Footnote() string {
 }
 
 // Thrust returns the thrust damage for the given strength.
-func (p Progression) Thrust(strength int) *dice.Dice {
+func (p DamageProgression) Thrust(strength int) *dice.Dice {
 	switch p {
 	case KnowingYourOwnStrength:
 		if strength < 12 {
@@ -195,7 +195,7 @@ func (p Progression) Thrust(strength int) *dice.Dice {
 }
 
 // Swing returns the swing damage for the given strength.
-func (p Progression) Swing(strength int) *dice.Dice {
+func (p DamageProgression) Swing(strength int) *dice.Dice {
 	switch p {
 	case KnowingYourOwnStrength:
 		if strength < 10 {

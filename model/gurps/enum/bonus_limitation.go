@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package attr
+package enum
 
 import (
 	"strings"
@@ -17,19 +17,20 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-// Possible BonusLimitation values.
+// Possible AttributeBonusLimitation values.
 const (
-	None BonusLimitation = iota
+	None AttributeBonusLimitation = iota
 	StrikingOnly
 	LiftingOnly
 	ThrowingOnly
 )
 
-// BonusLimitation holds a limitation for an AttributeBonus.
-type BonusLimitation uint8
+// AttributeBonusLimitation holds a limitation for an AttributeBonus.
+type AttributeBonusLimitation uint8
 
-// BonusLimitationFromString returns the BonusLimitation for the given key, or a default of None if nothing matches.
-func BonusLimitationFromString(key string) BonusLimitation {
+// AttributeBonusLimitationFromString returns the AttributeBonusLimitation for the given key, or a default of None if
+// nothing matches.
+func AttributeBonusLimitationFromString(key string) AttributeBonusLimitation {
 	for one := None; one <= ThrowingOnly; one++ {
 		if strings.EqualFold(one.Key(), key) {
 			return one
@@ -38,9 +39,9 @@ func BonusLimitationFromString(key string) BonusLimitation {
 	return None
 }
 
-// Key returns the key used to represent this BonusLimitation.
-func (l BonusLimitation) Key() string {
-	switch l {
+// Key returns the key used to represent this AttributeBonusLimitation.
+func (a AttributeBonusLimitation) Key() string {
+	switch a {
 	case StrikingOnly:
 		return "striking_only"
 	case LiftingOnly:
@@ -53,8 +54,8 @@ func (l BonusLimitation) Key() string {
 }
 
 // String implements fmt.Stringer.
-func (l BonusLimitation) String() string {
-	switch l {
+func (a AttributeBonusLimitation) String() string {
+	switch a {
 	case StrikingOnly:
 		return i18n.Text("for striking only")
 	case LiftingOnly:

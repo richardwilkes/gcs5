@@ -14,33 +14,32 @@ package measure_test
 import (
 	"testing"
 
-	"github.com/richardwilkes/gcs/model/gurps/enums/units"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWeightConversion(t *testing.T) {
-	assert.Equal(t, "1#", measure.WeightFromInt64(1, units.Pound).Format(units.Pound))
-	assert.Equal(t, "15#", measure.WeightFromInt64(15, units.Pound).Format(units.Pound))
-	assert.Equal(t, "0.5kg", measure.WeightFromInt64(1, units.Pound).Format(units.Kilogram))
-	assert.Equal(t, "7.5kg", measure.WeightFromInt64(15, units.Pound).Format(units.Kilogram))
+	assert.Equal(t, "1#", measure.WeightFromInt64(1, measure.Pound).Format(measure.Pound))
+	assert.Equal(t, "15#", measure.WeightFromInt64(15, measure.Pound).Format(measure.Pound))
+	assert.Equal(t, "0.5kg", measure.WeightFromInt64(1, measure.Pound).Format(measure.Kilogram))
+	assert.Equal(t, "7.5kg", measure.WeightFromInt64(15, measure.Pound).Format(measure.Kilogram))
 
-	w, err := measure.WeightFromString("1", units.Pound)
+	w, err := measure.WeightFromString("1", measure.Pound)
 	assert.NoError(t, err)
 	assert.Equal(t, "1#", w.String())
-	w, err = measure.WeightFromString("1", units.Kilogram)
+	w, err = measure.WeightFromString("1", measure.Kilogram)
 	assert.NoError(t, err)
 	assert.Equal(t, "2#", w.String())
-	w, err = measure.WeightFromString("22.34 lb", units.Pound)
+	w, err = measure.WeightFromString("22.34 lb", measure.Pound)
 	assert.NoError(t, err)
 	assert.Equal(t, "22.34#", w.String())
-	w, err = measure.WeightFromString(" +22.34   lb  ", units.Pound)
+	w, err = measure.WeightFromString(" +22.34   lb  ", measure.Pound)
 	assert.NoError(t, err)
 	assert.Equal(t, "22.34#", w.String())
-	w, err = measure.WeightFromString("0.5kg", units.Pound)
+	w, err = measure.WeightFromString("0.5kg", measure.Pound)
 	assert.NoError(t, err)
-	assert.Equal(t, "0.5kg", w.Format(units.Kilogram))
-	w, err = measure.WeightFromString(" 15.25 kg ", units.Pound)
+	assert.Equal(t, "0.5kg", w.Format(measure.Kilogram))
+	w, err = measure.WeightFromString(" 15.25 kg ", measure.Pound)
 	assert.NoError(t, err)
-	assert.Equal(t, "15.25kg", w.Format(units.Kilogram))
+	assert.Equal(t, "15.25kg", w.Format(measure.Kilogram))
 }

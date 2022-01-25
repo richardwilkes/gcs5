@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/gurps/enums/units"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -26,13 +25,13 @@ import (
 type Length fixed.F64d4
 
 // LengthFromInt64 creates a new Length.
-func LengthFromInt64(value int64, unit units.Length) Length {
+func LengthFromInt64(value int64, unit LengthUnits) Length {
 	return convertToInches(fixed.F64d4FromInt64(value), unit)
 }
 
 // LengthFromStringForced creates a new Length. May have any of the known Units suffixes, a feet and inches format (e.g.
 // 6'2"), or no notation at all, in which case defaultUnits is used.
-func LengthFromStringForced(text string, defaultUnits units.Length) Length {
+func LengthFromStringForced(text string, defaultUnits LengthUnits) Length {
 	length, err := LengthFromString(text, defaultUnits)
 	if err != nil {
 		return 0
@@ -42,9 +41,9 @@ func LengthFromStringForced(text string, defaultUnits units.Length) Length {
 
 // LengthFromString creates a new Length. May have any of the known Units suffixes, a feet and inches format (e.g. 6'2"),
 // or no notation at all, in which case defaultUnits is used.
-func LengthFromString(text string, defaultUnits units.Length) (Length, error) {
+func LengthFromString(text string, defaultUnits LengthUnits) (Length, error) {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
-	for unit := units.Centimeter; unit <= units.Mile; unit++ {
+	for unit := Centimeter; unit <= Mile; unit++ {
 		if strings.HasSuffix(text, unit.Key()) {
 			value, err := fixed.F64d4FromString(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())))
 			if err != nil {
@@ -87,24 +86,24 @@ func LengthFromString(text string, defaultUnits units.Length) (Length, error) {
 }
 
 func (l Length) String() string {
-	return l.Format(units.FeetAndInches)
+	return l.Format(FeetAndInches)
 }
 
 // Format the length as the given units.
-func (l Length) Format(unit units.Length) string {
+func (l Length) Format(unit LengthUnits) string {
 	inches := fixed.F64d4(l)
 	switch unit {
-	case units.Centimeter:
+	case Centimeter:
 		return inches.Div(fixed.F64d4FromInt64(36)).Mul(fixed.F64d4FromInt64(100)).String() + unit.Key()
-	case units.Feet:
+	case Feet:
 		return inches.Div(fixed.F64d4FromInt64(12)).String() + unit.Key()
-	case units.Yard, units.Meter:
+	case Yard, Meter:
 		return inches.Div(fixed.F64d4FromInt64(36)).String() + unit.Key()
-	case units.Kilometer:
+	case Kilometer:
 		return inches.Div(fixed.F64d4FromInt64(36000)).String() + unit.Key()
-	case units.Mile:
+	case Mile:
 		return inches.Div(fixed.F64d4FromInt64(5280)).String() + unit.Key()
-	case units.FeetAndInches:
+	case FeetAndInches:
 		oneFoot := fixed.F64d4FromInt64(12)
 		feet := inches.Div(oneFoot).Trunc()
 		inches -= feet.Mul(oneFoot)
@@ -122,21 +121,21 @@ func (l Length) Format(unit units.Length) string {
 		}
 		return buffer.String()
 	default: // Same as Inch
-		return inches.String() + units.Inch.Key()
+		return inches.String() + Inch.Key()
 	}
 }
 
-func convertToInches(value fixed.F64d4, unit units.Length) Length {
+func convertToInches(value fixed.F64d4, unit LengthUnits) Length {
 	switch unit {
-	case units.Centimeter:
+	case Centimeter:
 		value = value.Mul(fixed.F64d4FromFloat64(36)).Div(fixed.F64d4FromInt64(100))
-	case units.Feet:
+	case Feet:
 		value = value.Mul(fixed.F64d4FromInt64(12))
-	case units.Yard, units.Meter:
+	case Yard, Meter:
 		value = value.Mul(fixed.F64d4FromInt64(36))
-	case units.Kilometer:
+	case Kilometer:
 		value = value.Mul(fixed.F64d4FromInt64(36000))
-	case units.Mile:
+	case Mile:
 		value = value.Mul(fixed.F64d4FromInt64(63360))
 	default: // Same as Inch
 	}

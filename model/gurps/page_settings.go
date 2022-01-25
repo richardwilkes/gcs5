@@ -13,8 +13,7 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/gcs/model/enums/paper"
-	"github.com/richardwilkes/gcs/model/enums/units"
+	"github.com/richardwilkes/gcs/model/enum"
 	"github.com/richardwilkes/gcs/model/measure"
 )
 
@@ -29,8 +28,8 @@ const (
 
 // PageSettings holds page settings.
 type PageSettings struct {
-	Size         paper.Size
-	Orientation  paper.Orientation
+	Size         enum.PaperSize
+	Orientation  enum.PaperOrientation
 	TopMargin    measure.Length
 	LeftMargin   measure.Length
 	BottomMargin measure.Length
@@ -40,20 +39,20 @@ type PageSettings struct {
 // FactoryPageSettings returns a new PageSettings with factory defaults.
 func FactoryPageSettings() *PageSettings {
 	return &PageSettings{
-		Size:         paper.Letter,
-		Orientation:  paper.Portrait,
-		TopMargin:    measure.Length{Length: 0.25, Units: units.Inch},
-		LeftMargin:   measure.Length{Length: 0.25, Units: units.Inch},
-		BottomMargin: measure.Length{Length: 0.25, Units: units.Inch},
-		RightMargin:  measure.Length{Length: 0.25, Units: units.Inch},
+		Size:         enum.Letter,
+		Orientation:  enum.Portrait,
+		TopMargin:    measure.Length{Length: 0.25, Units: measure.Inch},
+		LeftMargin:   measure.Length{Length: 0.25, Units: measure.Inch},
+		BottomMargin: measure.Length{Length: 0.25, Units: measure.Inch},
+		RightMargin:  measure.Length{Length: 0.25, Units: measure.Inch},
 	}
 }
 
 // NewPageSettingsFromJSON creates a new PageSettings from a JSON object.
 func NewPageSettingsFromJSON(data map[string]interface{}) *PageSettings {
 	s := FactoryPageSettings()
-	s.Size = paper.SizeFromString(encoding.String(data[pageSettingsPaperSizeKey]))
-	s.Orientation = paper.OrientationFromString(encoding.String(data[pageSettingsOrientationKey]))
+	s.Size = enum.PaperSizeFromString(encoding.String(data[pageSettingsPaperSizeKey]))
+	s.Orientation = enum.PaperOrientationFromString(encoding.String(data[pageSettingsOrientationKey]))
 	s.TopMargin = measure.LengthFromString(encoding.String(data[pageSettingsTopMarginKey]))
 	s.LeftMargin = measure.LengthFromString(encoding.String(data[pageSettingsLeftMarginKey]))
 	s.BottomMargin = measure.LengthFromString(encoding.String(data[pageSettingsBottomMarginKey]))

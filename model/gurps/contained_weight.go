@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/gcs/model/gurps/enums/units"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -100,7 +99,7 @@ func (c *ContainedWeight) PercentageReduction() fixed.F64d4 {
 }
 
 // FixedReduction returns the fixed amount the weight should be reduced by. Will return 0 if this is a percentage.
-func (c *ContainedWeight) FixedReduction(defUnits units.Weight) measure.Weight {
+func (c *ContainedWeight) FixedReduction(defUnits measure.WeightUnits) measure.Weight {
 	if c.IsPercentageReduction() {
 		return 0
 	}

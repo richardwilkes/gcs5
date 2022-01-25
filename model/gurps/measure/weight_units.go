@@ -9,18 +9,18 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package units
+package measure
 
 import "strings"
 
-// Weight holds the weight unit type. Note that conversions to/from metric are done using the simplified GURPS metric
-// conversion of 1# = 0.5kg. For consistency, all metric weights are converted to kilograms, then to pounds, rather than
-// the variations at different weights that the GURPS rules suggest.
-type Weight uint8
+// WeightUnits holds the weight unit type. Note that conversions to/from metric are done using the simplified GURPS
+// metric conversion of 1# = 0.5kg. For consistency, all metric weights are converted to kilograms, then to pounds,
+// rather than the variations at different weights that the GURPS rules suggest.
+type WeightUnits uint8
 
-// Possible Weight values.
+// Possible WeightUnits values.
 const (
-	Pound Weight = iota
+	Pound WeightUnits = iota
 	PoundAlt
 	Ounce
 	Ton
@@ -28,8 +28,8 @@ const (
 	Gram // must come after Kilogram, as it's abbreviation is a subset
 )
 
-// WeightFromString extracts a Weight from a string.
-func WeightFromString(str string) Weight {
+// WeightUnitsFromString extracts a WeightUnits from a string.
+func WeightUnitsFromString(str string) WeightUnits {
 	for p := Pound; p <= Gram; p++ {
 		if strings.EqualFold(p.Key(), str) {
 			return p
@@ -38,8 +38,8 @@ func WeightFromString(str string) Weight {
 	return Pound
 }
 
-// Key returns the key used to represent this Weight.
-func (l Weight) Key() string {
+// Key returns the key used to represent this WeightUnits.
+func (l WeightUnits) Key() string {
 	switch l {
 	case PoundAlt:
 		return "lb"

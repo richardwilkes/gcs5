@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package display
+package enum
 
 import (
 	"strings"
@@ -17,19 +17,19 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-// Possible Option values.
+// Possible DisplayOption values.
 const (
-	NotShown Option = iota
+	NotShown DisplayOption = iota
 	Inline
 	Tooltip
 	InlineAndTooltip
 )
 
-// Option holds a display option.
-type Option uint8
+// DisplayOption holds a display option.
+type DisplayOption uint8
 
-// OptionFromString extracts an Option from a string.
-func OptionFromString(str string, def Option) Option {
+// DisplayOptionFromString extracts an DisplayOption from a string.
+func DisplayOptionFromString(str string, def DisplayOption) DisplayOption {
 	for one := NotShown; one <= InlineAndTooltip; one++ {
 		if strings.EqualFold(one.Key(), str) {
 			return one
@@ -38,8 +38,8 @@ func OptionFromString(str string, def Option) Option {
 	return def
 }
 
-// Key returns the key used to represent this Option.
-func (o Option) Key() string {
+// Key returns the key used to represent this DisplayOption.
+func (o DisplayOption) Key() string {
 	switch o {
 	case Inline:
 		return "inline"
@@ -53,7 +53,7 @@ func (o Option) Key() string {
 }
 
 // String implements fmt.Stringer.
-func (o Option) String() string {
+func (o DisplayOption) String() string {
 	switch o {
 	case Inline:
 		return i18n.Text("Inline")
@@ -67,11 +67,11 @@ func (o Option) String() string {
 }
 
 // Inline returns true if inline notes should be shown.
-func (o Option) Inline() bool {
+func (o DisplayOption) Inline() bool {
 	return o == Inline || o == InlineAndTooltip
 }
 
 // Tooltip returns true if tooltips should be shown.
-func (o Option) Tooltip() bool {
+func (o DisplayOption) Tooltip() bool {
 	return o == Tooltip || o == InlineAndTooltip
 }

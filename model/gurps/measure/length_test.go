@@ -14,30 +14,29 @@ package measure_test
 import (
 	"testing"
 
-	"github.com/richardwilkes/gcs/model/gurps/enums/units"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGURPSLengthConversion(t *testing.T) {
-	assert.Equal(t, `1"`, measure.LengthFromInt64(1, units.Inch).Format(units.FeetAndInches))
-	assert.Equal(t, `1'3"`, measure.LengthFromInt64(15, units.Inch).Format(units.FeetAndInches))
-	assert.Equal(t, "2.5cm", measure.LengthFromStringForced("2.5", units.Centimeter).Format(units.Centimeter))
-	assert.Equal(t, "37.5cm", measure.LengthFromStringForced("37.5", units.Centimeter).Format(units.Centimeter))
+	assert.Equal(t, `1"`, measure.LengthFromInt64(1, measure.Inch).Format(measure.FeetAndInches))
+	assert.Equal(t, `1'3"`, measure.LengthFromInt64(15, measure.Inch).Format(measure.FeetAndInches))
+	assert.Equal(t, "2.5cm", measure.LengthFromStringForced("2.5", measure.Centimeter).Format(measure.Centimeter))
+	assert.Equal(t, "37.5cm", measure.LengthFromStringForced("37.5", measure.Centimeter).Format(measure.Centimeter))
 
-	w, err := measure.LengthFromString("1", units.Inch)
+	w, err := measure.LengthFromString("1", measure.Inch)
 	assert.NoError(t, err)
-	assert.Equal(t, `1"`, w.Format(units.FeetAndInches))
-	w, err = measure.LengthFromString(`6'         2"`, units.Inch)
+	assert.Equal(t, `1"`, w.Format(measure.FeetAndInches))
+	w, err = measure.LengthFromString(`6'         2"`, measure.Inch)
 	assert.NoError(t, err)
-	assert.Equal(t, `6'2"`, w.Format(units.FeetAndInches))
-	w, err = measure.LengthFromString(" +32   yd  ", units.Inch)
+	assert.Equal(t, `6'2"`, w.Format(measure.FeetAndInches))
+	w, err = measure.LengthFromString(" +32   yd  ", measure.Inch)
 	assert.NoError(t, err)
-	assert.Equal(t, "96'", w.Format(units.FeetAndInches))
-	w, err = measure.LengthFromString("0.5m", units.Inch)
+	assert.Equal(t, "96'", w.Format(measure.FeetAndInches))
+	w, err = measure.LengthFromString("0.5m", measure.Inch)
 	assert.NoError(t, err)
-	assert.Equal(t, "50cm", w.Format(units.Centimeter))
-	w, err = measure.LengthFromString("1cm", units.Inch)
+	assert.Equal(t, "50cm", w.Format(measure.Centimeter))
+	w, err = measure.LengthFromString("1cm", measure.Inch)
 	assert.NoError(t, err)
-	assert.Equal(t, "1cm", w.Format(units.Centimeter))
+	assert.Equal(t, "1cm", w.Format(measure.Centimeter))
 }

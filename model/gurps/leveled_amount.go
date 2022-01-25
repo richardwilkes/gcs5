@@ -40,6 +40,13 @@ func NewLeveledAmountFromJSON(data map[string]interface{}) *LeveledAmount {
 	return a
 }
 
+// FromJSON replaces the current data with data from a JSON object.
+func (a *LeveledAmount) FromJSON(data map[string]interface{}) {
+	a.Amount = encoding.Number(data[leveledAmountAmountKey])
+	a.Level = 0
+	a.PerLevel = encoding.Bool(data[leveledAmountPerLevelKey])
+}
+
 // ToJSON implements Feature.
 func (a *LeveledAmount) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()

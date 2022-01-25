@@ -9,18 +9,18 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package units
+package measure
 
 import "strings"
 
-// Length holds the length unit type. Note that conversions to/from metric are done using the simplified GURPS metric
-// conversion of 1 yd = 1 meter. For consistency, all metric lengths are converted to meters, then to yards, rather than
-// the variations at different lengths that the GURPS rules suggest.
-type Length uint8
+// LengthUnits holds the length unit type. Note that conversions to/from metric are done using the simplified GURPS
+// metric conversion of 1 yd = 1 meter. For consistency, all metric lengths are converted to meters, then to yards,
+// rather than the variations at different lengths that the GURPS rules suggest.
+type LengthUnits uint8
 
-// Possible Length values.
+// Possible LengthUnits values.
 const (
-	FeetAndInches Length = iota // This one is special and not a suffix
+	FeetAndInches LengthUnits = iota // This one is special and not a suffix
 	Centimeter
 	Inch
 	Feet
@@ -30,8 +30,8 @@ const (
 	Mile
 )
 
-// LengthFromString extracts a Length from a string.
-func LengthFromString(str string) Length {
+// LengthUnitsFromString extracts a LengthUnits from a string.
+func LengthUnitsFromString(str string) LengthUnits {
 	for p := FeetAndInches; p <= Mile; p++ {
 		if strings.EqualFold(p.Key(), str) {
 			return p
@@ -40,8 +40,8 @@ func LengthFromString(str string) Length {
 	return FeetAndInches
 }
 
-// Key returns the key used to represent this Length.
-func (l Length) Key() string {
+// Key returns the key used to represent this LengthUnits.
+func (l LengthUnits) Key() string {
 	switch l {
 	case Centimeter:
 		return "cm"

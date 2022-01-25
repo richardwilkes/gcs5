@@ -9,19 +9,18 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package paper
+package enum
 
 import (
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/enums/units"
 	"github.com/richardwilkes/gcs/model/measure"
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-// Possible Size values.
+// Possible PaperSize values.
 const (
-	Letter Size = iota
+	Letter PaperSize = iota
 	Legal
 	Tabloid
 	A0
@@ -33,11 +32,11 @@ const (
 	A6
 )
 
-// Size holds a standard paper dimension.
-type Size uint8
+// PaperSize holds a standard paper dimension.
+type PaperSize uint8
 
-// SizeFromString extracts a Size from a string.
-func SizeFromString(str string) Size {
+// PaperSizeFromString extracts a PaperSize from a string.
+func PaperSizeFromString(str string) PaperSize {
 	for one := Letter; one <= A6; one++ {
 		if strings.EqualFold(one.Key(), str) {
 			return one
@@ -47,7 +46,7 @@ func SizeFromString(str string) Size {
 }
 
 // Key returns the key used to represent this ThresholdOp.
-func (s Size) Key() string {
+func (s PaperSize) Key() string {
 	switch s {
 	case Legal:
 		return "legal"
@@ -73,7 +72,7 @@ func (s Size) Key() string {
 }
 
 // String implements fmt.Stringer.
-func (s Size) String() string {
+func (s PaperSize) String() string {
 	switch s {
 	case Legal:
 		return i18n.Text("Legal")
@@ -99,27 +98,27 @@ func (s Size) String() string {
 }
 
 // Dimensions returns the paper dimensions.
-func (s Size) Dimensions() (width, height measure.Length) {
+func (s PaperSize) Dimensions() (width, height measure.Length) {
 	switch s {
 	case Legal:
-		return measure.Length{Length: 8.5, Units: units.Inch}, measure.Length{Length: 14, Units: units.Inch}
+		return measure.Length{Length: 8.5, Units: measure.Inch}, measure.Length{Length: 14, Units: measure.Inch}
 	case Tabloid:
-		return measure.Length{Length: 11, Units: units.Inch}, measure.Length{Length: 17, Units: units.Inch}
+		return measure.Length{Length: 11, Units: measure.Inch}, measure.Length{Length: 17, Units: measure.Inch}
 	case A0:
-		return measure.Length{Length: 841, Units: units.Millimeter}, measure.Length{Length: 1189, Units: units.Millimeter}
+		return measure.Length{Length: 841, Units: measure.Millimeter}, measure.Length{Length: 1189, Units: measure.Millimeter}
 	case A1:
-		return measure.Length{Length: 594, Units: units.Millimeter}, measure.Length{Length: 841, Units: units.Millimeter}
+		return measure.Length{Length: 594, Units: measure.Millimeter}, measure.Length{Length: 841, Units: measure.Millimeter}
 	case A2:
-		return measure.Length{Length: 420, Units: units.Millimeter}, measure.Length{Length: 594, Units: units.Millimeter}
+		return measure.Length{Length: 420, Units: measure.Millimeter}, measure.Length{Length: 594, Units: measure.Millimeter}
 	case A3:
-		return measure.Length{Length: 297, Units: units.Millimeter}, measure.Length{Length: 420, Units: units.Millimeter}
+		return measure.Length{Length: 297, Units: measure.Millimeter}, measure.Length{Length: 420, Units: measure.Millimeter}
 	case A4:
-		return measure.Length{Length: 210, Units: units.Millimeter}, measure.Length{Length: 297, Units: units.Millimeter}
+		return measure.Length{Length: 210, Units: measure.Millimeter}, measure.Length{Length: 297, Units: measure.Millimeter}
 	case A5:
-		return measure.Length{Length: 148, Units: units.Millimeter}, measure.Length{Length: 210, Units: units.Millimeter}
+		return measure.Length{Length: 148, Units: measure.Millimeter}, measure.Length{Length: 210, Units: measure.Millimeter}
 	case A6:
-		return measure.Length{Length: 105, Units: units.Millimeter}, measure.Length{Length: 148, Units: units.Millimeter}
+		return measure.Length{Length: 105, Units: measure.Millimeter}, measure.Length{Length: 148, Units: measure.Millimeter}
 	default: // Letter
-		return measure.Length{Length: 8.5, Units: units.Inch}, measure.Length{Length: 11, Units: units.Inch}
+		return measure.Length{Length: 8.5, Units: measure.Inch}, measure.Length{Length: 11, Units: measure.Inch}
 	}
 }
