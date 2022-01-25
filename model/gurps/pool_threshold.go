@@ -15,8 +15,8 @@ import (
 	"sort"
 
 	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/gcs/model/enums/attr"
 	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/gurps/enums/attr"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 

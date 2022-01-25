@@ -43,9 +43,14 @@ func NewLeveledAmountFromJSON(data map[string]interface{}) *LeveledAmount {
 // ToJSON implements Feature.
 func (a *LeveledAmount) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()
+	a.ToInlineJSON(encoder)
+	encoder.EndObject()
+}
+
+// ToInlineJSON emits the JSON key values that comprise this object without the object wrapper.
+func (a *LeveledAmount) ToInlineJSON(encoder *encoding.JSONEncoder) {
 	encoder.KeyedNumber(leveledAmountAmountKey, a.Amount, false)
 	encoder.KeyedBool(leveledAmountPerLevelKey, a.PerLevel, true)
-	encoder.EndObject()
 }
 
 // AdjustedAmount returns the amount, adjusted for level, if requested.

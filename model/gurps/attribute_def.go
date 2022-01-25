@@ -16,9 +16,9 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/gcs/model/enums/attr"
-	"github.com/richardwilkes/gcs/model/enums/dmg"
 	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/gurps/enums/attr"
+	"github.com/richardwilkes/gcs/model/gurps/enums/dmg"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/eval"

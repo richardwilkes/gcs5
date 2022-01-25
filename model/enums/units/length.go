@@ -11,22 +11,22 @@
 
 package units
 
-// Possible RealLength values.
+// Possible Length values.
 const (
-	RealMillimeter RealLength = iota
-	RealCentimeter
-	RealInch
+	Millimeter Length = iota
+	Centimeter
+	Inch
 )
 
-// RealLength holds the real-world length unit type.
-type RealLength uint8
+// Length holds the real-world length unit type.
+type Length uint8
 
 // Key returns the key used to represent this GURPSLength.
-func (l RealLength) Key() string {
+func (l Length) Key() string {
 	switch l {
-	case RealMillimeter:
+	case Millimeter:
 		return "mm"
-	case RealCentimeter:
+	case Centimeter:
 		return "cm"
 	default: // RealInch
 		return "in"

@@ -15,9 +15,8 @@ import (
 	"encoding/base64"
 
 	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/gcs/model/enums/units"
-	"github.com/richardwilkes/gcs/model/unit/length"
-	"github.com/richardwilkes/gcs/model/unit/weight"
+	"github.com/richardwilkes/gcs/model/gurps/enums/units"
+	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -67,8 +66,8 @@ type Profile struct {
 	TechLevel         string
 	PortraitData      string
 	portrait          *unison.Image
-	Height            length.GURPS
-	Weight            weight.Weight
+	Height            measure.Length
+	Weight            measure.Weight
 	SizeModifier      fixed.F64d4
 	SizeModifierBonus fixed.F64d4
 }
@@ -89,8 +88,8 @@ func NewProfileFromJSON(data map[string]interface{}) *Profile {
 		Handedness:   encoding.String(data[profileHandednessKey]),
 		Gender:       encoding.String(data[profileGenderKey]),
 		TechLevel:    encoding.String(data[profileTechLevelKey]),
-		Height:       length.GURPSFromStringForced(encoding.String(data[profileHeightKey]), units.FeetAndInches),
-		Weight:       weight.FromStringForced(encoding.String(data[profileWeightKey]), units.Pound),
+		Height:       measure.LengthFromStringForced(encoding.String(data[profileHeightKey]), units.FeetAndInches),
+		Weight:       measure.WeightFromStringForced(encoding.String(data[profileWeightKey]), units.Pound),
 		SizeModifier: encoding.Number(data[profileSizeModifierKey]),
 		PortraitData: encoding.String(data[profilePortraitKey]),
 	}

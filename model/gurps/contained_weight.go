@@ -15,8 +15,8 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/gcs/model/enums/units"
-	"github.com/richardwilkes/gcs/model/unit/weight"
+	"github.com/richardwilkes/gcs/model/gurps/enums/units"
+	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
@@ -71,12 +71,12 @@ func (c *ContainedWeight) FeatureKey() string {
 }
 
 // FillWithNameableKeys implements Feature.
-func (c *ContainedWeight) FillWithNameableKeys(set map[string]bool) {
+func (c *ContainedWeight) FillWithNameableKeys(_ map[string]bool) {
 	// Does nothing
 }
 
 // ApplyNameableKeys implements Feature.
-func (c *ContainedWeight) ApplyNameableKeys(nameables map[string]string) {
+func (c *ContainedWeight) ApplyNameableKeys(_ map[string]string) {
 	// Does nothing
 }
 
@@ -95,9 +95,9 @@ func (c *ContainedWeight) PercentageReduction() fixed.F64d4 {
 }
 
 // FixedReduction returns the fixed amount the weight should be reduced by. Will return 0 if this is a percentage.
-func (c *ContainedWeight) FixedReduction(defUnits units.GURPSWeight) weight.Weight {
+func (c *ContainedWeight) FixedReduction(defUnits units.Weight) measure.Weight {
 	if c.IsPercentageReduction() {
 		return 0
 	}
-	return weight.FromStringForced(c.Reduction, defUnits)
+	return measure.WeightFromStringForced(c.Reduction, defUnits)
 }

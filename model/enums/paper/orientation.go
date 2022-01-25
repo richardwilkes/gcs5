@@ -14,7 +14,7 @@ package paper
 import (
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/unit/length"
+	"github.com/richardwilkes/gcs/model/measure"
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
@@ -58,7 +58,8 @@ func (a Orientation) String() string {
 }
 
 // Dimensions returns the paper dimensions after orienting the paper.
-func (a Orientation) Dimensions(size Size) (width, height length.GURPS) {
+func (a Orientation) Dimensions(size Size) (width, height measure.Length) {
+	width, height = size.Dimensions()
 	switch a {
 	case Landscape:
 		return height, width

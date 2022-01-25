@@ -13,7 +13,7 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/gcs/model/enums/attr"
+	"github.com/richardwilkes/gcs/model/gurps/enums/attr"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )

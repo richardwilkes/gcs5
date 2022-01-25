@@ -34,14 +34,10 @@ type CostReduction struct {
 
 // NewCostReduction creates a new CostReduction. 'entity' may be nil.
 func NewCostReduction(entity *Entity) *CostReduction {
-	c := &CostReduction{Percentage: fixed.F64d4FromInt64(40)}
-	list := AttributeDefsFor(entity).List()
-	if len(list) != 0 {
-		c.Attribute = list[0].ID()
-	} else {
-		c.Attribute = "st"
+	return &CostReduction{
+		Attribute:  DefaultAttributeIDFor(entity),
+		Percentage: fixed.F64d4FromInt64(40),
 	}
-	return c
 }
 
 // NewCostReductionFromJSON creates a new CostReduction from a JSON object.
@@ -78,11 +74,11 @@ func (c *CostReduction) FeatureKey() string {
 }
 
 // FillWithNameableKeys implements Feature.
-func (c *CostReduction) FillWithNameableKeys(set map[string]bool) {
+func (c *CostReduction) FillWithNameableKeys(_ map[string]bool) {
 	// Does nothing
 }
 
 // ApplyNameableKeys implements Feature.
-func (c *CostReduction) ApplyNameableKeys(nameables map[string]string) {
+func (c *CostReduction) ApplyNameableKeys(_ map[string]string) {
 	// Does nothing
 }

@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package length
+package measure
 
 import (
 	"strconv"
@@ -18,44 +18,44 @@ import (
 	"github.com/richardwilkes/gcs/model/enums/units"
 )
 
-// Real contains a real-world length value with an attached units.
-type Real struct {
+// Length contains a real-world length value with an attached units.
+type Length struct {
 	Length float64
-	Units  units.RealLength
+	Units  units.Length
 }
 
-// RealFromString creates a new Real. May have any of the known units.RealLength suffixes or no notation at all, in which
-// case defaultUnits is used.
-func RealFromString(text string, defaultUnits units.RealLength) Real {
+// LengthFromString creates a new Length. May have any of the known units.Length suffixes or no notation at all, in which
+// case units.Inch is used.
+func LengthFromString(text string) Length {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
-	for unit := units.RealMillimeter; unit <= units.RealInch; unit++ {
+	for unit := units.Millimeter; unit <= units.Inch; unit++ {
 		if strings.HasSuffix(text, unit.Key()) {
 			value, err := strconv.ParseFloat(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())), 64)
 			if err != nil {
-				return Real{Units: unit}
+				return Length{Units: unit}
 			}
-			return Real{Length: value, Units: unit}
+			return Length{Length: value, Units: unit}
 		}
 	}
 	// Didn't match any of the Units types, assume the default
 	value, err := strconv.ParseFloat(text, 64)
 	if err != nil {
-		return Real{Units: defaultUnits}
+		return Length{Units: units.Inch}
 	}
-	return Real{Length: value, Units: defaultUnits}
+	return Length{Length: value, Units: units.Inch}
 }
 
-func (l Real) String() string {
+func (l Length) String() string {
 	return strconv.FormatFloat(l.Length, 'f', -1, 64) + l.Units.Key()
 }
 
 // Pixels returns the number of 72-pixels-per-inch pixels this represents.
-func (l Real) Pixels() float32 {
+func (l Length) Pixels() float32 {
 	length := l.Length * 72
 	switch l.Units {
-	case units.RealMillimeter:
+	case units.Millimeter:
 		return float32(length / 25.4)
-	case units.RealCentimeter:
+	case units.Centimeter:
 		return float32(length / 2.54)
 	default:
 		return float32(length)

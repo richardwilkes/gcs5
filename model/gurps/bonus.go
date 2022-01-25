@@ -14,4 +14,5 @@ package gurps
 // Bonus defines the methods that all bonuses must have.
 type Bonus interface {
 	Feature
+	// TODO: Currently nothing different from a Feature... probably should eliminate if that persists
 }

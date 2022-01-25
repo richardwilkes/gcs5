@@ -9,41 +9,36 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package weight
+package measure
 
 import (
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/enums/units"
+	"github.com/richardwilkes/gcs/model/gurps/enums/units"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 // Weight contains a fixed-point value in pounds.
 type Weight fixed.F64d4
 
-// FromInt64 creates a new Weight.
-func FromInt64(value int64, unit units.GURPSWeight) Weight {
+// WeightFromInt64 creates a new Weight.
+func WeightFromInt64(value int64, unit units.Weight) Weight {
 	return convertToPounds(fixed.F64d4FromInt64(value), unit)
 }
 
-// FromFloat64 creates a new Weight.
-func FromFloat64(value float64, unit units.GURPSWeight) Weight {
-	return convertToPounds(fixed.F64d4FromFloat64(value), unit)
-}
-
-// FromStringForced creates a new Weight. May have any of the known GURPSWeight suffixes or no notation at all, in which
+// WeightFromStringForced creates a new Weight. May have any of the known Weight suffixes or no notation at all, in which
 // case defaultUnits is used.
-func FromStringForced(text string, defaultUnits units.GURPSWeight) Weight {
-	weight, err := FromString(text, defaultUnits)
+func WeightFromStringForced(text string, defaultUnits units.Weight) Weight {
+	weight, err := WeightFromString(text, defaultUnits)
 	if err != nil {
 		return 0
 	}
 	return weight
 }
 
-// FromString creates a new Weight. May have any of the known GURPSWeight suffixes or no notation at all, in which case
+// WeightFromString creates a new Weight. May have any of the known Weight suffixes or no notation at all, in which case
 // defaultUnits is used.
-func FromString(text string, defaultUnits units.GURPSWeight) (Weight, error) {
+func WeightFromString(text string, defaultUnits units.Weight) (Weight, error) {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
 	for unit := units.Pound; unit <= units.Gram; unit++ {
 		if strings.HasSuffix(text, unit.Key()) {
@@ -62,7 +57,7 @@ func FromString(text string, defaultUnits units.GURPSWeight) (Weight, error) {
 	return convertToPounds(value, defaultUnits), nil
 }
 
-func convertToPounds(value fixed.F64d4, unit units.GURPSWeight) Weight {
+func convertToPounds(value fixed.F64d4, unit units.Weight) Weight {
 	switch unit {
 	case units.Ounce:
 		value = value.Div(fixed.F64d4FromInt64(16))
@@ -82,7 +77,7 @@ func (w Weight) String() string {
 }
 
 // Format the weight as the given units.
-func (w Weight) Format(unit units.GURPSWeight) string {
+func (w Weight) Format(unit units.Weight) string {
 	pounds := fixed.F64d4(w)
 	switch unit {
 	case units.Ounce:

@@ -14,8 +14,8 @@ package gurps
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/enums/display"
-	"github.com/richardwilkes/gcs/model/enums/dmg"
-	"github.com/richardwilkes/gcs/model/enums/units"
+	"github.com/richardwilkes/gcs/model/gurps/enums/dmg"
+	units2 "github.com/richardwilkes/gcs/model/gurps/enums/units"
 )
 
 const (
@@ -51,8 +51,8 @@ type SheetSettings struct {
 	Attributes                 *AttributeDefs
 	HitLocations               *BodyType
 	DamageProgression          dmg.Progression
-	DefaultLengthUnits         units.GURPSLength
-	DefaultWeightUnits         units.GURPSWeight
+	DefaultLengthUnits         units2.Length
+	DefaultWeightUnits         units2.Weight
 	UserDescriptionDisplay     display.Option
 	ModifiersDisplay           display.Option
 	NotesDisplay               display.Option
@@ -75,8 +75,8 @@ func FactorySheetSettings() *SheetSettings {
 		Attributes:             FactoryAttributeDefs(),
 		HitLocations:           FactoryBodyType(),
 		DamageProgression:      dmg.BasicSet,
-		DefaultLengthUnits:     units.FeetAndInches,
-		DefaultWeightUnits:     units.Pound,
+		DefaultLengthUnits:     units2.FeetAndInches,
+		DefaultWeightUnits:     units2.Pound,
 		UserDescriptionDisplay: display.Tooltip,
 		ModifiersDisplay:       display.Inline,
 		NotesDisplay:           display.Inline,
@@ -95,8 +95,8 @@ func NewSheetSettingsFromJSON(data map[string]interface{}, entity *Entity) *Shee
 		s.HitLocations = NewBodyTypeFromJSON(encoding.Object(data[sheetSettingsHitLocationsKey]))
 	}
 	s.DamageProgression = dmg.ProgressionFromString(encoding.String(data[sheetSettingsDamageProgressionKey]))
-	s.DefaultLengthUnits = units.GURPSLengthFromString(encoding.String(data[sheetSettingsDefaultLengthUnitsKey]))
-	s.DefaultWeightUnits = units.GURPSWeightFromString(encoding.String(data[sheetSettingsDefaultWeightUnitsKey]))
+	s.DefaultLengthUnits = units2.LengthFromString(encoding.String(data[sheetSettingsDefaultLengthUnitsKey]))
+	s.DefaultWeightUnits = units2.WeightFromString(encoding.String(data[sheetSettingsDefaultWeightUnitsKey]))
 	s.UserDescriptionDisplay = display.OptionFromString(encoding.String(data[sheetSettingsUserDescriptionDisplayKey]), s.UserDescriptionDisplay)
 	s.ModifiersDisplay = display.OptionFromString(encoding.String(data[sheetSettingsModifiersDisplayKey]), s.ModifiersDisplay)
 	s.NotesDisplay = display.OptionFromString(encoding.String(data[sheetSettingsNotesDisplayKey]), s.NotesDisplay)

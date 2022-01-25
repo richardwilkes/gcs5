@@ -13,14 +13,14 @@ package units
 
 import "strings"
 
-// GURPSWeight holds the weight unit type. Note that conversions to/from metric are done using the simplified GURPS
-// metric conversion of 1# = 0.5kg. For consistency, all metric weights are converted to kilograms, then to pounds,
-// rather than the variations at different weights that the GURPS rules suggest.
-type GURPSWeight uint8
+// Weight holds the weight unit type. Note that conversions to/from metric are done using the simplified GURPS metric
+// conversion of 1# = 0.5kg. For consistency, all metric weights are converted to kilograms, then to pounds, rather than
+// the variations at different weights that the GURPS rules suggest.
+type Weight uint8
 
-// Possible GURPSWeight values.
+// Possible Weight values.
 const (
-	Pound GURPSWeight = iota
+	Pound Weight = iota
 	PoundAlt
 	Ounce
 	Ton
@@ -28,8 +28,8 @@ const (
 	Gram // must come after Kilogram, as it's abbreviation is a subset
 )
 
-// GURPSWeightFromString extracts a GURPSLength from a string.
-func GURPSWeightFromString(str string) GURPSWeight {
+// WeightFromString extracts a Weight from a string.
+func WeightFromString(str string) Weight {
 	for p := Pound; p <= Gram; p++ {
 		if strings.EqualFold(p.Key(), str) {
 			return p
@@ -38,8 +38,8 @@ func GURPSWeightFromString(str string) GURPSWeight {
 	return Pound
 }
 
-// Key returns the key used to represent this GURPSWeight.
-func (l GURPSWeight) Key() string {
+// Key returns the key used to represent this Weight.
+func (l Weight) Key() string {
 	switch l {
 	case PoundAlt:
 		return "lb"

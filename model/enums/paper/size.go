@@ -15,9 +15,8 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/enums/units"
-	"github.com/richardwilkes/gcs/model/unit/length"
+	"github.com/richardwilkes/gcs/model/measure"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 // Possible Size values.
@@ -100,32 +99,27 @@ func (s Size) String() string {
 }
 
 // Dimensions returns the paper dimensions.
-func (s Size) Dimensions() (width, height length.GURPS) {
+func (s Size) Dimensions() (width, height measure.Length) {
 	switch s {
 	case Legal:
-		return length.GURPSFromFloat64(8.5, units.Inch), length.GURPSFromInt64(14, units.Inch)
+		return measure.LengthFromString("8.5in"), measure.Length{Length: 14, Units: units.Inch}
 	case Tabloid:
-		return length.GURPSFromInt64(11, units.Inch), length.GURPSFromInt64(17, units.Inch)
+		return measure.Length{Length: 11, Units: units.Inch}, measure.Length{Length: 17, Units: units.Inch}
 	case A0:
-		return mmToInches(841), mmToInches(1189)
+		return measure.Length{Length: 841, Units: units.Millimeter}, measure.Length{Length: 1189, Units: units.Millimeter}
 	case A1:
-		return mmToInches(594), mmToInches(841)
+		return measure.Length{Length: 594, Units: units.Millimeter}, measure.Length{Length: 841, Units: units.Millimeter}
 	case A2:
-		return mmToInches(420), mmToInches(594)
+		return measure.Length{Length: 420, Units: units.Millimeter}, measure.Length{Length: 594, Units: units.Millimeter}
 	case A3:
-		return mmToInches(297), mmToInches(420)
+		return measure.Length{Length: 297, Units: units.Millimeter}, measure.Length{Length: 420, Units: units.Millimeter}
 	case A4:
-		return mmToInches(210), mmToInches(297)
+		return measure.Length{Length: 210, Units: units.Millimeter}, measure.Length{Length: 297, Units: units.Millimeter}
 	case A5:
-		return mmToInches(148), mmToInches(210)
+		return measure.Length{Length: 148, Units: units.Millimeter}, measure.Length{Length: 210, Units: units.Millimeter}
 	case A6:
-		return mmToInches(105), mmToInches(148)
+		return measure.Length{Length: 105, Units: units.Millimeter}, measure.Length{Length: 148, Units: units.Millimeter}
 	default: // Letter
-		return length.GURPSFromFloat64(8.5, units.Inch), length.GURPSFromInt64(11, units.Inch)
+		return measure.LengthFromString("8.5in"), measure.Length{Length: 11, Units: units.Inch}
 	}
-}
-
-func mmToInches(mm int) length.GURPS {
-	// Do our own conversion to inches, since the metric values are using GURPS' simplified values
-	return length.GURPS(fixed.F64d4FromInt64(int64(mm)*10) / fixed.F64d4FromInt64(254))
 }

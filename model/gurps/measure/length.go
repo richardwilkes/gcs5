@@ -9,45 +9,40 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package length
+package measure
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/enums/units"
+	"github.com/richardwilkes/gcs/model/gurps/enums/units"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-// GURPS contains a fixed-point value in inches. Conversions to/from metric are done using the simplified GURPS metric
+// Length contains a fixed-point value in inches. Conversions to/from metric are done using the simplified Length metric
 // conversion of 1 yd = 1 meter. For consistency, all metric lengths are converted to meters, then to yards, rather than
-// the variations at different lengths that the GURPS rules suggest.
-type GURPS fixed.F64d4
+// the variations at different lengths that the Length rules suggest.
+type Length fixed.F64d4
 
-// GURPSFromInt64 creates a new GURPS.
-func GURPSFromInt64(value int64, unit units.GURPSLength) GURPS {
-	return convertGURPSToInches(fixed.F64d4FromInt64(value), unit)
+// LengthFromInt64 creates a new Length.
+func LengthFromInt64(value int64, unit units.Length) Length {
+	return convertToInches(fixed.F64d4FromInt64(value), unit)
 }
 
-// GURPSFromFloat64 creates a new GURPS.
-func GURPSFromFloat64(value float64, unit units.GURPSLength) GURPS {
-	return convertGURPSToInches(fixed.F64d4FromFloat64(value), unit)
-}
-
-// GURPSFromStringForced creates a new GURPS. May have any of the known Units suffixes, a feet and inches format (e.g.
+// LengthFromStringForced creates a new Length. May have any of the known Units suffixes, a feet and inches format (e.g.
 // 6'2"), or no notation at all, in which case defaultUnits is used.
-func GURPSFromStringForced(text string, defaultUnits units.GURPSLength) GURPS {
-	length, err := GURPSFromString(text, defaultUnits)
+func LengthFromStringForced(text string, defaultUnits units.Length) Length {
+	length, err := LengthFromString(text, defaultUnits)
 	if err != nil {
 		return 0
 	}
 	return length
 }
 
-// GURPSFromString creates a new GURPS. May have any of the known Units suffixes, a feet and inches format (e.g. 6'2"),
+// LengthFromString creates a new Length. May have any of the known Units suffixes, a feet and inches format (e.g. 6'2"),
 // or no notation at all, in which case defaultUnits is used.
-func GURPSFromString(text string, defaultUnits units.GURPSLength) (GURPS, error) {
+func LengthFromString(text string, defaultUnits units.Length) (Length, error) {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
 	for unit := units.Centimeter; unit <= units.Mile; unit++ {
 		if strings.HasSuffix(text, unit.Key()) {
@@ -55,7 +50,7 @@ func GURPSFromString(text string, defaultUnits units.GURPSLength) (GURPS, error)
 			if err != nil {
 				return 0, err
 			}
-			return convertGURPSToInches(value, unit), nil
+			return convertToInches(value, unit), nil
 		}
 	}
 	// Didn't match any of the Units types, let's try feet & inches
@@ -67,7 +62,7 @@ func GURPSFromString(text string, defaultUnits units.GURPSLength) (GURPS, error)
 		if err != nil {
 			return 0, err
 		}
-		return convertGURPSToInches(value, defaultUnits), nil
+		return convertToInches(value, defaultUnits), nil
 	}
 	var feet, inches fixed.F64d4
 	var err error
@@ -88,32 +83,15 @@ func GURPSFromString(text string, defaultUnits units.GURPSLength) (GURPS, error)
 			return 0, err
 		}
 	}
-	return GURPS(feet.Mul(fixed.F64d4FromInt64(12)) + inches), nil
+	return Length(feet.Mul(fixed.F64d4FromInt64(12)) + inches), nil
 }
 
-func convertGURPSToInches(value fixed.F64d4, unit units.GURPSLength) GURPS {
-	switch unit {
-	case units.Centimeter:
-		value = value.Mul(fixed.F64d4FromFloat64(36)).Div(fixed.F64d4FromInt64(100))
-	case units.Feet:
-		value = value.Mul(fixed.F64d4FromInt64(12))
-	case units.Yard, units.Meter:
-		value = value.Mul(fixed.F64d4FromInt64(36))
-	case units.Kilometer:
-		value = value.Mul(fixed.F64d4FromInt64(36000))
-	case units.Mile:
-		value = value.Mul(fixed.F64d4FromInt64(63360))
-	default: // Same as Inch
-	}
-	return GURPS(value)
-}
-
-func (l GURPS) String() string {
+func (l Length) String() string {
 	return l.Format(units.FeetAndInches)
 }
 
 // Format the length as the given units.
-func (l GURPS) Format(unit units.GURPSLength) string {
+func (l Length) Format(unit units.Length) string {
 	inches := fixed.F64d4(l)
 	switch unit {
 	case units.Centimeter:
@@ -146,4 +124,21 @@ func (l GURPS) Format(unit units.GURPSLength) string {
 	default: // Same as Inch
 		return inches.String() + units.Inch.Key()
 	}
+}
+
+func convertToInches(value fixed.F64d4, unit units.Length) Length {
+	switch unit {
+	case units.Centimeter:
+		value = value.Mul(fixed.F64d4FromFloat64(36)).Div(fixed.F64d4FromInt64(100))
+	case units.Feet:
+		value = value.Mul(fixed.F64d4FromInt64(12))
+	case units.Yard, units.Meter:
+		value = value.Mul(fixed.F64d4FromInt64(36))
+	case units.Kilometer:
+		value = value.Mul(fixed.F64d4FromInt64(36000))
+	case units.Mile:
+		value = value.Mul(fixed.F64d4FromInt64(63360))
+	default: // Same as Inch
+	}
+	return Length(value)
 }

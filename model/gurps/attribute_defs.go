@@ -33,6 +33,15 @@ func AttributeDefsFor(entity *Entity) *AttributeDefs {
 	return entity.SheetSettings.Attributes
 }
 
+// DefaultAttributeIDFor returns the default attribute ID to use for the given Entity, which may be nil.
+func DefaultAttributeIDFor(entity *Entity) string {
+	list := AttributeDefsFor(entity).List()
+	if len(list) != 0 {
+		return list[0].ID()
+	}
+	return "st"
+}
+
 // FactoryAttributeDefs returns the factory AttributeDef set.
 func FactoryAttributeDefs() *AttributeDefs {
 	defs, err := NewAttributeDefsFromFile(embeddedFS, "data/standard.attr")
