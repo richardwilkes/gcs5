@@ -47,7 +47,7 @@ func (a *LeveledAmount) FromJSON(data map[string]interface{}) {
 	a.PerLevel = encoding.Bool(data[leveledAmountPerLevelKey])
 }
 
-// ToJSON implements Feature.
+// ToJSON emits the JSON for this object.
 func (a *LeveledAmount) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()
 	a.ToInlineJSON(encoder)

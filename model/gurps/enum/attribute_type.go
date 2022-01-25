@@ -29,9 +29,9 @@ type AttributeType uint8
 
 // AttributeTypeFromString extracts a AttributeType from a string.
 func AttributeTypeFromString(str string) AttributeType {
-	for op := Integer; op <= Pool; op++ {
-		if strings.EqualFold(op.Key(), str) {
-			return op
+	for one := Integer; one <= Pool; one++ {
+		if strings.EqualFold(one.Key(), str) {
+			return one
 		}
 	}
 	return Integer
