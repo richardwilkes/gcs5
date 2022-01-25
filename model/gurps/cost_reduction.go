@@ -82,3 +82,8 @@ func (c *CostReduction) FillWithNameableKeys(_ map[string]string) {
 func (c *CostReduction) ApplyNameableKeys(_ map[string]string) {
 	// Does nothing
 }
+
+// Normalize implements Feature.
+func (c *CostReduction) Normalize() {
+	// Unused
+}

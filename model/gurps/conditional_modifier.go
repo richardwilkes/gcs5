@@ -82,3 +82,8 @@ func (m *ConditionalModifier) FillWithNameableKeys(nameables map[string]string) 
 func (m *ConditionalModifier) ApplyNameableKeys(nameables map[string]string) {
 	m.Situation = ApplyNameables(m.Situation, nameables)
 }
+
+// Normalize implements Feature.
+func (m *ConditionalModifier) Normalize() {
+	// Unused
+}

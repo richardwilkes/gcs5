@@ -29,4 +29,6 @@ type Feature interface {
 	FillWithNameableKeys(nameables map[string]string)
 	// ApplyNameableKeys replaces any nameable keys found in this Feature with the corresponding values in the provided map.
 	ApplyNameableKeys(nameables map[string]string)
+	// Normalize adjusts the data to it preferred representation.
+	Normalize()
 }

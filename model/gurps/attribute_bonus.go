@@ -92,3 +92,8 @@ func (a *AttributeBonus) FillWithNameableKeys(_ map[string]string) {
 func (a *AttributeBonus) ApplyNameableKeys(_ map[string]string) {
 	// Does nothing
 }
+
+// Normalize implements Feature.
+func (a *AttributeBonus) Normalize() {
+	// Unused
+}

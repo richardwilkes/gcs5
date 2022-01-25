@@ -80,6 +80,11 @@ func (c *ContainedWeight) ApplyNameableKeys(_ map[string]string) {
 	// Does nothing
 }
 
+// Normalize implements Feature.
+func (c *ContainedWeight) Normalize() {
+	// Unused
+}
+
 // IsPercentageReduction returns true if this is a percentage reduction and not a fixed amount.
 func (c *ContainedWeight) IsPercentageReduction() bool {
 	return strings.HasSuffix(c.Reduction, "%")
