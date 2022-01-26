@@ -57,7 +57,6 @@ func NewPrereq(prereqType enum.PrereqType, entity *Entity) *Prereq {
 	p := &Prereq{
 		Type: prereqType,
 	}
-	// TODO: Implement
 	switch prereqType {
 	case enum.AdvantagePrereq:
 		p.Has = true
@@ -78,12 +77,14 @@ func NewPrereq(prereqType enum.PrereqType, entity *Entity) *Prereq {
 		p.WeightCriteria.Qualifier = measure.WeightFromInt64(5, SheetSettingsFor(entity).DefaultWeightUnits)
 		p.Has = true
 	case enum.PrereqList:
+	// TODO: Implement
 	case enum.SkillPrereq:
 		p.Has = true
 		p.NameCriteria.Type = enum.Is
 		p.LevelCriteria.Type = enum.AtLeast
 		p.SpecializationCriteria.Type = enum.Any
 	case enum.SpellPrereq:
+		// TODO: Implement
 		p.Has = true
 	default:
 		jot.Fatal(1, "invalid prereq type: ", p.Type)
@@ -94,7 +95,6 @@ func NewPrereq(prereqType enum.PrereqType, entity *Entity) *Prereq {
 // NewPrereqFromJSON creates a new Prereq from JSON.
 func NewPrereqFromJSON(data map[string]interface{}, entity *Entity) *Prereq {
 	p := &Prereq{Type: enum.PrereqTypeFromString(encoding.String(data[prereqTypeKey]))}
-	// TODO: Implement
 	switch p.Type {
 	case enum.AdvantagePrereq:
 		p.Has = encoding.Bool(data[prereqHasKey])
@@ -113,12 +113,14 @@ func NewPrereqFromJSON(data map[string]interface{}, entity *Entity) *Prereq {
 		p.Has = encoding.Bool(data[prereqHasKey])
 		p.WeightCriteria.FromJSON(encoding.Object(data[prereqQualifierKey]), SheetSettingsFor(entity).DefaultWeightUnits)
 	case enum.PrereqList:
+	// TODO: Implement
 	case enum.SkillPrereq:
 		p.Has = encoding.Bool(data[prereqHasKey])
 		p.NameCriteria.FromJSON(encoding.Object(data[prereqNameKey]))
 		p.LevelCriteria.FromJSON(encoding.Object(data[prereqLevelKey]))
 		p.SpecializationCriteria.FromJSON(encoding.Object(data[prereqSpecializationKey]))
 	case enum.SpellPrereq:
+		// TODO: Implement
 		p.Has = encoding.Bool(data[prereqHasKey])
 	default:
 		jot.Fatal(1, "invalid prereq type: ", p.Type)
@@ -130,7 +132,6 @@ func NewPrereqFromJSON(data map[string]interface{}, entity *Entity) *Prereq {
 func (p *Prereq) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()
 	encoder.KeyedString(prereqTypeKey, p.Type.Key(), false, false)
-	// TODO: Implement
 	switch p.Type {
 	case enum.AdvantagePrereq:
 		encoder.KeyedBool(prereqHasKey, p.Has, false)
@@ -151,6 +152,7 @@ func (p *Prereq) ToJSON(encoder *encoding.JSONEncoder) {
 		encoder.KeyedBool(prereqHasKey, p.Has, false)
 		encoding.ToKeyedJSON(&p.WeightCriteria, prereqQualifierKey, encoder)
 	case enum.PrereqList:
+	// TODO: Implement
 	case enum.SkillPrereq:
 		encoder.KeyedBool(prereqHasKey, p.Has, false)
 		encoding.ToKeyedJSON(&p.NameCriteria, prereqNameKey, encoder)
@@ -159,6 +161,7 @@ func (p *Prereq) ToJSON(encoder *encoding.JSONEncoder) {
 		}
 		encoding.ToKeyedJSON(&p.SpecializationCriteria, prereqSpecializationKey, encoder)
 	case enum.SpellPrereq:
+		// TODO: Implement
 		encoder.KeyedBool(prereqHasKey, p.Has, false)
 	default:
 		jot.Fatal(1, "invalid prereq type: ", p.Type)
@@ -169,149 +172,155 @@ func (p *Prereq) ToJSON(encoder *encoding.JSONEncoder) {
 // Satisfied returns true if this Prereq is satisfied by the specified Entity. 'buffer' will be used, if not nil, to
 // write a description of what was unsatisfied. 'prefix' will be appended to each line of the description.
 func (p *Prereq) Satisfied(entity *Entity, exclude interface{}, buffer *xio.ByteBuffer, prefix string) bool {
-	// TODO: Implement
 	switch p.Type {
 	case enum.AdvantagePrereq:
-		/*
-		   boolean         satisfied     = false;
-		   StringCriteria  nameCriteria  = getNameCriteria();
-		   IntegerCriteria levelCriteria = getLevelCriteria();
+	// TODO: Implement
+	/*
+	   boolean         satisfied     = false;
+	   StringCriteria  nameCriteria  = getNameCriteria();
+	   IntegerCriteria levelCriteria = getLevelCriteria();
 
-		   for (Advantage advantage : character.getAdvantagesIterator(false)) {
-		       if (exclude != advantage && nameCriteria.matches(advantage.getName())) {
-		           String notes         = advantage.getNotes();
-		           String modifierNotes = advantage.getModifierNotes();
+	   for (Advantage advantage : character.getAdvantagesIterator(false)) {
+	       if (exclude != advantage && nameCriteria.matches(advantage.getName())) {
+	           String notes         = advantage.getNotes();
+	           String modifierNotes = advantage.getModifierNotes();
 
-		           if (!modifierNotes.isEmpty()) {
-		               notes = modifierNotes + '\n' + notes;
-		           }
-		           if (mNotesCriteria.matches(notes)) {
-		               int levels = advantage.getLevels();
-		               if (levels < 0) {
-		                   levels = 0;
-		               }
-		               satisfied = levelCriteria.matches(levels);
-		               break;
-		           }
-		       }
-		   }
-		   if (!has()) {
-		       satisfied = !satisfied;
-		   }
-		   if (!satisfied && builder != null) {
-		       builder.append(MessageFormat.format(I18n.text("\n{0}{1} an advantage whose name {2}"), prefix, getHasText(), nameCriteria.toString()));
-		       if (!mNotesCriteria.isTypeAnything()) {
-		           builder.append(MessageFormat.format(I18n.text(", notes {0},"), mNotesCriteria.toString()));
-		       }
-		       builder.append(MessageFormat.format(I18n.text(" and level {0}"), levelCriteria.toString()));
-		   }
-		   return satisfied;
-		*/
+	           if (!modifierNotes.isEmpty()) {
+	               notes = modifierNotes + '\n' + notes;
+	           }
+	           if (mNotesCriteria.matches(notes)) {
+	               int levels = advantage.getLevels();
+	               if (levels < 0) {
+	                   levels = 0;
+	               }
+	               satisfied = levelCriteria.matches(levels);
+	               break;
+	           }
+	       }
+	   }
+	   if (!has()) {
+	       satisfied = !satisfied;
+	   }
+	   if (!satisfied && builder != null) {
+	       builder.append(MessageFormat.format(I18n.text("\n{0}{1} an advantage whose name {2}"), prefix, getHasText(), nameCriteria.toString()));
+	       if (!mNotesCriteria.isTypeAnything()) {
+	           builder.append(MessageFormat.format(I18n.text(", notes {0},"), mNotesCriteria.toString()));
+	       }
+	       builder.append(MessageFormat.format(I18n.text(" and level {0}"), levelCriteria.toString()));
+	   }
+	   return satisfied;
+	*/
 	case enum.AttributePrereq:
-		/*
-		   boolean satisfied = mValueCompare.matches(character.getAttributeIntValue(mWhich) + (mCombinedWith != null ? character.getAttributeIntValue(mCombinedWith) : 0));
-		   if (!has()) {
-		       satisfied = !satisfied;
-		   }
-		   if (!satisfied && builder != null) {
-		       Map<String, AttributeDef> attributes = character.getSheetSettings().getAttributes();
-		       AttributeDef              def        = attributes.get(mWhich);
-		       String                    text       = def != null ? def.getName() : "<unknown>";
-		       if (mCombinedWith != null) {
-		           def = attributes.get(mCombinedWith);
-		           text += "+" + (def != null ? def.getName() : "<unknown>");
-		       }
-		       builder.append(MessageFormat.format(I18n.text("{0}{1} {2} which {3}\n"), prefix, getHasText(), text, mValueCompare.toString()));
-		   }
-		   return satisfied;
-		*/
+	// TODO: Implement
+	/*
+	   boolean satisfied = mValueCompare.matches(character.getAttributeIntValue(mWhich) + (mCombinedWith != null ? character.getAttributeIntValue(mCombinedWith) : 0));
+	   if (!has()) {
+	       satisfied = !satisfied;
+	   }
+	   if (!satisfied && builder != null) {
+	       Map<String, AttributeDef> attributes = character.getSheetSettings().getAttributes();
+	       AttributeDef              def        = attributes.get(mWhich);
+	       String                    text       = def != null ? def.getName() : "<unknown>";
+	       if (mCombinedWith != null) {
+	           def = attributes.get(mCombinedWith);
+	           text += "+" + (def != null ? def.getName() : "<unknown>");
+	       }
+	       builder.append(MessageFormat.format(I18n.text("{0}{1} {2} which {3}\n"), prefix, getHasText(), text, mValueCompare.toString()));
+	   }
+	   return satisfied;
+	*/
 	case enum.ContainedQuantityPrereq:
-		/*
-		   boolean satisfied = false;
-		   if (exclude instanceof Equipment equipment) {
-		       satisfied = !equipment.canHaveChildren();
-		       if (!satisfied) {
-		           int qty = 0;
-		           for (Row child : equipment.getChildren()) {
-		               if (child instanceof Equipment) {
-		                   qty += ((Equipment) child).getQuantity();
-		               }
-		           }
-		           satisfied = mQuantityCompare.matches(qty);
-		       }
-		   }
-		   if (!has()) {
-		       satisfied = !satisfied;
-		   }
-		   if (!satisfied && builder != null) {
-		       builder.append(MessageFormat.format(I18n.text("\n{0}{1} a contained quantity which {2}"), prefix, getHasText(), mQuantityCompare));
-		   }
-		   return satisfied;
-		*/
+	// TODO: Implement
+	/*
+	   boolean satisfied = false;
+	   if (exclude instanceof Equipment equipment) {
+	       satisfied = !equipment.canHaveChildren();
+	       if (!satisfied) {
+	           int qty = 0;
+	           for (Row child : equipment.getChildren()) {
+	               if (child instanceof Equipment) {
+	                   qty += ((Equipment) child).getQuantity();
+	               }
+	           }
+	           satisfied = mQuantityCompare.matches(qty);
+	       }
+	   }
+	   if (!has()) {
+	       satisfied = !satisfied;
+	   }
+	   if (!satisfied && builder != null) {
+	       builder.append(MessageFormat.format(I18n.text("\n{0}{1} a contained quantity which {2}"), prefix, getHasText(), mQuantityCompare));
+	   }
+	   return satisfied;
+	*/
 	case enum.ContainedWeightPrereq:
-		/*
-		   boolean satisfied = false;
-		   if (exclude instanceof Equipment equipment) {
-		       satisfied = !equipment.canHaveChildren();
-		       if (!satisfied) {
-		           WeightValue weight = new WeightValue(equipment.getExtendedWeight(false));
-		           weight.subtract(equipment.getAdjustedWeight(false));
-		           satisfied = mWeightCompare.matches(weight);
-		       }
-		   }
-		   if (!has()) {
-		       satisfied = !satisfied;
-		   }
-		   if (!satisfied && builder != null) {
-		       builder.append(MessageFormat.format(I18n.text("\n{0}{1} a contained weight which {2}"), prefix, getHasText(), mWeightCompare));
-		   }
-		   return satisfied;
-		*/
+	// TODO: Implement
+	/*
+	   boolean satisfied = false;
+	   if (exclude instanceof Equipment equipment) {
+	       satisfied = !equipment.canHaveChildren();
+	       if (!satisfied) {
+	           WeightValue weight = new WeightValue(equipment.getExtendedWeight(false));
+	           weight.subtract(equipment.getAdjustedWeight(false));
+	           satisfied = mWeightCompare.matches(weight);
+	       }
+	   }
+	   if (!has()) {
+	       satisfied = !satisfied;
+	   }
+	   if (!satisfied && builder != null) {
+	       builder.append(MessageFormat.format(I18n.text("\n{0}{1} a contained weight which {2}"), prefix, getHasText(), mWeightCompare));
+	   }
+	   return satisfied;
+	*/
 	case enum.PrereqList:
+	// TODO: Implement
 	case enum.SkillPrereq:
-		/*
-		   boolean         satisfied     = false;
-		   String          techLevel     = null;
-		   StringCriteria  nameCriteria  = getNameCriteria();
-		   IntegerCriteria levelCriteria = getLevelCriteria();
+	// TODO: Implement
+	/*
+	   boolean         satisfied     = false;
+	   String          techLevel     = null;
+	   StringCriteria  nameCriteria  = getNameCriteria();
+	   IntegerCriteria levelCriteria = getLevelCriteria();
 
-		   if (exclude instanceof Skill) {
-		       techLevel = ((Skill) exclude).getTechLevel();
-		   }
+	   if (exclude instanceof Skill) {
+	       techLevel = ((Skill) exclude).getTechLevel();
+	   }
 
-		   for (Skill skill : character.getSkillsIterator()) {
-		       if (exclude != skill && nameCriteria.matches(skill.getName()) && mSpecializationCriteria.matches(skill.getSpecialization())) {
-		           satisfied = levelCriteria.matches(skill.getLevel());
-		           if (satisfied && techLevel != null) {
-		               String otherTL = skill.getTechLevel();
-		               satisfied = otherTL == null || techLevel.equals(otherTL);
-		           }
-		           if (satisfied) {
-		               break;
-		           }
-		       }
-		   }
-		   if (!has()) {
-		       satisfied = !satisfied;
-		   }
-		   if (!satisfied && builder != null) {
-		       builder.append(MessageFormat.format(I18n.text("\n{0}{1} a skill whose name {2}"), prefix, getHasText(), nameCriteria.toString()));
-		       boolean notAnySpecialization = !mSpecializationCriteria.isTypeAnything();
-		       if (notAnySpecialization) {
-		           builder.append(MessageFormat.format(I18n.text(", specialization {0},"), mSpecializationCriteria.toString()));
-		       }
-		       if (techLevel == null) {
-		           builder.append(MessageFormat.format(I18n.text(" and level {0}"), levelCriteria.toString()));
-		       } else {
-		           if (notAnySpecialization) {
-		               builder.append(",");
-		           }
-		           builder.append(MessageFormat.format(I18n.text(" level {0} and tech level matches"), levelCriteria.toString()));
-		       }
-		   }
-		   return satisfied;
-		*/
+	   for (Skill skill : character.getSkillsIterator()) {
+	       if (exclude != skill && nameCriteria.matches(skill.getName()) && mSpecializationCriteria.matches(skill.getSpecialization())) {
+	           satisfied = levelCriteria.matches(skill.getLevel());
+	           if (satisfied && techLevel != null) {
+	               String otherTL = skill.getTechLevel();
+	               satisfied = otherTL == null || techLevel.equals(otherTL);
+	           }
+	           if (satisfied) {
+	               break;
+	           }
+	       }
+	   }
+	   if (!has()) {
+	       satisfied = !satisfied;
+	   }
+	   if (!satisfied && builder != null) {
+	       builder.append(MessageFormat.format(I18n.text("\n{0}{1} a skill whose name {2}"), prefix, getHasText(), nameCriteria.toString()));
+	       boolean notAnySpecialization = !mSpecializationCriteria.isTypeAnything();
+	       if (notAnySpecialization) {
+	           builder.append(MessageFormat.format(I18n.text(", specialization {0},"), mSpecializationCriteria.toString()));
+	       }
+	       if (techLevel == null) {
+	           builder.append(MessageFormat.format(I18n.text(" and level {0}"), levelCriteria.toString()));
+	       } else {
+	           if (notAnySpecialization) {
+	               builder.append(",");
+	           }
+	           builder.append(MessageFormat.format(I18n.text(" level {0} and tech level matches"), levelCriteria.toString()));
+	       }
+	   }
+	   return satisfied;
+	*/
 	case enum.SpellPrereq:
+	// TODO: Implement
 	default:
 		jot.Fatal(1, "invalid prereq type: ", p.Type)
 	}
@@ -320,7 +329,6 @@ func (p *Prereq) Satisfied(entity *Entity, exclude interface{}, buffer *xio.Byte
 
 // FillWithNameableKeys adds any nameable keys found in this Prereq to the provided map.
 func (p *Prereq) FillWithNameableKeys(nameables map[string]string) {
-	// TODO: Implement
 	switch p.Type {
 	case enum.AdvantagePrereq:
 		ExtractNameables(p.NameCriteria.Qualifier, nameables)
@@ -329,10 +337,12 @@ func (p *Prereq) FillWithNameableKeys(nameables map[string]string) {
 	case enum.ContainedQuantityPrereq:
 	case enum.ContainedWeightPrereq:
 	case enum.PrereqList:
+	// TODO: Implement
 	case enum.SkillPrereq:
 		ExtractNameables(p.NameCriteria.Qualifier, nameables)
 		ExtractNameables(p.SpecializationCriteria.Qualifier, nameables)
 	case enum.SpellPrereq:
+	// TODO: Implement
 	default:
 		jot.Fatal(1, "invalid prereq type: ", p.Type)
 	}
@@ -340,7 +350,6 @@ func (p *Prereq) FillWithNameableKeys(nameables map[string]string) {
 
 // ApplyNameableKeys replaces any nameable keys found in this Prereq with the corresponding values in the provided map.
 func (p *Prereq) ApplyNameableKeys(nameables map[string]string) {
-	// TODO: Implement
 	switch p.Type {
 	case enum.AdvantagePrereq:
 		p.NameCriteria.Qualifier = ApplyNameables(p.NameCriteria.Qualifier, nameables)
@@ -349,10 +358,12 @@ func (p *Prereq) ApplyNameableKeys(nameables map[string]string) {
 	case enum.ContainedQuantityPrereq:
 	case enum.ContainedWeightPrereq:
 	case enum.PrereqList:
+	// TODO: Implement
 	case enum.SkillPrereq:
 		p.NameCriteria.Qualifier = ApplyNameables(p.NameCriteria.Qualifier, nameables)
 		p.SpecializationCriteria.Qualifier = ApplyNameables(p.SpecializationCriteria.Qualifier, nameables)
 	case enum.SpellPrereq:
+	// TODO: Implement
 	default:
 		jot.Fatal(1, "invalid prereq type: ", p.Type)
 	}
