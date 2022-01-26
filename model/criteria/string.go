@@ -13,12 +13,11 @@ package criteria
 
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/gcs/model/gurps/enum"
 )
 
 // String holds the criteria for matching a string.
 type String struct {
-	Type      enum.StringCompareType
+	Type      StringCompareType
 	Qualifier string
 }
 
@@ -31,7 +30,7 @@ func NewStringFromJSON(data map[string]interface{}) *String {
 
 // FromJSON replaces the current data with data from a JSON object.
 func (s *String) FromJSON(data map[string]interface{}) {
-	s.Type = enum.StringCompareTypeFromString(encoding.String(data[typeKey]))
+	s.Type = StringCompareTypeFromString(encoding.String(data[typeKey]))
 	s.Qualifier = encoding.String(data[qualifierKey])
 }
 
@@ -44,7 +43,7 @@ func (s *String) ToJSON(encoder *encoding.JSONEncoder) {
 
 // ToInlineJSON emits the JSON key values that comprise this object without the object wrapper.
 func (s *String) ToInlineJSON(encoder *encoding.JSONEncoder) {
-	if s.Type != enum.Any {
+	if s.Type != Any {
 		encoder.KeyedString(typeKey, s.Type.Key(), false, false)
 		encoder.KeyedString(qualifierKey, s.Qualifier, true, true)
 	}

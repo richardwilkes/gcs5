@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package enum
+package gurps
 
 import (
 	"strings"
@@ -41,7 +41,7 @@ func SpellComparisonTypeFromString(str string) SpellComparisonType {
 func (a SpellComparisonType) Key() string {
 	switch a {
 	case AnySpell:
-		return AnyStr
+		return "any"
 	case Category:
 		return "category"
 	case College:

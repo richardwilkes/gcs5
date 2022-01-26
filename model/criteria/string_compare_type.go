@@ -9,16 +9,13 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package enum
+package criteria
 
 import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/i18n"
 )
-
-// AnyStr is used in a few places, so made it a constant.
-const AnyStr = "any"
 
 // Possible StringCompareType values.
 const (
@@ -66,7 +63,7 @@ func (s StringCompareType) Key() string {
 	case DoesNotEndWith:
 		return "does_not_end_with"
 	default: // Any
-		return AnyStr
+		return "any"
 	}
 }
 

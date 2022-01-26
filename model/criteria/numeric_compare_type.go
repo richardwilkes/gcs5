@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package enum
+package criteria
 
 import (
 	"strings"
@@ -52,7 +52,7 @@ func (n NumericCompareType) Key() string {
 	case AtMost:
 		return "at_most"
 	default: // AnyNumber
-		return AnyStr
+		return "any"
 	}
 }
 

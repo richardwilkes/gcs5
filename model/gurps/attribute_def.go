@@ -17,7 +17,6 @@ import (
 
 	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/f64d4"
-	"github.com/richardwilkes/gcs/model/gurps/enum"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/eval"
@@ -43,7 +42,7 @@ var ReservedIDs = []string{"skill", "parry", "block", "dodge", "sm"}
 // AttributeDef holds the definition of an attribute.
 type AttributeDef struct {
 	id                  string
-	Type                enum.AttributeType
+	Type                AttributeType
 	Name                string
 	FullName            string
 	AttributeBase       string
@@ -56,7 +55,7 @@ type AttributeDef struct {
 // NewAttributeDefFromJSON creates a new AttributeDef from a JSON object.
 func NewAttributeDefFromJSON(data map[string]interface{}, order int) *AttributeDef {
 	a := &AttributeDef{
-		Type:                enum.AttributeTypeFromString(encoding.String(data[attributeDefTypeKey])),
+		Type:                AttributeTypeFromString(encoding.String(data[attributeDefTypeKey])),
 		Name:                encoding.String(data[attributeDefNameKey]),
 		FullName:            encoding.String(data[attributeDefFullNameKey]),
 		AttributeBase:       encoding.String(data[attributeDefBaseKey]),
@@ -65,7 +64,7 @@ func NewAttributeDefFromJSON(data map[string]interface{}, order int) *AttributeD
 		Order:               order,
 	}
 	a.SetID(encoding.String(data[attributeDefIDKey]))
-	if a.Type == enum.Pool {
+	if a.Type == Pool {
 		array := encoding.Array(data[attributeDefThresholdsKey])
 		if len(array) != 0 {
 			a.Thresholds = make([]*PoolThreshold, 0, len(array))
@@ -87,7 +86,7 @@ func (a *AttributeDef) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.KeyedString(attributeDefBaseKey, a.AttributeBase, false, false)
 	encoder.KeyedNumber(attributeDefCostPerPointKey, a.CostPerPoint, false)
 	encoder.KeyedNumber(attributeDefCostAdjPercentPerSMKey, a.CostAdjPercentPerSM, true)
-	if a.Type == enum.Pool && len(a.Thresholds) != 0 {
+	if a.Type == Pool && len(a.Thresholds) != 0 {
 		encoder.Key(attributeDefThresholdsKey)
 		encoder.StartArray()
 		for _, threshold := range a.Thresholds {
@@ -145,7 +144,7 @@ func (a *AttributeDef) BaseValue(resolver eval.VariableResolver) fixed.F64d4 {
 // ComputeCost returns the value adjusted for a cost reduction.
 func (a *AttributeDef) ComputeCost(entity *Entity, value, sizeModifier, costReduction fixed.F64d4) fixed.F64d4 {
 	cost := value.Mul(a.CostPerPoint)
-	if sizeModifier > 0 && a.CostAdjPercentPerSM > 0 && !(a.id == "hp" && entity.SheetSettings.DamageProgression == enum.KnowingYourOwnStrength) {
+	if sizeModifier > 0 && a.CostAdjPercentPerSM > 0 && !(a.id == "hp" && entity.SheetSettings.DamageProgression == KnowingYourOwnStrength) {
 		costReduction += sizeModifier.Mul(a.CostAdjPercentPerSM)
 	}
 	if costReduction > 0 {

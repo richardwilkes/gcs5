@@ -13,7 +13,6 @@ package criteria
 
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/gcs/model/gurps/enum"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
@@ -24,7 +23,7 @@ const (
 
 // Numeric holds the criteria for matching a number.
 type Numeric struct {
-	Type      enum.NumericCompareType
+	Type      NumericCompareType
 	Qualifier fixed.F64d4
 }
 
@@ -37,7 +36,7 @@ func NewNumericFromJSON(data map[string]interface{}) *Numeric {
 
 // FromJSON replaces the current data with data from a JSON object.
 func (n *Numeric) FromJSON(data map[string]interface{}) {
-	n.Type = enum.NumericCompareTypeFromString(encoding.String(data[typeKey]))
+	n.Type = NumericCompareTypeFromString(encoding.String(data[typeKey]))
 	n.Qualifier = encoding.Number(data[qualifierKey])
 }
 
@@ -50,7 +49,7 @@ func (n *Numeric) ToJSON(encoder *encoding.JSONEncoder) {
 
 // ToInlineJSON emits the JSON key values that comprise this object without the object wrapper.
 func (n *Numeric) ToInlineJSON(encoder *encoding.JSONEncoder) {
-	if n.Type != enum.AnyNumber {
+	if n.Type != AnyNumber {
 		encoder.KeyedString(typeKey, n.Type.Key(), false, false)
 		encoder.KeyedNumber(qualifierKey, n.Qualifier, false)
 	}

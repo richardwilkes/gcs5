@@ -13,13 +13,12 @@ package criteria
 
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/gcs/model/gurps/enum"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 )
 
 // Weight holds the criteria for matching a number.
 type Weight struct {
-	Type      enum.NumericCompareType
+	Type      NumericCompareType
 	Qualifier measure.Weight
 }
 
@@ -32,7 +31,7 @@ func NewWeightFromJSON(data map[string]interface{}, defUnits measure.WeightUnits
 
 // FromJSON replaces the current data with data from a JSON object.
 func (n *Weight) FromJSON(data map[string]interface{}, defUnits measure.WeightUnits) {
-	n.Type = enum.NumericCompareTypeFromString(encoding.String(data[typeKey]))
+	n.Type = NumericCompareTypeFromString(encoding.String(data[typeKey]))
 	n.Qualifier = measure.WeightFromStringForced(encoding.String(data[qualifierKey]), defUnits)
 }
 
@@ -45,7 +44,7 @@ func (n *Weight) ToJSON(encoder *encoding.JSONEncoder) {
 
 // ToInlineJSON emits the JSON key values that comprise this object without the object wrapper.
 func (n *Weight) ToInlineJSON(encoder *encoding.JSONEncoder) {
-	if n.Type != enum.AnyNumber {
+	if n.Type != AnyNumber {
 		encoder.KeyedString(typeKey, n.Type.Key(), false, false)
 		encoder.KeyedString(qualifierKey, n.Qualifier.String(), false, false)
 	}

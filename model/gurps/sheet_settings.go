@@ -14,7 +14,6 @@ package gurps
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
 	enum2 "github.com/richardwilkes/gcs/model/enum"
-	"github.com/richardwilkes/gcs/model/gurps/enum"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 )
 
@@ -50,7 +49,7 @@ type SheetSettings struct {
 	BlockLayout                *BlockLayout
 	Attributes                 *AttributeDefs
 	HitLocations               *BodyType
-	DamageProgression          enum.DamageProgression
+	DamageProgression          DamageProgression
 	DefaultLengthUnits         measure.LengthUnits
 	DefaultWeightUnits         measure.WeightUnits
 	UserDescriptionDisplay     enum2.DisplayOption
@@ -82,7 +81,7 @@ func FactorySheetSettings() *SheetSettings {
 		BlockLayout:            FactoryBlockLayout(),
 		Attributes:             FactoryAttributeDefs(),
 		HitLocations:           FactoryBodyType(),
-		DamageProgression:      enum.BasicSet,
+		DamageProgression:      BasicSet,
 		DefaultLengthUnits:     measure.FeetAndInches,
 		DefaultWeightUnits:     measure.Pound,
 		UserDescriptionDisplay: enum2.Tooltip,
@@ -102,7 +101,7 @@ func NewSheetSettingsFromJSON(data map[string]interface{}, entity *Entity) *Shee
 		s.Attributes = NewAttributeDefsFromJSON(encoding.Array(data[sheetSettingsAttributesKey]))
 		s.HitLocations = NewBodyTypeFromJSON(encoding.Object(data[sheetSettingsHitLocationsKey]))
 	}
-	s.DamageProgression = enum.DamageProgressionFromString(encoding.String(data[sheetSettingsDamageProgressionKey]))
+	s.DamageProgression = DamageProgressionFromString(encoding.String(data[sheetSettingsDamageProgressionKey]))
 	s.DefaultLengthUnits = measure.LengthUnitsFromString(encoding.String(data[sheetSettingsDefaultLengthUnitsKey]))
 	s.DefaultWeightUnits = measure.WeightUnitsFromString(encoding.String(data[sheetSettingsDefaultWeightUnitsKey]))
 	s.UserDescriptionDisplay = enum2.DisplayOptionFromString(encoding.String(data[sheetSettingsUserDescriptionDisplayKey]), s.UserDescriptionDisplay)
