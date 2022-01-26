@@ -15,7 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/internal/ui/menus"
 	"github.com/richardwilkes/gcs/internal/ui/trampolines"
 	"github.com/richardwilkes/gcs/internal/ui/workspace"
-	"github.com/richardwilkes/gcs/settings"
+	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )

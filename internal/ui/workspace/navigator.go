@@ -17,7 +17,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps/library"
-	"github.com/richardwilkes/gcs/settings"
+	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"

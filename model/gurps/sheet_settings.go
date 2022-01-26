@@ -13,8 +13,8 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
-	enum2 "github.com/richardwilkes/gcs/model/enum"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
+	enum2 "github.com/richardwilkes/gcs/model/settings/display"
 )
 
 const (
@@ -52,10 +52,10 @@ type SheetSettings struct {
 	DamageProgression          DamageProgression
 	DefaultLengthUnits         measure.LengthUnits
 	DefaultWeightUnits         measure.WeightUnits
-	UserDescriptionDisplay     enum2.DisplayOption
-	ModifiersDisplay           enum2.DisplayOption
-	NotesDisplay               enum2.DisplayOption
-	SkillLevelAdjDisplay       enum2.DisplayOption
+	UserDescriptionDisplay     enum2.Option
+	ModifiersDisplay           enum2.Option
+	NotesDisplay               enum2.Option
+	SkillLevelAdjDisplay       enum2.Option
 	UseMultiplicativeModifiers bool
 	UseModifyingDicePlusAdds   bool
 	ShowCollegeInSheetSpells   bool
@@ -104,10 +104,10 @@ func NewSheetSettingsFromJSON(data map[string]interface{}, entity *Entity) *Shee
 	s.DamageProgression = DamageProgressionFromString(encoding.String(data[sheetSettingsDamageProgressionKey]))
 	s.DefaultLengthUnits = measure.LengthUnitsFromString(encoding.String(data[sheetSettingsDefaultLengthUnitsKey]))
 	s.DefaultWeightUnits = measure.WeightUnitsFromString(encoding.String(data[sheetSettingsDefaultWeightUnitsKey]))
-	s.UserDescriptionDisplay = enum2.DisplayOptionFromString(encoding.String(data[sheetSettingsUserDescriptionDisplayKey]), s.UserDescriptionDisplay)
-	s.ModifiersDisplay = enum2.DisplayOptionFromString(encoding.String(data[sheetSettingsModifiersDisplayKey]), s.ModifiersDisplay)
-	s.NotesDisplay = enum2.DisplayOptionFromString(encoding.String(data[sheetSettingsNotesDisplayKey]), s.NotesDisplay)
-	s.SkillLevelAdjDisplay = enum2.DisplayOptionFromString(encoding.String(data[sheetSettingsSkillLevelAdjDisplayKey]), s.SkillLevelAdjDisplay)
+	s.UserDescriptionDisplay = enum2.OptionFromString(encoding.String(data[sheetSettingsUserDescriptionDisplayKey]), s.UserDescriptionDisplay)
+	s.ModifiersDisplay = enum2.OptionFromString(encoding.String(data[sheetSettingsModifiersDisplayKey]), s.ModifiersDisplay)
+	s.NotesDisplay = enum2.OptionFromString(encoding.String(data[sheetSettingsNotesDisplayKey]), s.NotesDisplay)
+	s.SkillLevelAdjDisplay = enum2.OptionFromString(encoding.String(data[sheetSettingsSkillLevelAdjDisplayKey]), s.SkillLevelAdjDisplay)
 	s.UseMultiplicativeModifiers = encoding.Bool(data[sheetSettingsUseMultiplicativeModifiersKey])
 	s.UseModifyingDicePlusAdds = encoding.Bool(data[sheetSettingsUseModifyingDicePlusAddsKey])
 	s.ShowCollegeInSheetSpells = encoding.Bool(data[sheetSettingsShowCollegeInSheetSpellsKey])
