@@ -24,9 +24,6 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-// Already applied the HasPrereq and NameLevelPrereq, AdvantagePrereq, AttributePrereq, ContainedQuantityPrereq,
-// ContainedWeightPrereq, SkillPrereq portions
-
 const (
 	prereqAllKey            = "all"
 	prereqChildrenKey       = "prereqs"
