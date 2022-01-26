@@ -76,165 +76,165 @@ type Feature struct {
 }
 
 // NewFeature creates a new Feature for the given entity, which may be nil.
-func NewFeature(bonusType enum.FeatureType, entity *Entity) *Feature {
-	b := &Feature{
-		Type:   bonusType,
+func NewFeature(featureType enum.FeatureType, entity *Entity) *Feature {
+	f := &Feature{
+		Type:   featureType,
 		Amount: LeveledAmount{Amount: 1},
 	}
-	switch bonusType {
+	switch featureType {
 	case enum.AttributeBonus:
-		b.Attribute = DefaultAttributeIDFor(entity)
+		f.Attribute = DefaultAttributeIDFor(entity)
 	case enum.ConditionalModifierBonus:
-		b.Situation = i18n.Text("triggering condition")
+		f.Situation = i18n.Text("triggering condition")
 	case enum.ContainedWeightReduction:
-		b.Reduction = "0%"
+		f.Reduction = "0%"
 	case enum.CostReduction:
-		b.Attribute = DefaultAttributeIDFor(entity)
-		b.Amount.Amount = fixed.F64d4FromInt64(40)
+		f.Attribute = DefaultAttributeIDFor(entity)
+		f.Amount.Amount = fixed.F64d4FromInt64(40)
 	case enum.DRBonus:
-		b.Location = "torso"
-		b.Specialization = All
+		f.Location = "torso"
+		f.Specialization = All
 	case enum.ReactionBonus:
-		b.Situation = i18n.Text("from others")
+		f.Situation = i18n.Text("from others")
 	case enum.SkillBonus:
-		b.SkillSelectionType = enum.SkillsWithNameSkillSelect
+		f.SkillSelectionType = enum.SkillsWithNameSkillSelect
 		fallthrough
 	case enum.SkillPointBonus:
-		b.NameCriteria.Type = enum.Is
-		b.SpecializationCriteria.Type = enum.Any
-		b.CategoryCriteria.Type = enum.Any
+		f.NameCriteria.Type = enum.Is
+		f.SpecializationCriteria.Type = enum.Any
+		f.CategoryCriteria.Type = enum.Any
 	case enum.SpellBonus, enum.SpellPointBonus:
-		b.SpellMatchType = enum.AllColleges
-		b.NameCriteria.Type = enum.Is
-		b.CategoryCriteria.Type = enum.Any
+		f.SpellMatchType = enum.AllColleges
+		f.NameCriteria.Type = enum.Is
+		f.CategoryCriteria.Type = enum.Any
 	case enum.WeaponDamageBonus:
-		b.WeaponSelectionType = enum.WeaponsWithRequiredSkillWeaponSelect
-		b.NameCriteria.Type = enum.Is
-		b.SpecializationCriteria.Type = enum.Any
-		b.RelativeLevelCriteria.Type = enum.AnyNumber
-		b.CategoryCriteria.Type = enum.Any
+		f.WeaponSelectionType = enum.WeaponsWithRequiredSkillWeaponSelect
+		f.NameCriteria.Type = enum.Is
+		f.SpecializationCriteria.Type = enum.Any
+		f.RelativeLevelCriteria.Type = enum.AnyNumber
+		f.CategoryCriteria.Type = enum.Any
 	default:
-		jot.Fatal(1, "invalid bonus type: ", b.Type)
+		jot.Fatal(1, "invalid feature type: ", f.Type)
 	}
-	return b
+	return f
 }
 
 // NewFeatureFromJSON creates a new Feature from JSON.
 func NewFeatureFromJSON(data map[string]interface{}) *Feature {
-	b := &Feature{Type: enum.FeatureTypeFromString(encoding.String(data[featureTypeKey]))}
-	b.Amount.FromJSON(data)
-	switch b.Type {
+	f := &Feature{Type: enum.FeatureTypeFromString(encoding.String(data[featureTypeKey]))}
+	f.Amount.FromJSON(data)
+	switch f.Type {
 	case enum.AttributeBonus:
-		b.Attribute = encoding.String(data[featureAttributeKey])
-		b.Limitation = enum.AttributeBonusLimitationFromString(encoding.String(data[featureLimitationKey]))
+		f.Attribute = encoding.String(data[featureAttributeKey])
+		f.Limitation = enum.AttributeBonusLimitationFromString(encoding.String(data[featureLimitationKey]))
 	case enum.ConditionalModifierBonus, enum.ReactionBonus:
-		b.Situation = encoding.String(data[featureSituationKey])
+		f.Situation = encoding.String(data[featureSituationKey])
 	case enum.ContainedWeightReduction:
-		b.Reduction = strings.TrimSpace(encoding.String(data[featureReductionKey]))
+		f.Reduction = strings.TrimSpace(encoding.String(data[featureReductionKey]))
 	case enum.CostReduction:
-		b.Attribute = encoding.String(data[featureAttributeKey])
-		b.Amount.Amount = encoding.Number(data[featurePercentageKey])
+		f.Attribute = encoding.String(data[featureAttributeKey])
+		f.Amount.Amount = encoding.Number(data[featurePercentageKey])
 	case enum.DRBonus:
-		b.Location = encoding.String(data[featureLocationKey])
-		b.Specialization = encoding.String(data[featureSpecializationKey])
+		f.Location = encoding.String(data[featureLocationKey])
+		f.Specialization = encoding.String(data[featureSpecializationKey])
 	case enum.SkillBonus:
-		b.SkillSelectionType = enum.SkillSelectionTypeFromString(encoding.String(data[featureSelectionTypeKey]))
-		b.SpecializationCriteria.FromJSON(encoding.Object(data[featureSpecializationKey]))
-		if b.SkillSelectionType != enum.ThisWeaponSkillSelect {
-			b.NameCriteria.FromJSON(encoding.Object(data[featureNameKey]))
-			b.CategoryCriteria.FromJSON(encoding.Object(data[featureCategoryKey]))
+		f.SkillSelectionType = enum.SkillSelectionTypeFromString(encoding.String(data[featureSelectionTypeKey]))
+		f.SpecializationCriteria.FromJSON(encoding.Object(data[featureSpecializationKey]))
+		if f.SkillSelectionType != enum.ThisWeaponSkillSelect {
+			f.NameCriteria.FromJSON(encoding.Object(data[featureNameKey]))
+			f.CategoryCriteria.FromJSON(encoding.Object(data[featureCategoryKey]))
 		}
 	case enum.SkillPointBonus:
-		b.NameCriteria.FromJSON(encoding.Object(data[featureNameKey]))
-		b.SpecializationCriteria.FromJSON(encoding.Object(data[featureSpecializationKey]))
-		b.CategoryCriteria.FromJSON(encoding.Object(data[featureCategoryKey]))
+		f.NameCriteria.FromJSON(encoding.Object(data[featureNameKey]))
+		f.SpecializationCriteria.FromJSON(encoding.Object(data[featureSpecializationKey]))
+		f.CategoryCriteria.FromJSON(encoding.Object(data[featureCategoryKey]))
 	case enum.SpellBonus, enum.SpellPointBonus:
-		b.SpellMatchType = enum.SpellMatchTypeFromString(encoding.String(data[featureMatchKey]))
-		b.NameCriteria.FromJSON(encoding.Object(data[featureNameKey]))
-		b.CategoryCriteria.FromJSON(encoding.Object(data[featureCategoryKey]))
+		f.SpellMatchType = enum.SpellMatchTypeFromString(encoding.String(data[featureMatchKey]))
+		f.NameCriteria.FromJSON(encoding.Object(data[featureNameKey]))
+		f.CategoryCriteria.FromJSON(encoding.Object(data[featureCategoryKey]))
 	case enum.WeaponDamageBonus:
-		b.WeaponSelectionType = enum.WeaponSelectionTypeFromString(encoding.String(data[featureSelectionTypeKey]))
-		b.IsPercent = encoding.Bool(data[featureIsPercentKey])
-		b.SpecializationCriteria.FromJSON(encoding.Object(data[featureSpecializationKey]))
-		switch b.WeaponSelectionType {
+		f.WeaponSelectionType = enum.WeaponSelectionTypeFromString(encoding.String(data[featureSelectionTypeKey]))
+		f.IsPercent = encoding.Bool(data[featureIsPercentKey])
+		f.SpecializationCriteria.FromJSON(encoding.Object(data[featureSpecializationKey]))
+		switch f.WeaponSelectionType {
 		case enum.WeaponsWithNameWeaponSelect:
-			b.NameCriteria.FromJSON(encoding.Object(data[featureNameKey]))
-			b.CategoryCriteria.FromJSON(encoding.Object(data[featureCategoryKey]))
+			f.NameCriteria.FromJSON(encoding.Object(data[featureNameKey]))
+			f.CategoryCriteria.FromJSON(encoding.Object(data[featureCategoryKey]))
 		case enum.WeaponsWithRequiredSkillWeaponSelect:
-			b.NameCriteria.FromJSON(encoding.Object(data[featureNameKey]))
-			b.RelativeLevelCriteria.FromJSON(encoding.Object(data[featureLevelKey]))
-			b.CategoryCriteria.FromJSON(encoding.Object(data[featureCategoryKey]))
+			f.NameCriteria.FromJSON(encoding.Object(data[featureNameKey]))
+			f.RelativeLevelCriteria.FromJSON(encoding.Object(data[featureLevelKey]))
+			f.CategoryCriteria.FromJSON(encoding.Object(data[featureCategoryKey]))
 		}
 	default:
-		jot.Fatal(1, "invalid bonus type: ", b.Type)
+		jot.Fatal(1, "invalid feature type: ", f.Type)
 	}
-	b.Normalize()
-	return b
+	f.Normalize()
+	return f
 }
 
 // ToJSON emits this Feature as JSON.
-func (b *Feature) ToJSON(encoder *encoding.JSONEncoder) {
-	b.Normalize()
+func (f *Feature) ToJSON(encoder *encoding.JSONEncoder) {
+	f.Normalize()
 	encoder.StartObject()
-	encoder.KeyedString(featureTypeKey, b.Type.Key(), false, false)
-	b.Amount.ToInlineJSON(encoder)
-	switch b.Type {
+	encoder.KeyedString(featureTypeKey, f.Type.Key(), false, false)
+	f.Amount.ToInlineJSON(encoder)
+	switch f.Type {
 	case enum.AttributeBonus:
-		encoder.KeyedString(featureAttributeKey, b.Attribute, false, false)
-		if b.Limitation != enum.None {
-			encoder.KeyedString(featureLimitationKey, b.Limitation.Key(), false, false)
+		encoder.KeyedString(featureAttributeKey, f.Attribute, false, false)
+		if f.Limitation != enum.None {
+			encoder.KeyedString(featureLimitationKey, f.Limitation.Key(), false, false)
 		}
 	case enum.ConditionalModifierBonus, enum.ReactionBonus:
-		encoder.KeyedString(featureSituationKey, b.Situation, true, true)
+		encoder.KeyedString(featureSituationKey, f.Situation, true, true)
 	case enum.ContainedWeightReduction:
-		encoder.KeyedString(featureReductionKey, b.Reduction, true, true)
+		encoder.KeyedString(featureReductionKey, f.Reduction, true, true)
 	case enum.CostReduction:
-		encoder.KeyedString(featureAttributeKey, b.Attribute, false, false)
-		encoder.KeyedNumber(featurePercentageKey, b.Amount.Amount, false)
+		encoder.KeyedString(featureAttributeKey, f.Attribute, false, false)
+		encoder.KeyedNumber(featurePercentageKey, f.Amount.Amount, false)
 	case enum.DRBonus:
-		encoder.KeyedString(featureLocationKey, b.Location, true, true)
-		encoder.KeyedString(featureSpecializationKey, b.Specialization, true, true)
+		encoder.KeyedString(featureLocationKey, f.Location, true, true)
+		encoder.KeyedString(featureSpecializationKey, f.Specialization, true, true)
 	case enum.SkillBonus:
-		encoder.KeyedString(featureSelectionTypeKey, b.SkillSelectionType.Key(), false, false)
-		encoding.ToKeyedJSON(&b.SpecializationCriteria, featureSpecializationKey, encoder)
-		if b.SkillSelectionType != enum.ThisWeaponSkillSelect {
-			encoding.ToKeyedJSON(&b.NameCriteria, featureNameKey, encoder)
-			encoding.ToKeyedJSON(&b.CategoryCriteria, featureCategoryKey, encoder)
+		encoder.KeyedString(featureSelectionTypeKey, f.SkillSelectionType.Key(), false, false)
+		encoding.ToKeyedJSON(&f.SpecializationCriteria, featureSpecializationKey, encoder)
+		if f.SkillSelectionType != enum.ThisWeaponSkillSelect {
+			encoding.ToKeyedJSON(&f.NameCriteria, featureNameKey, encoder)
+			encoding.ToKeyedJSON(&f.CategoryCriteria, featureCategoryKey, encoder)
 		}
 	case enum.SkillPointBonus:
-		encoding.ToKeyedJSON(&b.NameCriteria, featureNameKey, encoder)
-		encoding.ToKeyedJSON(&b.SpecializationCriteria, featureSpecializationKey, encoder)
-		encoding.ToKeyedJSON(&b.CategoryCriteria, featureCategoryKey, encoder)
+		encoding.ToKeyedJSON(&f.NameCriteria, featureNameKey, encoder)
+		encoding.ToKeyedJSON(&f.SpecializationCriteria, featureSpecializationKey, encoder)
+		encoding.ToKeyedJSON(&f.CategoryCriteria, featureCategoryKey, encoder)
 	case enum.SpellBonus, enum.SpellPointBonus:
-		encoder.KeyedString(featureMatchKey, b.SpellMatchType.Key(), false, false)
-		encoding.ToKeyedJSON(&b.NameCriteria, featureNameKey, encoder)
-		encoding.ToKeyedJSON(&b.CategoryCriteria, featureCategoryKey, encoder)
+		encoder.KeyedString(featureMatchKey, f.SpellMatchType.Key(), false, false)
+		encoding.ToKeyedJSON(&f.NameCriteria, featureNameKey, encoder)
+		encoding.ToKeyedJSON(&f.CategoryCriteria, featureCategoryKey, encoder)
 	case enum.WeaponDamageBonus:
-		encoder.KeyedString(featureSelectionTypeKey, b.WeaponSelectionType.Key(), false, false)
-		encoder.KeyedBool(featureIsPercentKey, b.IsPercent, true)
-		encoding.ToKeyedJSON(&b.SpecializationCriteria, featureSpecializationKey, encoder)
-		switch b.WeaponSelectionType {
+		encoder.KeyedString(featureSelectionTypeKey, f.WeaponSelectionType.Key(), false, false)
+		encoder.KeyedBool(featureIsPercentKey, f.IsPercent, true)
+		encoding.ToKeyedJSON(&f.SpecializationCriteria, featureSpecializationKey, encoder)
+		switch f.WeaponSelectionType {
 		case enum.WeaponsWithNameWeaponSelect:
-			encoding.ToKeyedJSON(&b.NameCriteria, featureNameKey, encoder)
-			encoding.ToKeyedJSON(&b.CategoryCriteria, featureCategoryKey, encoder)
+			encoding.ToKeyedJSON(&f.NameCriteria, featureNameKey, encoder)
+			encoding.ToKeyedJSON(&f.CategoryCriteria, featureCategoryKey, encoder)
 		case enum.WeaponsWithRequiredSkillWeaponSelect:
-			encoding.ToKeyedJSON(&b.NameCriteria, featureNameKey, encoder)
-			encoding.ToKeyedJSON(&b.RelativeLevelCriteria, featureLevelKey, encoder)
-			encoding.ToKeyedJSON(&b.CategoryCriteria, featureCategoryKey, encoder)
+			encoding.ToKeyedJSON(&f.NameCriteria, featureNameKey, encoder)
+			encoding.ToKeyedJSON(&f.RelativeLevelCriteria, featureLevelKey, encoder)
+			encoding.ToKeyedJSON(&f.CategoryCriteria, featureCategoryKey, encoder)
 		}
 	default:
-		jot.Fatal(1, "invalid bonus type: ", b.Type)
+		jot.Fatal(1, "invalid feature type: ", f.Type)
 	}
 	encoder.EndObject()
 }
 
 // Key returns the key used in the Feature map for things this Feature applies to.
-func (b *Feature) Key() string {
-	switch b.Type {
+func (f *Feature) Key() string {
+	switch f.Type {
 	case enum.AttributeBonus:
-		key := AttributeIDPrefix + b.Attribute
-		if b.Limitation != enum.None {
-			key += "." + b.Limitation.Key()
+		key := AttributeIDPrefix + f.Attribute
+		if f.Limitation != enum.None {
+			key += "." + f.Limitation.Key()
 		}
 		return key
 	case enum.ConditionalModifierBonus:
@@ -242,174 +242,174 @@ func (b *Feature) Key() string {
 	case enum.ContainedWeightReduction:
 		return ContainedWeightFeatureKey
 	case enum.CostReduction:
-		return AttributeIDPrefix + b.Attribute
+		return AttributeIDPrefix + f.Attribute
 	case enum.DRBonus:
-		return HitLocationPrefix + b.Location
+		return HitLocationPrefix + f.Location
 	case enum.ReactionBonus:
 		return "reaction"
 	case enum.SkillBonus:
-		switch b.SkillSelectionType {
+		switch f.SkillSelectionType {
 		case enum.SkillsWithNameSkillSelect:
-			return b.buildKey(SkillNameID, false)
+			return f.buildKey(SkillNameID, false)
 		case enum.ThisWeaponSkillSelect:
 			return ThisWeaponID
 		case enum.WeaponsWithNameSkillSelect:
-			return b.buildKey(WeaponNamedIDPrefix, false)
+			return f.buildKey(WeaponNamedIDPrefix, false)
 		default:
-			jot.Fatal(1, "invalid selection type: ", b.SkillSelectionType)
+			jot.Fatal(1, "invalid selection type: ", f.SkillSelectionType)
 		}
 	case enum.SkillPointBonus:
-		return b.buildKey(SkillPointsID, false)
+		return f.buildKey(SkillPointsID, false)
 	case enum.SpellBonus:
-		if b.CategoryCriteria.Type != enum.Any {
+		if f.CategoryCriteria.Type != enum.Any {
 			return SpellNameID + "*"
 		}
-		switch b.SpellMatchType {
+		switch f.SpellMatchType {
 		case enum.AllColleges:
 			return SpellCollegeID
 		case enum.CollegeName:
-			return b.buildKey(SpellCollegeID, true)
+			return f.buildKey(SpellCollegeID, true)
 		case enum.PowerSourceName:
-			return b.buildKey(SpellPowerSourceID, true)
+			return f.buildKey(SpellPowerSourceID, true)
 		case enum.SpellName:
-			return b.buildKey(SpellNameID, true)
+			return f.buildKey(SpellNameID, true)
 		default:
-			jot.Fatal(1, "invalid match type: ", b.SpellMatchType)
+			jot.Fatal(1, "invalid match type: ", f.SpellMatchType)
 		}
 	case enum.SpellPointBonus:
-		if b.CategoryCriteria.Type != enum.Any {
+		if f.CategoryCriteria.Type != enum.Any {
 			return SpellPointsID + "*"
 		}
-		switch b.SpellMatchType {
+		switch f.SpellMatchType {
 		case enum.AllColleges:
 			return SpellCollegePointsID
 		case enum.CollegeName:
-			return b.buildKey(SpellCollegePointsID, true)
+			return f.buildKey(SpellCollegePointsID, true)
 		case enum.PowerSourceName:
-			return b.buildKey(SpellPowerSourcePointsID, true)
+			return f.buildKey(SpellPowerSourcePointsID, true)
 		case enum.SpellName:
-			return b.buildKey(SpellPointsID, true)
+			return f.buildKey(SpellPointsID, true)
 		default:
-			jot.Fatal(1, "invalid match type: ", b.SpellMatchType)
+			jot.Fatal(1, "invalid match type: ", f.SpellMatchType)
 		}
 	case enum.WeaponDamageBonus:
-		switch b.WeaponSelectionType {
+		switch f.WeaponSelectionType {
 		case enum.WeaponsWithRequiredSkillWeaponSelect:
-			return b.buildKey(WeaponNamedIDPrefix, false)
+			return f.buildKey(WeaponNamedIDPrefix, false)
 		case enum.ThisWeaponWeaponSelect:
 			return ThisWeaponID
 		case enum.WeaponsWithNameWeaponSelect:
-			return b.buildKey(SkillNameID, false)
+			return f.buildKey(SkillNameID, false)
 		default:
-			jot.Fatal(1, "invalid selection type: ", b.WeaponSelectionType)
+			jot.Fatal(1, "invalid selection type: ", f.WeaponSelectionType)
 		}
 	}
-	jot.Fatal(1, "invalid bonus type: ", b.Type)
+	jot.Fatal(1, "invalid feature type: ", f.Type)
 	return "" // Never reached
 }
 
-func (b *Feature) buildKey(prefix string, considerNameCriteriaOnly bool) string {
-	if b.NameCriteria.Type == enum.Is && (considerNameCriteriaOnly ||
-		(b.SpecializationCriteria.Type == enum.Any && b.CategoryCriteria.Type == enum.Any)) {
-		return prefix + "/" + b.NameCriteria.Qualifier
+func (f *Feature) buildKey(prefix string, considerNameCriteriaOnly bool) string {
+	if f.NameCriteria.Type == enum.Is && (considerNameCriteriaOnly ||
+		(f.SpecializationCriteria.Type == enum.Any && f.CategoryCriteria.Type == enum.Any)) {
+		return prefix + "/" + f.NameCriteria.Qualifier
 	}
 	return prefix + "*"
 }
 
 // FillWithNameableKeys adds any nameable keys found in this Feature to the provided map.
-func (b *Feature) FillWithNameableKeys(nameables map[string]string) {
-	switch b.Type {
+func (f *Feature) FillWithNameableKeys(nameables map[string]string) {
+	switch f.Type {
 	case enum.ConditionalModifierBonus, enum.ReactionBonus:
-		ExtractNameables(b.Situation, nameables)
+		ExtractNameables(f.Situation, nameables)
 	case enum.SkillBonus:
-		ExtractNameables(b.SpecializationCriteria.Qualifier, nameables)
-		if b.SkillSelectionType != enum.ThisWeaponSkillSelect {
-			ExtractNameables(b.NameCriteria.Qualifier, nameables)
-			ExtractNameables(b.CategoryCriteria.Qualifier, nameables)
+		ExtractNameables(f.SpecializationCriteria.Qualifier, nameables)
+		if f.SkillSelectionType != enum.ThisWeaponSkillSelect {
+			ExtractNameables(f.NameCriteria.Qualifier, nameables)
+			ExtractNameables(f.CategoryCriteria.Qualifier, nameables)
 		}
 	case enum.SkillPointBonus:
-		ExtractNameables(b.NameCriteria.Qualifier, nameables)
-		ExtractNameables(b.SpecializationCriteria.Qualifier, nameables)
-		ExtractNameables(b.CategoryCriteria.Qualifier, nameables)
+		ExtractNameables(f.NameCriteria.Qualifier, nameables)
+		ExtractNameables(f.SpecializationCriteria.Qualifier, nameables)
+		ExtractNameables(f.CategoryCriteria.Qualifier, nameables)
 	case enum.SpellBonus, enum.SpellPointBonus:
-		if b.SpellMatchType != enum.AllColleges {
-			ExtractNameables(b.NameCriteria.Qualifier, nameables)
+		if f.SpellMatchType != enum.AllColleges {
+			ExtractNameables(f.NameCriteria.Qualifier, nameables)
 		}
-		ExtractNameables(b.CategoryCriteria.Qualifier, nameables)
+		ExtractNameables(f.CategoryCriteria.Qualifier, nameables)
 	case enum.WeaponDamageBonus:
-		ExtractNameables(b.SpecializationCriteria.Qualifier, nameables)
-		if b.WeaponSelectionType != enum.ThisWeaponWeaponSelect {
-			ExtractNameables(b.NameCriteria.Qualifier, nameables)
-			ExtractNameables(b.SpecializationCriteria.Qualifier, nameables)
-			ExtractNameables(b.CategoryCriteria.Qualifier, nameables)
+		ExtractNameables(f.SpecializationCriteria.Qualifier, nameables)
+		if f.WeaponSelectionType != enum.ThisWeaponWeaponSelect {
+			ExtractNameables(f.NameCriteria.Qualifier, nameables)
+			ExtractNameables(f.SpecializationCriteria.Qualifier, nameables)
+			ExtractNameables(f.CategoryCriteria.Qualifier, nameables)
 		}
 	}
 }
 
 // ApplyNameableKeys replaces any nameable keys found in this Feature with the corresponding values in the provided map.
-func (b *Feature) ApplyNameableKeys(nameables map[string]string) {
-	switch b.Type {
+func (f *Feature) ApplyNameableKeys(nameables map[string]string) {
+	switch f.Type {
 	case enum.ConditionalModifierBonus, enum.ReactionBonus:
-		b.Situation = ApplyNameables(b.Situation, nameables)
+		f.Situation = ApplyNameables(f.Situation, nameables)
 	case enum.SkillBonus:
-		b.SpecializationCriteria.Qualifier = ApplyNameables(b.SpecializationCriteria.Qualifier, nameables)
-		if b.SkillSelectionType != enum.ThisWeaponSkillSelect {
-			b.NameCriteria.Qualifier = ApplyNameables(b.NameCriteria.Qualifier, nameables)
-			b.CategoryCriteria.Qualifier = ApplyNameables(b.CategoryCriteria.Qualifier, nameables)
+		f.SpecializationCriteria.Qualifier = ApplyNameables(f.SpecializationCriteria.Qualifier, nameables)
+		if f.SkillSelectionType != enum.ThisWeaponSkillSelect {
+			f.NameCriteria.Qualifier = ApplyNameables(f.NameCriteria.Qualifier, nameables)
+			f.CategoryCriteria.Qualifier = ApplyNameables(f.CategoryCriteria.Qualifier, nameables)
 		}
 	case enum.SkillPointBonus:
-		b.NameCriteria.Qualifier = ApplyNameables(b.NameCriteria.Qualifier, nameables)
-		b.SpecializationCriteria.Qualifier = ApplyNameables(b.SpecializationCriteria.Qualifier, nameables)
-		b.CategoryCriteria.Qualifier = ApplyNameables(b.CategoryCriteria.Qualifier, nameables)
+		f.NameCriteria.Qualifier = ApplyNameables(f.NameCriteria.Qualifier, nameables)
+		f.SpecializationCriteria.Qualifier = ApplyNameables(f.SpecializationCriteria.Qualifier, nameables)
+		f.CategoryCriteria.Qualifier = ApplyNameables(f.CategoryCriteria.Qualifier, nameables)
 	case enum.SpellBonus, enum.SpellPointBonus:
-		if b.SpellMatchType != enum.AllColleges {
-			b.NameCriteria.Qualifier = ApplyNameables(b.NameCriteria.Qualifier, nameables)
+		if f.SpellMatchType != enum.AllColleges {
+			f.NameCriteria.Qualifier = ApplyNameables(f.NameCriteria.Qualifier, nameables)
 		}
-		b.CategoryCriteria.Qualifier = ApplyNameables(b.CategoryCriteria.Qualifier, nameables)
+		f.CategoryCriteria.Qualifier = ApplyNameables(f.CategoryCriteria.Qualifier, nameables)
 	case enum.WeaponDamageBonus:
-		b.SpecializationCriteria.Qualifier = ApplyNameables(b.SpecializationCriteria.Qualifier, nameables)
-		if b.WeaponSelectionType != enum.ThisWeaponWeaponSelect {
-			b.NameCriteria.Qualifier = ApplyNameables(b.NameCriteria.Qualifier, nameables)
-			b.SpecializationCriteria.Qualifier = ApplyNameables(b.SpecializationCriteria.Qualifier, nameables)
-			b.CategoryCriteria.Qualifier = ApplyNameables(b.CategoryCriteria.Qualifier, nameables)
+		f.SpecializationCriteria.Qualifier = ApplyNameables(f.SpecializationCriteria.Qualifier, nameables)
+		if f.WeaponSelectionType != enum.ThisWeaponWeaponSelect {
+			f.NameCriteria.Qualifier = ApplyNameables(f.NameCriteria.Qualifier, nameables)
+			f.SpecializationCriteria.Qualifier = ApplyNameables(f.SpecializationCriteria.Qualifier, nameables)
+			f.CategoryCriteria.Qualifier = ApplyNameables(f.CategoryCriteria.Qualifier, nameables)
 		}
 	}
 }
 
 // Normalize adjusts the data to it preferred representation.
-func (b *Feature) Normalize() {
-	if b.Type == enum.DRBonus {
-		s := strings.TrimSpace(b.Specialization)
+func (f *Feature) Normalize() {
+	if f.Type == enum.DRBonus {
+		s := strings.TrimSpace(f.Specialization)
 		if s == "" || strings.EqualFold(s, All) {
 			s = All
 		}
-		b.Specialization = s
+		f.Specialization = s
 	}
 }
 
 // AddToTooltip adds this feature's bonus details to the tooltip.
-func (b *Feature) AddToTooltip(tooltip *xio.ByteBuffer) {
-	if tooltip == nil || b.Owner == nil || b.Type == enum.CostReduction || b.Type == enum.ContainedWeightReduction {
+func (f *Feature) AddToTooltip(tooltip *xio.ByteBuffer) {
+	if tooltip == nil || f.Owner == nil || f.Type == enum.CostReduction || f.Type == enum.ContainedWeightReduction {
 		return
 	}
 	tooltip.WriteByte('\n')
-	tooltip.WriteString(b.Owner.String())
+	tooltip.WriteString(f.Owner.String())
 	tooltip.WriteString(" [")
-	if b.Type == enum.WeaponDamageBonus {
-		tooltip.WriteString(b.Amount.Format(i18n.Text("die")))
-		if b.IsPercent {
+	if f.Type == enum.WeaponDamageBonus {
+		tooltip.WriteString(f.Amount.Format(i18n.Text("die")))
+		if f.IsPercent {
 			tooltip.WriteByte('%')
 		}
 	} else {
-		tooltip.WriteString(b.Amount.Format(i18n.Text("level")))
+		tooltip.WriteString(f.Amount.Format(i18n.Text("level")))
 	}
-	switch b.Type {
+	switch f.Type {
 	case enum.DRBonus:
 		tooltip.WriteString(i18n.Text(" against "))
-		tooltip.WriteString(b.Specialization)
+		tooltip.WriteString(f.Specialization)
 		tooltip.WriteString(i18n.Text(" attacks"))
 	case enum.SkillPointBonus:
-		if b.Amount.Amount == f64d4.One {
+		if f.Amount.Amount == f64d4.One {
 			tooltip.WriteString(i18n.Text(" pt"))
 		} else {
 			tooltip.WriteString(i18n.Text(" pts"))
@@ -420,24 +420,24 @@ func (b *Feature) AddToTooltip(tooltip *xio.ByteBuffer) {
 
 // IsPercentageReduction returns true if this is a percentage reduction and not a fixed amount. Only applicable to
 // enum.ContainedWeightReduction.
-func (b *Feature) IsPercentageReduction() bool {
-	return strings.HasSuffix(b.Reduction, "%")
+func (f *Feature) IsPercentageReduction() bool {
+	return strings.HasSuffix(f.Reduction, "%")
 }
 
 // PercentageReduction returns the percentage (where 1% is 1, not 0.01) the weight should be reduced by. Will return 0 if
 // this is not a percentage. Only applicable to enum.ContainedWeightReduction.
-func (b *Feature) PercentageReduction() fixed.F64d4 {
-	if !b.IsPercentageReduction() {
+func (f *Feature) PercentageReduction() fixed.F64d4 {
+	if !f.IsPercentageReduction() {
 		return 0
 	}
-	return fixed.F64d4FromStringForced(b.Reduction[:len(b.Reduction)-1])
+	return fixed.F64d4FromStringForced(f.Reduction[:len(f.Reduction)-1])
 }
 
 // FixedReduction returns the fixed amount the weight should be reduced by. Will return 0 if this is a percentage. Only
 // applicable to enum.ContainedWeightReduction.
-func (b *Feature) FixedReduction(defUnits measure.WeightUnits) measure.Weight {
-	if b.IsPercentageReduction() {
+func (f *Feature) FixedReduction(defUnits measure.WeightUnits) measure.Weight {
+	if f.IsPercentageReduction() {
 		return 0
 	}
-	return measure.WeightFromStringForced(b.Reduction, defUnits)
+	return measure.WeightFromStringForced(f.Reduction, defUnits)
 }
