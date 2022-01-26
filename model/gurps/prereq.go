@@ -12,11 +12,14 @@
 package gurps
 
 import (
+	"strings"
+
 	"github.com/richardwilkes/gcs/model/criteria"
 	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/enum"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -222,6 +225,9 @@ func (p *Prereq) Clone(owner *Prereq) *Prereq {
 // Satisfied returns true if this Prereq is satisfied by the specified Entity. 'buffer' will be used, if not nil, to
 // write a description of what was unsatisfied. 'prefix' will be appended to each line of the description.
 func (p *Prereq) Satisfied(entity *Entity, exclude interface{}, buffer *xio.ByteBuffer, prefix string) bool {
+	if entity == nil {
+		return false
+	}
 	switch p.Type {
 	case enum.AdvantagePrereq:
 	// TODO: Implement
@@ -324,38 +330,42 @@ func (p *Prereq) Satisfied(entity *Entity, exclude interface{}, buffer *xio.Byte
 	   return satisfied;
 	*/
 	case enum.PrereqList:
-	// TODO: Implement
-	/*
-	   if (mWhenEnabled) {
-	       if (!mWhenTLCriteria.matches(Numbers.extractInteger(character.getProfile().getTechLevel(), 0, false))) {
-	           return true;
-	       }
-	   }
-
-	   int           satisfiedCount = 0;
-	   int           total          = mPrereqs.size();
-	   boolean       requiresAll    = requiresAll();
-	   StringBuilder localBuilder   = builder != null ? new StringBuilder() : null;
-	   for (Prereq prereq : mPrereqs) {
-	       if (prereq.satisfied(character, exclude, localBuilder, prefix)) {
-	           satisfiedCount++;
-	       }
-	   }
-	   if (localBuilder != null && !localBuilder.isEmpty()) {
-	       String indented = LINE_FEED_MATCHER.matcher(localBuilder.toString()).replaceAll("\n\u00a0\u00a0");
-	       localBuilder.setLength(0);
-	       localBuilder.append(indented);
-	   }
-
-	   boolean satisfied = satisfiedCount == total || !requiresAll && satisfiedCount > 0;
-	   if (!satisfied && localBuilder != null) {
-	       builder.append("\n");
-	       builder.append(prefix);
-	       builder.append(requiresAll ? I18n.text("Requires all of:") : I18n.text("Requires at least one of:"));
-	       builder.append(localBuilder);
-	   }
-	   return satisfied;
-	*/
+		if p.WhenEnabled && !p.NumericCriteria.Type.Matches(p.NumericCriteria.Qualifier,
+			fixed.F64d4FromStringForced(strings.Map(func(r rune) rune {
+				if r == '.' || (r >= '0' && r <= '9') {
+					return r
+				}
+				return -1
+			}, entity.Profile.TechLevel))) {
+			return true
+		}
+		count := 0
+		var local *xio.ByteBuffer
+		if buffer != nil {
+			local = &xio.ByteBuffer{}
+		}
+		for _, one := range p.Children {
+			if one.Satisfied(entity, exclude, local, prefix) {
+				count++
+			}
+		}
+		if local != nil && local.Len() != 0 {
+			indented := strings.ReplaceAll(local.String(), "\n", "\n\u00a0\u00a0")
+			local = &xio.ByteBuffer{}
+			local.WriteString(indented)
+		}
+		satisfied := count == len(p.Children) || (!p.All && count > 0)
+		if !satisfied && local != nil {
+			buffer.WriteByte('\n')
+			buffer.WriteString(prefix)
+			if p.All {
+				buffer.WriteString(i18n.Text("Requires all of:"))
+			} else {
+				buffer.WriteString(i18n.Text("Requires at least one of:"))
+			}
+			buffer.WriteString(local.String())
+		}
+		return satisfied
 	case enum.SkillPrereq:
 	// TODO: Implement
 	/*
