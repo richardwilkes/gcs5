@@ -27,10 +27,7 @@ type AttributeDefs struct {
 
 // AttributeDefsFor returns the AttributeDefs for the given Entity, or the global settings if the Entity is nil.
 func AttributeDefsFor(entity *Entity) *AttributeDefs {
-	if entity == nil {
-		return GlobalSheetSettingsProvider().Attributes
-	}
-	return entity.SheetSettings.Attributes
+	return SheetSettingsFor(entity).Attributes
 }
 
 // DefaultAttributeIDFor returns the default attribute ID to use for the given Entity, which may be nil.

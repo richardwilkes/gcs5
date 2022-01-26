@@ -67,6 +67,14 @@ type SheetSettings struct {
 	UseTitleInFooter           bool
 }
 
+// SheetSettingsFor returns the SheetSettings for the given Entity, or the global settings if the Entity is nil.
+func SheetSettingsFor(entity *Entity) *SheetSettings {
+	if entity == nil {
+		return GlobalSheetSettingsProvider()
+	}
+	return entity.SheetSettings
+}
+
 // FactorySheetSettings returns a new SheetSettings with factory defaults.
 func FactorySheetSettings() *SheetSettings {
 	return &SheetSettings{
