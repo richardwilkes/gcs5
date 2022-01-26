@@ -9,48 +9,43 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package criteria
 
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/gurps/enum"
 )
 
-const (
-	stringCriteriaTypeKey      = "compare"
-	stringCriteriaQualifierKey = "qualifier"
-)
-
-// StringCriteria holds the criteria for matching a string.
-type StringCriteria struct {
+// String holds the criteria for matching a string.
+type String struct {
 	Type      enum.StringCompareType
 	Qualifier string
 }
 
-// NewStringCriteriaFromJSON creates a new StringCriteria from a JSON object.
-func NewStringCriteriaFromJSON(data map[string]interface{}) *StringCriteria {
-	s := &StringCriteria{}
+// NewStringFromJSON creates a new String from a JSON object.
+func NewStringFromJSON(data map[string]interface{}) *String {
+	s := &String{}
 	s.FromJSON(data)
 	return s
 }
 
 // FromJSON replaces the current data with data from a JSON object.
-func (s *StringCriteria) FromJSON(data map[string]interface{}) {
-	s.Type = enum.StringCompareTypeFromString(encoding.String(data[stringCriteriaTypeKey]))
-	s.Qualifier = encoding.String(data[stringCriteriaQualifierKey])
+func (s *String) FromJSON(data map[string]interface{}) {
+	s.Type = enum.StringCompareTypeFromString(encoding.String(data[typeKey]))
+	s.Qualifier = encoding.String(data[qualifierKey])
 }
 
 // ToJSON emits the JSON for this object.
-func (s *StringCriteria) ToJSON(encoder *encoding.JSONEncoder) {
+func (s *String) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()
 	s.ToInlineJSON(encoder)
 	encoder.EndObject()
 }
 
 // ToInlineJSON emits the JSON key values that comprise this object without the object wrapper.
-func (s *StringCriteria) ToInlineJSON(encoder *encoding.JSONEncoder) {
+func (s *String) ToInlineJSON(encoder *encoding.JSONEncoder) {
 	if s.Type != enum.Any {
-		encoder.KeyedString(stringCriteriaTypeKey, s.Type.Key(), false, false)
-		encoder.KeyedString(stringCriteriaQualifierKey, s.Qualifier, true, true)
+		encoder.KeyedString(typeKey, s.Type.Key(), false, false)
+		encoder.KeyedString(qualifierKey, s.Qualifier, true, true)
 	}
 }

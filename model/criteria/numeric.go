@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package criteria
 
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
@@ -18,40 +18,40 @@ import (
 )
 
 const (
-	numberCriteriaTypeKey      = "compare"
-	numberCriteriaQualifierKey = "qualifier"
+	typeKey      = "compare"
+	qualifierKey = "qualifier"
 )
 
-// NumberCriteria holds the criteria for matching a number.
-type NumberCriteria struct {
+// Numeric holds the criteria for matching a number.
+type Numeric struct {
 	Type      enum.NumericCompareType
 	Qualifier fixed.F64d4
 }
 
-// NewNumberCriteriaFromJSON creates a new NumberCriteria from a JSON object.
-func NewNumberCriteriaFromJSON(data map[string]interface{}) *NumberCriteria {
-	n := &NumberCriteria{}
+// NewNumericFromJSON creates a new Numeric from a JSON object.
+func NewNumericFromJSON(data map[string]interface{}) *Numeric {
+	n := &Numeric{}
 	n.FromJSON(data)
 	return n
 }
 
 // FromJSON replaces the current data with data from a JSON object.
-func (n *NumberCriteria) FromJSON(data map[string]interface{}) {
-	n.Type = enum.NumericCompareTypeFromString(encoding.String(data[numberCriteriaTypeKey]))
-	n.Qualifier = encoding.Number(data[numberCriteriaQualifierKey])
+func (n *Numeric) FromJSON(data map[string]interface{}) {
+	n.Type = enum.NumericCompareTypeFromString(encoding.String(data[typeKey]))
+	n.Qualifier = encoding.Number(data[qualifierKey])
 }
 
 // ToJSON emits the JSON for this object.
-func (n *NumberCriteria) ToJSON(encoder *encoding.JSONEncoder) {
+func (n *Numeric) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()
 	n.ToInlineJSON(encoder)
 	encoder.EndObject()
 }
 
 // ToInlineJSON emits the JSON key values that comprise this object without the object wrapper.
-func (n *NumberCriteria) ToInlineJSON(encoder *encoding.JSONEncoder) {
+func (n *Numeric) ToInlineJSON(encoder *encoding.JSONEncoder) {
 	if n.Type != enum.AnyNumber {
-		encoder.KeyedString(numberCriteriaTypeKey, n.Type.Key(), false, false)
-		encoder.KeyedNumber(numberCriteriaQualifierKey, n.Qualifier, false)
+		encoder.KeyedString(typeKey, n.Type.Key(), false, false)
+		encoder.KeyedNumber(qualifierKey, n.Qualifier, false)
 	}
 }
