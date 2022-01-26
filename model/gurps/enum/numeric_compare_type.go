@@ -52,7 +52,7 @@ func (n NumericCompareType) Key() string {
 	case AtMost:
 		return "at_most"
 	default: // AnyNumber
-		return "any"
+		return AnyStr
 	}
 }
 

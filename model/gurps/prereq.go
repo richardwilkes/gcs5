@@ -26,29 +26,37 @@ import (
 // ContainedWeightPrereq, SkillPrereq portions
 
 const (
-	prereqTypeKey           = "type"
-	prereqHasKey            = "has"
-	prereqNameKey           = "name"
-	prereqLevelKey          = "level"
-	prereqNotesKey          = "notes"
-	prereqWhichKey          = "which"
+	prereqAllKey            = "all"
+	prereqChildrenKey       = "prereqs"
 	prereqCombinedWithKey   = "combined_with"
+	prereqHasKey            = "has"
+	prereqLevelKey          = "level"
+	prereqNameKey           = "name"
+	prereqNotesKey          = "notes"
 	prereqQualifierKey      = "qualifier"
+	prereqQuantityKey       = "quantity"
 	prereqSpecializationKey = "specialization"
+	prereqSubTypeKey        = "sub_type"
+	prereqTypeKey           = "type"
+	prereqWhenTLKey         = "when_tl"
+	prereqWhichKey          = "which"
 )
 
 // Prereq holds data necessary to track a prerequisite.
 type Prereq struct {
 	Type                   enum.PrereqType
+	SubType                enum.SpellComparisonType
 	Has                    bool
+	WhenEnabled            bool
+	All                    bool
 	NameCriteria           criteria.String
-	LevelCriteria          criteria.Numeric
+	SpecializationCriteria criteria.String
 	NotesCriteria          criteria.String
+	NumericCriteria        criteria.Numeric
+	WeightCriteria         criteria.Weight
 	Which                  string
 	CombinedWith           string
-	ValueCriteria          criteria.Numeric
-	WeightCriteria         criteria.Weight
-	SpecializationCriteria criteria.String
+	Children               []*Prereq
 	Owner                  *Prereq // Only those of type PrereqList
 }
 
@@ -61,31 +69,34 @@ func NewPrereq(prereqType enum.PrereqType, entity *Entity) *Prereq {
 	case enum.AdvantagePrereq:
 		p.Has = true
 		p.NameCriteria.Type = enum.Is
-		p.LevelCriteria.Type = enum.AtLeast
+		p.NumericCriteria.Type = enum.AtLeast
 		p.NotesCriteria.Type = enum.Any
 	case enum.AttributePrereq:
 		p.Has = true
-		p.ValueCriteria.Type = enum.AtLeast
-		p.ValueCriteria.Qualifier = fixed.F64d4FromInt64(10)
+		p.NumericCriteria.Type = enum.AtLeast
+		p.NumericCriteria.Qualifier = fixed.F64d4FromInt64(10)
 		p.Which = DefaultAttributeIDFor(entity)
 	case enum.ContainedQuantityPrereq:
 		p.Has = true
-		p.ValueCriteria.Type = enum.AtMost
-		p.ValueCriteria.Qualifier = f64d4.One
+		p.NumericCriteria.Type = enum.AtMost
+		p.NumericCriteria.Qualifier = f64d4.One
 	case enum.ContainedWeightPrereq:
+		p.Has = true
 		p.WeightCriteria.Type = enum.AtMost
 		p.WeightCriteria.Qualifier = measure.WeightFromInt64(5, SheetSettingsFor(entity).DefaultWeightUnits)
-		p.Has = true
 	case enum.PrereqList:
-	// TODO: Implement
+		p.NumericCriteria.Type = enum.AtLeast
 	case enum.SkillPrereq:
 		p.Has = true
 		p.NameCriteria.Type = enum.Is
-		p.LevelCriteria.Type = enum.AtLeast
+		p.NumericCriteria.Type = enum.AtLeast
 		p.SpecializationCriteria.Type = enum.Any
 	case enum.SpellPrereq:
-		// TODO: Implement
 		p.Has = true
+		p.SubType = enum.Name
+		p.NameCriteria.Type = enum.Is
+		p.NumericCriteria.Type = enum.AtLeast
+		p.NumericCriteria.Qualifier = f64d4.One
 	default:
 		jot.Fatal(1, "invalid prereq type: ", p.Type)
 	}
@@ -99,29 +110,40 @@ func NewPrereqFromJSON(data map[string]interface{}, entity *Entity) *Prereq {
 	case enum.AdvantagePrereq:
 		p.Has = encoding.Bool(data[prereqHasKey])
 		p.NameCriteria.FromJSON(encoding.Object(data[prereqNameKey]))
-		p.LevelCriteria.FromJSON(encoding.Object(data[prereqLevelKey]))
+		p.NumericCriteria.FromJSON(encoding.Object(data[prereqLevelKey]))
 		p.NotesCriteria.FromJSON(encoding.Object(data[prereqNotesKey]))
 	case enum.AttributePrereq:
 		p.Has = encoding.Bool(data[prereqHasKey])
 		p.Which = encoding.String(data[prereqWhichKey])
 		p.CombinedWith = encoding.String(data[prereqCombinedWithKey])
-		p.ValueCriteria.FromJSON(encoding.Object(data[prereqQualifierKey]))
+		p.NumericCriteria.FromJSON(encoding.Object(data[prereqQualifierKey]))
 	case enum.ContainedQuantityPrereq:
 		p.Has = encoding.Bool(data[prereqHasKey])
-		p.ValueCriteria.FromJSON(encoding.Object(data[prereqQualifierKey]))
+		p.NumericCriteria.FromJSON(encoding.Object(data[prereqQualifierKey]))
 	case enum.ContainedWeightPrereq:
 		p.Has = encoding.Bool(data[prereqHasKey])
 		p.WeightCriteria.FromJSON(encoding.Object(data[prereqQualifierKey]), SheetSettingsFor(entity).DefaultWeightUnits)
 	case enum.PrereqList:
-	// TODO: Implement
+		p.All = encoding.Bool(data[prereqAllKey])
+		if _, p.WhenEnabled = data[prereqWhenTLKey]; p.WhenEnabled {
+			p.NumericCriteria.FromJSON(encoding.Object(data[prereqWhenTLKey]))
+		}
+		if array := encoding.Array(data[prereqChildrenKey]); len(array) != 0 {
+			p.Children = make([]*Prereq, 0, len(array))
+			for _, one := range array {
+				p.Children = append(p.Children, NewPrereqFromJSON(encoding.Object(one), entity))
+			}
+		}
 	case enum.SkillPrereq:
 		p.Has = encoding.Bool(data[prereqHasKey])
 		p.NameCriteria.FromJSON(encoding.Object(data[prereqNameKey]))
-		p.LevelCriteria.FromJSON(encoding.Object(data[prereqLevelKey]))
+		p.NumericCriteria.FromJSON(encoding.Object(data[prereqLevelKey]))
 		p.SpecializationCriteria.FromJSON(encoding.Object(data[prereqSpecializationKey]))
 	case enum.SpellPrereq:
-		// TODO: Implement
 		p.Has = encoding.Bool(data[prereqHasKey])
+		p.SubType = enum.SpellComparisonTypeFromString(encoding.String(data[prereqSubTypeKey]))
+		p.NameCriteria.FromJSON(encoding.Object(data[prereqQualifierKey]))
+		p.NumericCriteria.FromJSON(encoding.Object(data[prereqQuantityKey]))
 	default:
 		jot.Fatal(1, "invalid prereq type: ", p.Type)
 	}
@@ -136,37 +158,65 @@ func (p *Prereq) ToJSON(encoder *encoding.JSONEncoder) {
 	case enum.AdvantagePrereq:
 		encoder.KeyedBool(prereqHasKey, p.Has, false)
 		encoding.ToKeyedJSON(&p.NameCriteria, prereqNameKey, encoder)
-		if p.LevelCriteria.Type != enum.AtLeast || p.LevelCriteria.Qualifier != 0 {
-			encoding.ToKeyedJSON(&p.LevelCriteria, prereqLevelKey, encoder)
+		if p.NumericCriteria.Type != enum.AtLeast || p.NumericCriteria.Qualifier != 0 {
+			encoding.ToKeyedJSON(&p.NumericCriteria, prereqLevelKey, encoder)
 		}
 		encoding.ToKeyedJSON(&p.NotesCriteria, prereqNotesKey, encoder)
 	case enum.AttributePrereq:
 		encoder.KeyedBool(prereqHasKey, p.Has, false)
 		encoder.KeyedString(prereqWhichKey, p.Which, true, true)
 		encoder.KeyedString(prereqCombinedWithKey, p.CombinedWith, true, true)
-		encoding.ToKeyedJSON(&p.ValueCriteria, prereqQualifierKey, encoder)
+		encoding.ToKeyedJSON(&p.NumericCriteria, prereqQualifierKey, encoder)
 	case enum.ContainedQuantityPrereq:
 		encoder.KeyedBool(prereqHasKey, p.Has, false)
-		encoding.ToKeyedJSON(&p.ValueCriteria, prereqQualifierKey, encoder)
+		encoding.ToKeyedJSON(&p.NumericCriteria, prereqQualifierKey, encoder)
 	case enum.ContainedWeightPrereq:
 		encoder.KeyedBool(prereqHasKey, p.Has, false)
 		encoding.ToKeyedJSON(&p.WeightCriteria, prereqQualifierKey, encoder)
 	case enum.PrereqList:
-	// TODO: Implement
+		encoder.KeyedBool(prereqAllKey, p.All, false)
+		if p.WhenEnabled {
+			encoding.ToKeyedJSON(&p.NumericCriteria, prereqWhenTLKey, encoder)
+		}
+		if len(p.Children) != 0 {
+			encoder.Key(prereqChildrenKey)
+			encoder.StartArray()
+			for _, one := range p.Children {
+				one.ToJSON(encoder)
+			}
+			encoder.EndArray()
+		}
 	case enum.SkillPrereq:
 		encoder.KeyedBool(prereqHasKey, p.Has, false)
 		encoding.ToKeyedJSON(&p.NameCriteria, prereqNameKey, encoder)
-		if p.LevelCriteria.Type != enum.AtLeast || p.LevelCriteria.Qualifier != 0 {
-			encoding.ToKeyedJSON(&p.LevelCriteria, prereqLevelKey, encoder)
+		if p.NumericCriteria.Type != enum.AtLeast || p.NumericCriteria.Qualifier != 0 {
+			encoding.ToKeyedJSON(&p.NumericCriteria, prereqLevelKey, encoder)
 		}
 		encoding.ToKeyedJSON(&p.SpecializationCriteria, prereqSpecializationKey, encoder)
 	case enum.SpellPrereq:
-		// TODO: Implement
 		encoder.KeyedBool(prereqHasKey, p.Has, false)
+		encoder.KeyedString(prereqSubTypeKey, p.SubType.Key(), false, false)
+		if p.SubType.UsesStringCriteria() {
+			encoding.ToKeyedJSON(&p.NameCriteria, prereqQualifierKey, encoder)
+		}
+		encoding.ToKeyedJSON(&p.NumericCriteria, prereqQuantityKey, encoder)
 	default:
 		jot.Fatal(1, "invalid prereq type: ", p.Type)
 	}
 	encoder.EndObject()
+}
+
+// Clone creates a new copy of this Prereq.
+func (p *Prereq) Clone(owner *Prereq) *Prereq {
+	clone := *p
+	clone.Owner = owner
+	if p.Type == enum.PrereqList {
+		clone.Children = make([]*Prereq, 0, len(p.Children))
+		for _, one := range p.Children {
+			clone.Children = append(clone.Children, one.Clone(&clone))
+		}
+	}
+	return &clone
 }
 
 // Satisfied returns true if this Prereq is satisfied by the specified Entity. 'buffer' will be used, if not nil, to
@@ -275,6 +325,37 @@ func (p *Prereq) Satisfied(entity *Entity, exclude interface{}, buffer *xio.Byte
 	*/
 	case enum.PrereqList:
 	// TODO: Implement
+	/*
+	   if (mWhenEnabled) {
+	       if (!mWhenTLCriteria.matches(Numbers.extractInteger(character.getProfile().getTechLevel(), 0, false))) {
+	           return true;
+	       }
+	   }
+
+	   int           satisfiedCount = 0;
+	   int           total          = mPrereqs.size();
+	   boolean       requiresAll    = requiresAll();
+	   StringBuilder localBuilder   = builder != null ? new StringBuilder() : null;
+	   for (Prereq prereq : mPrereqs) {
+	       if (prereq.satisfied(character, exclude, localBuilder, prefix)) {
+	           satisfiedCount++;
+	       }
+	   }
+	   if (localBuilder != null && !localBuilder.isEmpty()) {
+	       String indented = LINE_FEED_MATCHER.matcher(localBuilder.toString()).replaceAll("\n\u00a0\u00a0");
+	       localBuilder.setLength(0);
+	       localBuilder.append(indented);
+	   }
+
+	   boolean satisfied = satisfiedCount == total || !requiresAll && satisfiedCount > 0;
+	   if (!satisfied && localBuilder != null) {
+	       builder.append("\n");
+	       builder.append(prefix);
+	       builder.append(requiresAll ? I18n.text("Requires all of:") : I18n.text("Requires at least one of:"));
+	       builder.append(localBuilder);
+	   }
+	   return satisfied;
+	*/
 	case enum.SkillPrereq:
 	// TODO: Implement
 	/*
@@ -321,6 +402,77 @@ func (p *Prereq) Satisfied(entity *Entity, exclude interface{}, buffer *xio.Byte
 	*/
 	case enum.SpellPrereq:
 	// TODO: Implement
+	/*
+	   Set<String> colleges  = new HashSet<>();
+	   String      techLevel = null;
+	   int         count     = 0;
+	   boolean     satisfied;
+	   if (exclude instanceof Spell) {
+	       techLevel = ((Spell) exclude).getTechLevel();
+	   }
+	   for (Spell spell : character.getSpellsIterator()) {
+	       if (exclude != spell && spell.getPoints() > 0) {
+	           boolean ok;
+	           if (techLevel != null) {
+	               String otherTL = spell.getTechLevel();
+
+	               ok = otherTL == null || techLevel.equals(otherTL);
+	           } else {
+	               ok = true;
+	           }
+	           if (ok) {
+	               if (KEY_NAME.equals(mType)) {
+	                   if (mStringCriteria.matches(spell.getName())) {
+	                       count++;
+	                   }
+	               } else if (KEY_ANY.equals(mType)) {
+	                   count++;
+	               } else if (KEY_CATEGORY.equals(mType)) {
+	                   for (String category : spell.getCategories()) {
+	                       if (mStringCriteria.matches(category)) {
+	                           count++;
+	                           break;
+	                       }
+	                   }
+	               } else if (KEY_COLLEGE.equals(mType)) {
+	                   for (String college : spell.getColleges()) {
+	                       if (mStringCriteria.matches(college)) {
+	                           count++;
+	                           break;
+	                       }
+	                   }
+	               } else if (Objects.equals(mType, KEY_COLLEGE_COUNT)) {
+	                   colleges.addAll(spell.getColleges());
+	               }
+	           }
+	       }
+	   }
+
+	   if (Objects.equals(mType, KEY_COLLEGE_COUNT)) {
+	       count = colleges.size();
+	   }
+
+	   satisfied = mQuantityCriteria.matches(count);
+	   if (!has()) {
+	       satisfied = !satisfied;
+	   }
+	   if (!satisfied && builder != null) {
+	       String oneSpell       = I18n.text("spell");
+	       String multipleSpells = I18n.text("spells");
+	       if (Objects.equals(mType, KEY_NAME)) {
+	           builder.append(MessageFormat.format(I18n.text("\n{0}{1} {2} {3} whose name {4}"), prefix, getHasText(), mQuantityCriteria.toString(""), mQuantityCriteria.getQualifier() == 1 ? oneSpell : multipleSpells, mStringCriteria.toString()));
+	       } else if (Objects.equals(mType, KEY_ANY)) {
+	           builder.append(MessageFormat.format(I18n.text("\n{0}{1} {2} {3} of any kind"), prefix, getHasText(), mQuantityCriteria.toString(""), mQuantityCriteria.getQualifier() == 1 ? oneSpell : multipleSpells));
+	       } else if (Objects.equals(mType, KEY_CATEGORY)) {
+	           builder.append(MessageFormat.format(I18n.text("\n{0}{1} {2} {3} whose category {4}"), prefix, getHasText(), mQuantityCriteria.toString(""), mQuantityCriteria.getQualifier() == 1 ? oneSpell : multipleSpells, mStringCriteria.toString()));
+	       } else if (Objects.equals(mType, KEY_COLLEGE)) {
+	           builder.append(MessageFormat.format(I18n.text("\n{0}{1} {2} {3} whose college {4}"), prefix, getHasText(), mQuantityCriteria.toString(""), mQuantityCriteria.getQualifier() == 1 ? oneSpell : multipleSpells, mStringCriteria.toString()));
+	       } else if (Objects.equals(mType, KEY_COLLEGE_COUNT)) {
+	           builder.append(MessageFormat.format(I18n.text("\n{0}{1} college count which {2}"), prefix, getHasText(), mQuantityCriteria.toString()));
+	       }
+	   }
+	   return satisfied;
+	*/
 	default:
 		jot.Fatal(1, "invalid prereq type: ", p.Type)
 	}
@@ -337,12 +489,16 @@ func (p *Prereq) FillWithNameableKeys(nameables map[string]string) {
 	case enum.ContainedQuantityPrereq:
 	case enum.ContainedWeightPrereq:
 	case enum.PrereqList:
-	// TODO: Implement
+		for _, one := range p.Children {
+			one.FillWithNameableKeys(nameables)
+		}
 	case enum.SkillPrereq:
 		ExtractNameables(p.NameCriteria.Qualifier, nameables)
 		ExtractNameables(p.SpecializationCriteria.Qualifier, nameables)
 	case enum.SpellPrereq:
-	// TODO: Implement
+		if p.SubType.UsesStringCriteria() {
+			ExtractNameables(p.NameCriteria.Qualifier, nameables)
+		}
 	default:
 		jot.Fatal(1, "invalid prereq type: ", p.Type)
 	}
@@ -358,12 +514,16 @@ func (p *Prereq) ApplyNameableKeys(nameables map[string]string) {
 	case enum.ContainedQuantityPrereq:
 	case enum.ContainedWeightPrereq:
 	case enum.PrereqList:
-	// TODO: Implement
+		for _, one := range p.Children {
+			one.ApplyNameableKeys(nameables)
+		}
 	case enum.SkillPrereq:
 		p.NameCriteria.Qualifier = ApplyNameables(p.NameCriteria.Qualifier, nameables)
 		p.SpecializationCriteria.Qualifier = ApplyNameables(p.SpecializationCriteria.Qualifier, nameables)
 	case enum.SpellPrereq:
-	// TODO: Implement
+		if p.SubType.UsesStringCriteria() {
+			p.NameCriteria.Qualifier = ApplyNameables(p.NameCriteria.Qualifier, nameables)
+		}
 	default:
 		jot.Fatal(1, "invalid prereq type: ", p.Type)
 	}

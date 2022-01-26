@@ -17,6 +17,9 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
+// AnyStr is used in a few places, so made it a constant.
+const AnyStr = "any"
+
 // Possible StringCompareType values.
 const (
 	Any StringCompareType = iota
@@ -63,7 +66,7 @@ func (s StringCompareType) Key() string {
 	case DoesNotEndWith:
 		return "does_not_end_with"
 	default: // Any
-		return "any"
+		return AnyStr
 	}
 }
 
