@@ -19,9 +19,9 @@ import (
 
 // Possible SkillSelectionType values.
 const (
-	SkillsWithName SkillSelectionType = iota
-	ThisWeapon
-	WeaponsWithName
+	SkillsWithNameSkillSelect SkillSelectionType = iota
+	ThisWeaponSkillSelect
+	WeaponsWithNameSkillSelect
 )
 
 // SkillSelectionType holds the type of an attribute definition.
@@ -29,20 +29,20 @@ type SkillSelectionType uint8
 
 // SkillSelectionTypeFromString extracts a SkillSelectionType from a string.
 func SkillSelectionTypeFromString(str string) SkillSelectionType {
-	for one := SkillsWithName; one <= WeaponsWithName; one++ {
+	for one := SkillsWithNameSkillSelect; one <= WeaponsWithNameSkillSelect; one++ {
 		if strings.EqualFold(one.Key(), str) {
 			return one
 		}
 	}
-	return SkillsWithName
+	return SkillsWithNameSkillSelect
 }
 
 // Key returns the key used to represent this SkillSelectionType.
 func (a SkillSelectionType) Key() string {
 	switch a {
-	case ThisWeapon:
+	case ThisWeaponSkillSelect:
 		return "this_weapon"
-	case WeaponsWithName:
+	case WeaponsWithNameSkillSelect:
 		return "weapons_with_name"
 	default: // SkillsWithName
 		return "skills_with_name"
@@ -52,9 +52,9 @@ func (a SkillSelectionType) Key() string {
 // String implements fmt.Stringer.
 func (a SkillSelectionType) String() string {
 	switch a {
-	case ThisWeapon:
+	case ThisWeaponSkillSelect:
 		return i18n.Text("to this weapon")
-	case WeaponsWithName:
+	case WeaponsWithNameSkillSelect:
 		return i18n.Text("to weapons whose name")
 	default: // SkillsWithName
 		return i18n.Text("to skills whose name")

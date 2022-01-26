@@ -29,11 +29,9 @@ type StringCriteria struct {
 
 // NewStringCriteriaFromJSON creates a new StringCriteria from a JSON object.
 func NewStringCriteriaFromJSON(data map[string]interface{}) *StringCriteria {
-	a := &StringCriteria{
-		Type:      enum.StringCompareTypeFromString(encoding.String(data[stringCriteriaTypeKey])),
-		Qualifier: encoding.String(data[stringCriteriaQualifierKey]),
-	}
-	return a
+	s := &StringCriteria{}
+	s.FromJSON(data)
+	return s
 }
 
 // FromJSON replaces the current data with data from a JSON object.

@@ -103,9 +103,9 @@ func (s StringCompareType) Describe(qualifier string) string {
 func (s StringCompareType) Matches(qualifier, data string) bool {
 	switch s {
 	case Is:
-		return strings.EqualFold(qualifier, data)
+		return strings.EqualFold(data, qualifier)
 	case IsNot:
-		return !strings.EqualFold(qualifier, data)
+		return !strings.EqualFold(data, qualifier)
 	case Contains:
 		return strings.Contains(strings.ToLower(data), strings.ToLower(qualifier))
 	case DoesNotContain:

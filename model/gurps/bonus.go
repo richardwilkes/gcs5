@@ -12,17 +12,22 @@
 package gurps
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/enum"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
+	"github.com/richardwilkes/toolbox/xio"
 )
 
 const (
 	bonusAttributeKey      = "attribute"
 	bonusCategoryKey       = "category"
+	bonusIsPercentKey      = "percent"
+	bonusLevelKey          = "level"
 	bonusLimitationKey     = "limitation"
 	bonusLocationKey       = "location"
 	bonusMatchKey          = "match"
@@ -48,15 +53,19 @@ type Bonus struct {
 	Type                   enum.BonusType                // Used by all
 	Limitation             enum.AttributeBonusLimitation // Used by AttributeBonusType
 	SkillSelectionType     enum.SkillSelectionType       // Used by SkillBonusType
-	SpellMatchType         enum.SpellMatchType           // Used by SpellBonusType
+	SpellMatchType         enum.SpellMatchType           // Used by SpellBonusType, SpellPointBonusType
+	WeaponSelectionType    enum.WeaponSelectionType      // Used by WeaponDamageBonusType
+	IsPercent              bool                          // Used by WeaponDamageBonusType
 	Amount                 LeveledAmount                 // Used by all
 	Attribute              string                        // Used by AttributeBonusType
 	Situation              string                        // Used by ConditionalModifierBonusType, ReactionBonusType
 	Location               string                        // Used by DRBonusType
 	Specialization         string                        // Used by DRBonusType
-	NameCriteria           StringCriteria                // Used by SkillBonusType, SkillPointBonusType, SpellBonusType
-	SpecializationCriteria StringCriteria                // Used by SkillBonusType, SkillPointBonusType
-	CategoryCriteria       StringCriteria                // Used by SkillBonusType, SkillPointBonusType, SpellBonusType
+	NameCriteria           StringCriteria                // Used by SkillBonusType, SkillPointBonusType, SpellBonusType, SpellPointBonusType, WeaponDamageBonusType
+	SpecializationCriteria StringCriteria                // Used by SkillBonusType, SkillPointBonusType, WeaponDamageBonusType
+	CategoryCriteria       StringCriteria                // Used by SkillBonusType, SkillPointBonusType, SpellBonusType, SpellPointBonusType, WeaponDamageBonusType
+	RelativeLevelCriteria  NumberCriteria                // Used by WeaponDamageBonusType
+	Owner                  fmt.Stringer
 }
 
 // NewBonus creates a new Bonus for the given entity, which may be nil.
@@ -76,20 +85,22 @@ func NewBonus(bonusType enum.BonusType, entity *Entity) *Bonus {
 	case enum.ReactionBonusType:
 		b.Situation = i18n.Text("from others")
 	case enum.SkillBonusType:
-		b.SkillSelectionType = enum.SkillsWithName
+		b.SkillSelectionType = enum.SkillsWithNameSkillSelect
 		fallthrough
 	case enum.SkillPointBonusType:
 		b.NameCriteria.Type = enum.Is
 		b.SpecializationCriteria.Type = enum.Any
 		b.CategoryCriteria.Type = enum.Any
-	case enum.SpellBonusType:
+	case enum.SpellBonusType, enum.SpellPointBonusType:
 		b.SpellMatchType = enum.AllColleges
 		b.NameCriteria.Type = enum.Is
 		b.CategoryCriteria.Type = enum.Any
-	case enum.SpellPointBonusType:
-	// TODO: Implement
 	case enum.WeaponDamageBonusType:
-	// TODO: Implement
+		b.WeaponSelectionType = enum.WeaponsWithRequiredSkillWeaponSelect
+		b.NameCriteria.Type = enum.Is
+		b.SpecializationCriteria.Type = enum.Any
+		b.RelativeLevelCriteria.Type = enum.AnyNumber
+		b.CategoryCriteria.Type = enum.Any
 	default:
 		jot.Fatal(1, "invalid bonus type: ", b.Type)
 	}
@@ -112,7 +123,7 @@ func NewBonusFromJSON(key string, data map[string]interface{}) *Bonus {
 	case enum.SkillBonusType:
 		b.SkillSelectionType = enum.SkillSelectionTypeFromString(encoding.String(data[bonusSelectionTypeKey]))
 		b.SpecializationCriteria.FromJSON(encoding.Object(data[bonusSpecializationKey]))
-		if b.SkillSelectionType != enum.ThisWeapon {
+		if b.SkillSelectionType != enum.ThisWeaponSkillSelect {
 			b.NameCriteria.FromJSON(encoding.Object(data[bonusNameKey]))
 			b.CategoryCriteria.FromJSON(encoding.Object(data[bonusCategoryKey]))
 		}
@@ -120,14 +131,23 @@ func NewBonusFromJSON(key string, data map[string]interface{}) *Bonus {
 		b.NameCriteria.FromJSON(encoding.Object(data[bonusNameKey]))
 		b.SpecializationCriteria.FromJSON(encoding.Object(data[bonusSpecializationKey]))
 		b.CategoryCriteria.FromJSON(encoding.Object(data[bonusCategoryKey]))
-	case enum.SpellBonusType:
+	case enum.SpellBonusType, enum.SpellPointBonusType:
 		b.SpellMatchType = enum.SpellMatchTypeFromString(encoding.String(data[bonusMatchKey]))
 		b.NameCriteria.FromJSON(encoding.Object(data[bonusNameKey]))
 		b.CategoryCriteria.FromJSON(encoding.Object(data[bonusCategoryKey]))
-	case enum.SpellPointBonusType:
-	// TODO: Implement
 	case enum.WeaponDamageBonusType:
-	// TODO: Implement
+		b.WeaponSelectionType = enum.WeaponSelectionTypeFromString(encoding.String(data[bonusSelectionTypeKey]))
+		b.IsPercent = encoding.Bool(data[bonusIsPercentKey])
+		b.SpecializationCriteria.FromJSON(encoding.Object(data[bonusSpecializationKey]))
+		switch b.WeaponSelectionType {
+		case enum.WeaponsWithNameWeaponSelect:
+			b.NameCriteria.FromJSON(encoding.Object(data[bonusNameKey]))
+			b.CategoryCriteria.FromJSON(encoding.Object(data[bonusCategoryKey]))
+		case enum.WeaponsWithRequiredSkillWeaponSelect:
+			b.NameCriteria.FromJSON(encoding.Object(data[bonusNameKey]))
+			b.RelativeLevelCriteria.FromJSON(encoding.Object(data[bonusLevelKey]))
+			b.CategoryCriteria.FromJSON(encoding.Object(data[bonusCategoryKey]))
+		}
 	default:
 		jot.Fatal(1, "invalid bonus type: ", b.Type)
 	}
@@ -154,7 +174,7 @@ func (b *Bonus) ToJSON(encoder *encoding.JSONEncoder) {
 	case enum.SkillBonusType:
 		encoder.KeyedString(bonusSelectionTypeKey, b.SkillSelectionType.Key(), false, false)
 		encoding.ToKeyedJSON(&b.SpecializationCriteria, bonusSpecializationKey, encoder)
-		if b.SkillSelectionType != enum.ThisWeapon {
+		if b.SkillSelectionType != enum.ThisWeaponSkillSelect {
 			encoding.ToKeyedJSON(&b.NameCriteria, bonusNameKey, encoder)
 			encoding.ToKeyedJSON(&b.CategoryCriteria, bonusCategoryKey, encoder)
 		}
@@ -162,14 +182,23 @@ func (b *Bonus) ToJSON(encoder *encoding.JSONEncoder) {
 		encoding.ToKeyedJSON(&b.NameCriteria, bonusNameKey, encoder)
 		encoding.ToKeyedJSON(&b.SpecializationCriteria, bonusSpecializationKey, encoder)
 		encoding.ToKeyedJSON(&b.CategoryCriteria, bonusCategoryKey, encoder)
-	case enum.SpellBonusType:
+	case enum.SpellBonusType, enum.SpellPointBonusType:
 		encoder.KeyedString(bonusMatchKey, b.SpellMatchType.Key(), false, false)
 		encoding.ToKeyedJSON(&b.NameCriteria, bonusNameKey, encoder)
 		encoding.ToKeyedJSON(&b.CategoryCriteria, bonusCategoryKey, encoder)
-	case enum.SpellPointBonusType:
-	// TODO: Implement
 	case enum.WeaponDamageBonusType:
-	// TODO: Implement
+		encoder.KeyedString(bonusSelectionTypeKey, b.WeaponSelectionType.Key(), false, false)
+		encoder.KeyedBool(bonusIsPercentKey, b.IsPercent, true)
+		encoding.ToKeyedJSON(&b.SpecializationCriteria, bonusSpecializationKey, encoder)
+		switch b.WeaponSelectionType {
+		case enum.WeaponsWithNameWeaponSelect:
+			encoding.ToKeyedJSON(&b.NameCriteria, bonusNameKey, encoder)
+			encoding.ToKeyedJSON(&b.CategoryCriteria, bonusCategoryKey, encoder)
+		case enum.WeaponsWithRequiredSkillWeaponSelect:
+			encoding.ToKeyedJSON(&b.NameCriteria, bonusNameKey, encoder)
+			encoding.ToKeyedJSON(&b.RelativeLevelCriteria, bonusLevelKey, encoder)
+			encoding.ToKeyedJSON(&b.CategoryCriteria, bonusCategoryKey, encoder)
+		}
 	default:
 		jot.Fatal(1, "invalid bonus type: ", b.Type)
 	}
@@ -204,11 +233,11 @@ func (b *Bonus) FeatureKey() string {
 		return "reaction"
 	case enum.SkillBonusType:
 		switch b.SkillSelectionType {
-		case enum.SkillsWithName:
+		case enum.SkillsWithNameSkillSelect:
 			return b.buildKey(SkillNameID, false)
-		case enum.ThisWeapon:
+		case enum.ThisWeaponSkillSelect:
 			return ThisWeaponID
-		case enum.WeaponsWithName:
+		case enum.WeaponsWithNameSkillSelect:
 			return b.buildKey(WeaponNamedIDPrefix, false)
 		default:
 			jot.Fatal(1, "invalid selection type: ", b.SkillSelectionType)
@@ -232,14 +261,35 @@ func (b *Bonus) FeatureKey() string {
 			jot.Fatal(1, "invalid match type: ", b.SpellMatchType)
 		}
 	case enum.SpellPointBonusType:
-	// TODO: Implement
+		if b.CategoryCriteria.Type != enum.Any {
+			return SpellPointsID + "*"
+		}
+		switch b.SpellMatchType {
+		case enum.AllColleges:
+			return SpellCollegePointsID
+		case enum.CollegeName:
+			return b.buildKey(SpellCollegePointsID, true)
+		case enum.PowerSourceName:
+			return b.buildKey(SpellPowerSourcePointsID, true)
+		case enum.SpellName:
+			return b.buildKey(SpellPointsID, true)
+		default:
+			jot.Fatal(1, "invalid match type: ", b.SpellMatchType)
+		}
 	case enum.WeaponDamageBonusType:
-	// TODO: Implement
-	default:
-		jot.Fatal(1, "invalid bonus type: ", b.Type)
+		switch b.WeaponSelectionType {
+		case enum.WeaponsWithRequiredSkillWeaponSelect:
+			return b.buildKey(WeaponNamedIDPrefix, false)
+		case enum.ThisWeaponWeaponSelect:
+			return ThisWeaponID
+		case enum.WeaponsWithNameWeaponSelect:
+			return b.buildKey(SkillNameID, false)
+		default:
+			jot.Fatal(1, "invalid selection type: ", b.WeaponSelectionType)
+		}
 	}
-	// TODO: Eliminate
-	return ""
+	jot.Fatal(1, "invalid bonus type: ", b.Type)
+	return "" // Never reached
 }
 
 func (b *Bonus) buildKey(prefix string, considerNameCriteriaOnly bool) string {
@@ -257,7 +307,7 @@ func (b *Bonus) FillWithNameableKeys(nameables map[string]string) {
 		ExtractNameables(b.Situation, nameables)
 	case enum.SkillBonusType:
 		ExtractNameables(b.SpecializationCriteria.Qualifier, nameables)
-		if b.SkillSelectionType != enum.ThisWeapon {
+		if b.SkillSelectionType != enum.ThisWeaponSkillSelect {
 			ExtractNameables(b.NameCriteria.Qualifier, nameables)
 			ExtractNameables(b.CategoryCriteria.Qualifier, nameables)
 		}
@@ -265,15 +315,18 @@ func (b *Bonus) FillWithNameableKeys(nameables map[string]string) {
 		ExtractNameables(b.NameCriteria.Qualifier, nameables)
 		ExtractNameables(b.SpecializationCriteria.Qualifier, nameables)
 		ExtractNameables(b.CategoryCriteria.Qualifier, nameables)
-	case enum.SpellBonusType:
+	case enum.SpellBonusType, enum.SpellPointBonusType:
 		if b.SpellMatchType != enum.AllColleges {
 			ExtractNameables(b.NameCriteria.Qualifier, nameables)
 		}
 		ExtractNameables(b.CategoryCriteria.Qualifier, nameables)
-	case enum.SpellPointBonusType:
-	// TODO: Implement
 	case enum.WeaponDamageBonusType:
-		// TODO: Implement
+		ExtractNameables(b.SpecializationCriteria.Qualifier, nameables)
+		if b.WeaponSelectionType != enum.ThisWeaponWeaponSelect {
+			ExtractNameables(b.NameCriteria.Qualifier, nameables)
+			ExtractNameables(b.SpecializationCriteria.Qualifier, nameables)
+			ExtractNameables(b.CategoryCriteria.Qualifier, nameables)
+		}
 	}
 }
 
@@ -284,7 +337,7 @@ func (b *Bonus) ApplyNameableKeys(nameables map[string]string) {
 		b.Situation = ApplyNameables(b.Situation, nameables)
 	case enum.SkillBonusType:
 		b.SpecializationCriteria.Qualifier = ApplyNameables(b.SpecializationCriteria.Qualifier, nameables)
-		if b.SkillSelectionType != enum.ThisWeapon {
+		if b.SkillSelectionType != enum.ThisWeaponSkillSelect {
 			b.NameCriteria.Qualifier = ApplyNameables(b.NameCriteria.Qualifier, nameables)
 			b.CategoryCriteria.Qualifier = ApplyNameables(b.CategoryCriteria.Qualifier, nameables)
 		}
@@ -292,32 +345,59 @@ func (b *Bonus) ApplyNameableKeys(nameables map[string]string) {
 		b.NameCriteria.Qualifier = ApplyNameables(b.NameCriteria.Qualifier, nameables)
 		b.SpecializationCriteria.Qualifier = ApplyNameables(b.SpecializationCriteria.Qualifier, nameables)
 		b.CategoryCriteria.Qualifier = ApplyNameables(b.CategoryCriteria.Qualifier, nameables)
-	case enum.SpellBonusType:
+	case enum.SpellBonusType, enum.SpellPointBonusType:
 		if b.SpellMatchType != enum.AllColleges {
 			b.NameCriteria.Qualifier = ApplyNameables(b.NameCriteria.Qualifier, nameables)
 		}
 		b.CategoryCriteria.Qualifier = ApplyNameables(b.CategoryCriteria.Qualifier, nameables)
-	case enum.SpellPointBonusType:
-	// TODO: Implement
 	case enum.WeaponDamageBonusType:
-		// TODO: Implement
+		b.SpecializationCriteria.Qualifier = ApplyNameables(b.SpecializationCriteria.Qualifier, nameables)
+		if b.WeaponSelectionType != enum.ThisWeaponWeaponSelect {
+			b.NameCriteria.Qualifier = ApplyNameables(b.NameCriteria.Qualifier, nameables)
+			b.SpecializationCriteria.Qualifier = ApplyNameables(b.SpecializationCriteria.Qualifier, nameables)
+			b.CategoryCriteria.Qualifier = ApplyNameables(b.CategoryCriteria.Qualifier, nameables)
+		}
 	}
 }
 
 // Normalize implements Feature.
 func (b *Bonus) Normalize() {
-	switch b.Type {
-	case enum.DRBonusType:
+	if b.Type == enum.DRBonusType {
 		s := strings.TrimSpace(b.Specialization)
 		if s == "" || strings.EqualFold(s, All) {
 			s = All
 		}
 		b.Specialization = s
-	case enum.SpellBonusType:
-	// TODO: Implement
-	case enum.SpellPointBonusType:
-	// TODO: Implement
-	case enum.WeaponDamageBonusType:
-		// TODO: Implement
 	}
+}
+
+// AddToTooltip adds this bonus' details to the tooltip.
+func (b *Bonus) AddToTooltip(tooltip *xio.ByteBuffer) {
+	if tooltip == nil || b.Owner == nil {
+		return
+	}
+	tooltip.WriteByte('\n')
+	tooltip.WriteString(b.Owner.String())
+	tooltip.WriteString(" [")
+	if b.Type == enum.WeaponDamageBonusType {
+		tooltip.WriteString(b.Amount.Format(i18n.Text("die")))
+		if b.IsPercent {
+			tooltip.WriteByte('%')
+		}
+	} else {
+		tooltip.WriteString(b.Amount.Format(i18n.Text("level")))
+	}
+	switch b.Type {
+	case enum.DRBonusType:
+		tooltip.WriteString(i18n.Text(" against "))
+		tooltip.WriteString(b.Specialization)
+		tooltip.WriteString(i18n.Text(" attacks"))
+	case enum.SkillPointBonusType:
+		if b.Amount.Amount == f64d4.One {
+			tooltip.WriteString(i18n.Text(" pt"))
+		} else {
+			tooltip.WriteString(i18n.Text(" pts"))
+		}
+	}
+	tooltip.WriteByte(']')
 }
