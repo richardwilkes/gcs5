@@ -125,7 +125,7 @@ func NewFeatureFromJSON(data map[string]interface{}) *Feature {
 	switch f.Type {
 	case AttributeBonus:
 		f.Attribute = encoding.String(data[featureAttributeKey])
-		f.Limitation = AttributeBonusLimitationFromString(encoding.String(data[featureLimitationKey]))
+		f.Limitation = AttributeBonusLimitationFromKey(encoding.String(data[featureLimitationKey]))
 	case ConditionalModifierBonus, ReactionBonus:
 		f.Situation = encoding.String(data[featureSituationKey])
 	case ContainedWeightReduction:

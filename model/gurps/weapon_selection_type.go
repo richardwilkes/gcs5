@@ -24,39 +24,53 @@ const (
 	WeaponsWithNameWeaponSelect
 )
 
+type weaponSelectionTypeData struct {
+	Key    string
+	String string
+}
+
 // WeaponSelectionType holds the type of an attribute definition.
 type WeaponSelectionType uint8
 
-// WeaponSelectionTypeFromString extracts a WeaponSelectionType from a string.
-func WeaponSelectionTypeFromString(str string) WeaponSelectionType {
-	for one := WeaponsWithRequiredSkillWeaponSelect; one <= WeaponsWithNameWeaponSelect; one++ {
-		if strings.EqualFold(one.Key(), str) {
-			return one
+var weaponSelectionTypeValues = []*weaponSelectionTypeData{
+	{
+		Key:    "weapons_with_required_skill",
+		String: i18n.Text("to weapons whose required skill name"),
+	},
+	{
+		Key:    "this_weapon",
+		String: i18n.Text("to this weapon"),
+	},
+	{
+		Key:    "weapons_with_name",
+		String: i18n.Text("to weapons whose name"),
+	},
+}
+
+// WeaponSelectionTypeFromString extracts a WeaponSelectionType from a key.
+func WeaponSelectionTypeFromString(key string) WeaponSelectionType {
+	for i, one := range weaponSelectionTypeValues {
+		if strings.EqualFold(key, one.Key) {
+			return WeaponSelectionType(i)
 		}
 	}
-	return WeaponsWithRequiredSkillWeaponSelect
+	return 0
+}
+
+// EnsureValid returns the first WeaponSelectionType if this WeaponSelectionType is not a known value.
+func (w WeaponSelectionType) EnsureValid() WeaponSelectionType {
+	if int(w) < len(weaponSelectionTypeValues) {
+		return w
+	}
+	return 0
 }
 
 // Key returns the key used to represent this WeaponSelectionType.
-func (a WeaponSelectionType) Key() string {
-	switch a {
-	case ThisWeaponWeaponSelect:
-		return "this_weapon"
-	case WeaponsWithNameWeaponSelect:
-		return "weapons_with_name"
-	default: // WeaponsWithRequiredSkillWeaponSelect
-		return "weapons_with_required_skill"
-	}
+func (w WeaponSelectionType) Key() string {
+	return weaponSelectionTypeValues[w.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
-func (a WeaponSelectionType) String() string {
-	switch a {
-	case ThisWeaponWeaponSelect:
-		return i18n.Text("to this weapon")
-	case WeaponsWithNameWeaponSelect:
-		return i18n.Text("to weapons whose name")
-	default: // WeaponsWithRequiredSkillWeaponSelect
-		return i18n.Text("to weapons whose required skill name")
-	}
+func (w WeaponSelectionType) String() string {
+	return weaponSelectionTypeValues[w.EnsureValid()].String
 }

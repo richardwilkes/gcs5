@@ -27,49 +27,69 @@ const (
 	AtMost
 )
 
+type numericCompareTypeData struct {
+	Key     string
+	String  string
+	Matches func(qualifier, data fixed.F64d4) bool
+}
+
 // NumericCompareType holds the type for a numeric comparison.
 type NumericCompareType uint8
 
-// NumericCompareTypeFromString extracts a NumericCompareType from a string.
-func NumericCompareTypeFromString(str string) NumericCompareType {
-	for one := AnyNumber; one <= AtMost; one++ {
-		if strings.EqualFold(one.Key(), str) {
-			return one
+var numericCompareTypeValues = []*numericCompareTypeData{
+	{
+		Key:     "any",
+		String:  i18n.Text("is anything"),
+		Matches: func(qualifier, data fixed.F64d4) bool { return true },
+	},
+	{
+		Key:     "is",
+		String:  i18n.Text("is"),
+		Matches: func(qualifier, data fixed.F64d4) bool { return data == qualifier },
+	},
+	{
+		Key:     "is_not",
+		String:  i18n.Text("is not"),
+		Matches: func(qualifier, data fixed.F64d4) bool { return data != qualifier },
+	},
+	{
+		Key:     "at_least",
+		String:  i18n.Text("at least"),
+		Matches: func(qualifier, data fixed.F64d4) bool { return data >= qualifier },
+	},
+	{
+		Key:     "at_most",
+		String:  i18n.Text("at most"),
+		Matches: func(qualifier, data fixed.F64d4) bool { return data <= qualifier },
+	},
+}
+
+// NumericCompareTypeFromString extracts a NumericCompareType from a key.
+func NumericCompareTypeFromString(key string) NumericCompareType {
+	for i, one := range numericCompareTypeValues {
+		if strings.EqualFold(key, one.Key) {
+			return NumericCompareType(i)
 		}
 	}
-	return Equals
+	return 0
+}
+
+// EnsureValid returns the first NumericCompareType if this NumericCompareType is not a known value.
+func (n NumericCompareType) EnsureValid() NumericCompareType {
+	if int(n) < len(numericCompareTypeValues) {
+		return n
+	}
+	return 0
 }
 
 // Key returns the key used to represent this NumericCompareType.
 func (n NumericCompareType) Key() string {
-	switch n {
-	case Equals:
-		return "is"
-	case NotEquals:
-		return "is_not"
-	case AtLeast:
-		return "at_least"
-	case AtMost:
-		return "at_most"
-	default: // AnyNumber
-		return "any"
-	}
+	return numericCompareTypeValues[n.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
 func (n NumericCompareType) String() string {
-	switch n {
-	case Equals:
-		return i18n.Text("is")
-	case NotEquals:
-		return i18n.Text("is not")
-	case AtLeast:
-		return i18n.Text("at least")
-	case AtMost:
-		return i18n.Text("at most")
-	default: // AnyNumber
-		return i18n.Text("is anything")
-	}
+	return numericCompareTypeValues[n.EnsureValid()].String
 }
 
 // Describe returns a description of this NumericCompareType using a qualifier.
@@ -82,16 +102,5 @@ func (n NumericCompareType) Describe(qualifier fixed.F64d4) string {
 
 // Matches performs a comparison and returns true if the data matches.
 func (n NumericCompareType) Matches(qualifier, data fixed.F64d4) bool {
-	switch n {
-	case Equals:
-		return data == qualifier
-	case NotEquals:
-		return data != qualifier
-	case AtLeast:
-		return data >= qualifier
-	case AtMost:
-		return data <= qualifier
-	default: // AnyNumber
-		return true
-	}
+	return numericCompareTypeValues[n.EnsureValid()].Matches(qualifier, data)
 }

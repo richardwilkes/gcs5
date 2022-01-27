@@ -24,39 +24,53 @@ const (
 	Pool
 )
 
+type attributeTypeData struct {
+	Key    string
+	String string
+}
+
 // AttributeType holds the type of an attribute definition.
 type AttributeType uint8
 
-// AttributeTypeFromString extracts a AttributeType from a string.
-func AttributeTypeFromString(str string) AttributeType {
-	for one := Integer; one <= Pool; one++ {
-		if strings.EqualFold(one.Key(), str) {
-			return one
+var attributeTypeValues = []*attributeTypeData{
+	{
+		Key:    "integer",
+		String: i18n.Text("Integer"),
+	},
+	{
+		Key:    "decimal",
+		String: i18n.Text("Decimal"),
+	},
+	{
+		Key:    "pool",
+		String: i18n.Text("Pool"),
+	},
+}
+
+// AttributeTypeFromKey extracts a AttributeType from a key.
+func AttributeTypeFromKey(key string) AttributeType {
+	for i, one := range attributeTypeValues {
+		if strings.EqualFold(key, one.Key) {
+			return AttributeType(i)
 		}
 	}
-	return Integer
+	return 0
+}
+
+// EnsureValid returns the first AttributeType if this AttributeType is not a known value.
+func (a AttributeType) EnsureValid() AttributeType {
+	if int(a) < len(attributeTypeValues) {
+		return a
+	}
+	return 0
 }
 
 // Key returns the key used to represent this AttributeType.
 func (a AttributeType) Key() string {
-	switch a {
-	case Decimal:
-		return "decimal"
-	case Pool:
-		return "pool"
-	default: // Integer
-		return "integer"
-	}
+	return attributeTypeValues[a.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
 func (a AttributeType) String() string {
-	switch a {
-	case Decimal:
-		return i18n.Text("Decimal")
-	case Pool:
-		return i18n.Text("Pool")
-	default: // Integer
-		return i18n.Text("Integer")
-	}
+	return attributeTypeValues[a.EnsureValid()].String
 }

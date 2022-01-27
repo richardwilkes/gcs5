@@ -23,46 +23,60 @@ const (
 	Landscape
 )
 
+type orientationData struct {
+	Key        string
+	String     string
+	Dimensions func(size Size) (width, height Length)
+}
+
 // Orientation holds the orientation of the page.
 type Orientation uint8
 
-// OrientationFromString extracts a Orientation from a string.
-func OrientationFromString(str string) Orientation {
-	for one := Portrait; one <= Landscape; one++ {
-		if strings.EqualFold(one.Key(), str) {
-			return one
+var orientationValues = []*orientationData{
+	{
+		Key:        "portrait",
+		String:     i18n.Text("Portrait"),
+		Dimensions: func(size Size) (width, height Length) { return size.Dimensions() },
+	},
+	{
+		Key:    "landscape",
+		String: i18n.Text("Landscape"),
+		Dimensions: func(size Size) (width, height Length) {
+			width, height = size.Dimensions()
+			return height, width
+		},
+	},
+}
+
+// OrientationFromString extracts a Orientation from a key.
+func OrientationFromString(key string) Orientation {
+	for i, one := range orientationValues {
+		if strings.EqualFold(key, one.Key) {
+			return Orientation(i)
 		}
 	}
-	return Portrait
+	return 0
+}
+
+// EnsureValid returns the first Orientation if this Orientation is not a known value.
+func (o Orientation) EnsureValid() Orientation {
+	if int(o) < len(orientationValues) {
+		return o
+	}
+	return 0
 }
 
 // Key returns the key used to represent this ThresholdOp.
-func (a Orientation) Key() string {
-	switch a {
-	case Landscape:
-		return "landscape"
-	default: // Portrait
-		return "portrait"
-	}
+func (o Orientation) Key() string {
+	return orientationValues[o.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
-func (a Orientation) String() string {
-	switch a {
-	case Landscape:
-		return i18n.Text("Landscape")
-	default: // Portrait
-		return i18n.Text("Portrait")
-	}
+func (o Orientation) String() string {
+	return orientationValues[o.EnsureValid()].String
 }
 
 // Dimensions returns the paper dimensions after orienting the paper.
-func (a Orientation) Dimensions(size Size) (width, height Length) {
-	width, height = size.Dimensions()
-	switch a {
-	case Landscape:
-		return height, width
-	default: // Portrait
-		return width, height
-	}
+func (o Orientation) Dimensions(size Size) (width, height Length) {
+	return orientationValues[o.EnsureValid()].Dimensions(size)
 }

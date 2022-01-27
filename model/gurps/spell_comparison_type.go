@@ -17,43 +17,68 @@ import (
 
 // Possible SpellComparisonType values.
 const (
-	AnySpell SpellComparisonType = iota
-	Name
+	Name SpellComparisonType = iota
 	Category
 	College
 	CollegeCount
+	AnySpell
 )
+
+type spellComparisonTypeData struct {
+	Key                string
+	UsesStringCriteria bool
+}
 
 // SpellComparisonType holds the type of an attribute definition.
 type SpellComparisonType uint8
 
-// SpellComparisonTypeFromString extracts a SpellComparisonType from a string.
-func SpellComparisonTypeFromString(str string) SpellComparisonType {
-	for one := AnySpell; one <= CollegeCount; one++ {
-		if strings.EqualFold(one.Key(), str) {
-			return one
+var spellComparisonTypeValues = []*spellComparisonTypeData{
+	{
+		Key:                "name",
+		UsesStringCriteria: true,
+	},
+	{
+		Key:                "category",
+		UsesStringCriteria: true,
+	},
+	{
+		Key:                "college",
+		UsesStringCriteria: true,
+	},
+	{
+		Key:                "college_count",
+		UsesStringCriteria: false,
+	},
+	{
+		Key:                "any",
+		UsesStringCriteria: false,
+	},
+}
+
+// SpellComparisonTypeFromString extracts a SpellComparisonType from a key.
+func SpellComparisonTypeFromString(key string) SpellComparisonType {
+	for i, one := range spellComparisonTypeValues {
+		if strings.EqualFold(key, one.Key) {
+			return SpellComparisonType(i)
 		}
 	}
-	return Name
+	return 0
+}
+
+// EnsureValid returns the first SpellComparisonType if this SpellComparisonType is not a known value.
+func (s SpellComparisonType) EnsureValid() SpellComparisonType {
+	if int(s) < len(spellComparisonTypeValues) {
+		return s
+	}
+	return 0
 }
 
 // Key returns the key used to represent this SpellComparisonType.
-func (a SpellComparisonType) Key() string {
-	switch a {
-	case AnySpell:
-		return "any"
-	case Category:
-		return "category"
-	case College:
-		return "college"
-	case CollegeCount:
-		return "college_count"
-	default: // Name
-		return "name"
-	}
+func (s SpellComparisonType) Key() string {
+	return spellComparisonTypeValues[s.EnsureValid()].Key
 }
 
 // UsesStringCriteria returns true if the comparison uses a string value.
-func (a SpellComparisonType) UsesStringCriteria() bool {
-	return a == Name || a == Category || a == College
+func (s SpellComparisonType) UsesStringCriteria() bool {
+	return spellComparisonTypeValues[s.EnsureValid()].UsesStringCriteria
 }

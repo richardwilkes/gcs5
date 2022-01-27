@@ -24,39 +24,53 @@ const (
 	WeaponsWithNameSkillSelect
 )
 
+type skillSelectionTypeData struct {
+	Key    string
+	String string
+}
+
 // SkillSelectionType holds the type of an attribute definition.
 type SkillSelectionType uint8
 
-// SkillSelectionTypeFromString extracts a SkillSelectionType from a string.
-func SkillSelectionTypeFromString(str string) SkillSelectionType {
-	for one := SkillsWithNameSkillSelect; one <= WeaponsWithNameSkillSelect; one++ {
-		if strings.EqualFold(one.Key(), str) {
-			return one
+var skillSelectionTypeValues = []*skillSelectionTypeData{
+	{
+		Key:    "skills_with_name",
+		String: i18n.Text("to skills whose name"),
+	},
+	{
+		Key:    "this_weapon",
+		String: i18n.Text("to this weapon"),
+	},
+	{
+		Key:    "weapons_with_name",
+		String: i18n.Text("to weapons whose name"),
+	},
+}
+
+// SkillSelectionTypeFromString extracts a SkillSelectionType from a key.
+func SkillSelectionTypeFromString(key string) SkillSelectionType {
+	for i, one := range skillSelectionTypeValues {
+		if strings.EqualFold(key, one.Key) {
+			return SkillSelectionType(i)
 		}
 	}
-	return SkillsWithNameSkillSelect
+	return 0
+}
+
+// EnsureValid returns the first SkillSelectionType if this SkillSelectionType is not a known value.
+func (s SkillSelectionType) EnsureValid() SkillSelectionType {
+	if int(s) < len(skillSelectionTypeValues) {
+		return s
+	}
+	return 0
 }
 
 // Key returns the key used to represent this SkillSelectionType.
-func (a SkillSelectionType) Key() string {
-	switch a {
-	case ThisWeaponSkillSelect:
-		return "this_weapon"
-	case WeaponsWithNameSkillSelect:
-		return "weapons_with_name"
-	default: // SkillsWithName
-		return "skills_with_name"
-	}
+func (s SkillSelectionType) Key() string {
+	return skillSelectionTypeValues[s.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
-func (a SkillSelectionType) String() string {
-	switch a {
-	case ThisWeaponSkillSelect:
-		return i18n.Text("to this weapon")
-	case WeaponsWithNameSkillSelect:
-		return i18n.Text("to weapons whose name")
-	default: // SkillsWithName
-		return i18n.Text("to skills whose name")
-	}
+func (s SkillSelectionType) String() string {
+	return skillSelectionTypeValues[s.EnsureValid()].String
 }

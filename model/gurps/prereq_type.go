@@ -24,35 +24,56 @@ const (
 	SpellPrereq
 )
 
+type prereqTypeData struct {
+	Key string
+}
+
 // PrereqType holds the type of a Feature.
 type PrereqType uint8
 
-// PrereqTypeFromString extracts a PrereqType from a string.
-func PrereqTypeFromString(str string) PrereqType {
-	for one := AdvantagePrereq; one <= SpellPrereq; one++ {
-		if strings.EqualFold(one.Key(), str) {
-			return one
+var prereqTypeValues = []*prereqTypeData{
+	{
+		Key: "advantage_prereq",
+	},
+	{
+		Key: "attribute_prereq",
+	},
+	{
+		Key: "contained_quantity_prereq",
+	},
+	{
+		Key: "contained_weight_prereq",
+	},
+	{
+		Key: "prereq_list",
+	},
+	{
+		Key: "skill_prereq",
+	},
+	{
+		Key: "spell_prereq",
+	},
+}
+
+// PrereqTypeFromString extracts a PrereqType from a key.
+func PrereqTypeFromString(key string) PrereqType {
+	for i, one := range prereqTypeValues {
+		if strings.EqualFold(key, one.Key) {
+			return PrereqType(i)
 		}
 	}
-	return PrereqList
+	return 0
+}
+
+// EnsureValid returns the first PrereqType if this PrereqType is not a known value.
+func (p PrereqType) EnsureValid() PrereqType {
+	if int(p) < len(prereqTypeValues) {
+		return p
+	}
+	return 0
 }
 
 // Key returns the key used to represent this PrereqType.
-func (b PrereqType) Key() string {
-	switch b {
-	case AdvantagePrereq:
-		return "advantage_prereq"
-	case AttributePrereq:
-		return "attribute_prereq"
-	case ContainedQuantityPrereq:
-		return "contained_quantity_prereq"
-	case ContainedWeightPrereq:
-		return "contained_weight_prereq"
-	case SkillPrereq:
-		return "skill_prereq"
-	case SpellPrereq:
-		return "spell_prereq"
-	default: // PrereqList
-		return "prereq_list"
-	}
+func (p PrereqType) Key() string {
+	return prereqTypeValues[p.EnsureValid()].Key
 }

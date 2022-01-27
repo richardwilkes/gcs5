@@ -49,13 +49,5 @@ func (l Length) String() string {
 
 // Pixels returns the number of 72-pixels-per-inch pixels this represents.
 func (l Length) Pixels() float32 {
-	length := l.Length * 72
-	switch l.Units {
-	case Millimeter:
-		return float32(length / 25.4)
-	case Centimeter:
-		return float32(length / 2.54)
-	default:
-		return float32(length)
-	}
+	return l.Units.ToPixels(l.Length)
 }

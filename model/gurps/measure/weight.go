@@ -22,7 +22,7 @@ type Weight fixed.F64d4
 
 // WeightFromInt64 creates a new Weight.
 func WeightFromInt64(value int64, unit WeightUnits) Weight {
-	return convertToPounds(fixed.F64d4FromInt64(value), unit)
+	return Weight(unit.ToPounds(fixed.F64d4FromInt64(value)))
 }
 
 // WeightFromStringForced creates a new Weight. May have any of the known Weight suffixes or no notation at all, in which
@@ -45,7 +45,7 @@ func WeightFromString(text string, defaultUnits WeightUnits) (Weight, error) {
 			if err != nil {
 				return 0, err
 			}
-			return convertToPounds(value, unit), nil
+			return Weight(unit.ToPounds(value)), nil
 		}
 	}
 	// No matches, so let's use our passed-in default units
@@ -53,41 +53,9 @@ func WeightFromString(text string, defaultUnits WeightUnits) (Weight, error) {
 	if err != nil {
 		return 0, err
 	}
-	return convertToPounds(value, defaultUnits), nil
-}
-
-func convertToPounds(value fixed.F64d4, unit WeightUnits) Weight {
-	switch unit {
-	case Ounce:
-		value = value.Div(fixed.F64d4FromInt64(16))
-	case Ton:
-		value = value.Mul(fixed.F64d4FromInt64(2000))
-	case Kilogram:
-		value = value.Mul(fixed.F64d4FromInt64(2))
-	case Gram:
-		value = value.Div(fixed.F64d4FromInt64(500))
-	default: // Same as Pound
-	}
-	return Weight(value)
+	return Weight(defaultUnits.ToPounds(value)), nil
 }
 
 func (w Weight) String() string {
-	return w.Format(Pound)
-}
-
-// Format the weight as the given units.
-func (w Weight) Format(unit WeightUnits) string {
-	pounds := fixed.F64d4(w)
-	switch unit {
-	case Ounce:
-		return pounds.Mul(fixed.F64d4FromInt64(16)).String() + unit.Key()
-	case Ton:
-		return pounds.Div(fixed.F64d4FromInt64(2000)).String() + unit.Key()
-	case Kilogram:
-		return pounds.Div(fixed.F64d4FromInt64(2)).String() + unit.Key()
-	case Gram:
-		return pounds.Mul(fixed.F64d4FromInt64(500)).String() + unit.Key()
-	default: // Same as Pound
-		return pounds.String() + Pound.Key()
-	}
+	return Pound.Format(w)
 }

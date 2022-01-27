@@ -23,29 +23,47 @@ const (
 	SpellName
 )
 
+type spellMatchTypeData struct {
+	Key string
+}
+
 // SpellMatchType holds the type of an attribute definition.
 type SpellMatchType uint8
 
-// SpellMatchTypeFromString extracts a SpellMatchType from a string.
-func SpellMatchTypeFromString(str string) SpellMatchType {
-	for one := AllColleges; one <= SpellName; one++ {
-		if strings.EqualFold(one.Key(), str) {
-			return one
+var spellMatchTypeValues = []*spellMatchTypeData{
+	{
+		Key: "all_colleges",
+	},
+	{
+		Key: "college_name",
+	},
+	{
+		Key: "power_source_name",
+	},
+	{
+		Key: "spell_name",
+	},
+}
+
+// SpellMatchTypeFromString extracts a SpellMatchType from a key.
+func SpellMatchTypeFromString(key string) SpellMatchType {
+	for i, one := range spellMatchTypeValues {
+		if strings.EqualFold(key, one.Key) {
+			return SpellMatchType(i)
 		}
 	}
-	return AllColleges
+	return 0
+}
+
+// EnsureValid returns the first SpellMatchType if this SpellMatchType is not a known value.
+func (s SpellMatchType) EnsureValid() SpellMatchType {
+	if int(s) < len(spellMatchTypeValues) {
+		return s
+	}
+	return 0
 }
 
 // Key returns the key used to represent this SpellMatchType.
 func (s SpellMatchType) Key() string {
-	switch s {
-	case CollegeName:
-		return "college_name"
-	case PowerSourceName:
-		return "power_source_name"
-	case SpellName:
-		return "spell_name"
-	default: // AllColleges
-		return "all_colleges"
-	}
+	return attributeTypeValues[s.EnsureValid()].Key
 }

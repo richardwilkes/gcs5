@@ -25,57 +25,67 @@ const (
 	HalveST
 )
 
+type thresholdOpData struct {
+	Key         string
+	String      string
+	Description string
+}
+
 // ThresholdOp holds an operation to apply when a pool threshold is hit.
 type ThresholdOp uint8
 
-// ThresholdOpFromString extracts a ThresholdOp from a string.
-func ThresholdOpFromString(str string) ThresholdOp {
-	for op := Unknown; op <= HalveST; op++ {
-		if strings.EqualFold(op.Key(), str) {
-			return op
+var thresholdOpValues = []*thresholdOpData{
+	{
+		Key:         "unknown",
+		String:      i18n.Text("Unknown"),
+		Description: i18n.Text("Unknown"),
+	},
+	{
+		Key:         "halve_move",
+		String:      i18n.Text("Halve Move"),
+		Description: i18n.Text("Halve Move (round up)"),
+	},
+	{
+		Key:         "halve_dodge",
+		String:      i18n.Text("Halve Dodge"),
+		Description: i18n.Text("Halve Dodge (round up)"),
+	},
+	{
+		Key:         "halve_st",
+		String:      i18n.Text("Halve ST"),
+		Description: i18n.Text("Halve ST (round up; does not affect HP and damage)"),
+	},
+}
+
+// ThresholdOpFromString extracts a ThresholdOp from a key.
+func ThresholdOpFromString(key string) ThresholdOp {
+	for i, one := range thresholdOpValues {
+		if strings.EqualFold(key, one.Key) {
+			return ThresholdOp(i)
 		}
 	}
-	return Unknown
+	return 0
+}
+
+// EnsureValid returns the first ThresholdOp if this ThresholdOp is not a known value.
+func (t ThresholdOp) EnsureValid() ThresholdOp {
+	if int(t) < len(thresholdOpValues) {
+		return t
+	}
+	return 0
 }
 
 // Key returns the key used to represent this ThresholdOp.
-func (op ThresholdOp) Key() string {
-	switch op {
-	case HalveMove:
-		return "halve_move"
-	case HalveDodge:
-		return "halve_dodge"
-	case HalveST:
-		return "halve_st"
-	default: // Unknown
-		return "unknown"
-	}
+func (t ThresholdOp) Key() string {
+	return thresholdOpValues[t.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
-func (op ThresholdOp) String() string {
-	switch op {
-	case HalveMove:
-		return i18n.Text("Halve Move")
-	case HalveDodge:
-		return i18n.Text("Halve Dodge")
-	case HalveST:
-		return i18n.Text("Halve ST")
-	default: // Unknown
-		return i18n.Text("Unknown")
-	}
+func (t ThresholdOp) String() string {
+	return thresholdOpValues[t.EnsureValid()].String
 }
 
 // Description of this ThresholdOp's function.
-func (op ThresholdOp) Description() string {
-	switch op {
-	case HalveMove:
-		return i18n.Text("Halve Move (round up)")
-	case HalveDodge:
-		return i18n.Text("Halve Dodge (round up)")
-	case HalveST:
-		return i18n.Text("Halve ST (round up; does not affect HP and damage)")
-	default: // Unknown
-		return i18n.Text("Unknown")
-	}
+func (t ThresholdOp) Description() string {
+	return thresholdOpValues[t.EnsureValid()].Description
 }

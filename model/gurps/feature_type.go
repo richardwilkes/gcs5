@@ -28,43 +28,68 @@ const (
 	WeaponDamageBonus
 )
 
+type featureTypeData struct {
+	Key string
+}
+
 // FeatureType holds the type of a Feature.
 type FeatureType uint8
 
-// FeatureTypeFromString extracts a FeatureType from a string.
-func FeatureTypeFromString(str string) FeatureType {
-	for one := AttributeBonus; one <= WeaponDamageBonus; one++ {
-		if strings.EqualFold(one.Key(), str) {
-			return one
+var featureTypeValues = []*featureTypeData{
+	{
+		Key: "attribute_bonus",
+	},
+	{
+		Key: "conditional_modifier",
+	},
+	{
+		Key: "contained_weight_reduction",
+	},
+	{
+		Key: "cost_reduction",
+	},
+	{
+		Key: "dr_bonus",
+	},
+	{
+		Key: "reaction_bonus",
+	},
+	{
+		Key: "skill_bonus",
+	},
+	{
+		Key: "skill_point_bonus",
+	},
+	{
+		Key: "spell_bonus",
+	},
+	{
+		Key: "spell_point_bonus",
+	},
+	{
+		Key: "weapon_bonus",
+	},
+}
+
+// FeatureTypeFromString extracts a FeatureType from a key.
+func FeatureTypeFromString(key string) FeatureType {
+	for i, one := range featureTypeValues {
+		if strings.EqualFold(key, one.Key) {
+			return FeatureType(i)
 		}
 	}
-	return AttributeBonus
+	return 0
+}
+
+// EnsureValid returns the first FeatureType if this FeatureType is not a known value.
+func (f FeatureType) EnsureValid() FeatureType {
+	if int(f) < len(featureTypeValues) {
+		return f
+	}
+	return 0
 }
 
 // Key returns the key used to represent this FeatureType.
-func (b FeatureType) Key() string {
-	switch b {
-	case ConditionalModifierBonus:
-		return "conditional_modifier"
-	case ContainedWeightReduction:
-		return "contained_weight_reduction"
-	case CostReduction:
-		return "cost_reduction"
-	case DRBonus:
-		return "dr_bonus"
-	case ReactionBonus:
-		return "reaction_bonus"
-	case SkillBonus:
-		return "skill_bonus"
-	case SkillPointBonus:
-		return "skill_point_bonus"
-	case SpellBonus:
-		return "spell_bonus"
-	case SpellPointBonus:
-		return "spell_point_bonus"
-	case WeaponDamageBonus:
-		return "weapon_bonus"
-	default: // AttributeBonusType
-		return "attribute_bonus"
-	}
+func (f FeatureType) Key() string {
+	return featureTypeValues[f.EnsureValid()].Key
 }

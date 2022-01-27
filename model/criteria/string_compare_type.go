@@ -30,65 +30,101 @@ const (
 	DoesNotEndWith
 )
 
+type stringCompareTypeData struct {
+	Key     string
+	String  string
+	Matches func(qualifier, data string) bool
+}
+
 // StringCompareType holds the type for a string comparison.
 type StringCompareType uint8
 
-// StringCompareTypeFromString extracts a StringCompareType from a string.
-func StringCompareTypeFromString(str string) StringCompareType {
-	for one := Any; one <= DoesNotEndWith; one++ {
-		if strings.EqualFold(one.Key(), str) {
-			return one
+var stringCompareTypeValues = []*stringCompareTypeData{
+	{
+		Key:     "any",
+		String:  i18n.Text("is anything"),
+		Matches: func(qualifier, data string) bool { return true },
+	},
+	{
+		Key:     "is",
+		String:  i18n.Text("is"),
+		Matches: func(qualifier, data string) bool { return strings.EqualFold(data, qualifier) },
+	},
+	{
+		Key:     "is_not",
+		String:  i18n.Text("is not"),
+		Matches: func(qualifier, data string) bool { return !strings.EqualFold(data, qualifier) },
+	},
+	{
+		Key:    "contains",
+		String: i18n.Text("contains"),
+		Matches: func(qualifier, data string) bool {
+			return strings.Contains(strings.ToLower(data), strings.ToLower(qualifier))
+		},
+	},
+	{
+		Key:    "does_not_contain",
+		String: i18n.Text("does not contain"),
+		Matches: func(qualifier, data string) bool {
+			return !strings.Contains(strings.ToLower(data), strings.ToLower(qualifier))
+		},
+	},
+	{
+		Key:    "starts_with",
+		String: i18n.Text("starts with"),
+		Matches: func(qualifier, data string) bool {
+			return strings.HasPrefix(strings.ToLower(data), strings.ToLower(qualifier))
+		},
+	},
+	{
+		Key:    "does_not_start_with",
+		String: i18n.Text("does not start with"),
+		Matches: func(qualifier, data string) bool {
+			return !strings.HasPrefix(strings.ToLower(data), strings.ToLower(qualifier))
+		},
+	},
+	{
+		Key:    "ends_with",
+		String: i18n.Text("ends with"),
+		Matches: func(qualifier, data string) bool {
+			return strings.HasSuffix(strings.ToLower(data), strings.ToLower(qualifier))
+		},
+	},
+	{
+		Key:    "does_not_end_with",
+		String: i18n.Text("does not end with"),
+		Matches: func(qualifier, data string) bool {
+			return !strings.HasSuffix(strings.ToLower(data), strings.ToLower(qualifier))
+		},
+	},
+}
+
+// StringCompareTypeFromString extracts a StringCompareType from a key.
+func StringCompareTypeFromString(key string) StringCompareType {
+	for i, one := range stringCompareTypeValues {
+		if strings.EqualFold(key, one.Key) {
+			return StringCompareType(i)
 		}
 	}
-	return Any
+	return 0
+}
+
+// EnsureValid returns the first StringCompareType if this StringCompareType is not a known value.
+func (s StringCompareType) EnsureValid() StringCompareType {
+	if int(s) < len(stringCompareTypeValues) {
+		return s
+	}
+	return 0
 }
 
 // Key returns the key used to represent this StringCompareType.
 func (s StringCompareType) Key() string {
-	switch s {
-	case Is:
-		return "is"
-	case IsNot:
-		return "is_not"
-	case Contains:
-		return "contains"
-	case DoesNotContain:
-		return "does_not_contain"
-	case StartsWith:
-		return "starts_with"
-	case DoesNotStartWith:
-		return "does_not_start_with"
-	case EndsWith:
-		return "ends_with"
-	case DoesNotEndWith:
-		return "does_not_end_with"
-	default: // Any
-		return "any"
-	}
+	return stringCompareTypeValues[s.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
 func (s StringCompareType) String() string {
-	switch s {
-	case Is:
-		return i18n.Text("is")
-	case IsNot:
-		return i18n.Text("is not")
-	case Contains:
-		return i18n.Text("contains")
-	case DoesNotContain:
-		return i18n.Text("does not contain")
-	case StartsWith:
-		return i18n.Text("starts with")
-	case DoesNotStartWith:
-		return i18n.Text("does not start with")
-	case EndsWith:
-		return i18n.Text("ends with")
-	case DoesNotEndWith:
-		return i18n.Text("does not end with")
-	default: // Any
-		return i18n.Text("is anything")
-	}
+	return stringCompareTypeValues[s.EnsureValid()].String
 }
 
 // Describe returns a description of this StringCompareType using a qualifier.
@@ -101,24 +137,5 @@ func (s StringCompareType) Describe(qualifier string) string {
 
 // Matches performs a comparison and returns true if the data matches.
 func (s StringCompareType) Matches(qualifier, data string) bool {
-	switch s {
-	case Is:
-		return strings.EqualFold(data, qualifier)
-	case IsNot:
-		return !strings.EqualFold(data, qualifier)
-	case Contains:
-		return strings.Contains(strings.ToLower(data), strings.ToLower(qualifier))
-	case DoesNotContain:
-		return !strings.Contains(strings.ToLower(data), strings.ToLower(qualifier))
-	case StartsWith:
-		return strings.HasPrefix(strings.ToLower(data), strings.ToLower(qualifier))
-	case DoesNotStartWith:
-		return !strings.HasPrefix(strings.ToLower(data), strings.ToLower(qualifier))
-	case EndsWith:
-		return strings.HasSuffix(strings.ToLower(data), strings.ToLower(qualifier))
-	case DoesNotEndWith:
-		return !strings.HasSuffix(strings.ToLower(data), strings.ToLower(qualifier))
-	default: // Any
-		return true
-	}
+	return stringCompareTypeValues[s.EnsureValid()].Matches(qualifier, data)
 }

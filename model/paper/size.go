@@ -31,93 +31,109 @@ const (
 	A6
 )
 
+type sizeData struct {
+	Key    string
+	String string
+	Width  Length
+	Height Length
+}
+
 // Size holds a standard paper dimension.
 type Size uint8
 
-// SizeFromString extracts a Size from a string.
-func SizeFromString(str string) Size {
-	for one := Letter; one <= A6; one++ {
-		if strings.EqualFold(one.Key(), str) {
-			return one
+var sizeValues = []*sizeData{
+	{
+		Key:    "letter",
+		String: i18n.Text("Letter"),
+		Width:  Length{Length: 8.5, Units: Inch},
+		Height: Length{Length: 11, Units: Inch},
+	},
+	{
+		Key:    "legal",
+		String: i18n.Text("Legal"),
+		Width:  Length{Length: 8.5, Units: Inch},
+		Height: Length{Length: 14, Units: Inch},
+	},
+	{
+		Key:    "tabloid",
+		String: i18n.Text("Tabloid"),
+		Width:  Length{Length: 11, Units: Inch},
+		Height: Length{Length: 17, Units: Inch},
+	},
+	{
+		Key:    "a0",
+		String: "A0",
+		Width:  Length{Length: 841, Units: Millimeter},
+		Height: Length{Length: 1189, Units: Millimeter},
+	},
+	{
+		Key:    "a1",
+		String: "A1",
+		Width:  Length{Length: 594, Units: Millimeter},
+		Height: Length{Length: 841, Units: Millimeter},
+	},
+	{
+		Key:    "a2",
+		String: "A2",
+		Width:  Length{Length: 420, Units: Millimeter},
+		Height: Length{Length: 594, Units: Millimeter},
+	},
+	{
+		Key:    "a3",
+		String: "A3",
+		Width:  Length{Length: 297, Units: Millimeter},
+		Height: Length{Length: 420, Units: Millimeter},
+	},
+	{
+		Key:    "a4",
+		String: "A4",
+		Width:  Length{Length: 210, Units: Millimeter},
+		Height: Length{Length: 297, Units: Millimeter},
+	},
+	{
+		Key:    "a5",
+		String: "A5",
+		Width:  Length{Length: 148, Units: Millimeter},
+		Height: Length{Length: 210, Units: Millimeter},
+	},
+	{
+		Key:    "a6",
+		String: "A6",
+		Width:  Length{Length: 105, Units: Millimeter},
+		Height: Length{Length: 148, Units: Millimeter},
+	},
+}
+
+// SizeFromString extracts a Size from a key.
+func SizeFromString(key string) Size {
+	for i, one := range sizeValues {
+		if strings.EqualFold(key, one.Key) {
+			return Size(i)
 		}
 	}
-	return Letter
+	return 0
+}
+
+// EnsureValid returns the first Size if this Size is not a known value.
+func (s Size) EnsureValid() Size {
+	if int(s) < len(sizeValues) {
+		return s
+	}
+	return 0
 }
 
 // Key returns the key used to represent this ThresholdOp.
 func (s Size) Key() string {
-	switch s {
-	case Legal:
-		return "legal"
-	case Tabloid:
-		return "tabloid"
-	case A0:
-		return "a0"
-	case A1:
-		return "a1"
-	case A2:
-		return "a2"
-	case A3:
-		return "a3"
-	case A4:
-		return "a4"
-	case A5:
-		return "a5"
-	case A6:
-		return "a6"
-	default: // Letter
-		return "letter"
-	}
+	return sizeValues[s.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
 func (s Size) String() string {
-	switch s {
-	case Legal:
-		return i18n.Text("Legal")
-	case Tabloid:
-		return i18n.Text("Tabloid")
-	case A0:
-		return i18n.Text("A0")
-	case A1:
-		return i18n.Text("A1")
-	case A2:
-		return i18n.Text("A2")
-	case A3:
-		return i18n.Text("A3")
-	case A4:
-		return i18n.Text("A4")
-	case A5:
-		return i18n.Text("A5")
-	case A6:
-		return i18n.Text("A6")
-	default: // Letter
-		return i18n.Text("Letter")
-	}
+	return sizeValues[s.EnsureValid()].String
 }
 
 // Dimensions returns the paper dimensions.
 func (s Size) Dimensions() (width, height Length) {
-	switch s {
-	case Legal:
-		return Length{Length: 8.5, Units: Inch}, Length{Length: 14, Units: Inch}
-	case Tabloid:
-		return Length{Length: 11, Units: Inch}, Length{Length: 17, Units: Inch}
-	case A0:
-		return Length{Length: 841, Units: Millimeter}, Length{Length: 1189, Units: Millimeter}
-	case A1:
-		return Length{Length: 594, Units: Millimeter}, Length{Length: 841, Units: Millimeter}
-	case A2:
-		return Length{Length: 420, Units: Millimeter}, Length{Length: 594, Units: Millimeter}
-	case A3:
-		return Length{Length: 297, Units: Millimeter}, Length{Length: 420, Units: Millimeter}
-	case A4:
-		return Length{Length: 210, Units: Millimeter}, Length{Length: 297, Units: Millimeter}
-	case A5:
-		return Length{Length: 148, Units: Millimeter}, Length{Length: 210, Units: Millimeter}
-	case A6:
-		return Length{Length: 105, Units: Millimeter}, Length{Length: 148, Units: Millimeter}
-	default: // Letter
-		return Length{Length: 8.5, Units: Inch}, Length{Length: 11, Units: Inch}
-	}
+	one := sizeValues[s.EnsureValid()]
+	return one.Width, one.Height
 }

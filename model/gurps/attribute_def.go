@@ -55,7 +55,7 @@ type AttributeDef struct {
 // NewAttributeDefFromJSON creates a new AttributeDef from a JSON object.
 func NewAttributeDefFromJSON(data map[string]interface{}, order int) *AttributeDef {
 	a := &AttributeDef{
-		Type:                AttributeTypeFromString(encoding.String(data[attributeDefTypeKey])),
+		Type:                AttributeTypeFromKey(encoding.String(data[attributeDefTypeKey])),
 		Name:                encoding.String(data[attributeDefNameKey]),
 		FullName:            encoding.String(data[attributeDefFullNameKey]),
 		AttributeBase:       encoding.String(data[attributeDefBaseKey]),
