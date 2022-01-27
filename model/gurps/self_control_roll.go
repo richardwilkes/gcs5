@@ -22,8 +22,7 @@ import (
 
 // Possible SelfControlRoll values.
 const (
-	CannotResist SelfControlRoll = iota
-	CR6
+	CR6 SelfControlRoll = iota
 	CR9
 	CR12
 	CR15
@@ -31,9 +30,9 @@ const (
 )
 
 type selfControlRollData struct {
-	String      string
-	Multiplier  fixed.F64d4
-	MinimumRoll int
+	String     string
+	Multiplier fixed.F64d4
+	Value      int
 }
 
 // SelfControlRoll holds the information about a self-control roll, from B121.
@@ -41,33 +40,28 @@ type SelfControlRoll uint8
 
 var selfControlRollValues = []*selfControlRollData{
 	{
-		String:     i18n.Text("Cannot Resist"),
-		Multiplier: fixed.F64d4FromStringForced("2.5"),
+		String:     i18n.Text("CR: 6 (Resist rarely)"),
+		Multiplier: fixed.F64d4FromInt64(2),
+		Value:      6,
 	},
 	{
-		String:      i18n.Text("CR: 6 (Resist rarely)"),
-		Multiplier:  fixed.F64d4FromInt64(2),
-		MinimumRoll: 6,
+		String:     i18n.Text("CR: 9 (Resist fairly often)"),
+		Multiplier: fixed.F64d4FromStringForced("1.5"),
+		Value:      9,
 	},
 	{
-		String:      i18n.Text("CR: 9 (Resist fairly often)"),
-		Multiplier:  fixed.F64d4FromStringForced("1.5"),
-		MinimumRoll: 9,
+		String:     i18n.Text("CR: 12 (Resist quite often)"),
+		Multiplier: f64d4.One,
+		Value:      12,
 	},
 	{
-		String:      i18n.Text("CR: 12 (Resist quite often)"),
-		Multiplier:  f64d4.One,
-		MinimumRoll: 12,
+		String:     i18n.Text("CR: 15 (Resist almost all the time)"),
+		Multiplier: fixed.F64d4FromStringForced("0.5"),
+		Value:      15,
 	},
 	{
-		String:      i18n.Text("CR: 15 (Resist almost all the time)"),
-		Multiplier:  fixed.F64d4FromStringForced("0.5"),
-		MinimumRoll: 15,
-	},
-	{
-		String:      i18n.Text("None Required"),
-		Multiplier:  f64d4.One,
-		MinimumRoll: 10000,
+		String:     i18n.Text("None Required"),
+		Multiplier: f64d4.One,
 	},
 }
 
@@ -77,7 +71,7 @@ func SelfControlRollFromJSON(key string, data map[string]interface{}) SelfContro
 		if n, err := strconv.ParseInt(encoding.String(v), 10, 64); err == nil {
 			num := int(n)
 			for i, one := range selfControlRollValues {
-				if num == one.MinimumRoll {
+				if num == one.Value {
 					return SelfControlRoll(i)
 				}
 			}
@@ -89,7 +83,7 @@ func SelfControlRollFromJSON(key string, data map[string]interface{}) SelfContro
 // ToKeyedJSON writes the SelfControlRoll to JSON.
 func (s SelfControlRoll) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
 	if resolved := s.EnsureValid(); resolved != NoneRequired {
-		encoder.KeyedNumber(key, fixed.F64d4FromInt64(int64(selfControlRollValues[resolved].MinimumRoll)), false)
+		encoder.KeyedNumber(key, fixed.F64d4FromInt64(int64(selfControlRollValues[resolved].Value)), false)
 	}
 }
 
@@ -123,5 +117,5 @@ func (s SelfControlRoll) Multiplier() fixed.F64d4 {
 
 // MinimumRoll returns the minimum roll to retain control.
 func (s SelfControlRoll) MinimumRoll() int {
-	return selfControlRollValues[s.EnsureValid()].MinimumRoll
+	return selfControlRollValues[s.EnsureValid()].Value
 }

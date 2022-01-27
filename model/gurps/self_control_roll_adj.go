@@ -15,6 +15,7 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 // Possible SelfControlRollAdj values.
@@ -32,7 +33,6 @@ type selfControlRollAdjData struct {
 	Key         string
 	String      string
 	Description func(cr SelfControlRoll) string
-	Adjustment  func(cr SelfControlRoll) int
 	Features    func(cr SelfControlRoll) []*Feature
 }
 
@@ -44,157 +44,62 @@ var selfControlRollAdjValues = []*selfControlRollAdjData{
 		Key:         "none",
 		String:      i18n.Text("None"),
 		Description: func(_ SelfControlRoll) string { return "" },
-		Adjustment:  func(_ SelfControlRoll) int { return 0 },
 		Features:    func(_ SelfControlRoll) []*Feature { return nil },
 	},
 	{
 		Key:    "action_penalty",
 		String: i18n.Text("Includes an Action Penalty for Failure"),
 		Description: func(cr SelfControlRoll) string {
-			if cr == NoneRequired {
-				return ""
-			}
 			return fmt.Sprintf(i18n.Text("%d Action Penalty"), int(cr)-int(NoneRequired))
 		},
-		Adjustment: func(cr SelfControlRoll) int { return int(cr) - int(NoneRequired) },
-		Features:   func(_ SelfControlRoll) []*Feature { return nil },
+		Features: func(_ SelfControlRoll) []*Feature { return nil },
 	},
 	{
 		Key:    "reaction_penalty",
 		String: i18n.Text("Includes a Reaction Penalty for Failure"),
 		Description: func(cr SelfControlRoll) string {
-			if cr == NoneRequired {
-				return ""
-			}
 			return fmt.Sprintf(i18n.Text("%d Reaction Penalty"), int(cr)-int(NoneRequired))
 		},
-		Adjustment: func(cr SelfControlRoll) int { return int(cr) - int(NoneRequired) },
-		Features:   func(_ SelfControlRoll) []*Feature { return nil },
+		Features: func(_ SelfControlRoll) []*Feature { return nil },
 	},
 	{
 		Key:    "fright_check_penalty",
 		String: i18n.Text("Includes Fright Check Penalty"),
 		Description: func(cr SelfControlRoll) string {
-			if cr == NoneRequired {
-				return ""
-			}
-			return fmt.Sprintf(i18n.Text("%d Reaction Penalty"), int(cr)-int(NoneRequired))
+			return fmt.Sprintf(i18n.Text("%d Fright Check Penalty"), int(cr)-int(NoneRequired))
 		},
-		Adjustment: func(cr SelfControlRoll) int { return int(cr) - int(NoneRequired) },
-		Features:   func(_ SelfControlRoll) []*Feature { return nil },
+		Features: func(_ SelfControlRoll) []*Feature { return nil },
+	},
+	{
+		Key:    "fright_check_bonus",
+		String: i18n.Text("Includes Fright Check Bonus"),
+		Description: func(cr SelfControlRoll) string {
+			return fmt.Sprintf(i18n.Text("+%d Fright Check Bonus"), int(NoneRequired)-int(cr))
+		},
+		Features: func(_ SelfControlRoll) []*Feature { return nil },
+	},
+	{
+		Key:    "minor_cost_of_living_increase",
+		String: i18n.Text("Includes a Minor Cost of Living Increase"),
+		Description: func(cr SelfControlRoll) string {
+			return fmt.Sprintf(i18n.Text("+%d%% Cost of Living Increase"), 5*(int(NoneRequired)-int(cr)))
+		},
+		Features: func(_ SelfControlRoll) []*Feature { return nil },
+	},
+	{
+		Key:    "major_cost_of_living_increase",
+		String: i18n.Text("Includes a Major Cost of Living Increase and Merchant Skill Penalty"),
+		Description: func(cr SelfControlRoll) string {
+			return fmt.Sprintf(i18n.Text("+%d%% Cost of Living Increase"), 10*(1<<((int(NoneRequired)-int(cr))-1)))
+		},
+		Features: func(cr SelfControlRoll) []*Feature {
+			f := NewFeature(SkillBonus, nil)
+			f.NameCriteria.Qualifier = "Merchant"
+			f.Amount.Amount = fixed.F64d4FromInt64(int64(cr) - int64(NoneRequired))
+			return []*Feature{f}
+		},
 	},
 }
-
-/*
-    FRIGHT_CHECK_PENALTY {
-        @Override
-        public String toString() {
-            return I18n.text("Includes Fright Check Penalty");
-        }
-
-        @Override
-        public String getDescription(SelfControlRoll cr) {
-            if (cr == SelfControlRoll.NONE_REQUIRED) {
-                return "";
-            }
-            return MessageFormat.format(I18n.text("{0} Fright Check Penalty"), Numbers.formatWithForcedSign(getAdjustment(cr)));
-        }
-
-        @Override
-        public int getAdjustment(SelfControlRoll cr) {
-            return cr.ordinal() - SelfControlRoll.NONE_REQUIRED.ordinal();
-        }
-    },
-    FRIGHT_CHECK_BONUS {
-        @Override
-        public String toString() {
-            return I18n.text("Includes Fright Check Bonus");
-        }
-
-        @Override
-        public String getDescription(SelfControlRoll cr) {
-            if (cr == SelfControlRoll.NONE_REQUIRED) {
-                return "";
-            }
-            return MessageFormat.format(I18n.text("{0} Fright Check Bonus"), Numbers.formatWithForcedSign(getAdjustment(cr)));
-        }
-
-        @Override
-        public int getAdjustment(SelfControlRoll cr) {
-            return SelfControlRoll.NONE_REQUIRED.ordinal() - cr.ordinal();
-        }
-    },
-    MINOR_COST_OF_LIVING_INCREASE {
-        @Override
-        public String toString() {
-            return I18n.text("Includes a Minor Cost of Living Increase");
-        }
-
-        @Override
-        public String getDescription(SelfControlRoll cr) {
-            if (cr == SelfControlRoll.NONE_REQUIRED) {
-                return "";
-            }
-            return MessageFormat.format(I18n.text("{0}% Cost of Living Increase"), Numbers.formatWithForcedSign(getAdjustment(cr)));
-        }
-
-        @Override
-        public int getAdjustment(SelfControlRoll cr) {
-            return 5 * (SelfControlRoll.NONE_REQUIRED.ordinal() - cr.ordinal());
-        }
-    },
-    MAJOR_COST_OF_LIVING_INCREASE {
-        @Override
-        public String toString() {
-            return I18n.text("Includes a Major Cost of Living Increase and Merchant Skill Penalty");
-        }
-
-        @Override
-        public String getDescription(SelfControlRoll cr) {
-            if (cr == SelfControlRoll.NONE_REQUIRED) {
-                return "";
-            }
-            return MessageFormat.format(I18n.text("{0}% Cost of Living Increase"), Numbers.formatWithForcedSign(getAdjustment(cr)));
-        }
-
-        @Override
-        public int getAdjustment(SelfControlRoll cr) {
-            return switch (cr) {
-                case CR6 -> 80;
-                case CR9 -> 40;
-                case CR12 -> 20;
-                case CR15 -> 10;
-                default -> 0;
-            };
-        }
-
-        @Override
-        public List<Bonus> getBonuses(SelfControlRoll cr) {
-            List<Bonus>    list     = new ArrayList<>();
-            SkillBonus     bonus    = new SkillBonus();
-            StringCriteria criteria = bonus.getNameCriteria();
-            criteria.setType(StringCompareType.IS);
-            criteria.setQualifier("Merchant");
-            criteria = bonus.getSpecializationCriteria();
-            criteria.setType(StringCompareType.ANY);
-            LeveledAmount amount = bonus.getAmount();
-            amount.setDecimal(false);
-            amount.setPerLevel(false);
-            amount.setAmount(cr.ordinal() - SelfControlRoll.NONE_REQUIRED.ordinal());
-            list.add(bonus);
-            return list;
-        }
-    };
-
-    public abstract String getDescription(SelfControlRoll cr);
-
-    public abstract int getAdjustment(SelfControlRoll cr);
-
-    public List<Bonus> getBonuses(SelfControlRoll cr) {
-        return Collections.emptyList();
-    }
-}
-*/
 
 // EnsureValid returns the first SelfControlRollAdj if this SelfControlRollAdj is not a known value.
 func (s SelfControlRollAdj) EnsureValid() SelfControlRollAdj {
@@ -215,11 +120,6 @@ func (s SelfControlRollAdj) Description(cr SelfControlRoll) string {
 		return ""
 	}
 	return selfControlRollAdjValues[s.EnsureValid()].Description(cr)
-}
-
-// Adjustment returns the adjustment to make.
-func (s SelfControlRollAdj) Adjustment(cr SelfControlRoll) int {
-	return selfControlRollAdjValues[s.EnsureValid()].Adjustment(cr)
 }
 
 // Features returns the set of features to apply.
