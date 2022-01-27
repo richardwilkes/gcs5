@@ -39,18 +39,18 @@ type NamedFileSet struct {
 // ScanForNamedFileSets scans for settings files of a particular type.
 func ScanForNamedFileSets(builtIn fs.FS, builtInDir, extension string, libraries *Libraries) []*NamedFileSet {
 	list := make([]*NamedFileSet, 0)
-	if builtIn != nil {
-		if refs := scanForNamedFileSets(builtIn, builtInDir, extension); len(refs) != 0 {
-			list = append(list, &NamedFileSet{
-				Name: i18n.Text("Built-in"),
-				List: refs,
-			})
-		}
-	}
 	for _, lib := range libraries.List() {
 		if refs := scanForNamedFileSets(os.DirFS(lib.Path()), "Settings", extension); len(refs) != 0 {
 			list = append(list, &NamedFileSet{
 				Name: lib.Title,
+				List: refs,
+			})
+		}
+	}
+	if builtIn != nil {
+		if refs := scanForNamedFileSets(builtIn, builtInDir, extension); len(refs) != 0 {
+			list = append(list, &NamedFileSet{
+				Name: i18n.Text("Built-in"),
 				List: refs,
 			})
 		}
