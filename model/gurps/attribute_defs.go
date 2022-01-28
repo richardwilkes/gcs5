@@ -25,6 +25,14 @@ type AttributeDefs struct {
 	Set map[string]*AttributeDef
 }
 
+// ResolveAttributeName returns the name of the attribute, if possible.
+func ResolveAttributeName(entity *Entity, attribute string) string {
+	if def := AttributeDefsFor(entity).Set[attribute]; def != nil {
+		return def.Name
+	}
+	return attribute
+}
+
 // AttributeDefsFor returns the AttributeDefs for the given Entity, or the global settings if the Entity is nil.
 func AttributeDefsFor(entity *Entity) *AttributeDefs {
 	return SheetSettingsFor(entity).Attributes
