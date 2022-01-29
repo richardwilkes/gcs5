@@ -162,3 +162,17 @@ func (w *Weapon) ResolvedMinimumStrength() int {
 	}
 	return value
 }
+
+// FillWithNameableKeys adds any nameable keys found in this Weapon to the provided map.
+func (w *Weapon) FillWithNameableKeys(nameables map[string]string) {
+	for _, one := range w.Defaults {
+		one.FillWithNameableKeys(nameables)
+	}
+}
+
+// ApplyNameableKeys replaces any nameable keys found in this Weapon with the corresponding values in the provided map.
+func (w *Weapon) ApplyNameableKeys(nameables map[string]string) {
+	for _, one := range w.Defaults {
+		one.ApplyNameableKeys(nameables)
+	}
+}

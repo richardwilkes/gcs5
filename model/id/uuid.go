@@ -17,14 +17,21 @@ import (
 	"github.com/richardwilkes/toolbox/log/jot"
 )
 
+// NewUUID creates a new UUID.
+func NewUUID() uuid.UUID {
+	id, err := uuid.NewRandom()
+	if err != nil {
+		jot.Error(err)
+		// continue on... the id will be garbage, but we can live with that... and this should not be possible anyway
+	}
+	return id
+}
+
 // ParseOrNewUUID parses a UUID from the input or generates a new one should that fail.
 func ParseOrNewUUID(in string) uuid.UUID {
 	id, err := uuid.Parse(encoding.String(in))
 	if err != nil {
-		if id, err = uuid.NewRandom(); err != nil {
-			jot.Error(err)
-			// continue on... the id will be garbage, but we can live with that... and this should not be possible anyway
-		}
+		id = NewUUID()
 	}
 	return id
 }

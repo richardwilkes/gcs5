@@ -84,6 +84,7 @@ func NewPrereq(prereqType PrereqType, entity *Entity) *Prereq {
 		p.WeightCriteria.Type = criteria.AtMost
 		p.WeightCriteria.Qualifier = measure.WeightFromInt64(5, SheetSettingsFor(entity).DefaultWeightUnits)
 	case PrereqList:
+		p.All = true
 		p.NumericCriteria.Type = criteria.AtLeast
 	case SkillPrereq:
 		p.Has = true

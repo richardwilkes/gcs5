@@ -52,7 +52,7 @@ var selfControlRollAdjValues = []*selfControlRollAdjData{
 		Key:    "action_penalty",
 		String: i18n.Text("Includes an Action Penalty for Failure"),
 		Description: func(cr SelfControlRoll) string {
-			return fmt.Sprintf(i18n.Text("%d Action Penalty"), int(cr)-int(NoneRequired))
+			return fmt.Sprintf(i18n.Text("%d Action Penalty"), int(cr)-int(NoCR))
 		},
 		Features: func(_ SelfControlRoll) []*Feature { return nil },
 	},
@@ -60,7 +60,7 @@ var selfControlRollAdjValues = []*selfControlRollAdjData{
 		Key:    "reaction_penalty",
 		String: i18n.Text("Includes a Reaction Penalty for Failure"),
 		Description: func(cr SelfControlRoll) string {
-			return fmt.Sprintf(i18n.Text("%d Reaction Penalty"), int(cr)-int(NoneRequired))
+			return fmt.Sprintf(i18n.Text("%d Reaction Penalty"), int(cr)-int(NoCR))
 		},
 		Features: func(_ SelfControlRoll) []*Feature { return nil },
 	},
@@ -68,7 +68,7 @@ var selfControlRollAdjValues = []*selfControlRollAdjData{
 		Key:    "fright_check_penalty",
 		String: i18n.Text("Includes Fright Check Penalty"),
 		Description: func(cr SelfControlRoll) string {
-			return fmt.Sprintf(i18n.Text("%d Fright Check Penalty"), int(cr)-int(NoneRequired))
+			return fmt.Sprintf(i18n.Text("%d Fright Check Penalty"), int(cr)-int(NoCR))
 		},
 		Features: func(_ SelfControlRoll) []*Feature { return nil },
 	},
@@ -76,7 +76,7 @@ var selfControlRollAdjValues = []*selfControlRollAdjData{
 		Key:    "fright_check_bonus",
 		String: i18n.Text("Includes Fright Check Bonus"),
 		Description: func(cr SelfControlRoll) string {
-			return fmt.Sprintf(i18n.Text("+%d Fright Check Bonus"), int(NoneRequired)-int(cr))
+			return fmt.Sprintf(i18n.Text("+%d Fright Check Bonus"), int(NoCR)-int(cr))
 		},
 		Features: func(_ SelfControlRoll) []*Feature { return nil },
 	},
@@ -84,7 +84,7 @@ var selfControlRollAdjValues = []*selfControlRollAdjData{
 		Key:    "minor_cost_of_living_increase",
 		String: i18n.Text("Includes a Minor Cost of Living Increase"),
 		Description: func(cr SelfControlRoll) string {
-			return fmt.Sprintf(i18n.Text("+%d%% Cost of Living Increase"), 5*(int(NoneRequired)-int(cr)))
+			return fmt.Sprintf(i18n.Text("+%d%% Cost of Living Increase"), 5*(int(NoCR)-int(cr)))
 		},
 		Features: func(_ SelfControlRoll) []*Feature { return nil },
 	},
@@ -92,12 +92,12 @@ var selfControlRollAdjValues = []*selfControlRollAdjData{
 		Key:    "major_cost_of_living_increase",
 		String: i18n.Text("Includes a Major Cost of Living Increase and Merchant Skill Penalty"),
 		Description: func(cr SelfControlRoll) string {
-			return fmt.Sprintf(i18n.Text("+%d%% Cost of Living Increase"), 10*(1<<((int(NoneRequired)-int(cr))-1)))
+			return fmt.Sprintf(i18n.Text("+%d%% Cost of Living Increase"), 10*(1<<((int(NoCR)-int(cr))-1)))
 		},
 		Features: func(cr SelfControlRoll) []*Feature {
 			f := NewFeature(SkillBonus, nil)
 			f.NameCriteria.Qualifier = "Merchant"
-			f.Amount.Amount = fixed.F64d4FromInt64(int64(cr) - int64(NoneRequired))
+			f.Amount.Amount = fixed.F64d4FromInt64(int64(cr) - int64(NoCR))
 			return []*Feature{f}
 		},
 	},
@@ -135,7 +135,7 @@ func (s SelfControlRollAdj) String() string {
 
 // Description returns a formatted description.
 func (s SelfControlRollAdj) Description(cr SelfControlRoll) string {
-	if cr == NoneRequired {
+	if cr == NoCR {
 		return ""
 	}
 	return selfControlRollAdjValues[s.EnsureValid()].Description(cr)

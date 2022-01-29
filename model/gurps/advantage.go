@@ -12,19 +12,14 @@
 package gurps
 
 import (
+	"strings"
+
 	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/ancestry"
+	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
-)
-
-// Masks for the various TypeBits.
-const (
-	MentalTypeMask = 1 << iota
-	PhysicalTypeMask
-	SocialTypeMask
-	ExoticTypeMask
-	SupernaturalTypeMask
 )
 
 const (
@@ -33,15 +28,10 @@ const (
 	advantageContainerTypeKey  = "container_type"
 	advantageCRAdjKey          = "cr_adj"
 	advantageCRKey             = "cr"
-	advantageExoticKey         = "exotic"
 	advantageLevelsKey         = "levels"
-	advantageMentalKey         = "mental"
-	advantagePhysicalKey       = "physical"
 	advantagePointsPerLevelKey = "points_per_level"
 	advantagePrereqsKey        = "prereqs"
 	advantageRoundCostDownKey  = "round_down"
-	advantageSocialKey         = "social"
-	advantageSupernaturalKey   = "supernatural"
 	advantageTypeKey           = "advantage"
 	advantageUserDescKey       = "userdesc"
 	advantageCalcPointsKey     = "points"
@@ -65,12 +55,30 @@ type Advantage struct {
 	UserDesc          string
 	Categories        []string
 	ContainerType     AdvantageContainerType // TODO: Consider merging Container & ContainerType
-	TypeBits          uint8
+	TypeBits          AdvantageTypeBits
 	CR                SelfControlRoll
 	CRAdj             SelfControlRollAdj
 	Satisfied         bool
 	RoundCostDown     bool
-	Enabled           bool
+	SelfEnabled       bool
+}
+
+// NewAdvantage creates a new Advantage.
+func NewAdvantage(parent *Advantage, container bool) *Advantage {
+	return &Advantage{
+		Common: Common{
+			ID:        id.NewUUID(),
+			Name:      i18n.Text("Advantage"),
+			Container: container,
+			Open:      true,
+		},
+		Parent:      parent,
+		Levels:      f64d4.NegOne,
+		Prereq:      NewPrereq(PrereqList, nil),
+		TypeBits:    PhysicalTypeMask,
+		Satisfied:   true,
+		SelfEnabled: true,
+	}
 }
 
 // NewAdvantageFromJSON creates a new Advantage from a JSON object.
@@ -87,23 +95,9 @@ func NewAdvantageFromJSON(parent *Advantage, data map[string]interface{}) *Advan
 			}
 		}
 	} else {
-		a.Enabled = !encoding.Bool(data[commonDisabledKey])
+		a.SelfEnabled = !encoding.Bool(data[commonDisabledKey])
 		a.RoundCostDown = encoding.Bool(data[advantageRoundCostDownKey])
-		if encoding.Bool(data[advantageMentalKey]) {
-			a.TypeBits |= MentalTypeMask
-		}
-		if encoding.Bool(data[advantagePhysicalKey]) {
-			a.TypeBits |= PhysicalTypeMask
-		}
-		if encoding.Bool(data[advantageSocialKey]) {
-			a.TypeBits |= SocialTypeMask
-		}
-		if encoding.Bool(data[advantageExoticKey]) {
-			a.TypeBits |= ExoticTypeMask
-		}
-		if encoding.Bool(data[advantageSupernaturalKey]) {
-			a.TypeBits |= SupernaturalTypeMask
-		}
+		a.TypeBits = AdvantageTypeBitsFromJSON(data)
 		if v, exists := data[advantageLevelsKey]; exists {
 			a.Levels = encoding.Number(v)
 		} else {
@@ -144,13 +138,9 @@ func (a *Advantage) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
 			encoder.EndArray()
 		}
 	} else {
-		encoder.KeyedBool(commonDisabledKey, !a.Enabled, true)
+		encoder.KeyedBool(commonDisabledKey, !a.SelfEnabled, true)
 		encoder.KeyedBool(advantageRoundCostDownKey, a.RoundCostDown, true)
-		encoder.KeyedBool(advantageMentalKey, a.TypeBits&MentalTypeMask != 0, true)
-		encoder.KeyedBool(advantagePhysicalKey, a.TypeBits&PhysicalTypeMask != 0, true)
-		encoder.KeyedBool(advantageSocialKey, a.TypeBits&SocialTypeMask != 0, true)
-		encoder.KeyedBool(advantageExoticKey, a.TypeBits&ExoticTypeMask != 0, true)
-		encoder.KeyedBool(advantageSupernaturalKey, a.TypeBits&SupernaturalTypeMask != 0, true)
+		a.TypeBits.ToInlineJSON(encoder)
 		if a.Levels >= 0 {
 			encoder.KeyedNumber(advantageLevelsKey, a.Levels, false)
 		}
@@ -162,7 +152,7 @@ func (a *Advantage) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
 		FeaturesListToJSON(a.Features, encoder)
 	}
 	a.CR.ToKeyedJSON(advantageCRKey, encoder)
-	if a.CR != NoneRequired {
+	if a.CR != NoCR {
 		a.CRAdj.ToKeyedJSON(advantageCRAdjKey, encoder)
 	}
 	AdvantageModifiersListToJSON(commonModifiersKey, a.Modifiers, encoder)
@@ -180,7 +170,7 @@ func (a *Advantage) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
 
 // AdjustedPoints returns the total points, taking levels and modifiers into account. 'entity' may be nil.
 func (a *Advantage) AdjustedPoints(entity *Entity) fixed.F64d4 {
-	if !a.Enabled {
+	if !a.SelfEnabled {
 		return 0
 	}
 	if !a.Container {
@@ -222,6 +212,144 @@ func (a *Advantage) AllModifiers() []*AdvantageModifier {
 		p = p.Parent
 	}
 	return all
+}
+
+// Enabled returns true if this Advantage and all of its parents are enabled.
+func (a *Advantage) Enabled() bool {
+	if !a.SelfEnabled {
+		return false
+	}
+	p := a.Parent
+	for p != nil {
+		if !p.SelfEnabled {
+			return false
+		}
+		p = p.Parent
+	}
+	return true
+}
+
+// TypeAsText returns the set of type bits that are set if this isn't a container, or an empty string if it is.
+func (a *Advantage) TypeAsText() string {
+	if a.Container {
+		return ""
+	}
+	return a.TypeBits.String()
+}
+
+func (a *Advantage) String() string {
+	var buffer strings.Builder
+	buffer.WriteString(a.Name)
+	if !a.Container && a.Levels > 0 {
+		buffer.WriteByte(' ')
+		buffer.WriteString(a.Levels.String())
+	}
+	return buffer.String()
+}
+
+// FillWithNameableKeys adds any nameable keys found in this Advantage to the provided map.
+func (a *Advantage) FillWithNameableKeys(nameables map[string]string) {
+	a.Common.FillWithNameableKeys(nameables)
+	a.Prereq.FillWithNameableKeys(nameables)
+	for _, one := range a.Defaults {
+		one.FillWithNameableKeys(nameables)
+	}
+	for _, one := range a.Features {
+		one.FillWithNameableKeys(nameables)
+	}
+	for _, one := range a.Weapons {
+		one.FillWithNameableKeys(nameables)
+	}
+	for _, one := range a.Modifiers {
+		one.FillWithNameableKeys(nameables)
+	}
+}
+
+// ApplyNameableKeys replaces any nameable keys found in this Advantage with the corresponding values in the provided map.
+func (a *Advantage) ApplyNameableKeys(nameables map[string]string) {
+	a.Common.ApplyNameableKeys(nameables)
+	a.Prereq.ApplyNameableKeys(nameables)
+	for _, one := range a.Defaults {
+		one.ApplyNameableKeys(nameables)
+	}
+	for _, one := range a.Features {
+		one.ApplyNameableKeys(nameables)
+	}
+	for _, one := range a.Weapons {
+		one.ApplyNameableKeys(nameables)
+	}
+	for _, one := range a.Modifiers {
+		one.ApplyNameableKeys(nameables)
+	}
+}
+
+// ActiveModifierFor returns the first modifier that matches the name (case-insensitive).
+func (a *Advantage) ActiveModifierFor(name string) *AdvantageModifier {
+	for _, one := range a.Modifiers {
+		if one.Enabled && strings.EqualFold(one.Name, name) {
+			return one
+		}
+	}
+	return nil
+}
+
+// ModifierNotes returns the notes due to modifiers. 'entity' may be nil.
+func (a *Advantage) ModifierNotes(entity *Entity) string {
+	var buffer strings.Builder
+	if a.CR != NoCR {
+		buffer.WriteString(a.CR.String())
+		if a.CRAdj != NoCRAdj {
+			buffer.WriteString(", ")
+			buffer.WriteString(a.CRAdj.Description(a.CR))
+		}
+	}
+	for _, one := range a.Modifiers {
+		if one.Enabled {
+			if buffer.Len() != 0 {
+				buffer.WriteString("; ")
+			}
+			buffer.WriteString(one.FullDescription(entity))
+		}
+	}
+	return buffer.String()
+}
+
+// SecondaryText returns the "secondary" text: the text display below an Advantage.
+func (a *Advantage) SecondaryText(entity *Entity) string {
+	var buffer strings.Builder
+	settings := SheetSettingsFor(entity)
+	if a.UserDesc != "" && settings.UserDescriptionDisplay.Inline() {
+		buffer.WriteString(a.UserDesc)
+	}
+	if settings.ModifiersDisplay.Inline() {
+		if notes := a.ModifierNotes(entity); notes != "" {
+			if buffer.Len() != 0 {
+				buffer.WriteByte('\n')
+			}
+			buffer.WriteString(notes)
+		}
+	}
+	if a.Notes != "" && settings.NotesDisplay.Inline() {
+		if buffer.Len() != 0 {
+			buffer.WriteByte('\n')
+		}
+		buffer.WriteString(a.Notes)
+	}
+	return buffer.String()
+}
+
+// HasCategory returns true if 'category' is present in 'categories'. This check both ignores case and can check for
+// subsets that are colon-separated.
+func HasCategory(category string, categories []string) bool {
+	category = strings.TrimSpace(category)
+	for _, one := range categories {
+		for _, part := range strings.Split(one, ":") {
+			if strings.EqualFold(category, strings.TrimSpace(part)) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // AdjustedPoints returns the total points, taking levels and modifiers into account. 'entity' may be nil.

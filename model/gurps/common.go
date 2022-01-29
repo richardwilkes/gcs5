@@ -77,6 +77,20 @@ func (c *Common) ToInlineJSON(typeKey string, encoder *encoding.JSONEncoder) {
 	}
 }
 
+// FillWithNameableKeys adds any nameable keys found in this Common to the provided map.
+func (c *Common) FillWithNameableKeys(nameables map[string]string) {
+	ExtractNameables(c.Name, nameables)
+	ExtractNameables(c.Notes, nameables)
+	ExtractNameables(c.VTTNotes, nameables)
+}
+
+// ApplyNameableKeys replaces any nameable keys found in this Common with the corresponding values in the provided map.
+func (c *Common) ApplyNameableKeys(nameables map[string]string) {
+	c.Name = ApplyNameables(c.Name, nameables)
+	c.Notes = ApplyNameables(c.Notes, nameables)
+	c.VTTNotes = ApplyNameables(c.VTTNotes, nameables)
+}
+
 // FeaturesListFromJSON loads a features list from a JSON object.
 func FeaturesListFromJSON(data map[string]interface{}) []*Feature {
 	array := encoding.Array(data[commonFeaturesKey])

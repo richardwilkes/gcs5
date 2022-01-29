@@ -22,11 +22,11 @@ import (
 
 // Possible SelfControlRoll values.
 const (
-	CR6 SelfControlRoll = iota
+	NoCR SelfControlRoll = iota
+	CR6
 	CR9
 	CR12
 	CR15
-	NoneRequired
 )
 
 type selfControlRollData struct {
@@ -39,6 +39,10 @@ type selfControlRollData struct {
 type SelfControlRoll uint8
 
 var selfControlRollValues = []*selfControlRollData{
+	{
+		String:     i18n.Text("None Required"),
+		Multiplier: f64d4.One,
+	},
 	{
 		String:     i18n.Text("CR: 6 (Resist rarely)"),
 		Multiplier: fixed.F64d4FromInt64(2),
@@ -59,10 +63,6 @@ var selfControlRollValues = []*selfControlRollData{
 		Multiplier: fixed.F64d4FromStringForced("0.5"),
 		Value:      15,
 	},
-	{
-		String:     i18n.Text("None Required"),
-		Multiplier: f64d4.One,
-	},
 }
 
 // SelfControlRollFromJSON extracts a SelfControlRoll from a key and JSON data object.
@@ -70,19 +70,19 @@ func SelfControlRollFromJSON(key string, data map[string]interface{}) SelfContro
 	if v, exists := data[key]; exists {
 		if n, err := strconv.ParseInt(encoding.String(v), 10, 64); err == nil {
 			num := int(n)
-			for i, one := range selfControlRollValues {
+			for i, one := range selfControlRollValues[1:] {
 				if num == one.Value {
 					return SelfControlRoll(i)
 				}
 			}
 		}
 	}
-	return NoneRequired
+	return NoCR
 }
 
 // ToKeyedJSON writes the SelfControlRoll to JSON.
 func (s SelfControlRoll) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
-	if resolved := s.EnsureValid(); resolved != NoneRequired {
+	if resolved := s.EnsureValid(); resolved != NoCR {
 		encoder.KeyedNumber(key, fixed.F64d4FromInt64(int64(selfControlRollValues[resolved].Value)), false)
 	}
 }
@@ -92,7 +92,7 @@ func (s SelfControlRoll) EnsureValid() SelfControlRoll {
 	if int(s) < len(selfControlRollValues) {
 		return s
 	}
-	return NoneRequired
+	return NoCR
 }
 
 // String implements fmt.Stringer.
@@ -103,7 +103,7 @@ func (s SelfControlRoll) String() string {
 // DescriptionWithCost returns a formatted description that includes the cost multiplier.
 func (s SelfControlRoll) DescriptionWithCost() string {
 	resolved := s.EnsureValid()
-	if resolved == NoneRequired {
+	if resolved == NoCR {
 		return ""
 	}
 	cr := selfControlRollValues[resolved]
