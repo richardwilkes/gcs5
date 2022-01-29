@@ -535,3 +535,11 @@ func (p *Prereq) ApplyNameableKeys(nameables map[string]string) {
 		jot.Fatal(1, "invalid prereq type: ", p.Type)
 	}
 }
+
+// Empty implements encoding.Empty.
+func (p *Prereq) Empty() bool {
+	if p.Type == PrereqList {
+		return len(p.Children) == 0
+	}
+	return false
+}

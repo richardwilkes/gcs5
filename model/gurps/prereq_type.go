@@ -15,11 +15,11 @@ import "strings"
 
 // Possible PrereqType values.
 const (
-	AdvantagePrereq PrereqType = iota
+	PrereqList PrereqType = iota
+	AdvantagePrereq
 	AttributePrereq
 	ContainedQuantityPrereq
 	ContainedWeightPrereq
-	PrereqList
 	SkillPrereq
 	SpellPrereq
 )
@@ -33,6 +33,9 @@ type PrereqType uint8
 
 var prereqTypeValues = []*prereqTypeData{
 	{
+		Key: "prereq_list",
+	},
+	{
 		Key: "advantage_prereq",
 	},
 	{
@@ -43,9 +46,6 @@ var prereqTypeValues = []*prereqTypeData{
 	},
 	{
 		Key: "contained_weight_prereq",
-	},
-	{
-		Key: "prereq_list",
 	},
 	{
 		Key: "skill_prereq",

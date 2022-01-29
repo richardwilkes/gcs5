@@ -23,6 +23,9 @@ type Empty interface {
 
 // ToKeyedJSON adds a key and emits the object, unless it is empty.
 func ToKeyedJSON(obj JSONer, key string, encoder *JSONEncoder) {
+	if obj == nil {
+		return
+	}
 	if empty, ok := obj.(Empty); ok && empty.Empty() {
 		return
 	}
