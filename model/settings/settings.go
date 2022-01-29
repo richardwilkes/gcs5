@@ -17,6 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/library"
+	"github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/xio/fs/paths"
@@ -42,7 +43,7 @@ var global *Settings
 // Settings holds the application settings.
 type Settings struct {
 	LastSeenGCSVersion string
-	General            *gurps.GeneralSettings
+	General            *settings.General
 	Libraries          *library.Libraries
 	LibraryExplorer    *NavigatorSettings
 	RecentFiles        *RecentFiles
@@ -59,7 +60,7 @@ type Settings struct {
 func Default() *Settings {
 	return &Settings{
 		LastSeenGCSVersion: cmdline.AppVersion,
-		General:            gurps.NewGeneralSettings(),
+		General:            settings.NewGeneral(),
 		Libraries:          library.NewLibraries(),
 		LibraryExplorer:    NewNavigatorSettings(),
 		RecentFiles:        NewRecentFiles(),
@@ -82,7 +83,7 @@ func Global() *Settings {
 			obj := encoding.Object(data)
 			global = &Settings{
 				LastSeenGCSVersion: encoding.String(obj[settingsLastSeenGCSVersionKey]),
-				General:            gurps.NewGeneralSettingsFromJSON(encoding.Object(obj[settingsGeneralKey])),
+				General:            settings.NewGeneralFromJSON(encoding.Object(obj[settingsGeneralKey])),
 				Libraries:          library.NewLibrariesFromJSON(encoding.Object(obj[settingsLibrariesKey])),
 				LibraryExplorer:    NewNavigatorSettingsFromJSON(encoding.Object(obj[settingsLibraryExplorerKey])),
 				RecentFiles:        NewRecentFilesFromJSON(encoding.Object(obj[settingsRecentFilesKey])),

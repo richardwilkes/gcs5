@@ -15,7 +15,8 @@ import (
 	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
-	enum2 "github.com/richardwilkes/gcs/model/settings/display"
+	"github.com/richardwilkes/gcs/model/gurps/settings"
+	"github.com/richardwilkes/gcs/model/settings/display"
 )
 
 const (
@@ -46,17 +47,17 @@ var GlobalSheetSettingsProvider func() *SheetSettings
 
 // SheetSettings holds sheet settings.
 type SheetSettings struct {
-	Page                       *PageSettings
+	Page                       *settings.Page
 	BlockLayout                *BlockLayout
 	Attributes                 *AttributeDefs
 	HitLocations               *BodyType
 	DamageProgression          attribute.DamageProgression
 	DefaultLengthUnits         measure.LengthUnits
 	DefaultWeightUnits         measure.WeightUnits
-	UserDescriptionDisplay     enum2.Option
-	ModifiersDisplay           enum2.Option
-	NotesDisplay               enum2.Option
-	SkillLevelAdjDisplay       enum2.Option
+	UserDescriptionDisplay     display.Option
+	ModifiersDisplay           display.Option
+	NotesDisplay               display.Option
+	SkillLevelAdjDisplay       display.Option
 	UseMultiplicativeModifiers bool
 	UseModifyingDicePlusAdds   bool
 	ShowCollegeInSheetSpells   bool
@@ -78,17 +79,17 @@ func SheetSettingsFor(entity *Entity) *SheetSettings {
 // FactorySheetSettings returns a new SheetSettings with factory defaults.
 func FactorySheetSettings() *SheetSettings {
 	return &SheetSettings{
-		Page:                   FactoryPageSettings(),
+		Page:                   settings.NewPage(),
 		BlockLayout:            FactoryBlockLayout(),
 		Attributes:             FactoryAttributeDefs(),
 		HitLocations:           FactoryBodyType(),
 		DamageProgression:      attribute.BasicSet,
 		DefaultLengthUnits:     measure.FeetAndInches,
 		DefaultWeightUnits:     measure.Pound,
-		UserDescriptionDisplay: enum2.Tooltip,
-		ModifiersDisplay:       enum2.Inline,
-		NotesDisplay:           enum2.Inline,
-		SkillLevelAdjDisplay:   enum2.Tooltip,
+		UserDescriptionDisplay: display.Tooltip,
+		ModifiersDisplay:       display.Inline,
+		NotesDisplay:           display.Inline,
+		SkillLevelAdjDisplay:   display.Tooltip,
 		ShowSpellAdj:           true,
 	}
 }
@@ -96,7 +97,7 @@ func FactorySheetSettings() *SheetSettings {
 // NewSheetSettingsFromJSON creates a new SheetSettings from a JSON object.
 func NewSheetSettingsFromJSON(data map[string]interface{}, entity *Entity) *SheetSettings {
 	s := FactorySheetSettings()
-	s.Page = NewPageSettingsFromJSON(encoding.Object(data[sheetSettingsPageKey]))
+	s.Page = settings.NewPageFromJSON(encoding.Object(data[sheetSettingsPageKey]))
 	s.BlockLayout = NewBlockLayoutFromJSON(encoding.Object(data[sheetSettingsBlockLayoutKey]))
 	if entity != nil {
 		s.Attributes = NewAttributeDefsFromJSON(encoding.Array(data[sheetSettingsAttributesKey]))
@@ -105,10 +106,10 @@ func NewSheetSettingsFromJSON(data map[string]interface{}, entity *Entity) *Shee
 	s.DamageProgression = attribute.DamageProgressionFromString(encoding.String(data[sheetSettingsDamageProgressionKey]))
 	s.DefaultLengthUnits = measure.LengthUnitsFromString(encoding.String(data[sheetSettingsDefaultLengthUnitsKey]))
 	s.DefaultWeightUnits = measure.WeightUnitsFromString(encoding.String(data[sheetSettingsDefaultWeightUnitsKey]))
-	s.UserDescriptionDisplay = enum2.OptionFromString(encoding.String(data[sheetSettingsUserDescriptionDisplayKey]), s.UserDescriptionDisplay)
-	s.ModifiersDisplay = enum2.OptionFromString(encoding.String(data[sheetSettingsModifiersDisplayKey]), s.ModifiersDisplay)
-	s.NotesDisplay = enum2.OptionFromString(encoding.String(data[sheetSettingsNotesDisplayKey]), s.NotesDisplay)
-	s.SkillLevelAdjDisplay = enum2.OptionFromString(encoding.String(data[sheetSettingsSkillLevelAdjDisplayKey]), s.SkillLevelAdjDisplay)
+	s.UserDescriptionDisplay = display.OptionFromString(encoding.String(data[sheetSettingsUserDescriptionDisplayKey]), s.UserDescriptionDisplay)
+	s.ModifiersDisplay = display.OptionFromString(encoding.String(data[sheetSettingsModifiersDisplayKey]), s.ModifiersDisplay)
+	s.NotesDisplay = display.OptionFromString(encoding.String(data[sheetSettingsNotesDisplayKey]), s.NotesDisplay)
+	s.SkillLevelAdjDisplay = display.OptionFromString(encoding.String(data[sheetSettingsSkillLevelAdjDisplayKey]), s.SkillLevelAdjDisplay)
 	s.UseMultiplicativeModifiers = encoding.Bool(data[sheetSettingsUseMultiplicativeModifiersKey])
 	s.UseModifyingDicePlusAdds = encoding.Bool(data[sheetSettingsUseModifyingDicePlusAddsKey])
 	s.ShowCollegeInSheetSpells = encoding.Bool(data[sheetSettingsShowCollegeInSheetSpellsKey])
