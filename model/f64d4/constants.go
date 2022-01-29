@@ -15,9 +15,12 @@ import "github.com/richardwilkes/toolbox/xmath/fixed"
 
 // Common values that can be reused.
 var (
-	One     = fixed.F64d4FromInt64(1)
-	Half    = fixed.F64d4FromStringForced("0.5")
-	NegHalf = fixed.F64d4FromStringForced("-0.5")
-	Eighty  = fixed.F64d4FromInt64(80)
-	Hundred = fixed.F64d4FromInt64(100)
+	One       = fixed.F64d4FromInt64(1)
+	NegOne    = fixed.F64d4FromInt64(-1)
+	Half      = fixed.F64d4FromStringForced("0.5")
+	NegHalf   = fixed.F64d4FromStringForced("-0.5")
+	Twenty    = fixed.F64d4FromInt64(20)
+	Eighty    = fixed.F64d4FromInt64(80)
+	NegEighty = fixed.F64d4FromInt64(-80)
+	Hundred   = fixed.F64d4FromInt64(100)
 )

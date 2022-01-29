@@ -53,13 +53,7 @@ func FactoryBlockLayout() *BlockLayout {
 // NewBlockLayoutFromJSON creates a new BlockLayout from a JSON object.
 func NewBlockLayoutFromJSON(data map[string]interface{}) *BlockLayout {
 	l := FactoryBlockLayout()
-	array := encoding.Array(data[blockLayoutLayoutKey])
-	list := make([]string, 0, len(array))
-	for _, one := range array {
-		if str := encoding.String(one); str != "" {
-			list = append(list, str)
-		}
-	}
+	list := StringListFromJSON(blockLayoutLayoutKey, true, data)
 	if len(list) != 0 {
 		l.Layout = list
 	}
@@ -69,11 +63,6 @@ func NewBlockLayoutFromJSON(data map[string]interface{}) *BlockLayout {
 // ToJSON emits this object as JSON.
 func (l *BlockLayout) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()
-	encoder.Key(blockLayoutLayoutKey)
-	encoder.StartArray()
-	for _, one := range l.Layout {
-		encoder.String(one)
-	}
-	encoder.EndArray()
+	StringListToJSON(blockLayoutLayoutKey, l.Layout, encoder)
 	encoder.EndObject()
 }

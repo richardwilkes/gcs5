@@ -25,3 +25,30 @@ func Round(value fixed.F64d4) fixed.F64d4 {
 	}
 	return value
 }
+
+// ApplyRounding truncates if 'roundDown' is true and performs a ceil() if false.
+func ApplyRounding(value fixed.F64d4, roundDown bool) fixed.F64d4 {
+	if roundDown {
+		return value.Trunc()
+	}
+	if value.Trunc() != value {
+		return value.Trunc() + One
+	}
+	return value
+}
+
+// Min returns the minimum of a or b.
+func Min(a, b fixed.F64d4) fixed.F64d4 {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// Max returns the maximum of a or b.
+func Max(a, b fixed.F64d4) fixed.F64d4 {
+	if a > b {
+		return a
+	}
+	return b
+}

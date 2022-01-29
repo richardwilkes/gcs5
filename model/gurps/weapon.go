@@ -31,7 +31,6 @@ const (
 	weaponShotsKey           = "shots"
 	weaponBulkKey            = "bulk"
 	weaponRecoilKey          = "recoil"
-	weaponDefaultsKey        = "defaults"
 	weaponUsageKey           = "usage"
 	weaponUsageNotesKey      = "usage_notes"
 	weaponCalcLevelKey       = "level"
@@ -82,13 +81,7 @@ func NewWeaponFromJSON(data map[string]interface{}) *Weapon {
 		w.Bulk = encoding.String(data[weaponBulkKey])
 		w.Recoil = encoding.String(data[weaponRecoilKey])
 	}
-	array := encoding.Array(data[weaponDefaultsKey])
-	if len(array) != 0 {
-		w.Defaults = make([]*SkillDefault, len(array))
-		for i, one := range array {
-			w.Defaults[i] = NewSkillDefaultFromJSON(false, encoding.Object(one))
-		}
-	}
+	w.Defaults = SkillDefaultsListFromJSON(data)
 	return w
 }
 
@@ -113,14 +106,7 @@ func (w *Weapon) ToJSON(encoder *encoding.JSONEncoder) {
 		encoder.KeyedString(weaponBulkKey, w.Bulk, true, true)
 		encoder.KeyedString(weaponRecoilKey, w.Recoil, true, true)
 	}
-	if len(w.Defaults) != 0 {
-		encoder.Key(weaponDefaultsKey)
-		encoder.StartArray()
-		for _, one := range w.Defaults {
-			one.ToJSON(false, encoder)
-		}
-		encoder.EndArray()
-	}
+	SkillDefaultsListToJSON(w.Defaults, encoder)
 	// Emit the calculated values for third parties
 	encoder.Key(calcKey)
 	encoder.StartObject()

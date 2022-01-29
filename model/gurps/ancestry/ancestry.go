@@ -21,12 +21,14 @@ import (
 )
 
 const (
+	ancestryNameKey          = "name"
 	ancestryCommonOptionsKey = "common_options"
 	ancestryGenderOptionsKey = "gender_options"
 )
 
 // Ancestry holds details necessary to generate ancestry-specific customizations.
 type Ancestry struct {
+	Name          string
 	CommonOptions *Options
 	GenderOptions []*WeightedAncestryOptions
 }
@@ -37,13 +39,17 @@ func AvailableAncestries(libraries *library.Libraries) []*library.NamedFileSet {
 }
 
 // NewAncestryFromJSON creates a new Ancestry from a JSON object.
-func NewAncestryFromJSON(data map[string]interface{}) *Ancestry {
+func NewAncestryFromJSON(data map[string]interface{}, defaultName string) *Ancestry {
 	a := &Ancestry{
+		Name:          encoding.String(data[ancestryNameKey]),
 		GenderOptions: WeightedAncestryOptionsFromJSON(encoding.Array(data[ancestryGenderOptionsKey])),
 	}
 	obj := encoding.Object(data[ancestryCommonOptionsKey])
 	if len(obj) != 0 {
 		a.CommonOptions = NewOptionsFromJSON(obj)
+	}
+	if a.Name == "" {
+		a.Name = defaultName
 	}
 	return a
 }
@@ -51,6 +57,7 @@ func NewAncestryFromJSON(data map[string]interface{}) *Ancestry {
 // ToJSON emits this object as JSON.
 func (a *Ancestry) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()
+	encoder.KeyedString(ancestryNameKey, a.Name, true, true)
 	if a.CommonOptions != nil {
 		encoding.ToKeyedJSON(a.CommonOptions, ancestryCommonOptionsKey, encoder)
 	}

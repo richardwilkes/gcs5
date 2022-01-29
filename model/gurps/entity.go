@@ -57,3 +57,10 @@ func (e *Entity) ResolveVariable(variableName string) string {
 	// TODO implement me
 	return variableName
 }
+
+// PreservesUserDesc returns true if the user description field should be preserved when written to disk. Normally, only
+// character sheets should return true for this.
+func (e *Entity) PreservesUserDesc() bool {
+	// TODO: Implement... should only return true for sheets
+	return false
+}

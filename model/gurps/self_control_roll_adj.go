@@ -13,7 +13,9 @@ package gurps
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -107,6 +109,23 @@ func (s SelfControlRollAdj) EnsureValid() SelfControlRollAdj {
 		return s
 	}
 	return NoCRAdj
+}
+
+// SelfControlRollAdjFromKey extracts a SelfControlRollAdj from a key.
+func SelfControlRollAdjFromKey(key string) SelfControlRollAdj {
+	for i, one := range selfControlRollAdjValues {
+		if strings.EqualFold(key, one.Key) {
+			return SelfControlRollAdj(i)
+		}
+	}
+	return 0
+}
+
+// ToKeyedJSON writes the SelfControlRollAdj to JSON.
+func (s SelfControlRollAdj) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
+	if resolved := s.EnsureValid(); resolved != NoCRAdj {
+		encoder.KeyedString(key, selfControlRollAdjValues[resolved].Key, false, false)
+	}
 }
 
 // String implements fmt.Stringer.
