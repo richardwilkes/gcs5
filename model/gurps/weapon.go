@@ -13,6 +13,7 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -42,7 +43,7 @@ const (
 
 // Weapon holds the stats for a weapon.
 type Weapon struct {
-	Type            WeaponType
+	Type            weapon.Type
 	Damage          *WeaponDamage
 	MinimumStrength string
 	Usage           string
@@ -62,18 +63,18 @@ type Weapon struct {
 // NewWeaponFromJSON creates a new Weapon from a JSON object.
 func NewWeaponFromJSON(data map[string]interface{}) *Weapon {
 	w := &Weapon{
-		Type:            WeaponTypeFromKey(encoding.String(data[weaponTypeKey])),
+		Type:            weapon.TypeFromKey(encoding.String(data[weaponTypeKey])),
 		MinimumStrength: encoding.String(data[weaponMinimumStrengthKey]),
 		Usage:           encoding.String(data[weaponUsageKey]),
 		UsageNotes:      encoding.String(data[weaponUsageNotesKey]),
 	}
 	w.Damage = NewWeaponDamageFromJSON(w, encoding.Object(data[weaponDamageKey]))
 	switch w.Type {
-	case Melee:
+	case weapon.Melee:
 		w.Reach = encoding.String(data[weaponReachKey])
 		w.Parry = encoding.String(data[weaponParryKey])
 		w.Block = encoding.String(data[weaponBlockKey])
-	case Ranged:
+	case weapon.Ranged:
 		w.Accuracy = encoding.String(data[weaponAccuracyKey])
 		w.Range = encoding.String(data[weaponRangeKey])
 		w.RateOfFire = encoding.String(data[weaponRateOfFireKey])
@@ -94,11 +95,11 @@ func (w *Weapon) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.KeyedString(weaponUsageKey, w.Usage, true, true)
 	encoder.KeyedString(weaponUsageNotesKey, w.UsageNotes, true, true)
 	switch w.Type {
-	case Melee:
+	case weapon.Melee:
 		encoder.KeyedString(weaponReachKey, w.Reach, true, true)
 		encoder.KeyedString(weaponParryKey, w.Parry, true, true)
 		encoder.KeyedString(weaponBlockKey, w.Block, true, true)
-	case Ranged:
+	case weapon.Ranged:
 		encoder.KeyedString(weaponAccuracyKey, w.Accuracy, true, true)
 		encoder.KeyedString(weaponRangeKey, w.Range, true, true)
 		encoder.KeyedString(weaponRateOfFireKey, w.RateOfFire, true, true)
@@ -112,10 +113,10 @@ func (w *Weapon) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()
 	encoder.KeyedNumber(weaponCalcLevelKey, fixed.F64d4FromInt64(int64(xmath.MaxInt(w.SkillLevel(), 0))), true)
 	switch w.Type {
-	case Melee:
+	case weapon.Melee:
 		encoder.KeyedString(weaponCalcParryKey, w.ResolvedParry(nil), true, true)
 		encoder.KeyedString(weaponCalcBlockKey, w.ResolvedBlock(nil), true, true)
-	case Ranged:
+	case weapon.Ranged:
 		encoder.KeyedString(weaponCalcRangeKey, w.ResolvedRange(), true, true)
 	}
 	encoder.KeyedString(weaponCalcDamageKey, w.Damage.ResolvedDamage(nil), true, true)

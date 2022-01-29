@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package advantage
 
 import (
 	"strconv"
@@ -22,7 +22,7 @@ import (
 
 // Possible SelfControlRoll values.
 const (
-	NoCR SelfControlRoll = iota
+	None SelfControlRoll = iota
 	CR6
 	CR9
 	CR12
@@ -77,12 +77,12 @@ func SelfControlRollFromJSON(key string, data map[string]interface{}) SelfContro
 			}
 		}
 	}
-	return NoCR
+	return None
 }
 
 // ToKeyedJSON writes the SelfControlRoll to JSON.
 func (s SelfControlRoll) ToKeyedJSON(key string, encoder *encoding.JSONEncoder) {
-	if resolved := s.EnsureValid(); resolved != NoCR {
+	if resolved := s.EnsureValid(); resolved != None {
 		encoder.KeyedNumber(key, fixed.F64d4FromInt64(int64(selfControlRollValues[resolved].Value)), false)
 	}
 }
@@ -92,7 +92,7 @@ func (s SelfControlRoll) EnsureValid() SelfControlRoll {
 	if int(s) < len(selfControlRollValues) {
 		return s
 	}
-	return NoCR
+	return None
 }
 
 // String implements fmt.Stringer.
@@ -103,7 +103,7 @@ func (s SelfControlRoll) String() string {
 // DescriptionWithCost returns a formatted description that includes the cost multiplier.
 func (s SelfControlRoll) DescriptionWithCost() string {
 	resolved := s.EnsureValid()
-	if resolved == NoCR {
+	if resolved == None {
 		return ""
 	}
 	cr := selfControlRollValues[resolved]

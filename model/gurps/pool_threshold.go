@@ -16,6 +16,7 @@ import (
 
 	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
@@ -35,7 +36,7 @@ type PoolThreshold struct {
 	Multiplier  fixed.F64d4
 	Divisor     fixed.F64d4
 	Addition    fixed.F64d4
-	Ops         []ThresholdOp
+	Ops         []attribute.ThresholdOp
 	// TODO: Turn the Multiplier, Divisor & Addition fields into an expression field instead
 }
 
@@ -50,9 +51,9 @@ func NewPoolThresholdFromJSON(data map[string]interface{}) *PoolThreshold {
 	}
 	ops := encoding.Array(data[poolThresholdOpsKey])
 	if len(ops) != 0 {
-		p.Ops = make([]ThresholdOp, 0, len(ops))
+		p.Ops = make([]attribute.ThresholdOp, 0, len(ops))
 		for _, one := range ops {
-			p.Ops = append(p.Ops, ThresholdOpFromString(encoding.String(one)))
+			p.Ops = append(p.Ops, attribute.ThresholdOpFromString(encoding.String(one)))
 		}
 	}
 	return p

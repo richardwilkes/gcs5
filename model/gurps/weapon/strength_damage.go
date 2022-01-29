@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package weapon
 
 import (
 	"strings"
@@ -17,24 +17,24 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-// Possible WeaponSTDamage values.
+// Possible StrengthDamage values.
 const (
-	NoSTBasedDamage WeaponSTDamage = iota
+	None StrengthDamage = iota
 	Thrust
 	LeveledThrust
 	Swing
 	LeveledSwing
 )
 
-type weaponSTDamageData struct {
+type strengthDamageData struct {
 	Key    string
 	String string
 }
 
-// WeaponSTDamage holds the type of strength dice to add to damage.
-type WeaponSTDamage uint8
+// StrengthDamage holds the type of strength dice to add to damage.
+type StrengthDamage uint8
 
-var weaponSTDamageValues = []*weaponSTDamageData{
+var strengthDamageValues = []*strengthDamageData{
 	{
 		Key:    "none",
 		String: "",
@@ -57,30 +57,30 @@ var weaponSTDamageValues = []*weaponSTDamageData{
 	},
 }
 
-// WeaponSTDamageFromKey extracts a WeaponSTDamage from a key.
-func WeaponSTDamageFromKey(key string) WeaponSTDamage {
-	for i, one := range weaponSTDamageValues {
+// StrengthDamageFromKey extracts a StrengthDamage from a key.
+func StrengthDamageFromKey(key string) StrengthDamage {
+	for i, one := range strengthDamageValues {
 		if strings.EqualFold(key, one.Key) {
-			return WeaponSTDamage(i)
+			return StrengthDamage(i)
 		}
 	}
 	return 0
 }
 
-// EnsureValid returns the first WeaponSTDamage if this WeaponSTDamage is not a known value.
-func (w WeaponSTDamage) EnsureValid() WeaponSTDamage {
-	if int(w) < len(weaponSTDamageValues) {
+// EnsureValid returns the first StrengthDamage if this StrengthDamage is not a known value.
+func (w StrengthDamage) EnsureValid() StrengthDamage {
+	if int(w) < len(strengthDamageValues) {
 		return w
 	}
 	return 0
 }
 
-// Key returns the key used to represent this WeaponSTDamage.
-func (w WeaponSTDamage) Key() string {
-	return weaponSTDamageValues[w.EnsureValid()].Key
+// Key returns the key used to represent this StrengthDamage.
+func (w StrengthDamage) Key() string {
+	return strengthDamageValues[w.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
-func (w WeaponSTDamage) String() string {
-	return weaponSTDamageValues[w.EnsureValid()].String
+func (w StrengthDamage) String() string {
+	return strengthDamageValues[w.EnsureValid()].String
 }

@@ -16,7 +16,9 @@ import (
 
 	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/ancestry"
+	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -54,9 +56,9 @@ type Advantage struct {
 	UnsatisfiedReason string
 	UserDesc          string
 	Categories        []string
-	ContainerType     AdvantageContainerType // TODO: Consider merging Container & ContainerType
-	TypeBits          AdvantageTypeBits
-	CR                SelfControlRoll
+	ContainerType     advantage.ContainerType // TODO: Consider merging Container & ContainerType
+	TypeBits          advantage.Type
+	CR                advantage.SelfControlRoll
 	CRAdj             SelfControlRollAdj
 	Satisfied         bool
 	RoundCostDown     bool
@@ -74,8 +76,8 @@ func NewAdvantage(parent *Advantage, container bool) *Advantage {
 		},
 		Parent:      parent,
 		Levels:      f64d4.NegOne,
-		Prereq:      NewPrereq(PrereqList, nil),
-		TypeBits:    PhysicalTypeMask,
+		Prereq:      NewPrereq(prereq.List, nil),
+		TypeBits:    advantage.Physical,
 		Satisfied:   true,
 		SelfEnabled: true,
 	}
@@ -86,7 +88,7 @@ func NewAdvantageFromJSON(parent *Advantage, data map[string]interface{}) *Advan
 	a := &Advantage{Parent: parent}
 	a.Common.FromJSON(advantageTypeKey, data)
 	if a.Container {
-		a.ContainerType = AdvantageContainerTypeFromKey(encoding.String(data[advantageContainerTypeKey]))
+		a.ContainerType = advantage.ContainerTypeFromKey(encoding.String(data[advantageContainerTypeKey]))
 		array := encoding.Array(data[commonChildrenKey])
 		if len(array) != 0 {
 			a.Children = make([]*Advantage, len(array))
@@ -97,7 +99,7 @@ func NewAdvantageFromJSON(parent *Advantage, data map[string]interface{}) *Advan
 	} else {
 		a.SelfEnabled = !encoding.Bool(data[commonDisabledKey])
 		a.RoundCostDown = encoding.Bool(data[advantageRoundCostDownKey])
-		a.TypeBits = AdvantageTypeBitsFromJSON(data)
+		a.TypeBits = advantage.TypeFromJSON(data)
 		if v, exists := data[advantageLevelsKey]; exists {
 			a.Levels = encoding.Number(v)
 		} else {
@@ -110,7 +112,7 @@ func NewAdvantageFromJSON(parent *Advantage, data map[string]interface{}) *Advan
 		a.Weapons = WeaponsListFromJSON(data)
 		a.Features = FeaturesListFromJSON(data)
 	}
-	a.CR = SelfControlRollFromJSON(advantageCRKey, data)
+	a.CR = advantage.SelfControlRollFromJSON(advantageCRKey, data)
 	a.CRAdj = SelfControlRollAdjFromKey(encoding.String(data[advantageCRAdjKey]))
 	a.Modifiers = AdvantageModifiersListFromJSON(commonModifiersKey, data)
 	a.UserDesc = encoding.String(data[advantageUserDescKey])
@@ -123,9 +125,9 @@ func (a *Advantage) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
 	encoder.StartObject()
 	a.Common.ToInlineJSON(advantageTypeKey, encoder)
 	if a.Container {
-		if a.ContainerType != Group {
+		if a.ContainerType != advantage.Group {
 			encoder.KeyedString(advantageContainerTypeKey, a.ContainerType.Key(), false, false)
-			if a.ContainerType == Race {
+			if a.ContainerType == advantage.Race {
 				encoder.KeyedString(advantageAncestryKey, a.Ancestry.Name, true, true)
 			}
 		}
@@ -152,7 +154,7 @@ func (a *Advantage) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
 		FeaturesListToJSON(a.Features, encoder)
 	}
 	a.CR.ToKeyedJSON(advantageCRKey, encoder)
-	if a.CR != NoCR {
+	if a.CR != advantage.None {
 		a.CRAdj.ToKeyedJSON(advantageCRAdjKey, encoder)
 	}
 	AdvantageModifiersListToJSON(commonModifiersKey, a.Modifiers, encoder)
@@ -177,7 +179,7 @@ func (a *Advantage) AdjustedPoints(entity *Entity) fixed.F64d4 {
 		return AdjustedPoints(entity, a.BasePoints, a.Levels, a.PointsPerLevel, a.CR, a.AllModifiers(), a.RoundCostDown)
 	}
 	var points fixed.F64d4
-	if a.ContainerType == AlternativeAbilities {
+	if a.ContainerType == advantage.AlternativeAbilities {
 		values := make([]fixed.F64d4, len(a.Children))
 		for i, one := range a.Children {
 			values[i] = one.AdjustedPoints(entity)
@@ -296,7 +298,7 @@ func (a *Advantage) ActiveModifierFor(name string) *AdvantageModifier {
 // ModifierNotes returns the notes due to modifiers. 'entity' may be nil.
 func (a *Advantage) ModifierNotes(entity *Entity) string {
 	var buffer strings.Builder
-	if a.CR != NoCR {
+	if a.CR != advantage.None {
 		buffer.WriteString(a.CR.String())
 		if a.CRAdj != NoCRAdj {
 			buffer.WriteString(", ")
@@ -353,16 +355,16 @@ func HasCategory(category string, categories []string) bool {
 }
 
 // AdjustedPoints returns the total points, taking levels and modifiers into account. 'entity' may be nil.
-func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fixed.F64d4, cr SelfControlRoll, modifiers []*AdvantageModifier, roundCostDown bool) fixed.F64d4 {
+func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fixed.F64d4, cr advantage.SelfControlRoll, modifiers []*AdvantageModifier, roundCostDown bool) fixed.F64d4 {
 	var baseEnh, levelEnh, baseLim, levelLim fixed.F64d4
 	multiplier := cr.Multiplier()
 	for _, one := range modifiers {
 		if one.Enabled {
 			modifier := one.CostModifier()
 			switch one.CostType {
-			case Percentage:
+			case advantage.Percentage:
 				switch one.Affects {
-				case Total:
+				case advantage.Total:
 					if modifier < 0 {
 						baseLim += modifier
 						levelLim += modifier
@@ -370,26 +372,26 @@ func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fixed.F64
 						baseEnh += modifier
 						levelEnh += modifier
 					}
-				case BaseOnly:
+				case advantage.BaseOnly:
 					if modifier < 0 {
 						baseLim += modifier
 					} else {
 						baseEnh += modifier
 					}
-				case LevelsOnly:
+				case advantage.LevelsOnly:
 					if modifier < 0 {
 						levelLim += modifier
 					} else {
 						levelEnh += modifier
 					}
 				}
-			case Points:
-				if one.Affects == LevelsOnly {
+			case advantage.Points:
+				if one.Affects == advantage.LevelsOnly {
 					pointsPerLevel += modifier
 				} else {
 					basePoints += modifier
 				}
-			case Multiplier:
+			case advantage.Multiplier:
 				multiplier = multiplier.Mul(modifier)
 			}
 		}

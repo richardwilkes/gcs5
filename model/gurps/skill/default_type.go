@@ -9,17 +9,17 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package skill
 
 import "strings"
 
-var skillBasedSkillDefaultTypes = map[string]bool{
+var skillBasedDefaultTypes = map[string]bool{
 	"skill": true,
 	"parry": true,
 	"block": true,
 }
 
-// SkillDefaultTypeIsSkillBased returns true if the SkillDefault type is Skill-based.
-func SkillDefaultTypeIsSkillBased(skillDefaultType string) bool {
-	return skillBasedSkillDefaultTypes[strings.ToLower(strings.TrimSpace(skillDefaultType))]
+// DefaultTypeIsSkillBased returns true if the SkillDefault type is Skill-based.
+func DefaultTypeIsSkillBased(skillDefaultType string) bool {
+	return skillBasedDefaultTypes[strings.ToLower(strings.TrimSpace(skillDefaultType))]
 }

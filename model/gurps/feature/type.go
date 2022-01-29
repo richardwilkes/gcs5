@@ -9,13 +9,13 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package feature
 
 import "strings"
 
-// Possible FeatureType values.
+// Possible Type values.
 const (
-	AttributeBonus FeatureType = iota
+	AttributeBonus Type = iota
 	ConditionalModifierBonus
 	ContainedWeightReduction
 	CostReduction
@@ -28,14 +28,14 @@ const (
 	WeaponDamageBonus
 )
 
-type featureTypeData struct {
+type typeData struct {
 	Key string
 }
 
-// FeatureType holds the type of a Feature.
-type FeatureType uint8
+// Type holds the type of a Feature.
+type Type uint8
 
-var featureTypeValues = []*featureTypeData{
+var typeValues = []*typeData{
 	{
 		Key: "attribute_bonus",
 	},
@@ -71,25 +71,25 @@ var featureTypeValues = []*featureTypeData{
 	},
 }
 
-// FeatureTypeFromString extracts a FeatureType from a key.
-func FeatureTypeFromString(key string) FeatureType {
-	for i, one := range featureTypeValues {
+// TypeFromString extracts a Type from a key.
+func TypeFromString(key string) Type {
+	for i, one := range typeValues {
 		if strings.EqualFold(key, one.Key) {
-			return FeatureType(i)
+			return Type(i)
 		}
 	}
 	return 0
 }
 
-// EnsureValid returns the first FeatureType if this FeatureType is not a known value.
-func (f FeatureType) EnsureValid() FeatureType {
-	if int(f) < len(featureTypeValues) {
+// EnsureValid returns the first Type if this Type is not a known value.
+func (f Type) EnsureValid() Type {
+	if int(f) < len(typeValues) {
 		return f
 	}
 	return 0
 }
 
-// Key returns the key used to represent this FeatureType.
-func (f FeatureType) Key() string {
-	return featureTypeValues[f.EnsureValid()].Key
+// Key returns the key used to represent this Type.
+func (f Type) Key() string {
+	return typeValues[f.EnsureValid()].Key
 }

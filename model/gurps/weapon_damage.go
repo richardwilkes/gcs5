@@ -14,6 +14,7 @@ package gurps
 import (
 	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
@@ -35,7 +36,7 @@ const (
 type WeaponDamage struct {
 	Owner                     *Weapon
 	Type                      string
-	StrengthType              WeaponSTDamage
+	StrengthType              weapon.StrengthDamage
 	Base                      *dice.Dice
 	ArmorDivisor              fixed.F64d4
 	Fragmentation             *dice.Dice
@@ -49,7 +50,7 @@ func NewWeaponDamageFromJSON(owner *Weapon, data map[string]interface{}) *Weapon
 	w := &WeaponDamage{
 		Owner:          owner,
 		Type:           encoding.String(data[weaponDamageTypeKey]),
-		StrengthType:   WeaponSTDamageFromKey(encoding.String(data[weaponDamageStrengthTypeKey])),
+		StrengthType:   weapon.StrengthDamageFromKey(encoding.String(data[weaponDamageStrengthTypeKey])),
 		ArmorDivisor:   encoding.Number(data[weaponDamageArmorDivisorKey]),
 		ModifierPerDie: encoding.Number(data[weaponDamageModifierPerDieKey]),
 	}
@@ -74,7 +75,7 @@ func NewWeaponDamageFromJSON(owner *Weapon, data map[string]interface{}) *Weapon
 func (w *WeaponDamage) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.StartObject()
 	encoder.KeyedString(weaponDamageTypeKey, w.Type, true, true)
-	if w.StrengthType != NoSTBasedDamage {
+	if w.StrengthType != weapon.None {
 		encoder.KeyedString(weaponDamageStrengthTypeKey, w.StrengthType.Key(), false, false)
 	}
 	if w.Base != nil {

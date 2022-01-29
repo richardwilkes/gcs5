@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
@@ -33,8 +34,8 @@ type AdvantageModifier struct {
 	Levels   fixed.F64d4
 	Features []*Feature
 	Children []*AdvantageModifier
-	CostType AdvantageModifierCostType
-	Affects  Affects
+	CostType advantage.ModifierCostType
+	Affects  advantage.Affects
 	Enabled  bool
 }
 
@@ -46,10 +47,10 @@ func NewAdvantageModifierFromJSON(data map[string]interface{}) *AdvantageModifie
 		a.Children = AdvantageModifiersListFromJSON(commonChildrenKey, data)
 	} else {
 		a.Enabled = !encoding.Bool(data[commonDisabledKey])
-		a.CostType = AdvantageModifierCostTypeFromKey(encoding.String(data[advantageModifierCostTypeKey]))
+		a.CostType = advantage.ModifierCostTypeFromKey(encoding.String(data[advantageModifierCostTypeKey]))
 		a.Cost = encoding.Number(data[advantageModifierCostKey])
-		if a.CostType != Multiplier {
-			a.Affects = AffectsFromKey(encoding.String(data[advantageModifierAffectsKey]))
+		if a.CostType != advantage.Multiplier {
+			a.Affects = advantage.AffectsFromKey(encoding.String(data[advantageModifierAffectsKey]))
 		}
 		a.Levels = encoding.Number(data[advantageModifierLevelsKey])
 		a.Features = FeaturesListFromJSON(data)
@@ -67,7 +68,7 @@ func (a *AdvantageModifier) ToJSON(encoder *encoding.JSONEncoder) {
 		encoder.KeyedBool(commonDisabledKey, !a.Enabled, true)
 		encoder.KeyedString(advantageModifierCostTypeKey, a.CostType.Key(), false, false)
 		encoder.KeyedNumber(advantageModifierCostKey, a.Cost, false)
-		if a.CostType != Multiplier {
+		if a.CostType != advantage.Multiplier {
 			encoder.KeyedString(advantageModifierAffectsKey, a.Affects.Key(), false, false)
 		}
 		encoder.KeyedNumber(advantageModifierLevelsKey, a.Levels, true)
@@ -86,7 +87,7 @@ func (a *AdvantageModifier) CostModifier() fixed.F64d4 {
 
 // HasLevels returns true if this AdvantageModifier has levels.
 func (a *AdvantageModifier) HasLevels() bool {
-	return a.CostType == Percentage && a.Levels > 0
+	return a.CostType == advantage.Percentage && a.Levels > 0
 }
 
 func (a *AdvantageModifier) String() string {
@@ -119,7 +120,7 @@ func (a *AdvantageModifier) FullDescription(entity *Entity) string {
 // CostDescription returns the formatted cost.
 func (a *AdvantageModifier) CostDescription() string {
 	var buffer strings.Builder
-	if a.CostType == Multiplier {
+	if a.CostType == advantage.Multiplier {
 		buffer.WriteByte('x')
 		buffer.WriteString(a.Cost.String())
 	} else {
@@ -127,7 +128,7 @@ func (a *AdvantageModifier) CostDescription() string {
 			buffer.WriteByte('+')
 		}
 		buffer.WriteString(a.Cost.String())
-		if a.CostType == Percentage {
+		if a.CostType == advantage.Percentage {
 			buffer.WriteByte('%')
 		}
 		if desc := a.Affects.ShortTitle(); desc != "" {

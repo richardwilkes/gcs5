@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package weapon
 
 import (
 	"strings"
@@ -17,21 +17,21 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-// Possible WeaponType values.
+// Possible Type values.
 const (
-	Melee WeaponType = iota
+	Melee Type = iota
 	Ranged
 )
 
-type weaponTypeData struct {
+type typeData struct {
 	Key    string
 	String string
 }
 
-// WeaponType holds the type of an weapon definition.
-type WeaponType uint8
+// Type holds the type of an weapon definition.
+type Type uint8
 
-var weaponTypeValues = []*weaponTypeData{
+var typeValues = []*typeData{
 	{
 		Key:    "melee_weapon",
 		String: i18n.Text("Melee Weapon"),
@@ -42,30 +42,30 @@ var weaponTypeValues = []*weaponTypeData{
 	},
 }
 
-// WeaponTypeFromKey extracts a WeaponType from a key.
-func WeaponTypeFromKey(key string) WeaponType {
-	for i, one := range weaponTypeValues {
+// TypeFromKey extracts a Type from a key.
+func TypeFromKey(key string) Type {
+	for i, one := range typeValues {
 		if strings.EqualFold(key, one.Key) {
-			return WeaponType(i)
+			return Type(i)
 		}
 	}
 	return 0
 }
 
-// EnsureValid returns the first WeaponType if this WeaponType is not a known value.
-func (a WeaponType) EnsureValid() WeaponType {
-	if int(a) < len(weaponTypeValues) {
+// EnsureValid returns the first Type if this Type is not a known value.
+func (a Type) EnsureValid() Type {
+	if int(a) < len(typeValues) {
 		return a
 	}
 	return 0
 }
 
-// Key returns the key used to represent this WeaponType.
-func (a WeaponType) Key() string {
-	return weaponTypeValues[a.EnsureValid()].Key
+// Key returns the key used to represent this Type.
+func (a Type) Key() string {
+	return typeValues[a.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
-func (a WeaponType) String() string {
-	return weaponTypeValues[a.EnsureValid()].String
+func (a Type) String() string {
+	return typeValues[a.EnsureValid()].String
 }

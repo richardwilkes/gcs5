@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -61,7 +62,7 @@ func NewSkillDefaultFromJSON(full bool, data map[string]interface{}) *SkillDefau
 func (s *SkillDefault) ToJSON(full bool, encoder *encoding.JSONEncoder) {
 	encoder.StartObject()
 	encoder.KeyedString(skillDefaultTypeKey, s.defaultType, true, true)
-	if SkillDefaultTypeIsSkillBased(s.defaultType) {
+	if skill.DefaultTypeIsSkillBased(s.defaultType) {
 		encoder.KeyedString(skillDefaultNameKey, s.Name, true, true)
 		encoder.KeyedString(skillDefaultSpecializationKey, s.Specialization, true, true)
 	}
@@ -86,7 +87,7 @@ func (s *SkillDefault) SetType(t string) {
 
 // FullName returns the full name of the skill to default from.
 func (s *SkillDefault) FullName(entity *Entity) string {
-	if SkillDefaultTypeIsSkillBased(s.defaultType) {
+	if skill.DefaultTypeIsSkillBased(s.defaultType) {
 		var buffer strings.Builder
 		buffer.WriteString(s.Name)
 		if s.Specialization != "" {

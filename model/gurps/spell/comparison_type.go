@@ -9,30 +9,30 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package spell
 
 import (
 	"strings"
 )
 
-// Possible SpellComparisonType values.
+// Possible ComparisonType values.
 const (
-	Name SpellComparisonType = iota
+	Name ComparisonType = iota
 	Category
 	College
 	CollegeCount
-	AnySpell
+	Any
 )
 
-type spellComparisonTypeData struct {
+type comparisonTypeData struct {
 	Key                string
 	UsesStringCriteria bool
 }
 
-// SpellComparisonType holds the type of an attribute definition.
-type SpellComparisonType uint8
+// ComparisonType holds the type of an attribute definition.
+type ComparisonType uint8
 
-var spellComparisonTypeValues = []*spellComparisonTypeData{
+var comparisonTypeValues = []*comparisonTypeData{
 	{
 		Key:                "name",
 		UsesStringCriteria: true,
@@ -55,30 +55,30 @@ var spellComparisonTypeValues = []*spellComparisonTypeData{
 	},
 }
 
-// SpellComparisonTypeFromString extracts a SpellComparisonType from a key.
-func SpellComparisonTypeFromString(key string) SpellComparisonType {
-	for i, one := range spellComparisonTypeValues {
+// ComparisonTypeFromString extracts a ComparisonType from a key.
+func ComparisonTypeFromString(key string) ComparisonType {
+	for i, one := range comparisonTypeValues {
 		if strings.EqualFold(key, one.Key) {
-			return SpellComparisonType(i)
+			return ComparisonType(i)
 		}
 	}
 	return 0
 }
 
-// EnsureValid returns the first SpellComparisonType if this SpellComparisonType is not a known value.
-func (s SpellComparisonType) EnsureValid() SpellComparisonType {
-	if int(s) < len(spellComparisonTypeValues) {
+// EnsureValid returns the first ComparisonType if this ComparisonType is not a known value.
+func (s ComparisonType) EnsureValid() ComparisonType {
+	if int(s) < len(comparisonTypeValues) {
 		return s
 	}
 	return 0
 }
 
-// Key returns the key used to represent this SpellComparisonType.
-func (s SpellComparisonType) Key() string {
-	return spellComparisonTypeValues[s.EnsureValid()].Key
+// Key returns the key used to represent this ComparisonType.
+func (s ComparisonType) Key() string {
+	return comparisonTypeValues[s.EnsureValid()].Key
 }
 
 // UsesStringCriteria returns true if the comparison uses a string value.
-func (s SpellComparisonType) UsesStringCriteria() bool {
-	return spellComparisonTypeValues[s.EnsureValid()].UsesStringCriteria
+func (s ComparisonType) UsesStringCriteria() bool {
+	return comparisonTypeValues[s.EnsureValid()].UsesStringCriteria
 }

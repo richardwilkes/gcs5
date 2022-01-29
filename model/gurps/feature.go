@@ -18,7 +18,12 @@ import (
 	"github.com/richardwilkes/gcs/model/criteria"
 	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/gurps/attribute"
+	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
+	"github.com/richardwilkes/gcs/model/gurps/skill"
+	"github.com/richardwilkes/gcs/model/gurps/spell"
+	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
@@ -55,11 +60,11 @@ const (
 
 // Feature holds data that affects another object.
 type Feature struct {
-	Type                   FeatureType
-	Limitation             AttributeBonusLimitation
-	SkillSelectionType     SkillSelectionType
-	SpellMatchType         SpellMatchType
-	WeaponSelectionType    WeaponSelectionType
+	Type                   feature.Type
+	Limitation             attribute.BonusLimitation
+	SkillSelectionType     skill.SelectionType
+	SpellMatchType         spell.MatchType
+	WeaponSelectionType    weapon.SelectionType
 	IsPercent              bool
 	Amount                 LeveledAmount
 	Attribute              string
@@ -75,39 +80,39 @@ type Feature struct {
 }
 
 // NewFeature creates a new Feature for the given entity, which may be nil.
-func NewFeature(featureType FeatureType, entity *Entity) *Feature {
+func NewFeature(featureType feature.Type, entity *Entity) *Feature {
 	f := &Feature{
 		Type:   featureType,
 		Amount: LeveledAmount{Amount: 1},
 	}
 	switch featureType {
-	case AttributeBonus:
+	case feature.AttributeBonus:
 		f.Attribute = DefaultAttributeIDFor(entity)
-	case ConditionalModifierBonus:
+	case feature.ConditionalModifierBonus:
 		f.Situation = i18n.Text("triggering condition")
-	case ContainedWeightReduction:
+	case feature.ContainedWeightReduction:
 		f.Reduction = "0%"
-	case CostReduction:
+	case feature.CostReduction:
 		f.Attribute = DefaultAttributeIDFor(entity)
 		f.Amount.Amount = fixed.F64d4FromInt64(40)
-	case DRBonus:
+	case feature.DRBonus:
 		f.Location = "torso"
 		f.Specialization = All
-	case ReactionBonus:
+	case feature.ReactionBonus:
 		f.Situation = i18n.Text("from others")
-	case SkillBonus:
-		f.SkillSelectionType = SkillsWithNameSkillSelect
+	case feature.SkillBonus:
+		f.SkillSelectionType = skill.SkillsWithName
 		fallthrough
-	case SkillPointBonus:
+	case feature.SkillPointBonus:
 		f.NameCriteria.Type = criteria.Is
 		f.SpecializationCriteria.Type = criteria.Any
 		f.CategoryCriteria.Type = criteria.Any
-	case SpellBonus, SpellPointBonus:
-		f.SpellMatchType = AllColleges
+	case feature.SpellBonus, feature.SpellPointBonus:
+		f.SpellMatchType = spell.AllColleges
 		f.NameCriteria.Type = criteria.Is
 		f.CategoryCriteria.Type = criteria.Any
-	case WeaponDamageBonus:
-		f.WeaponSelectionType = WeaponsWithRequiredSkillWeaponSelect
+	case feature.WeaponDamageBonus:
+		f.WeaponSelectionType = weapon.WithRequiredSkill
 		f.NameCriteria.Type = criteria.Is
 		f.SpecializationCriteria.Type = criteria.Any
 		f.RelativeLevelCriteria.Type = criteria.AnyNumber
@@ -120,46 +125,46 @@ func NewFeature(featureType FeatureType, entity *Entity) *Feature {
 
 // NewFeatureFromJSON creates a new Feature from JSON.
 func NewFeatureFromJSON(data map[string]interface{}) *Feature {
-	f := &Feature{Type: FeatureTypeFromString(encoding.String(data[featureTypeKey]))}
+	f := &Feature{Type: feature.TypeFromString(encoding.String(data[featureTypeKey]))}
 	f.Amount.FromJSON(data)
 	switch f.Type {
-	case AttributeBonus:
+	case feature.AttributeBonus:
 		f.Attribute = encoding.String(data[featureAttributeKey])
-		f.Limitation = AttributeBonusLimitationFromKey(encoding.String(data[featureLimitationKey]))
-	case ConditionalModifierBonus, ReactionBonus:
+		f.Limitation = attribute.BonusLimitationFromKey(encoding.String(data[featureLimitationKey]))
+	case feature.ConditionalModifierBonus, feature.ReactionBonus:
 		f.Situation = encoding.String(data[featureSituationKey])
-	case ContainedWeightReduction:
+	case feature.ContainedWeightReduction:
 		f.Reduction = strings.TrimSpace(encoding.String(data[featureReductionKey]))
-	case CostReduction:
+	case feature.CostReduction:
 		f.Attribute = encoding.String(data[featureAttributeKey])
 		f.Amount.Amount = encoding.Number(data[featurePercentageKey])
-	case DRBonus:
+	case feature.DRBonus:
 		f.Location = encoding.String(data[featureLocationKey])
 		f.Specialization = encoding.String(data[featureSpecializationKey])
-	case SkillBonus:
-		f.SkillSelectionType = SkillSelectionTypeFromString(encoding.String(data[featureSelectionTypeKey]))
+	case feature.SkillBonus:
+		f.SkillSelectionType = skill.SelectionTypeFromString(encoding.String(data[featureSelectionTypeKey]))
 		f.SpecializationCriteria.FromJSON(encoding.Object(data[featureSpecializationKey]))
-		if f.SkillSelectionType != ThisWeaponSkillSelect {
+		if f.SkillSelectionType != skill.ThisWeapon {
 			f.NameCriteria.FromJSON(encoding.Object(data[featureNameKey]))
 			f.CategoryCriteria.FromJSON(encoding.Object(data[featureCategoryKey]))
 		}
-	case SkillPointBonus:
+	case feature.SkillPointBonus:
 		f.NameCriteria.FromJSON(encoding.Object(data[featureNameKey]))
 		f.SpecializationCriteria.FromJSON(encoding.Object(data[featureSpecializationKey]))
 		f.CategoryCriteria.FromJSON(encoding.Object(data[featureCategoryKey]))
-	case SpellBonus, SpellPointBonus:
-		f.SpellMatchType = SpellMatchTypeFromString(encoding.String(data[featureMatchKey]))
+	case feature.SpellBonus, feature.SpellPointBonus:
+		f.SpellMatchType = spell.MatchTypeFromString(encoding.String(data[featureMatchKey]))
 		f.NameCriteria.FromJSON(encoding.Object(data[featureNameKey]))
 		f.CategoryCriteria.FromJSON(encoding.Object(data[featureCategoryKey]))
-	case WeaponDamageBonus:
-		f.WeaponSelectionType = WeaponSelectionTypeFromString(encoding.String(data[featureSelectionTypeKey]))
+	case feature.WeaponDamageBonus:
+		f.WeaponSelectionType = weapon.SelectionTypeFromString(encoding.String(data[featureSelectionTypeKey]))
 		f.IsPercent = encoding.Bool(data[featureIsPercentKey])
 		f.SpecializationCriteria.FromJSON(encoding.Object(data[featureSpecializationKey]))
 		switch f.WeaponSelectionType {
-		case WeaponsWithNameWeaponSelect:
+		case weapon.WithName:
 			f.NameCriteria.FromJSON(encoding.Object(data[featureNameKey]))
 			f.CategoryCriteria.FromJSON(encoding.Object(data[featureCategoryKey]))
-		case WeaponsWithRequiredSkillWeaponSelect:
+		case weapon.WithRequiredSkill:
 			f.NameCriteria.FromJSON(encoding.Object(data[featureNameKey]))
 			f.RelativeLevelCriteria.FromJSON(encoding.Object(data[featureLevelKey]))
 			f.CategoryCriteria.FromJSON(encoding.Object(data[featureCategoryKey]))
@@ -178,45 +183,45 @@ func (f *Feature) ToJSON(encoder *encoding.JSONEncoder) {
 	encoder.KeyedString(featureTypeKey, f.Type.Key(), false, false)
 	f.Amount.ToInlineJSON(encoder)
 	switch f.Type {
-	case AttributeBonus:
+	case feature.AttributeBonus:
 		encoder.KeyedString(featureAttributeKey, f.Attribute, false, false)
-		if f.Limitation != None {
+		if f.Limitation != attribute.None {
 			encoder.KeyedString(featureLimitationKey, f.Limitation.Key(), false, false)
 		}
-	case ConditionalModifierBonus, ReactionBonus:
+	case feature.ConditionalModifierBonus, feature.ReactionBonus:
 		encoder.KeyedString(featureSituationKey, f.Situation, true, true)
-	case ContainedWeightReduction:
+	case feature.ContainedWeightReduction:
 		encoder.KeyedString(featureReductionKey, f.Reduction, true, true)
-	case CostReduction:
+	case feature.CostReduction:
 		encoder.KeyedString(featureAttributeKey, f.Attribute, false, false)
 		encoder.KeyedNumber(featurePercentageKey, f.Amount.Amount, false)
-	case DRBonus:
+	case feature.DRBonus:
 		encoder.KeyedString(featureLocationKey, f.Location, true, true)
 		encoder.KeyedString(featureSpecializationKey, f.Specialization, true, true)
-	case SkillBonus:
+	case feature.SkillBonus:
 		encoder.KeyedString(featureSelectionTypeKey, f.SkillSelectionType.Key(), false, false)
 		encoding.ToKeyedJSON(&f.SpecializationCriteria, featureSpecializationKey, encoder)
-		if f.SkillSelectionType != ThisWeaponSkillSelect {
+		if f.SkillSelectionType != skill.ThisWeapon {
 			encoding.ToKeyedJSON(&f.NameCriteria, featureNameKey, encoder)
 			encoding.ToKeyedJSON(&f.CategoryCriteria, featureCategoryKey, encoder)
 		}
-	case SkillPointBonus:
+	case feature.SkillPointBonus:
 		encoding.ToKeyedJSON(&f.NameCriteria, featureNameKey, encoder)
 		encoding.ToKeyedJSON(&f.SpecializationCriteria, featureSpecializationKey, encoder)
 		encoding.ToKeyedJSON(&f.CategoryCriteria, featureCategoryKey, encoder)
-	case SpellBonus, SpellPointBonus:
+	case feature.SpellBonus, feature.SpellPointBonus:
 		encoder.KeyedString(featureMatchKey, f.SpellMatchType.Key(), false, false)
 		encoding.ToKeyedJSON(&f.NameCriteria, featureNameKey, encoder)
 		encoding.ToKeyedJSON(&f.CategoryCriteria, featureCategoryKey, encoder)
-	case WeaponDamageBonus:
+	case feature.WeaponDamageBonus:
 		encoder.KeyedString(featureSelectionTypeKey, f.WeaponSelectionType.Key(), false, false)
 		encoder.KeyedBool(featureIsPercentKey, f.IsPercent, true)
 		encoding.ToKeyedJSON(&f.SpecializationCriteria, featureSpecializationKey, encoder)
 		switch f.WeaponSelectionType {
-		case WeaponsWithNameWeaponSelect:
+		case weapon.WithName:
 			encoding.ToKeyedJSON(&f.NameCriteria, featureNameKey, encoder)
 			encoding.ToKeyedJSON(&f.CategoryCriteria, featureCategoryKey, encoder)
-		case WeaponsWithRequiredSkillWeaponSelect:
+		case weapon.WithRequiredSkill:
 			encoding.ToKeyedJSON(&f.NameCriteria, featureNameKey, encoder)
 			encoding.ToKeyedJSON(&f.RelativeLevelCriteria, featureLevelKey, encoder)
 			encoding.ToKeyedJSON(&f.CategoryCriteria, featureCategoryKey, encoder)
@@ -230,74 +235,74 @@ func (f *Feature) ToJSON(encoder *encoding.JSONEncoder) {
 // Key returns the key used in the Feature map for things this Feature applies to.
 func (f *Feature) Key() string {
 	switch f.Type {
-	case AttributeBonus:
+	case feature.AttributeBonus:
 		key := AttributeIDPrefix + f.Attribute
-		if f.Limitation != None {
+		if f.Limitation != attribute.None {
 			key += "." + f.Limitation.Key()
 		}
 		return key
-	case ConditionalModifierBonus:
-		return ConditionalModifierBonus.Key()
-	case ContainedWeightReduction:
+	case feature.ConditionalModifierBonus:
+		return feature.ConditionalModifierBonus.Key()
+	case feature.ContainedWeightReduction:
 		return ContainedWeightFeatureKey
-	case CostReduction:
+	case feature.CostReduction:
 		return AttributeIDPrefix + f.Attribute
-	case DRBonus:
+	case feature.DRBonus:
 		return HitLocationPrefix + f.Location
-	case ReactionBonus:
+	case feature.ReactionBonus:
 		return "reaction"
-	case SkillBonus:
+	case feature.SkillBonus:
 		switch f.SkillSelectionType {
-		case SkillsWithNameSkillSelect:
+		case skill.SkillsWithName:
 			return f.buildKey(SkillNameID, false)
-		case ThisWeaponSkillSelect:
+		case skill.ThisWeapon:
 			return ThisWeaponID
-		case WeaponsWithNameSkillSelect:
+		case skill.WeaponsWithName:
 			return f.buildKey(WeaponNamedIDPrefix, false)
 		default:
 			jot.Fatal(1, "invalid selection type: ", f.SkillSelectionType)
 		}
-	case SkillPointBonus:
+	case feature.SkillPointBonus:
 		return f.buildKey(SkillPointsID, false)
-	case SpellBonus:
+	case feature.SpellBonus:
 		if f.CategoryCriteria.Type != criteria.Any {
 			return SpellNameID + "*"
 		}
 		switch f.SpellMatchType {
-		case AllColleges:
+		case spell.AllColleges:
 			return SpellCollegeID
-		case CollegeName:
+		case spell.CollegeName:
 			return f.buildKey(SpellCollegeID, true)
-		case PowerSourceName:
+		case spell.PowerSource:
 			return f.buildKey(SpellPowerSourceID, true)
-		case SpellName:
+		case spell.Spell:
 			return f.buildKey(SpellNameID, true)
 		default:
 			jot.Fatal(1, "invalid match type: ", f.SpellMatchType)
 		}
-	case SpellPointBonus:
+	case feature.SpellPointBonus:
 		if f.CategoryCriteria.Type != criteria.Any {
 			return SpellPointsID + "*"
 		}
 		switch f.SpellMatchType {
-		case AllColleges:
+		case spell.AllColleges:
 			return SpellCollegePointsID
-		case CollegeName:
+		case spell.CollegeName:
 			return f.buildKey(SpellCollegePointsID, true)
-		case PowerSourceName:
+		case spell.PowerSource:
 			return f.buildKey(SpellPowerSourcePointsID, true)
-		case SpellName:
+		case spell.Spell:
 			return f.buildKey(SpellPointsID, true)
 		default:
 			jot.Fatal(1, "invalid match type: ", f.SpellMatchType)
 		}
-	case WeaponDamageBonus:
+	case feature.WeaponDamageBonus:
 		switch f.WeaponSelectionType {
-		case WeaponsWithRequiredSkillWeaponSelect:
+		case weapon.WithRequiredSkill:
 			return f.buildKey(WeaponNamedIDPrefix, false)
-		case ThisWeaponWeaponSelect:
+		case weapon.ThisWeapon:
 			return ThisWeaponID
-		case WeaponsWithNameWeaponSelect:
+		case weapon.WithName:
 			return f.buildKey(SkillNameID, false)
 		default:
 			jot.Fatal(1, "invalid selection type: ", f.WeaponSelectionType)
@@ -318,26 +323,26 @@ func (f *Feature) buildKey(prefix string, considerNameCriteriaOnly bool) string 
 // FillWithNameableKeys adds any nameable keys found in this Feature to the provided map.
 func (f *Feature) FillWithNameableKeys(nameables map[string]string) {
 	switch f.Type {
-	case ConditionalModifierBonus, ReactionBonus:
+	case feature.ConditionalModifierBonus, feature.ReactionBonus:
 		ExtractNameables(f.Situation, nameables)
-	case SkillBonus:
+	case feature.SkillBonus:
 		ExtractNameables(f.SpecializationCriteria.Qualifier, nameables)
-		if f.SkillSelectionType != ThisWeaponSkillSelect {
+		if f.SkillSelectionType != skill.ThisWeapon {
 			ExtractNameables(f.NameCriteria.Qualifier, nameables)
 			ExtractNameables(f.CategoryCriteria.Qualifier, nameables)
 		}
-	case SkillPointBonus:
+	case feature.SkillPointBonus:
 		ExtractNameables(f.NameCriteria.Qualifier, nameables)
 		ExtractNameables(f.SpecializationCriteria.Qualifier, nameables)
 		ExtractNameables(f.CategoryCriteria.Qualifier, nameables)
-	case SpellBonus, SpellPointBonus:
-		if f.SpellMatchType != AllColleges {
+	case feature.SpellBonus, feature.SpellPointBonus:
+		if f.SpellMatchType != spell.AllColleges {
 			ExtractNameables(f.NameCriteria.Qualifier, nameables)
 		}
 		ExtractNameables(f.CategoryCriteria.Qualifier, nameables)
-	case WeaponDamageBonus:
+	case feature.WeaponDamageBonus:
 		ExtractNameables(f.SpecializationCriteria.Qualifier, nameables)
-		if f.WeaponSelectionType != ThisWeaponWeaponSelect {
+		if f.WeaponSelectionType != weapon.ThisWeapon {
 			ExtractNameables(f.NameCriteria.Qualifier, nameables)
 			ExtractNameables(f.SpecializationCriteria.Qualifier, nameables)
 			ExtractNameables(f.CategoryCriteria.Qualifier, nameables)
@@ -348,26 +353,26 @@ func (f *Feature) FillWithNameableKeys(nameables map[string]string) {
 // ApplyNameableKeys replaces any nameable keys found in this Feature with the corresponding values in the provided map.
 func (f *Feature) ApplyNameableKeys(nameables map[string]string) {
 	switch f.Type {
-	case ConditionalModifierBonus, ReactionBonus:
+	case feature.ConditionalModifierBonus, feature.ReactionBonus:
 		f.Situation = ApplyNameables(f.Situation, nameables)
-	case SkillBonus:
+	case feature.SkillBonus:
 		f.SpecializationCriteria.Qualifier = ApplyNameables(f.SpecializationCriteria.Qualifier, nameables)
-		if f.SkillSelectionType != ThisWeaponSkillSelect {
+		if f.SkillSelectionType != skill.ThisWeapon {
 			f.NameCriteria.Qualifier = ApplyNameables(f.NameCriteria.Qualifier, nameables)
 			f.CategoryCriteria.Qualifier = ApplyNameables(f.CategoryCriteria.Qualifier, nameables)
 		}
-	case SkillPointBonus:
+	case feature.SkillPointBonus:
 		f.NameCriteria.Qualifier = ApplyNameables(f.NameCriteria.Qualifier, nameables)
 		f.SpecializationCriteria.Qualifier = ApplyNameables(f.SpecializationCriteria.Qualifier, nameables)
 		f.CategoryCriteria.Qualifier = ApplyNameables(f.CategoryCriteria.Qualifier, nameables)
-	case SpellBonus, SpellPointBonus:
-		if f.SpellMatchType != AllColleges {
+	case feature.SpellBonus, feature.SpellPointBonus:
+		if f.SpellMatchType != spell.AllColleges {
 			f.NameCriteria.Qualifier = ApplyNameables(f.NameCriteria.Qualifier, nameables)
 		}
 		f.CategoryCriteria.Qualifier = ApplyNameables(f.CategoryCriteria.Qualifier, nameables)
-	case WeaponDamageBonus:
+	case feature.WeaponDamageBonus:
 		f.SpecializationCriteria.Qualifier = ApplyNameables(f.SpecializationCriteria.Qualifier, nameables)
-		if f.WeaponSelectionType != ThisWeaponWeaponSelect {
+		if f.WeaponSelectionType != weapon.ThisWeapon {
 			f.NameCriteria.Qualifier = ApplyNameables(f.NameCriteria.Qualifier, nameables)
 			f.SpecializationCriteria.Qualifier = ApplyNameables(f.SpecializationCriteria.Qualifier, nameables)
 			f.CategoryCriteria.Qualifier = ApplyNameables(f.CategoryCriteria.Qualifier, nameables)
@@ -377,7 +382,7 @@ func (f *Feature) ApplyNameableKeys(nameables map[string]string) {
 
 // Normalize adjusts the data to it preferred representation.
 func (f *Feature) Normalize() {
-	if f.Type == DRBonus {
+	if f.Type == feature.DRBonus {
 		s := strings.TrimSpace(f.Specialization)
 		if s == "" || strings.EqualFold(s, All) {
 			s = All
@@ -388,13 +393,13 @@ func (f *Feature) Normalize() {
 
 // AddToTooltip adds this feature's bonus details to the tooltip.
 func (f *Feature) AddToTooltip(tooltip *xio.ByteBuffer) {
-	if tooltip == nil || f.Owner == nil || f.Type == CostReduction || f.Type == ContainedWeightReduction {
+	if tooltip == nil || f.Owner == nil || f.Type == feature.CostReduction || f.Type == feature.ContainedWeightReduction {
 		return
 	}
 	tooltip.WriteByte('\n')
 	tooltip.WriteString(f.Owner.String())
 	tooltip.WriteString(" [")
-	if f.Type == WeaponDamageBonus {
+	if f.Type == feature.WeaponDamageBonus {
 		tooltip.WriteString(f.Amount.Format(i18n.Text("die")))
 		if f.IsPercent {
 			tooltip.WriteByte('%')
@@ -403,11 +408,11 @@ func (f *Feature) AddToTooltip(tooltip *xio.ByteBuffer) {
 		tooltip.WriteString(f.Amount.Format(i18n.Text("level")))
 	}
 	switch f.Type {
-	case DRBonus:
+	case feature.DRBonus:
 		tooltip.WriteString(i18n.Text(" against "))
 		tooltip.WriteString(f.Specialization)
 		tooltip.WriteString(i18n.Text(" attacks"))
-	case SkillPointBonus:
+	case feature.SkillPointBonus:
 		if f.Amount.Amount == f64d4.One {
 			tooltip.WriteString(i18n.Text(" pt"))
 		} else {
