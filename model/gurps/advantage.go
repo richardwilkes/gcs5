@@ -401,14 +401,14 @@ func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fixed.F64
 	if baseEnh != 0 || baseLim != 0 || levelEnh != 0 || levelLim != 0 {
 		if SheetSettingsFor(entity).UseMultiplicativeModifiers {
 			if baseEnh == levelEnh && baseLim == levelLim {
-				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints+leveledPoints, baseEnh), f64d4.Max(baseLim, f64d4.NegEighty))
+				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints+leveledPoints, baseEnh), f64d4.NegEighty.Max(baseLim))
 			} else {
-				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints, baseEnh), f64d4.Max(baseLim, f64d4.NegEighty)) +
-					modifyPoints(modifyPoints(leveledPoints, levelEnh), f64d4.Max(levelLim, f64d4.NegEighty))
+				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints, baseEnh), f64d4.NegEighty.Max(baseLim)) +
+					modifyPoints(modifyPoints(leveledPoints, levelEnh), f64d4.NegEighty.Max(levelLim))
 			}
 		} else {
-			baseMod := f64d4.Max(baseEnh+baseLim, f64d4.NegEighty)
-			levelMod := f64d4.Max(levelEnh+levelLim, f64d4.NegEighty)
+			baseMod := f64d4.NegEighty.Max(baseEnh + baseLim)
+			levelMod := f64d4.NegEighty.Max(levelEnh + levelLim)
 			if baseMod == levelMod {
 				modifiedBasePoints = modifyPoints(modifiedBasePoints+leveledPoints, baseMod)
 			} else {

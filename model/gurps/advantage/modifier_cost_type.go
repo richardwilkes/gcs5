@@ -29,7 +29,7 @@ type modifierCostTypeData struct {
 	String string
 }
 
-// ModifierCostType eescribes how an AdvantageModifier's point cost is applied.
+// ModifierCostType describes how an AdvantageModifier's point cost is applied.
 type ModifierCostType uint8
 
 var modifierCostTypeValues = []*modifierCostTypeData{

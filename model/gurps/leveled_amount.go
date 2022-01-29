@@ -73,17 +73,9 @@ func (a *LeveledAmount) AdjustedAmount() fixed.F64d4 {
 
 // Format the value.
 func (a *LeveledAmount) Format(what string) string {
-	str := a.Amount.String()
-	if a.Amount >= 0 {
-		return "+" + str
-	}
+	str := a.Amount.StringWithSign()
 	if a.PerLevel {
-		full := a.AdjustedAmount()
-		fullStr := full.String()
-		if full >= 0 {
-			fullStr = "+" + fullStr
-		}
-		return fmt.Sprintf(i18n.Text("%s (%s per %s)"), fullStr, str, what)
+		return fmt.Sprintf(i18n.Text("%s (%s per %s)"), a.AdjustedAmount().StringWithSign(), str, what)
 	}
 	return str
 }
