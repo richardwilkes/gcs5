@@ -191,6 +191,31 @@ func AdvantageModifiersListToJSON(key string, modifiers []*AdvantageModifier, en
 	}
 }
 
+// EquipmentModifiersListFromJSON loads an equipment modifiers list from a JSON object.
+func EquipmentModifiersListFromJSON(key string, data map[string]interface{}) []*EquipmentModifier {
+	array := encoding.Array(data[key])
+	if len(array) == 0 {
+		return nil
+	}
+	modifiers := make([]*EquipmentModifier, len(array))
+	for i, one := range array {
+		modifiers[i] = NewEquipmentModifierFromJSON(encoding.Object(one))
+	}
+	return modifiers
+}
+
+// EquipmentModifiersListToJSON emits the equipment modifiers list as JSON.
+func EquipmentModifiersListToJSON(key string, modifiers []*EquipmentModifier, encoder *encoding.JSONEncoder) {
+	if len(modifiers) != 0 {
+		encoder.Key(key)
+		encoder.StartArray()
+		for _, one := range modifiers {
+			one.ToJSON(encoder)
+		}
+		encoder.EndArray()
+	}
+}
+
 // StringListFromJSON loads a string list from a JSON object.
 func StringListFromJSON(key string, omitEmptyEntries bool, data map[string]interface{}) []string {
 	array := encoding.Array(data[key])
