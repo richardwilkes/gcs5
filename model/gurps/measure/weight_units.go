@@ -81,6 +81,17 @@ func WeightUnitsFromString(key string) WeightUnits {
 	return 0
 }
 
+// TrailingWeightUnitsFromString extracts a trailing WeightUnits from a string.
+func TrailingWeightUnitsFromString(s string, defUnits WeightUnits) WeightUnits {
+	s = strings.ToLower(strings.TrimSpace(s))
+	for i, one := range weightUnitsValues {
+		if strings.HasSuffix(s, one.Key) {
+			return WeightUnits(i)
+		}
+	}
+	return defUnits
+}
+
 // EnsureValid returns the first WeightUnits if this WeightUnits is not a known value.
 func (w WeightUnits) EnsureValid() WeightUnits {
 	if int(w) < len(weightUnitsValues) {
