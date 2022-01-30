@@ -49,7 +49,6 @@ type Advantage struct {
 	Features          []*Feature
 	Modifiers         []*AdvantageModifier
 	Prereq            *Prereq
-	Defaults          []*SkillDefault
 	Weapons           []*Weapon
 	Ancestry          *ancestry.Ancestry
 	Children          []*Advantage
@@ -84,7 +83,7 @@ func NewAdvantage(parent *Advantage, container bool) *Advantage {
 }
 
 // NewAdvantageFromJSON creates a new Advantage from a JSON object.
-func NewAdvantageFromJSON(parent *Advantage, data map[string]interface{}) *Advantage {
+func NewAdvantageFromJSON(parent *Advantage, data map[string]interface{}, entity *Entity) *Advantage {
 	a := &Advantage{Parent: parent}
 	a.Common.FromJSON(advantageTypeKey, data)
 	if a.Container {
@@ -93,7 +92,7 @@ func NewAdvantageFromJSON(parent *Advantage, data map[string]interface{}) *Advan
 		if len(array) != 0 {
 			a.Children = make([]*Advantage, len(array))
 			for i, one := range array {
-				a.Children[i] = NewAdvantageFromJSON(a, encoding.Object(one))
+				a.Children[i] = NewAdvantageFromJSON(a, encoding.Object(one), entity)
 			}
 		}
 	} else {
@@ -107,8 +106,7 @@ func NewAdvantageFromJSON(parent *Advantage, data map[string]interface{}) *Advan
 		}
 		a.BasePoints = encoding.Number(data[advantageBasePointsKey])
 		a.PointsPerLevel = encoding.Number(data[advantagePointsPerLevelKey])
-		a.Prereq = NewPrereqFromJSON(encoding.Object(data[advantagePrereqsKey]), nil)
-		a.Defaults = SkillDefaultsListFromJSON(data)
+		a.Prereq = NewPrereqFromJSON(encoding.Object(data[advantagePrereqsKey]), entity)
 		a.Weapons = WeaponsListFromJSON(data)
 		a.Features = FeaturesListFromJSON(data)
 	}
@@ -149,7 +147,6 @@ func (a *Advantage) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
 		encoder.KeyedNumber(advantageBasePointsKey, a.BasePoints, true)
 		encoder.KeyedNumber(advantagePointsPerLevelKey, a.PointsPerLevel, true)
 		encoding.ToKeyedJSON(a.Prereq, advantagePrereqsKey, encoder)
-		SkillDefaultsListToJSON(a.Defaults, encoder)
 		WeaponsListToJSON(a.Weapons, encoder)
 		FeaturesListToJSON(a.Features, encoder)
 	}
@@ -163,7 +160,7 @@ func (a *Advantage) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
 	}
 	StringListToJSON(commonCategoriesKey, a.Categories, encoder)
 	// Emit the calculated values for third parties
-	encoder.Key(calcKey)
+	encoder.Key(commonCalcKey)
 	encoder.StartObject()
 	encoder.KeyedNumber(advantageCalcPointsKey, a.AdjustedPoints(entity), false)
 	encoder.EndObject()
@@ -253,9 +250,6 @@ func (a *Advantage) String() string {
 func (a *Advantage) FillWithNameableKeys(nameables map[string]string) {
 	a.Common.FillWithNameableKeys(nameables)
 	a.Prereq.FillWithNameableKeys(nameables)
-	for _, one := range a.Defaults {
-		one.FillWithNameableKeys(nameables)
-	}
 	for _, one := range a.Features {
 		one.FillWithNameableKeys(nameables)
 	}
@@ -271,9 +265,6 @@ func (a *Advantage) FillWithNameableKeys(nameables map[string]string) {
 func (a *Advantage) ApplyNameableKeys(nameables map[string]string) {
 	a.Common.ApplyNameableKeys(nameables)
 	a.Prereq.ApplyNameableKeys(nameables)
-	for _, one := range a.Defaults {
-		one.ApplyNameableKeys(nameables)
-	}
 	for _, one := range a.Features {
 		one.ApplyNameableKeys(nameables)
 	}

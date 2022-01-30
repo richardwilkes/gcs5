@@ -19,6 +19,7 @@ import (
 )
 
 const (
+	commonCalcKey             = "calc"
 	commonCategoriesKey       = "categories"
 	commonChildrenKey         = "children"
 	commonContainerKeyPostfix = "_container"

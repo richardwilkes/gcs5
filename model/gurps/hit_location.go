@@ -87,7 +87,7 @@ func (h *HitLocation) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
 	}
 
 	// Emit the calculated values for third parties
-	encoder.Key(calcKey)
+	encoder.Key(commonCalcKey)
 	encoder.StartObject()
 	encoder.KeyedString(hitLocationCalcRollRangeKey, h.RollRange, false, false)
 	if entity != nil {

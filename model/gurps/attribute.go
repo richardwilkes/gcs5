@@ -19,7 +19,6 @@ import (
 )
 
 const (
-	calcKey                 = "calc"
 	attributeIDKey          = "attr_id"
 	attributeAdjKey         = "adj"
 	attributeDamageKey      = "damage"
@@ -61,7 +60,7 @@ func (a *Attribute) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
 		}
 
 		// Emit calculated values for third parties
-		encoder.Key(calcKey)
+		encoder.Key(commonCalcKey)
 		encoder.StartObject()
 		encoder.KeyedNumber(attributeCalcValueKey, a.Maximum(entity), false)
 		if def.Type == attribute.Pool {

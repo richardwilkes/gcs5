@@ -109,7 +109,7 @@ func (w *Weapon) ToJSON(encoder *encoding.JSONEncoder) {
 	}
 	SkillDefaultsListToJSON(w.Defaults, encoder)
 	// Emit the calculated values for third parties
-	encoder.Key(calcKey)
+	encoder.Key(commonCalcKey)
 	encoder.StartObject()
 	encoder.KeyedNumber(weaponCalcLevelKey, fixed.F64d4FromInt64(int64(xmath.MaxInt(w.SkillLevel(), 0))), true)
 	switch w.Type {
