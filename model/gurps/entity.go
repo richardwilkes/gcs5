@@ -12,6 +12,9 @@
 package gurps
 
 import (
+	"strings"
+
+	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/toolbox/eval"
 	"github.com/richardwilkes/toolbox/xio"
 )
@@ -22,6 +25,7 @@ var _ eval.VariableResolver = &Entity{}
 type Entity struct {
 	Profile       *Profile
 	SheetSettings *SheetSettings
+	featureMap    map[string][]*Feature
 }
 
 // AddDRBonusesFor locates any active DR bonuses and adds them to the map. If 'drMap' isn't nil, it will be returned.
@@ -29,26 +33,14 @@ func (e *Entity) AddDRBonusesFor(id string, tooltip *xio.ByteBuffer, drMap map[s
 	if drMap == nil {
 		drMap = make(map[string]int)
 	}
-	// TODO: Implement
-	/*
-	   List<Feature> list = mFeatureMap.get(id.toLowerCase());
-	   if (list != null) {
-	       for (Feature feature : list) {
-	           if (feature instanceof DRBonus bonus) {
-	               String  specialization = bonus.getSpecialization();
-	               int     amt            = bonus.getAmount().getIntegerAdjustedAmount();
-	               Integer value          = dr.get(specialization);
-	               if (value == null) {
-	                   value = Integer.valueOf(amt);
-	               } else {
-	                   value = Integer.valueOf(value.intValue() + amt);
-	               }
-	               dr.put(specialization, value);
-	               bonus.addToToolTip(tooltip);
-	           }
-	       }
-	   }
-	*/
+	if list, exists := e.featureMap[strings.ToLower(id)]; exists {
+		for _, one := range list {
+			if one.Type == feature.DRBonus {
+				drMap[strings.ToLower(one.Specialization)] += int(one.Amount.AdjustedAmount().AsInt64())
+				one.AddToTooltip(tooltip)
+			}
+		}
+	}
 	return drMap
 }
 
@@ -62,5 +54,5 @@ func (e *Entity) ResolveVariable(variableName string) string {
 // character sheets should return true for this.
 func (e *Entity) PreservesUserDesc() bool {
 	// TODO: Implement... should only return true for sheets
-	return false
+	return true
 }
