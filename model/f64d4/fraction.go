@@ -52,6 +52,15 @@ func (f Fraction) Value() fixed.F64d4 {
 	return f.Numerator.Div(f.Denominator)
 }
 
+// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive
+func (f Fraction) StringWithSign() string {
+	s := f.Numerator.StringWithSign()
+	if f.Denominator == One {
+		return s
+	}
+	return s + "/" + f.Denominator.String()
+}
+
 func (f Fraction) String() string {
 	s := f.Numerator.String()
 	if f.Denominator == One {
