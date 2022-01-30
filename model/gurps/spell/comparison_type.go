@@ -66,19 +66,19 @@ func ComparisonTypeFromString(key string) ComparisonType {
 }
 
 // EnsureValid returns the first ComparisonType if this ComparisonType is not a known value.
-func (s ComparisonType) EnsureValid() ComparisonType {
-	if int(s) < len(comparisonTypeValues) {
-		return s
+func (c ComparisonType) EnsureValid() ComparisonType {
+	if int(c) < len(comparisonTypeValues) {
+		return c
 	}
 	return 0
 }
 
 // Key returns the key used to represent this ComparisonType.
-func (s ComparisonType) Key() string {
-	return comparisonTypeValues[s.EnsureValid()].Key
+func (c ComparisonType) Key() string {
+	return comparisonTypeValues[c.EnsureValid()].Key
 }
 
 // UsesStringCriteria returns true if the comparison uses a string value.
-func (s ComparisonType) UsesStringCriteria() bool {
-	return comparisonTypeValues[s.EnsureValid()].UsesStringCriteria
+func (c ComparisonType) UsesStringCriteria() bool {
+	return comparisonTypeValues[c.EnsureValid()].UsesStringCriteria
 }

@@ -63,19 +63,19 @@ func BonusLimitationFromKey(key string) BonusLimitation {
 }
 
 // EnsureValid returns the first BonusLimitation if this BonusLimitation is not a known value.
-func (a BonusLimitation) EnsureValid() BonusLimitation {
-	if int(a) < len(bonusLimitationValues) {
-		return a
+func (b BonusLimitation) EnsureValid() BonusLimitation {
+	if int(b) < len(bonusLimitationValues) {
+		return b
 	}
 	return 0
 }
 
 // Key returns the key used to represent this BonusLimitation.
-func (a BonusLimitation) Key() string {
-	return bonusLimitationValues[a.EnsureValid()].Key
+func (b BonusLimitation) Key() string {
+	return bonusLimitationValues[b.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
-func (a BonusLimitation) String() string {
-	return bonusLimitationValues[a.EnsureValid()].String
+func (b BonusLimitation) String() string {
+	return bonusLimitationValues[b.EnsureValid()].String
 }

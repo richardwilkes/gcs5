@@ -68,19 +68,19 @@ func StrengthDamageFromKey(key string) StrengthDamage {
 }
 
 // EnsureValid returns the first StrengthDamage if this StrengthDamage is not a known value.
-func (w StrengthDamage) EnsureValid() StrengthDamage {
-	if int(w) < len(strengthDamageValues) {
-		return w
+func (s StrengthDamage) EnsureValid() StrengthDamage {
+	if int(s) < len(strengthDamageValues) {
+		return s
 	}
 	return 0
 }
 
 // Key returns the key used to represent this StrengthDamage.
-func (w StrengthDamage) Key() string {
-	return strengthDamageValues[w.EnsureValid()].Key
+func (s StrengthDamage) Key() string {
+	return strengthDamageValues[s.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
-func (w StrengthDamage) String() string {
-	return strengthDamageValues[w.EnsureValid()].String
+func (s StrengthDamage) String() string {
+	return strengthDamageValues[s.EnsureValid()].String
 }

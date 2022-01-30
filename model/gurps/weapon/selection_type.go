@@ -58,19 +58,19 @@ func SelectionTypeFromString(key string) SelectionType {
 }
 
 // EnsureValid returns the first SelectionType if this SelectionType is not a known value.
-func (w SelectionType) EnsureValid() SelectionType {
-	if int(w) < len(selectionTypeValues) {
-		return w
+func (s SelectionType) EnsureValid() SelectionType {
+	if int(s) < len(selectionTypeValues) {
+		return s
 	}
 	return 0
 }
 
 // Key returns the key used to represent this SelectionType.
-func (w SelectionType) Key() string {
-	return selectionTypeValues[w.EnsureValid()].Key
+func (s SelectionType) Key() string {
+	return selectionTypeValues[s.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
-func (w SelectionType) String() string {
-	return selectionTypeValues[w.EnsureValid()].String
+func (s SelectionType) String() string {
+	return selectionTypeValues[s.EnsureValid()].String
 }

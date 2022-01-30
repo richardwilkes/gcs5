@@ -80,9 +80,9 @@ func ModifierCostTypeFromKey(key string) ModifierCostType {
 
 // DetermineModifierCostValueTypeFromString examines a string to determine what type it is, but restricts the result to
 // those allowed for this ModifierCostType.
-func (a ModifierCostType) DetermineModifierCostValueTypeFromString(s string) ModifierCostValueType {
+func (m ModifierCostType) DetermineModifierCostValueTypeFromString(s string) ModifierCostValueType {
 	t := DetermineModifierCostValueTypeFromString(s)
-	permitted := modifierCostTypeValues[a.EnsureValid()].Permitted
+	permitted := modifierCostTypeValues[m.EnsureValid()].Permitted
 	for _, one := range permitted {
 		if one == t {
 			return t
@@ -92,36 +92,36 @@ func (a ModifierCostType) DetermineModifierCostValueTypeFromString(s string) Mod
 }
 
 // EnsureValid returns the first ModifierCostType if this ModifierCostType is not a known value.
-func (a ModifierCostType) EnsureValid() ModifierCostType {
-	if int(a) < len(modifierCostTypeValues) {
-		return a
+func (m ModifierCostType) EnsureValid() ModifierCostType {
+	if int(m) < len(modifierCostTypeValues) {
+		return m
 	}
 	return 0
 }
 
 // Key returns the key used to represent this ModifierCostType.
-func (a ModifierCostType) Key() string {
-	return modifierCostTypeValues[a.EnsureValid()].Key
+func (m ModifierCostType) Key() string {
+	return modifierCostTypeValues[m.EnsureValid()].Key
 }
 
 // ShortString returns the same thing as .String(), but without the example.
-func (a ModifierCostType) ShortString() string {
-	return modifierCostTypeValues[a.EnsureValid()].Description
+func (m ModifierCostType) ShortString() string {
+	return modifierCostTypeValues[m.EnsureValid()].Description
 }
 
 // String implements fmt.Stringer.
-func (a ModifierCostType) String() string {
-	data := modifierCostTypeValues[a.EnsureValid()]
+func (m ModifierCostType) String() string {
+	data := modifierCostTypeValues[m.EnsureValid()]
 	return fmt.Sprintf("%s (e.g. %s)", data.Description, data.Example)
 }
 
 // ExtractValue from the string.
-func (a ModifierCostType) ExtractValue(s string) fixed.F64d4 {
-	return a.DetermineModifierCostValueTypeFromString(s).ExtractValue(s)
+func (m ModifierCostType) ExtractValue(s string) fixed.F64d4 {
+	return m.DetermineModifierCostValueTypeFromString(s).ExtractValue(s)
 }
 
 // Format returns a formatted version of the value.
-func (a ModifierCostType) Format(s string) string {
-	t := a.DetermineModifierCostValueTypeFromString(s)
+func (m ModifierCostType) Format(s string) string {
+	t := m.DetermineModifierCostValueTypeFromString(s)
 	return t.Format(t.ExtractValue(s))
 }

@@ -69,19 +69,19 @@ func ContainerTypeFromKey(key string) ContainerType {
 }
 
 // EnsureValid returns the first ContainerType if this ContainerType is not a known value.
-func (a ContainerType) EnsureValid() ContainerType {
-	if int(a) < len(containerTypeValues) {
-		return a
+func (c ContainerType) EnsureValid() ContainerType {
+	if int(c) < len(containerTypeValues) {
+		return c
 	}
 	return 0
 }
 
 // Key returns the key used to represent this ContainerType.
-func (a ContainerType) Key() string {
-	return containerTypeValues[a.EnsureValid()].Key
+func (c ContainerType) Key() string {
+	return containerTypeValues[c.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
-func (a ContainerType) String() string {
-	return containerTypeValues[a.EnsureValid()].String
+func (c ContainerType) String() string {
+	return containerTypeValues[c.EnsureValid()].String
 }

@@ -53,19 +53,19 @@ func TypeFromKey(key string) Type {
 }
 
 // EnsureValid returns the first Type if this Type is not a known value.
-func (a Type) EnsureValid() Type {
-	if int(a) < len(typeValues) {
-		return a
+func (t Type) EnsureValid() Type {
+	if int(t) < len(typeValues) {
+		return t
 	}
 	return 0
 }
 
 // Key returns the key used to represent this Type.
-func (a Type) Key() string {
-	return typeValues[a.EnsureValid()].Key
+func (t Type) Key() string {
+	return typeValues[t.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
-func (a Type) String() string {
-	return typeValues[a.EnsureValid()].String
+func (t Type) String() string {
+	return typeValues[t.EnsureValid()].String
 }

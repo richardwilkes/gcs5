@@ -58,19 +58,19 @@ func ModifierCostTypeFromKey(key string) ModifierCostType {
 }
 
 // EnsureValid returns the first ModifierCostType if this ModifierCostType is not a known value.
-func (a ModifierCostType) EnsureValid() ModifierCostType {
-	if int(a) < len(modifierCostTypeValues) {
-		return a
+func (m ModifierCostType) EnsureValid() ModifierCostType {
+	if int(m) < len(modifierCostTypeValues) {
+		return m
 	}
 	return 0
 }
 
 // Key returns the key used to represent this ModifierCostType.
-func (a ModifierCostType) Key() string {
-	return modifierCostTypeValues[a.EnsureValid()].Key
+func (m ModifierCostType) Key() string {
+	return modifierCostTypeValues[m.EnsureValid()].Key
 }
 
 // String implements fmt.Stringer.
-func (a ModifierCostType) String() string {
-	return modifierCostTypeValues[a.EnsureValid()].String
+func (m ModifierCostType) String() string {
+	return modifierCostTypeValues[m.EnsureValid()].String
 }

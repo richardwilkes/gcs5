@@ -81,9 +81,9 @@ func ModifierWeightTypeFromKey(key string) ModifierWeightType {
 
 // DetermineModifierWeightValueTypeFromString examines a string to determine what type it is, but restricts the result to
 // those allowed for this ModifierWeightType.
-func (a ModifierWeightType) DetermineModifierWeightValueTypeFromString(s string) ModifierWeightValueType {
+func (m ModifierWeightType) DetermineModifierWeightValueTypeFromString(s string) ModifierWeightValueType {
 	t := DetermineModifierWeightValueTypeFromString(s)
-	permitted := modifierWeightTypeValues[a.EnsureValid()].Permitted
+	permitted := modifierWeightTypeValues[m.EnsureValid()].Permitted
 	for _, one := range permitted {
 		if one == t {
 			return t
@@ -93,37 +93,37 @@ func (a ModifierWeightType) DetermineModifierWeightValueTypeFromString(s string)
 }
 
 // EnsureValid returns the first ModifierWeightType if this ModifierWeightType is not a known value.
-func (a ModifierWeightType) EnsureValid() ModifierWeightType {
-	if int(a) < len(modifierWeightTypeValues) {
-		return a
+func (m ModifierWeightType) EnsureValid() ModifierWeightType {
+	if int(m) < len(modifierWeightTypeValues) {
+		return m
 	}
 	return 0
 }
 
 // Key returns the key used to represent this ModifierWeightType.
-func (a ModifierWeightType) Key() string {
-	return modifierWeightTypeValues[a.EnsureValid()].Key
+func (m ModifierWeightType) Key() string {
+	return modifierWeightTypeValues[m.EnsureValid()].Key
 }
 
 // ShortString returns the same thing as .String(), but without the example.
-func (a ModifierWeightType) ShortString() string {
-	return modifierWeightTypeValues[a.EnsureValid()].Description
+func (m ModifierWeightType) ShortString() string {
+	return modifierWeightTypeValues[m.EnsureValid()].Description
 }
 
 // String implements fmt.Stringer.
-func (a ModifierWeightType) String() string {
-	data := modifierWeightTypeValues[a.EnsureValid()]
+func (m ModifierWeightType) String() string {
+	data := modifierWeightTypeValues[m.EnsureValid()]
 	return fmt.Sprintf("%s (e.g. %s)", data.Description, data.Example)
 }
 
 // ExtractFraction from the string.
-func (a ModifierWeightType) ExtractFraction(s string) f64d4.Fraction {
-	return a.DetermineModifierWeightValueTypeFromString(s).ExtractFraction(s)
+func (m ModifierWeightType) ExtractFraction(s string) f64d4.Fraction {
+	return m.DetermineModifierWeightValueTypeFromString(s).ExtractFraction(s)
 }
 
 // Format returns a formatted version of the value.
-func (a ModifierWeightType) Format(s string, defUnits measure.WeightUnits) string {
-	t := a.DetermineModifierWeightValueTypeFromString(s)
+func (m ModifierWeightType) Format(s string, defUnits measure.WeightUnits) string {
+	t := m.DetermineModifierWeightValueTypeFromString(s)
 	result := t.Format(t.ExtractFraction(s))
 	if t == WeightAddition {
 		result += " " + measure.TrailingWeightUnitsFromString(s, defUnits).Key()

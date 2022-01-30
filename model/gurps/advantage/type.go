@@ -60,55 +60,55 @@ func TypeFromJSON(data map[string]interface{}) Type {
 }
 
 // ToInlineJSON emits the Type into JSON.
-func (a Type) ToInlineJSON(encoder *encoding.JSONEncoder) {
-	encoder.KeyedBool(mentalKey, a.Mental(), true)
-	encoder.KeyedBool(physicalKey, a.Physical(), true)
-	encoder.KeyedBool(socialKey, a.Social(), true)
-	encoder.KeyedBool(exoticKey, a.Exotic(), true)
-	encoder.KeyedBool(supernaturalKey, a.Supernatural(), true)
+func (t Type) ToInlineJSON(encoder *encoding.JSONEncoder) {
+	encoder.KeyedBool(mentalKey, t.Mental(), true)
+	encoder.KeyedBool(physicalKey, t.Physical(), true)
+	encoder.KeyedBool(socialKey, t.Social(), true)
+	encoder.KeyedBool(exoticKey, t.Exotic(), true)
+	encoder.KeyedBool(supernaturalKey, t.Supernatural(), true)
 }
 
-func (a Type) String() string {
+func (t Type) String() string {
 	list := make([]string, 0, 5)
-	if a.Mental() {
+	if t.Mental() {
 		list = append(list, i18n.Text("Mental"))
 	}
-	if a.Physical() {
+	if t.Physical() {
 		list = append(list, i18n.Text("Physical"))
 	}
-	if a.Social() {
+	if t.Social() {
 		list = append(list, i18n.Text("Social"))
 	}
-	if a.Exotic() {
+	if t.Exotic() {
 		list = append(list, i18n.Text("Exotic"))
 	}
-	if a.Supernatural() {
+	if t.Supernatural() {
 		list = append(list, i18n.Text("Supernatural"))
 	}
 	return strings.Join(list, ", ")
 }
 
 // Mental returns true if this Type has the Mental flag set.
-func (a Type) Mental() bool {
-	return a&Mental != 0
+func (t Type) Mental() bool {
+	return t&Mental != 0
 }
 
 // Physical returns true if this Type has the Physical flag set.
-func (a Type) Physical() bool {
-	return a&Physical != 0
+func (t Type) Physical() bool {
+	return t&Physical != 0
 }
 
 // Social returns true if this Type has the Social flag set.
-func (a Type) Social() bool {
-	return a&Social != 0
+func (t Type) Social() bool {
+	return t&Social != 0
 }
 
 // Exotic returns true if this Type has the Exotic flag set.
-func (a Type) Exotic() bool {
-	return a&Exotic != 0
+func (t Type) Exotic() bool {
+	return t&Exotic != 0
 }
 
 // Supernatural returns true if this Type has the Supernatural flag set.
-func (a Type) Supernatural() bool {
-	return a&Supernatural != 0
+func (t Type) Supernatural() bool {
+	return t&Supernatural != 0
 }

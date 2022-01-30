@@ -69,22 +69,22 @@ func DetermineModifierCostValueTypeFromString(s string) ModifierCostValueType {
 }
 
 // EnsureValid returns the first ModifierCostValueType if this ModifierCostValueType is not a known value.
-func (a ModifierCostValueType) EnsureValid() ModifierCostValueType {
-	if int(a) < len(modifierCostValueTypeValues) {
-		return a
+func (m ModifierCostValueType) EnsureValid() ModifierCostValueType {
+	if int(m) < len(modifierCostValueTypeValues) {
+		return m
 	}
 	return 0
 }
 
 // Format returns a formatted version of the value.
-func (a ModifierCostValueType) Format(value fixed.F64d4) string {
-	return modifierCostValueTypeValues[a.EnsureValid()].Format(value)
+func (m ModifierCostValueType) Format(value fixed.F64d4) string {
+	return modifierCostValueTypeValues[m.EnsureValid()].Format(value)
 }
 
 // ExtractValue from the string.
-func (a ModifierCostValueType) ExtractValue(s string) fixed.F64d4 {
+func (m ModifierCostValueType) ExtractValue(s string) fixed.F64d4 {
 	v := fixed.F64d4FromStringForced(s)
-	if a.EnsureValid() == Multiplier && v <= 0 {
+	if m.EnsureValid() == Multiplier && v <= 0 {
 		v = f64d4.One
 	}
 	return v

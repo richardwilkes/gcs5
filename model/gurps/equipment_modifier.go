@@ -19,6 +19,29 @@ type EquipmentModifier struct {
 	TechLevel    string
 	CostAmount   string
 	WeightAmount string
+	Features     []*Feature
+	Children     []*EquipmentModifier
 	CostType     equipment.ModifierCostType
 	WeightType   equipment.ModifierWeightType
+	Enabled      bool
+}
+
+// FillWithNameableKeys adds any nameable keys found in this AdvantageModifier to the provided map.
+func (e *EquipmentModifier) FillWithNameableKeys(nameables map[string]string) {
+	if e.Enabled {
+		e.Common.FillWithNameableKeys(nameables)
+		for _, one := range e.Features {
+			one.FillWithNameableKeys(nameables)
+		}
+	}
+}
+
+// ApplyNameableKeys replaces any nameable keys found in this AdvantageModifier with the corresponding values in the provided map.
+func (e *EquipmentModifier) ApplyNameableKeys(nameables map[string]string) {
+	if e.Enabled {
+		e.Common.ApplyNameableKeys(nameables)
+		for _, one := range e.Features {
+			one.ApplyNameableKeys(nameables)
+		}
+	}
 }

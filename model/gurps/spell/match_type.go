@@ -56,14 +56,14 @@ func MatchTypeFromString(key string) MatchType {
 }
 
 // EnsureValid returns the first MatchType if this MatchType is not a known value.
-func (s MatchType) EnsureValid() MatchType {
-	if int(s) < len(matchTypeValues) {
-		return s
+func (m MatchType) EnsureValid() MatchType {
+	if int(m) < len(matchTypeValues) {
+		return m
 	}
 	return 0
 }
 
 // Key returns the key used to represent this MatchType.
-func (s MatchType) Key() string {
-	return matchTypeValues[s.EnsureValid()].Key
+func (m MatchType) Key() string {
+	return matchTypeValues[m.EnsureValid()].Key
 }

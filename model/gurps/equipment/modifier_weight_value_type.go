@@ -76,22 +76,22 @@ func DetermineModifierWeightValueTypeFromString(s string) ModifierWeightValueTyp
 }
 
 // EnsureValid returns the first ModifierWeightValueType if this ModifierWeightValueType is not a known value.
-func (a ModifierWeightValueType) EnsureValid() ModifierWeightValueType {
-	if int(a) < len(modifierWeightValueTypeValues) {
-		return a
+func (m ModifierWeightValueType) EnsureValid() ModifierWeightValueType {
+	if int(m) < len(modifierWeightValueTypeValues) {
+		return m
 	}
 	return 0
 }
 
 // Format returns a formatted version of the value.
-func (a ModifierWeightValueType) Format(fraction f64d4.Fraction) string {
-	return modifierWeightValueTypeValues[a.EnsureValid()].Format(fraction)
+func (m ModifierWeightValueType) Format(fraction f64d4.Fraction) string {
+	return modifierWeightValueTypeValues[m.EnsureValid()].Format(fraction)
 }
 
 // ExtractFraction from the string.
-func (a ModifierWeightValueType) ExtractFraction(s string) f64d4.Fraction {
+func (m ModifierWeightValueType) ExtractFraction(s string) f64d4.Fraction {
 	fraction := f64d4.NewFractionFromString(s)
-	revised := a.EnsureValid()
+	revised := m.EnsureValid()
 	switch revised {
 	case WeightPercentageMultiplier:
 		if fraction.Numerator <= 0 {
