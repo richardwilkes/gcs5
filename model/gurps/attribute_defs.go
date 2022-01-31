@@ -12,12 +12,13 @@
 package gurps
 
 import (
+	"encoding/json"
 	"io/fs"
 	"sort"
 
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
+	xfs "github.com/richardwilkes/toolbox/xio/fs"
 )
 
 // AttributeDefs holds a set of AttributeDef objects.
@@ -56,44 +57,49 @@ func FactoryAttributeDefs() *AttributeDefs {
 
 // NewAttributeDefsFromFile loads an AttributeDef set from a file.
 func NewAttributeDefsFromFile(fsys fs.FS, filePath string) (*AttributeDefs, error) {
-	data, err := encoding.LoadJSONFromFS(fsys, filePath)
-	if err != nil {
-		return nil, err
-	}
-	// Check for older formats
-	if obj := encoding.Object(data); obj != nil {
-		var exists bool
-		if data, exists = obj["attributes"]; !exists {
-			if data, exists = obj["attribute_settings"]; !exists {
-				return nil, errs.New("invalid attribute definitions file: " + filePath)
-			}
+	var a AttributeDefs
+	if err := xfs.LoadJSONFromFS(fsys, filePath, &a); err != nil {
+		// Check for older formats
+		var old struct {
+			Attributes        *AttributeDefs `json:"attributes"`
+			AttributeSettings *AttributeDefs `json:"attribute_settings"`
 		}
+		if err = xfs.LoadJSONFromFS(fsys, filePath, &a); err != nil {
+			return nil, err
+		}
+		if old.Attributes != nil {
+			return old.Attributes, nil
+		}
+		if old.AttributeSettings != nil {
+			return old.AttributeSettings, nil
+		}
+		return nil, errs.New("invalid attribute definitions file: " + filePath)
 	}
-	return NewAttributeDefsFromJSON(encoding.Array(data)), nil
-}
-
-// NewAttributeDefsFromJSON creates a new AttributeDefs from a JSON object.
-func NewAttributeDefsFromJSON(data []interface{}) *AttributeDefs {
-	a := &AttributeDefs{Set: make(map[string]*AttributeDef)}
-	for i, one := range encoding.Array(data) {
-		def := NewAttributeDefFromJSON(encoding.Object(one), i+1)
-		a.Set[def.ID()] = def
-	}
-	return a
+	return &a, nil
 }
 
 // Save writes the AttributeDefs to the file as JSON.
 func (a *AttributeDefs) Save(filePath string) error {
-	return encoding.SaveJSON(filePath, true, a.ToJSON)
+	return xfs.SaveJSON(filePath, a, true)
 }
 
-// ToJSON emits this object as JSON.
-func (a *AttributeDefs) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartArray()
-	for _, def := range a.List() {
-		def.ToJSON(encoder)
+// MarshalJSON implements json.Marshaler.
+func (a *AttributeDefs) MarshalJSON() ([]byte, error) {
+	return json.Marshal(a.List())
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (a *AttributeDefs) UnmarshalJSON(data []byte) error {
+	var list []*AttributeDef
+	if err := json.Unmarshal(data, &list); err != nil {
+		return err
 	}
-	encoder.EndArray()
+	a.Set = make(map[string]*AttributeDef, len(list))
+	for i, one := range list {
+		one.Order = i + 1
+		a.Set[one.ID()] = one
+	}
+	return nil
 }
 
 // List returns the map of AttributeDef objects as an ordered list.

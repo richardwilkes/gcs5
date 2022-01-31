@@ -40,7 +40,7 @@ type selfControlRollAdjData struct {
 	Features    func(cr advantage.SelfControlRoll) []*Feature
 }
 
-// SelfControlRollAdj holds an adjustment for a self-control roll.
+// SelfControlRollAdj holds an Adjustment for a self-control roll.
 type SelfControlRollAdj uint8
 
 var selfControlRollAdjValues = []*selfControlRollAdjData{

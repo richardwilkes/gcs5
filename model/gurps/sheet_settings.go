@@ -20,6 +20,19 @@ import (
 )
 
 const (
+	blockLayoutReactionsKey            = "reactions"
+	blockLayoutConditionalModifiersKey = "conditional_modifiers"
+	blockLayoutMeleeKey                = "melee"
+	blockLayoutRangedKey               = "ranged"
+	blockLayoutAdvantagesKey           = "advantages"
+	blockLayoutSkillsKey               = "skills"
+	blockLayoutSpellsKey               = "spells"
+	blockLayoutEquipmentKey            = "equipment"
+	blockLayoutOtherEquipmentKey       = "other_equipment"
+	blockLayoutNotesKey                = "notes"
+)
+
+const (
 	sheetSettingsDefaultLengthUnitsKey         = "default_length_units"
 	sheetSettingsDefaultWeightUnitsKey         = "default_weight_units"
 	sheetSettingsUserDescriptionDisplayKey     = "user_description_display"
@@ -48,7 +61,7 @@ var GlobalSheetSettingsProvider func() *SheetSettings
 // SheetSettings holds sheet settings.
 type SheetSettings struct {
 	Page                       *settings.Page
-	BlockLayout                *BlockLayout
+	BlockLayout                []string
 	Attributes                 *AttributeDefs
 	HitLocations               *BodyType
 	DamageProgression          attribute.DamageProgression
@@ -91,6 +104,19 @@ func FactorySheetSettings() *SheetSettings {
 		NotesDisplay:           display.Inline,
 		SkillLevelAdjDisplay:   display.Tooltip,
 		ShowSpellAdj:           true,
+	}
+}
+
+func FactoryBlockLayout() []string {
+	return []string{
+		blockLayoutReactionsKey + " " + blockLayoutConditionalModifiersKey,
+		blockLayoutMeleeKey,
+		blockLayoutRangedKey,
+		blockLayoutAdvantagesKey + " " + blockLayoutSkillsKey,
+		blockLayoutSpellsKey,
+		blockLayoutEquipmentKey,
+		blockLayoutOtherEquipmentKey,
+		blockLayoutNotesKey,
 	}
 }
 

@@ -11,74 +11,39 @@
 
 package spell
 
-import (
-	"strings"
-)
-
 // Possible ComparisonType values.
 const (
-	Name ComparisonType = iota
-	Category
-	College
-	CollegeCount
-	Any
+	Name         = ComparisonType("name")
+	Category     = ComparisonType("category")
+	College      = ComparisonType("college")
+	CollegeCount = ComparisonType("college_count")
+	Any          = ComparisonType("any")
 )
 
-type comparisonTypeData struct {
-	Key                string
-	UsesStringCriteria bool
+// AllComparisonTypes is the complete set of ComparisonType values.
+var AllComparisonTypes = []ComparisonType{
+	Name,
+	Category,
+	College,
+	CollegeCount,
+	Any,
 }
 
 // ComparisonType holds the type of an attribute definition.
-type ComparisonType uint8
+type ComparisonType string
 
-var comparisonTypeValues = []*comparisonTypeData{
-	{
-		Key:                "name",
-		UsesStringCriteria: true,
-	},
-	{
-		Key:                "category",
-		UsesStringCriteria: true,
-	},
-	{
-		Key:                "college",
-		UsesStringCriteria: true,
-	},
-	{
-		Key:                "college_count",
-		UsesStringCriteria: false,
-	},
-	{
-		Key:                "any",
-		UsesStringCriteria: false,
-	},
-}
-
-// ComparisonTypeFromString extracts a ComparisonType from a key.
-func ComparisonTypeFromString(key string) ComparisonType {
-	for i, one := range comparisonTypeValues {
-		if strings.EqualFold(key, one.Key) {
-			return ComparisonType(i)
+// EnsureValid ensures this is of a known value.
+func (c ComparisonType) EnsureValid() ComparisonType {
+	for _, one := range AllComparisonTypes {
+		if one == c {
+			return c
 		}
 	}
-	return 0
-}
-
-// EnsureValid returns the first ComparisonType if this ComparisonType is not a known value.
-func (c ComparisonType) EnsureValid() ComparisonType {
-	if int(c) < len(comparisonTypeValues) {
-		return c
-	}
-	return 0
-}
-
-// Key returns the key used to represent this ComparisonType.
-func (c ComparisonType) Key() string {
-	return comparisonTypeValues[c.EnsureValid()].Key
+	return AllComparisonTypes[0]
 }
 
 // UsesStringCriteria returns true if the comparison uses a string value.
 func (c ComparisonType) UsesStringCriteria() bool {
-	return comparisonTypeValues[c.EnsureValid()].UsesStringCriteria
+	v := c.EnsureValid()
+	return v == Name || v == Category || v == College
 }

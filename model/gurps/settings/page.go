@@ -12,27 +12,17 @@
 package settings
 
 import (
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/paper"
-)
-
-const (
-	pagePaperSizeKey    = "paper_size"
-	pageOrientationKey  = "orientation"
-	pageTopMarginKey    = "top_margin"
-	pageLeftMarginKey   = "left_margin"
-	pageBottomMarginKey = "bottom_margin"
-	pageRightMarginKey  = "right_margin"
 )
 
 // Page holds page settings.
 type Page struct {
-	Size         paper.Size
-	Orientation  paper.Orientation
-	TopMargin    paper.Length
-	LeftMargin   paper.Length
-	BottomMargin paper.Length
-	RightMargin  paper.Length
+	Size         paper.Size        `json:"paper_size"`
+	Orientation  paper.Orientation `json:"orientation"`
+	TopMargin    paper.Length      `json:"top_margin"`
+	LeftMargin   paper.Length      `json:"left_margin"`
+	BottomMargin paper.Length      `json:"bottom_margin"`
+	RightMargin  paper.Length      `json:"right_margin"`
 }
 
 // NewPage returns new settings with factory defaults.
@@ -45,28 +35,4 @@ func NewPage() *Page {
 		BottomMargin: paper.Length{Length: 0.25, Units: paper.Inch},
 		RightMargin:  paper.Length{Length: 0.25, Units: paper.Inch},
 	}
-}
-
-// NewPageFromJSON creates new settings from a JSON object.
-func NewPageFromJSON(data map[string]interface{}) *Page {
-	s := NewPage()
-	s.Size = paper.SizeFromString(encoding.String(data[pagePaperSizeKey]))
-	s.Orientation = paper.OrientationFromString(encoding.String(data[pageOrientationKey]))
-	s.TopMargin = paper.LengthFromString(encoding.String(data[pageTopMarginKey]))
-	s.LeftMargin = paper.LengthFromString(encoding.String(data[pageLeftMarginKey]))
-	s.BottomMargin = paper.LengthFromString(encoding.String(data[pageBottomMarginKey]))
-	s.RightMargin = paper.LengthFromString(encoding.String(data[pageRightMarginKey]))
-	return s
-}
-
-// ToJSON emits this object as JSON.
-func (s *Page) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	encoder.KeyedString(pagePaperSizeKey, s.Size.Key(), false, false)
-	encoder.KeyedString(pageOrientationKey, s.Orientation.Key(), false, false)
-	encoder.KeyedString(pageTopMarginKey, s.TopMargin.String(), false, false)
-	encoder.KeyedString(pageLeftMarginKey, s.LeftMargin.String(), false, false)
-	encoder.KeyedString(pageBottomMarginKey, s.BottomMargin.String(), false, false)
-	encoder.KeyedString(pageRightMarginKey, s.RightMargin.String(), false, false)
-	encoder.EndObject()
 }

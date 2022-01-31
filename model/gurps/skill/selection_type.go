@@ -12,65 +12,46 @@
 package skill
 
 import (
-	"strings"
-
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
 // Possible SelectionType values.
 const (
-	SkillsWithName SelectionType = iota
-	ThisWeapon
-	WeaponsWithName
+	SkillsWithName  = SelectionType("skills_with_name")
+	ThisWeapon      = SelectionType("this_weapon")
+	WeaponsWithName = SelectionType("weapons_with_name")
 )
 
-type selectionTypeData struct {
-	Key    string
-	String string
+// AllSelectionTypes is the complete set of SelectionType values.
+var AllSelectionTypes = []SelectionType{
+	SkillsWithName,
+	ThisWeapon,
+	WeaponsWithName,
 }
 
 // SelectionType holds the type of an attribute definition.
-type SelectionType uint8
+type SelectionType string
 
-var selectionTypeValues = []*selectionTypeData{
-	{
-		Key:    "skills_with_name",
-		String: i18n.Text("to skills whose name"),
-	},
-	{
-		Key:    "this_weapon",
-		String: i18n.Text("to this weapon"),
-	},
-	{
-		Key:    "weapons_with_name",
-		String: i18n.Text("to weapons whose name"),
-	},
-}
-
-// SelectionTypeFromString extracts a SelectionType from a key.
-func SelectionTypeFromString(key string) SelectionType {
-	for i, one := range selectionTypeValues {
-		if strings.EqualFold(key, one.Key) {
-			return SelectionType(i)
+// EnsureValid ensures this is of a known value.
+func (s SelectionType) EnsureValid() SelectionType {
+	for _, one := range AllSelectionTypes {
+		if one == s {
+			return s
 		}
 	}
-	return 0
-}
-
-// EnsureValid returns the first SelectionType if this SelectionType is not a known value.
-func (s SelectionType) EnsureValid() SelectionType {
-	if int(s) < len(selectionTypeValues) {
-		return s
-	}
-	return 0
-}
-
-// Key returns the key used to represent this SelectionType.
-func (s SelectionType) Key() string {
-	return selectionTypeValues[s.EnsureValid()].Key
+	return AllSelectionTypes[0]
 }
 
 // String implements fmt.Stringer.
 func (s SelectionType) String() string {
-	return selectionTypeValues[s.EnsureValid()].String
+	switch s {
+	case SkillsWithName:
+		return i18n.Text("to skills whose name")
+	case ThisWeapon:
+		return i18n.Text("to this weapon")
+	case WeaponsWithName:
+		return i18n.Text("to weapons whose name")
+	default:
+		return SkillsWithName.String()
+	}
 }
