@@ -20,6 +20,13 @@ import (
 )
 
 const (
+	// ThisWeaponID holds the ID for "this weapon".
+	ThisWeaponID = "\u0001"
+	// WeaponNamedIDPrefix the prefix for "weapon named" IDs.
+	WeaponNamedIDPrefix = "weapon_named."
+)
+
+const (
 	weaponTypeKey            = "type"
 	weaponDamageKey          = "damage"
 	weaponMinimumStrengthKey = "strength"

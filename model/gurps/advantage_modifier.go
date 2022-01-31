@@ -31,7 +31,7 @@ type AdvantageModifierItem struct {
 	Levels   fixed.F64d4                `json:"levels,omitempty"`
 	Affects  *advantage.Affects         `json:"affects,omitempty"`
 	Features []*Feature                 `json:"features,omitempty"`
-	Disabled bool                       `json:"disabled,omitempty" json:"disabled,omitempty"`
+	Disabled bool                       `json:"disabled,omitempty"`
 }
 
 // AdvantageModifierContainer holds the AdvantageModifier data that only exists in containers.
@@ -40,6 +40,7 @@ type AdvantageModifierContainer struct {
 	Open     bool                 `json:"open,omitempty"`
 }
 
+// AdvantageModifierData holds the AdvantageModifier data that is written to disk.
 type AdvantageModifierData struct {
 	Type                        string    `json:"type"`
 	ID                          uuid.UUID `json:"id"`

@@ -17,7 +17,7 @@ import (
 
 // Possible BonusLimitation values.
 const (
-	None         = BonusLimitation("none")
+	None         = BonusLimitation("")
 	StrikingOnly = BonusLimitation("striking_only")
 	LiftingOnly  = BonusLimitation("lifting_only")
 	ThrowingOnly = BonusLimitation("throwing_only")
@@ -48,7 +48,7 @@ func (b BonusLimitation) EnsureValid() BonusLimitation {
 func (b BonusLimitation) String() string {
 	switch b {
 	case None:
-		return " "
+		return ""
 	case StrikingOnly:
 		return i18n.Text("for striking only")
 	case LiftingOnly:

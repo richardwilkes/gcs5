@@ -14,7 +14,7 @@ package feature
 // Possible Type values.
 const (
 	AttributeBonus           = Type("attribute_bonus")
-	ConditionalModifierBonus = Type("conditional_modifier")
+	ConditionalModifier      = Type("conditional_modifier")
 	ContainedWeightReduction = Type("contained_weight_reduction")
 	CostReduction            = Type("cost_reduction")
 	DRBonus                  = Type("dr_bonus")
@@ -29,7 +29,7 @@ const (
 // AllTypes is the complete set of Type values.
 var AllTypes = []Type{
 	AttributeBonus,
-	ConditionalModifierBonus,
+	ConditionalModifier,
 	ContainedWeightReduction,
 	CostReduction,
 	DRBonus,

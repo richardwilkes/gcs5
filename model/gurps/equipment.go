@@ -12,154 +12,135 @@
 package gurps
 
 import (
+	"encoding/json"
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-const (
-	equipmentTypeKey                        = "equipment"
-	equipmentEquippedKey                    = "equipped"
-	equipmentQuantityKey                    = "quantity"
-	equipmentDescriptionKey                 = "description"
-	equipmentTechLevelKey                   = "tech_level"
-	equipmentLegalityClassKey               = "legality_class"
-	equipmentValueKey                       = "value"
-	equipmentIgnoreWeightForSkillsKey       = "ignore_weight_for_skills"
-	equipmentWeightKey                      = "weight"
-	equipmentUsesKey                        = "uses"
-	equipmentMaxUsesKey                     = "max_uses"
-	equipmentPrereqsKey                     = "prereqs"
-	equipmentCalcExtendedValueKey           = "extended_value"
-	equipmentCalcExtendedWeightKey          = "extended_weight"
-	equipmentCalcExtendedWeightForSkillsKey = "extended_weight_for_skills"
-)
+const equipmentTypeKey = "equipment"
+
+// EquipmentItem holds the Equipment data that only exists in non-containers.
+type EquipmentItem struct {
+	Quantity fixed.F64d4 `json:"quantity,omitempty"`
+}
+
+// EquipmentContainer holds the Equipment data that only exists in containers.
+type EquipmentContainer struct {
+	Children []*Equipment `json:"children,omitempty"`
+	Open     bool         `json:"open,omitempty"`
+}
+
+// EquipmentCalc holds the Equipment data that is only emitted for third parties.
+type EquipmentCalc struct {
+	ExtendedValue           fixed.F64d4     `json:"extended_value"`
+	ExtendedWeight          measure.Weight  `json:"extended_weight"`
+	ExtendedWeightForSkills *measure.Weight `json:"extended_weight_for_skills,omitempty"`
+}
+
+// EquipmentData holds the Equipment data that is written to disk.
+type EquipmentData struct {
+	Type                   string               `json:"type"`
+	ID                     uuid.UUID            `json:"id"`
+	Name                   string               `json:"description,omitempty"`
+	PageRef                string               `json:"reference,omitempty"`
+	Notes                  string               `json:"notes,omitempty"`
+	VTTNotes               string               `json:"vtt_notes,omitempty"`
+	TechLevel              string               `json:"tech_level,omitempty"`
+	LegalityClass          string               `json:"legality_class,omitempty"`
+	Value                  fixed.F64d4          `json:"value,omitempty"`
+	Weight                 measure.Weight       `json:"weight,omitempty"`
+	MaxUses                int                  `json:"max_uses,omitempty"`
+	Uses                   int                  `json:"uses,omitempty"`
+	Weapons                []*Weapon            `json:"weapons,omitempty"`
+	Modifiers              []*EquipmentModifier `json:"modifiers,omitempty"`
+	Features               []*Feature           `json:"features,omitempty"`
+	Prereq                 *Prereq              `json:"prereqs,omitempty"`
+	Categories             []string             `json:"categories,omitempty"`
+	Equipped               bool                 `json:"equipped,omitempty"`
+	WeightIgnoredForSkills bool                 `json:"ignore_weight_for_skills,omitempty"`
+	*EquipmentItem         `json:",omitempty"`
+	*EquipmentContainer    `json:",omitempty"`
+	Calc                   *EquipmentCalc `json:"calc,omitempty"`
+}
 
 // Equipment holds a piece of equipment.
 type Equipment struct {
-	Common
-	Parent                 *Equipment
-	Quantity               fixed.F64d4
-	Value                  fixed.F64d4
-	Weight                 measure.Weight
-	Uses                   int
-	MaxUses                int
-	TechLevel              string
-	LegalityClass          string
-	UnsatisfiedReason      string
-	Weapons                []*Weapon
-	Modifiers              []*EquipmentModifier
-	Features               []*Feature
-	Prereq                 *Prereq
-	Categories             []string
-	Children               []*Equipment
-	Equipped               bool
-	WeightIgnoredForSkills bool
-	Satisfied              bool
+	EquipmentData
+	Entity            *Entity
+	Parent            *Equipment
+	UnsatisfiedReason string
+	Satisfied         bool
 }
 
 // NewEquipment creates a new Equipment.
-func NewEquipment(parent *Equipment, container bool) *Equipment {
-	return &Equipment{
-		Common: Common{
-			ID:        id.NewUUID(),
-			Name:      i18n.Text("Equipment"),
-			Container: container,
-			Open:      true,
+func NewEquipment(entity *Entity, parent *Equipment, container bool) *Equipment {
+	e := Equipment{
+		EquipmentData: EquipmentData{
+			Type:          equipmentTypeKey,
+			ID:            id.NewUUID(),
+			Name:          i18n.Text("Equipment"),
+			LegalityClass: "4",
+			Prereq:        NewPrereq(prereq.List, nil),
+			Equipped:      true,
 		},
-		Parent:        parent,
-		Quantity:      f64d4.One,
-		LegalityClass: "4",
-		Prereq:        NewPrereq(prereq.List, nil),
-		Equipped:      true,
-		Satisfied:     true,
+		Entity: entity,
+		Parent: parent,
 	}
+	if container {
+		e.Type += commonContainerKeyPostfix
+		e.EquipmentContainer = &EquipmentContainer{Open: true}
+	} else {
+		e.EquipmentItem = &EquipmentItem{Quantity: f64d4.One}
+	}
+	return &e
 }
 
-// NewEquipmentFromJSON creates a new Equipment from a JSON object. 'entity' may be nil.
-func NewEquipmentFromJSON(parent *Equipment, data map[string]interface{}, entity *Entity) *Equipment {
-	e := &Equipment{Parent: parent}
-	e.Common.FromJSON(equipmentTypeKey, data)
-	if e.Name == "" { // If no name, then try to load from the old key
-		e.Name = encoding.String(data[equipmentDescriptionKey])
-	}
-	e.Equipped = encoding.Bool(data[equipmentEquippedKey])
-	e.TechLevel = encoding.String(data[equipmentTechLevelKey])
-	e.LegalityClass = encoding.String(data[equipmentLegalityClassKey])
-	e.Value = encoding.Number(data[equipmentValueKey])
-	e.WeightIgnoredForSkills = encoding.Bool(data[equipmentIgnoreWeightForSkillsKey])
-	defWeightUnits := SheetSettingsFor(entity).DefaultWeightUnits
-	e.Weight = measure.WeightFromStringForced(encoding.String(data[equipmentWeightKey]), defWeightUnits)
-	e.MaxUses = int(encoding.Number(data[equipmentMaxUsesKey]).Max(0).AsInt64())
-	e.Uses = xmath.MinInt(int(encoding.Number(data[equipmentUsesKey]).Max(0).AsInt64()), e.MaxUses)
-	e.Weapons = WeaponsListFromJSON(data)
-	e.Modifiers = EquipmentModifiersListFromJSON(commonModifiersKey, data)
-	e.Features = FeaturesListFromJSON(data)
-	e.Prereq = NewPrereqFromJSON(encoding.Object(data[equipmentPrereqsKey]), entity)
-	e.Categories = StringListFromJSON(commonCategoriesKey, true, data)
-	if e.Container {
-		array := encoding.Array(data[commonChildrenKey])
-		if len(array) != 0 {
-			e.Children = make([]*Equipment, len(array))
-			for i, one := range array {
-				e.Children[i] = NewEquipmentFromJSON(e, encoding.Object(one), entity)
-			}
-		}
-		e.Quantity = f64d4.One
+// MarshalJSON implements json.Marshaler.
+func (e *Equipment) MarshalJSON() ([]byte, error) {
+	if e.Container() {
+		e.EquipmentItem = nil
 	} else {
-		e.Quantity = encoding.Number(data[equipmentQuantityKey])
+		e.EquipmentContainer = nil
 	}
-	return e
-}
-
-// ToJSON emits this object as JSON.
-func (e *Equipment) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
-	defUnits := SheetSettingsFor(entity).DefaultWeightUnits
-	encoder.StartObject()
-	e.Common.ToInlineJSON(equipmentTypeKey, encoder)
-	if entity != nil {
-		encoder.KeyedBool(equipmentEquippedKey, e.Equipped, true)
+	defUnits := SheetSettingsFor(e.Entity).DefaultWeightUnits
+	e.Calc = &EquipmentCalc{
+		ExtendedValue:  e.ExtendedValue(),
+		ExtendedWeight: e.ExtendedWeight(false, defUnits),
 	}
-	encoder.KeyedString(equipmentTechLevelKey, e.TechLevel, true, true)
-	encoder.KeyedString(equipmentLegalityClassKey, e.LegalityClass, true, true)
-	encoder.KeyedNumber(equipmentValueKey, e.Value, true)
-	encoder.KeyedBool(equipmentIgnoreWeightForSkillsKey, e.WeightIgnoredForSkills, true)
-	encoder.KeyedString(equipmentWeightKey, e.Weight.String(), false, false)
-	encoder.KeyedNumber(equipmentMaxUsesKey, fixed.F64d4FromInt64(int64(e.MaxUses)), true)
-	encoder.KeyedNumber(equipmentUsesKey, fixed.F64d4FromInt64(int64(e.Uses)), true)
-	WeaponsListToJSON(e.Weapons, encoder)
-	EquipmentModifiersListToJSON(commonModifiersKey, e.Modifiers, encoder)
-	FeaturesListToJSON(e.Features, encoder)
-	encoding.ToKeyedJSON(e.Prereq, equipmentPrereqsKey, encoder)
-	StringListToJSON(commonCategoriesKey, e.Categories, encoder)
-	if e.Container {
-		encoder.Key(commonChildrenKey)
-		encoder.StartArray()
-		for _, one := range e.Children {
-			one.ToJSON(encoder, entity)
-		}
-		encoder.EndArray()
-	} else {
-		encoder.KeyedNumber(equipmentQuantityKey, e.Quantity, true)
-	}
-	// Emit the calculated values for third parties
-	encoder.Key(commonCalcKey)
-	encoder.StartObject()
-	encoder.KeyedNumber(equipmentCalcExtendedValueKey, e.ExtendedValue(), true)
-	encoder.KeyedString(equipmentCalcExtendedWeightKey, e.ExtendedWeight(false, defUnits).String(), false, false)
 	if e.WeightIgnoredForSkills {
-		encoder.KeyedString(equipmentCalcExtendedWeightForSkillsKey, e.ExtendedWeight(true, defUnits).String(), false, false)
+		w := e.ExtendedWeight(true, defUnits)
+		e.Calc.ExtendedWeightForSkills = &w
 	}
-	encoder.EndObject()
-	encoder.EndObject()
+	data, err := json.Marshal(&e.EquipmentData)
+	e.Calc = nil
+	return data, err
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (e *Equipment) UnmarshalJSON(data []byte) error {
+	e.EquipmentData = EquipmentData{}
+	if err := json.Unmarshal(data, &e.EquipmentData); err != nil {
+		return err
+	}
+	if e.Container() {
+		for _, one := range e.Children {
+			one.Parent = e
+		}
+	}
+	return nil
+}
+
+// Container returns true if this is a container.
+func (e *Equipment) Container() bool {
+	return strings.HasSuffix(e.Type, commonContainerKeyPostfix)
 }
 
 // AdjustedValue returns the value after adjustments for any modifiers. Does not include the value of children.
@@ -177,7 +158,6 @@ func (e *Equipment) ExtendedValue() fixed.F64d4 {
 }
 
 // AdjustedWeight returns the weight after adjustments for any modifiers. Does not include the weight of children.
-// 'entity' may be nil.
 func (e *Equipment) AdjustedWeight(forSkills bool, defUnits measure.WeightUnits) measure.Weight {
 	if forSkills && e.WeightIgnoredForSkills {
 		return 0
@@ -194,21 +174,23 @@ func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits)
 	var percentage, reduction fixed.F64d4
 	for _, one := range e.Features {
 		if one.Type == feature.ContainedWeightReduction {
-			if one.IsPercentageReduction() {
-				percentage += one.PercentageReduction()
+			cwr := one.Self.(*ContainedWeightReduction)
+			if cwr.IsPercentageReduction() {
+				percentage += cwr.PercentageReduction()
 			} else {
-				reduction += fixed.F64d4(one.FixedReduction(defUnits))
+				reduction += fixed.F64d4(cwr.FixedReduction(defUnits))
 			}
 		}
 	}
 	for _, one := range e.Modifiers {
-		if one.Enabled {
+		if !one.Disabled {
 			for _, f := range e.Features {
 				if f.Type == feature.ContainedWeightReduction {
-					if f.IsPercentageReduction() {
-						percentage += f.PercentageReduction()
+					cwr := f.Self.(*ContainedWeightReduction)
+					if cwr.IsPercentageReduction() {
+						percentage += cwr.PercentageReduction()
 					} else {
-						reduction += fixed.F64d4(f.FixedReduction(defUnits))
+						reduction += fixed.F64d4(cwr.FixedReduction(defUnits))
 					}
 				}
 			}
@@ -225,7 +207,9 @@ func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits)
 
 // FillWithNameableKeys adds any nameable keys found in this Advantage to the provided map.
 func (e *Equipment) FillWithNameableKeys(nameables map[string]string) {
-	e.Common.FillWithNameableKeys(nameables)
+	ExtractNameables(e.Name, nameables)
+	ExtractNameables(e.Notes, nameables)
+	ExtractNameables(e.VTTNotes, nameables)
 	e.Prereq.FillWithNameableKeys(nameables)
 	for _, one := range e.Features {
 		one.FillWithNameableKeys(nameables)
@@ -240,7 +224,9 @@ func (e *Equipment) FillWithNameableKeys(nameables map[string]string) {
 
 // ApplyNameableKeys replaces any nameable keys found in this Advantage with the corresponding values in the provided map.
 func (e *Equipment) ApplyNameableKeys(nameables map[string]string) {
-	e.Common.ApplyNameableKeys(nameables)
+	e.Name = ApplyNameables(e.Name, nameables)
+	e.Notes = ApplyNameables(e.Notes, nameables)
+	e.VTTNotes = ApplyNameables(e.VTTNotes, nameables)
 	e.Prereq.ApplyNameableKeys(nameables)
 	for _, one := range e.Features {
 		one.ApplyNameableKeys(nameables)
@@ -275,22 +261,22 @@ func (e *Equipment) DisplayLegalityClass() string {
 // ActiveModifierFor returns the first modifier that matches the name (case-insensitive).
 func (e *Equipment) ActiveModifierFor(name string) *EquipmentModifier {
 	for _, one := range e.Modifiers {
-		if one.Enabled && strings.EqualFold(one.Name, name) {
+		if !one.Disabled && strings.EqualFold(one.Name, name) {
 			return one
 		}
 	}
 	return nil
 }
 
-// ModifierNotes returns the notes due to modifiers. 'entity' may be nil.
-func (e *Equipment) ModifierNotes(entity *Entity) string {
+// ModifierNotes returns the notes due to modifiers.
+func (e *Equipment) ModifierNotes() string {
 	var buffer strings.Builder
 	for _, one := range e.Modifiers {
-		if one.Enabled {
+		if !one.Disabled {
 			if buffer.Len() != 0 {
 				buffer.WriteString("; ")
 			}
-			buffer.WriteString(one.FullDescription(entity))
+			buffer.WriteString(one.FullDescription(e.Entity))
 		}
 	}
 	return buffer.String()

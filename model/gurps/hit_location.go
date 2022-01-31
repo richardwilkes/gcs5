@@ -13,114 +13,81 @@ package gurps
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 // HitLocationPrefix is the prefix used on all hit locations for DR bonuses.
 const HitLocationPrefix = "hit_location."
 
-const (
-	hitLocationIDKey            = "id"
-	hitLocationChoiceNameKey    = "choice_name"
-	hitLocationTableNameKey     = "table_name"
-	hitLocationSlotsKey         = "slots"
-	hitLocationHitPenaltyKey    = "hit_penalty"
-	hitLocationDRBonusKey       = "dr_bonus"
-	hitLocationDescriptionKey   = "description"
-	hitLocationSubTableKey      = "sub_table"
-	hitLocationCalcRollRangeKey = "roll_range"
-	hitLocationCalcDRKey        = "dr"
-)
+// HitLocationData holds the Hitlocation data that gets written to disk.
+type HitLocationData struct {
+	Entity      *Entity         `json:"-"`
+	LocID       string          `json:"id"`
+	ChoiceName  string          `json:"choice_name"`
+	TableName   string          `json:"table_name"`
+	Slots       int             `json:"slots"`
+	HitPenalty  int             `json:"hit_penalty"`
+	DRBonus     int             `json:"dr_bonus"`
+	Description string          `json:"description"`
+	Calc        HitLocationCalc `json:"calc"`
+	SubTable    *BodyType       `json:"sub_table,omitempty"`
+}
+
+// HitLocationCalc holds the data that we calculate and store for third parties.
+type HitLocationCalc struct {
+	RollRange string         `json:"roll_range"`
+	DR        map[string]int `json:"dr,omitempty"`
+}
 
 // HitLocation holds a single hit location.
 type HitLocation struct {
-	id          string
-	ChoiceName  string
-	TableName   string
-	RollRange   string
-	Slots       int
-	HitPenalty  int
-	DRBonus     int
-	Description string
-	SubTable    *BodyType
+	HitLocationData
 	owningTable *BodyType
 }
 
-// NewHitLocationFromJSON creates a new HitLocation from a JSON object.
-func NewHitLocationFromJSON(data map[string]interface{}) *HitLocation {
-	h := &HitLocation{
-		ChoiceName:  encoding.String(data[hitLocationChoiceNameKey]),
-		TableName:   encoding.String(data[hitLocationTableNameKey]),
-		Slots:       int(encoding.Number(data[hitLocationSlotsKey]).AsInt64()),
-		HitPenalty:  int(encoding.Number(data[hitLocationHitPenaltyKey]).AsInt64()),
-		DRBonus:     int(encoding.Number(data[hitLocationDRBonusKey]).AsInt64()),
-		Description: encoding.String(data[hitLocationDescriptionKey]),
+// MarshalJSON implements json.Marshaler.
+func (h *HitLocation) MarshalJSON() ([]byte, error) {
+	h.Calc.DR = nil
+	if h.Entity != nil {
+		h.Calc.DR = h.DR(h.Entity, nil, nil)
+		if _, exists := h.Calc.DR[All]; !exists {
+			h.Calc.DR[All] = 0
+		}
 	}
-	h.SetID(encoding.String(data[hitLocationIDKey]))
-	if obj := encoding.Object(data[hitLocationSubTableKey]); obj != nil {
-		h.SetSubTable(NewBodyTypeFromJSON(obj))
-	}
-	return h
+	data, err := json.Marshal(&h.HitLocationData)
+	h.Calc.DR = nil
+	return data, err
 }
 
-// ToJSON emits this object as JSON.
-func (h *HitLocation) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
-	encoder.StartObject()
-	encoder.KeyedString(hitLocationIDKey, h.id, false, false)
-	encoder.KeyedString(hitLocationChoiceNameKey, h.ChoiceName, true, true)
-	encoder.KeyedString(hitLocationTableNameKey, h.TableName, true, true)
-	encoder.KeyedNumber(hitLocationSlotsKey, fixed.F64d4FromInt64(int64(h.Slots)), true)
-	encoder.KeyedNumber(hitLocationHitPenaltyKey, fixed.F64d4FromInt64(int64(h.HitPenalty)), true)
-	encoder.KeyedNumber(hitLocationDRBonusKey, fixed.F64d4FromInt64(int64(h.DRBonus)), true)
-	encoder.KeyedString(hitLocationDescriptionKey, h.Description, true, true)
+// UnmarshalJSON implements json.Unmarshaler.
+func (h *HitLocation) UnmarshalJSON(data []byte) error {
+	h.HitLocationData = HitLocationData{}
+	if err := json.Unmarshal(data, &h.HitLocationData); err != nil {
+		return err
+	}
+	h.Calc.DR = nil
 	if h.SubTable != nil {
-		encoder.Key(hitLocationSubTableKey)
-		h.SubTable.ToJSON(encoder, entity)
+		h.SubTable.SetOwningLocation(h)
 	}
-
-	// Emit the calculated values for third parties
-	encoder.Key(commonCalcKey)
-	encoder.StartObject()
-	encoder.KeyedString(hitLocationCalcRollRangeKey, h.RollRange, false, false)
-	if entity != nil {
-		drMap := h.DR(entity, nil, nil)
-		if _, exists := drMap[All]; !exists {
-			drMap[All] = 0
-		}
-		keys := make([]string, 0, len(drMap))
-		for k := range drMap {
-			keys = append(keys, k)
-		}
-		txt.SortStringsNaturalAscending(keys)
-		encoder.Key(hitLocationCalcDRKey)
-		encoder.StartObject()
-		for _, k := range keys {
-			encoder.KeyedNumber(k, fixed.F64d4FromInt64(int64(drMap[k])), false)
-		}
-		encoder.EndObject()
-	}
-	encoder.EndObject()
-
-	encoder.EndObject()
+	return nil
 }
 
 // ID returns the ID.
 func (h *HitLocation) ID() string {
-	return h.id
+	return h.LocID
 }
 
 // SetID sets the ID, sanitizing it in the process (i.e. it may be changed from what you set -- read it back if you want
 // to be sure of what it gets set to.
 func (h *HitLocation) SetID(value string) {
-	h.id = id.Sanitize(value, false, ReservedIDs...)
+	h.LocID = id.Sanitize(value, false, ReservedIDs...)
 }
 
 // DR computes the DR coverage for this HitLocation. If 'tooltip' isn't nil, the buffer will be updated with details on
@@ -135,7 +102,7 @@ func (h *HitLocation) DR(entity *Entity, tooltip *xio.ByteBuffer, drMap map[stri
 			fmt.Fprintf(tooltip, "\n%s [%+d against %s attacks]", h.ChoiceName, h.DRBonus, All)
 		}
 	}
-	drMap = entity.AddDRBonusesFor(HitLocationPrefix+h.id, tooltip, drMap)
+	drMap = entity.AddDRBonusesFor(HitLocationPrefix+h.LocID, tooltip, drMap)
 	if h.owningTable != nil && h.owningTable.owningLocation != nil {
 		drMap = h.owningTable.owningLocation.DR(entity, tooltip, drMap)
 	}
@@ -201,7 +168,7 @@ func (h *HitLocation) SetSubTable(bodyType *BodyType) {
 }
 
 func (h *HitLocation) populateMap(m map[string]*HitLocation) {
-	m[h.id] = h
+	m[h.LocID] = h
 	if h.SubTable != nil {
 		h.SubTable.populateMap(m)
 	}
@@ -210,11 +177,11 @@ func (h *HitLocation) populateMap(m map[string]*HitLocation) {
 func (h *HitLocation) updateRollRange(start int) int {
 	switch h.Slots {
 	case 0:
-		h.RollRange = "-"
+		h.Calc.RollRange = "-"
 	case 1:
-		h.RollRange = strconv.Itoa(start)
+		h.Calc.RollRange = strconv.Itoa(start)
 	default:
-		h.RollRange = fmt.Sprintf("%d-%d", start, start+h.Slots-1)
+		h.Calc.RollRange = fmt.Sprintf("%d-%d", start, start+h.Slots-1)
 	}
 	if h.SubTable != nil {
 		h.SubTable.updateRollRanges()

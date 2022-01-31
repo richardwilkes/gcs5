@@ -27,9 +27,9 @@ type Length struct {
 // case units.Inch is used.
 func LengthFromString(text string) Length {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
-	for unit := Inch; unit <= Millimeter; unit++ {
-		if strings.HasSuffix(text, unit.Key()) {
-			value, err := strconv.ParseFloat(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())), 64)
+	for _, unit := range AllUnits {
+		if strings.HasSuffix(text, string(unit)) {
+			value, err := strconv.ParseFloat(strings.TrimSpace(strings.TrimSuffix(text, string(unit))), 64)
 			if err != nil {
 				return Length{Units: unit}
 			}
@@ -45,7 +45,7 @@ func LengthFromString(text string) Length {
 }
 
 func (l Length) String() string {
-	return strconv.FormatFloat(l.Length, 'f', -1, 64) + l.Units.Key()
+	return strconv.FormatFloat(l.Length, 'f', -1, 64) + string(l.Units)
 }
 
 // Pixels returns the number of 72-pixels-per-inch pixels this represents.

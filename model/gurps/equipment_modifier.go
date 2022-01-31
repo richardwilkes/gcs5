@@ -12,79 +12,89 @@
 package gurps
 
 import (
+	"encoding/json"
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/equipment"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
+	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-const (
-	equipmentModifierCostKey       = "cost"
-	equipmentModifierCostTypeKey   = "cost_type"
-	equipmentModifierWeightKey     = "weight"
-	equipmentModifierWeightTypeKey = "weight_type"
-	equipmentModifierTechLevelKey  = "tech_level"
-	equipmentModifierTypeKey       = "modifier"
-)
+const equipmentModifierTypeKey = "modifier"
+
+// EquipmentModifierItem holds the EquipmentModifier data that only exists in non-containers.
+type EquipmentModifierItem struct {
+	TechLevel    string                       `json:"tech_level,omitempty"`
+	CostType     equipment.ModifierCostType   `json:"cost_type,omitempty"`
+	CostAmount   string                       `json:"cost,omitempty"`
+	WeightType   equipment.ModifierWeightType `json:"weight_type,omitempty"`
+	WeightAmount string                       `json:"weight,omitempty"`
+	Features     []*Feature                   `json:"features,omitempty"`
+	Disabled     bool                         `json:"disabled,omitempty"`
+}
+
+// EquipmentModifierContainer holds the EquipmentModifier data that only exists in containers.
+type EquipmentModifierContainer struct {
+	Children []*EquipmentModifier `json:"children,omitempty"`
+	Open     bool                 `json:"open,omitempty"`
+}
+
+// EquipmentModifierData holds the EquipmentModifier data that is written to disk.
+type EquipmentModifierData struct {
+	Type                        string    `json:"type"`
+	ID                          uuid.UUID `json:"id"`
+	Name                        string    `json:"name,omitempty"`
+	PageRef                     string    `json:"reference,omitempty"`
+	Notes                       string    `json:"notes,omitempty"`
+	VTTNotes                    string    `json:"vtt_notes,omitempty"`
+	*EquipmentModifierItem      `json:",omitempty"`
+	*EquipmentModifierContainer `json:",omitempty"`
+}
 
 // EquipmentModifier holds a modifier to a piece of Equipment.
 type EquipmentModifier struct {
-	Common
-	TechLevel    string
-	CostAmount   string
-	WeightAmount string
-	Features     []*Feature
-	Children     []*EquipmentModifier
-	CostType     equipment.ModifierCostType
-	WeightType   equipment.ModifierWeightType
-	Enabled      bool
+	EquipmentModifierData
 }
 
-// NewEquipmentModifierFromJSON creates a new EquipmentModifier from a JSON object.
-func NewEquipmentModifierFromJSON(data map[string]interface{}) *EquipmentModifier {
-	e := &EquipmentModifier{}
-	e.Common.FromJSON(equipmentModifierTypeKey, data)
-	if e.Container {
-		e.Children = EquipmentModifiersListFromJSON(commonChildrenKey, data)
-	} else {
-		e.Enabled = !encoding.Bool(data[commonDisabledKey])
-		if v, ok := data[equipmentModifierCostTypeKey]; ok {
-			e.CostType = equipment.ModifierCostTypeFromKey(encoding.String(v))
-			e.CostAmount = encoding.String(data[equipmentModifierCostKey])
-		}
-		if v, ok := data[equipmentModifierWeightTypeKey]; ok {
-			e.WeightType = equipment.ModifierWeightTypeFromKey(encoding.String(v))
-			e.WeightAmount = encoding.String(data[equipmentModifierWeightKey])
-		}
-		e.TechLevel = encoding.String(data[equipmentModifierTechLevelKey])
-		e.Features = FeaturesListFromJSON(data)
+// NewEquipmentModifier creates an EquipmentModifier.
+func NewEquipmentModifier(container bool) *EquipmentModifier {
+	a := EquipmentModifier{
+		EquipmentModifierData: EquipmentModifierData{
+			Type: equipmentModifierTypeKey,
+			ID:   id.NewUUID(),
+			Name: i18n.Text("Advantage Modifier"),
+		},
 	}
-	return e
+	if container {
+		a.Type += commonContainerKeyPostfix
+		a.EquipmentModifierContainer = &EquipmentModifierContainer{Open: true}
+	} else {
+		a.EquipmentModifierItem = &EquipmentModifierItem{
+			CostType:   equipment.OriginalCost,
+			WeightType: equipment.OriginalWeight,
+		}
+	}
+	return &a
 }
 
-// ToJSON emits this object as JSON.
-func (e *EquipmentModifier) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	e.Common.ToInlineJSON(equipmentModifierTypeKey, encoder)
-	if e.Container {
-		EquipmentModifiersListToJSON(commonChildrenKey, e.Children, encoder)
+// MarshalJSON implements json.Marshaler.
+func (e *EquipmentModifier) MarshalJSON() ([]byte, error) {
+	if e.Container() {
+		e.EquipmentModifierItem = nil
 	} else {
-		encoder.KeyedBool(commonDisabledKey, !e.Enabled, true)
-		if e.CostType != equipment.OriginalCost || e.CostAmount != "+0" {
-			encoder.KeyedString(equipmentModifierCostTypeKey, e.CostType.Key(), false, false)
-			encoder.KeyedString(equipmentModifierCostKey, e.CostAmount, true, true)
-		}
-		if e.WeightType != equipment.OriginalWeight || (e.WeightAmount != "+0" && !strings.HasPrefix(e.WeightAmount, "+0 ")) {
-			encoder.KeyedString(equipmentModifierWeightTypeKey, e.WeightType.Key(), false, false)
-			encoder.KeyedString(equipmentModifierWeightKey, e.WeightAmount, true, true)
-		}
-		encoder.KeyedString(equipmentModifierTechLevelKey, e.TechLevel, true, true)
-		FeaturesListToJSON(e.Features, encoder)
+		e.EquipmentModifierContainer = nil
 	}
-	encoder.EndObject()
+	data, err := json.Marshal(&e.EquipmentModifierData)
+	return data, err
+}
+
+// Container returns true if this is a container.
+func (e *EquipmentModifier) Container() bool {
+	return strings.HasSuffix(e.Type, commonContainerKeyPostfix)
 }
 
 func (e *EquipmentModifier) String() string {
@@ -120,7 +130,7 @@ func (e *EquipmentModifier) FullDescription(entity *Entity) string {
 
 // CostDescription returns the formatted cost.
 func (e *EquipmentModifier) CostDescription() string {
-	if e.Container || (e.CostType == equipment.OriginalCost && e.CostAmount == "+0") {
+	if e.Container() || (e.CostType == equipment.OriginalCost && e.CostAmount == "+0") {
 		return ""
 	}
 	return e.CostType.Format(e.CostAmount) + " " + e.CostType.ShortString()
@@ -128,7 +138,7 @@ func (e *EquipmentModifier) CostDescription() string {
 
 // WeightDescription returns the formatted weight.
 func (e *EquipmentModifier) WeightDescription(entity *Entity) string {
-	if e.Container || (e.WeightType == equipment.OriginalWeight && (e.WeightAmount == "+0" || strings.HasPrefix(e.WeightAmount, "+0 "))) {
+	if e.Container() || (e.WeightType == equipment.OriginalWeight && (e.WeightAmount == "+0" || strings.HasPrefix(e.WeightAmount, "+0 "))) {
 		return ""
 	}
 	return e.WeightType.Format(e.WeightAmount, SheetSettingsFor(entity).DefaultWeightUnits) + " " + e.WeightType.ShortString()
@@ -136,8 +146,10 @@ func (e *EquipmentModifier) WeightDescription(entity *Entity) string {
 
 // FillWithNameableKeys adds any nameable keys found in this EquipmentModifier to the provided map.
 func (e *EquipmentModifier) FillWithNameableKeys(nameables map[string]string) {
-	if e.Enabled {
-		e.Common.FillWithNameableKeys(nameables)
+	if !e.Disabled {
+		ExtractNameables(e.Name, nameables)
+		ExtractNameables(e.Notes, nameables)
+		ExtractNameables(e.VTTNotes, nameables)
 		for _, one := range e.Features {
 			one.FillWithNameableKeys(nameables)
 		}
@@ -146,8 +158,10 @@ func (e *EquipmentModifier) FillWithNameableKeys(nameables map[string]string) {
 
 // ApplyNameableKeys replaces any nameable keys found in this EquipmentModifier with the corresponding values in the provided map.
 func (e *EquipmentModifier) ApplyNameableKeys(nameables map[string]string) {
-	if e.Enabled {
-		e.Common.ApplyNameableKeys(nameables)
+	if !e.Disabled {
+		e.Name = ApplyNameables(e.Name, nameables)
+		e.Notes = ApplyNameables(e.Notes, nameables)
+		e.VTTNotes = ApplyNameables(e.VTTNotes, nameables)
 		for _, one := range e.Features {
 			one.ApplyNameableKeys(nameables)
 		}
@@ -162,7 +176,7 @@ func ValueAdjustedForModifiers(value fixed.F64d4, modifiers []*EquipmentModifier
 	// Apply all equipment.BaseCost
 	var cf fixed.F64d4
 	for _, one := range modifiers {
-		if one.Enabled && one.CostType == equipment.BaseCost {
+		if !one.Disabled && one.CostType == equipment.BaseCost {
 			t := equipment.BaseCost.DetermineModifierCostValueTypeFromString(one.CostAmount)
 			cf += t.ExtractValue(one.CostAmount)
 			if t == equipment.Multiplier {
@@ -188,7 +202,7 @@ func processNonCFStep(costType equipment.ModifierCostType, value fixed.F64d4, mo
 	var percentages, additions fixed.F64d4
 	cost := value
 	for _, one := range modifiers {
-		if one.Enabled && one.CostType == costType {
+		if !one.Disabled && one.CostType == costType {
 			t := costType.DetermineModifierCostValueTypeFromString(one.CostAmount)
 			amt := t.ExtractValue(one.CostAmount)
 			switch t {
@@ -215,7 +229,7 @@ func WeightAdjustedForModifiers(weight measure.Weight, modifiers []*EquipmentMod
 
 	// Apply all equipment.OriginalWeight
 	for _, one := range modifiers {
-		if one.Enabled && one.WeightType == equipment.OriginalWeight {
+		if !one.Disabled && one.WeightType == equipment.OriginalWeight {
 			t := equipment.OriginalWeight.DetermineModifierWeightValueTypeFromString(one.WeightAmount)
 			amt := t.ExtractFraction(one.WeightAmount).Value()
 			if t == equipment.WeightAddition {
@@ -244,7 +258,7 @@ func WeightAdjustedForModifiers(weight measure.Weight, modifiers []*EquipmentMod
 func processMultiplyAddWeightStep(weightType equipment.ModifierWeightType, weight fixed.F64d4, defUnits measure.WeightUnits, modifiers []*EquipmentModifier) fixed.F64d4 {
 	var sum fixed.F64d4
 	for _, one := range modifiers {
-		if one.Enabled && one.WeightType == weightType {
+		if !one.Disabled && one.WeightType == weightType {
 			t := weightType.DetermineModifierWeightValueTypeFromString(one.WeightAmount)
 			f := t.ExtractFraction(one.WeightAmount)
 			switch t {

@@ -112,7 +112,7 @@ func (m ModifierWeightType) Format(s string, defUnits measure.WeightUnits) strin
 	t := m.DetermineModifierWeightValueTypeFromString(s)
 	result := t.Format(t.ExtractFraction(s))
 	if t == WeightAddition {
-		result += " " + measure.TrailingWeightUnitsFromString(s, defUnits).Key()
+		result += " " + string(measure.TrailingWeightUnitsFromString(s, defUnits))
 	}
 	return result
 }

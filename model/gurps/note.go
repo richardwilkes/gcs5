@@ -12,68 +12,67 @@
 package gurps
 
 import (
+	"encoding/json"
+	"strings"
+
 	"github.com/google/uuid"
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/id"
 )
 
-const (
-	noteTextKey = "text"
-	noteTypeKey = "note"
-)
+const noteTypeKey = "note"
+
+// NoteContainer holds the Note data that only exists in containers.
+type NoteContainer struct {
+	Children []*Note `json:"children,omitempty"`
+	Open     bool    `json:"open,omitempty"`
+}
+
+// NoteData holds the Note data that is written to disk.
+type NoteData struct {
+	Type           string    `json:"type"`
+	ID             uuid.UUID `json:"id"`
+	Text           string    `json:"text,omitempty"`
+	PageRef        string    `json:"reference,omitempty"`
+	*NoteContainer `json:",omitempty"`
+}
 
 // Note holds a note.
 type Note struct {
-	Parent    *Note
-	ID        uuid.UUID
-	Text      string
-	PageRef   string
-	Children  []*Note
-	Container bool
-	Open      bool
+	NoteData
+	Parent *Note
 }
 
-// NewNoteFromJSON creates a new Note from a JSON object.
-func NewNoteFromJSON(parent *Note, data map[string]interface{}) *Note {
-	n := &Note{Parent: parent}
-	n.Container = encoding.String(data[commonTypeKey]) == noteTypeKey+commonContainerKeyPostfix
-	n.ID = id.ParseOrNewUUID(encoding.String(data[commonIDKey]))
-	n.Text = encoding.String(data[noteTextKey])
-	n.PageRef = encoding.String(data[commonPageRefKey])
-	if n.Container {
-		n.Open = encoding.Bool(data[commonOpenKey])
-		array := encoding.Array(data[commonChildrenKey])
-		if len(array) != 0 {
-			n.Children = make([]*Note, len(array))
-			for i, one := range array {
-				n.Children[i] = NewNoteFromJSON(n, encoding.Object(one))
-			}
-		}
+// NewNote creates a new Note.
+func NewNote(parent *Note, container bool) *Note {
+	n := Note{
+		NoteData: NoteData{
+			Type: noteTypeKey,
+			ID:   id.NewUUID(),
+		},
+		Parent: parent,
 	}
-	return n
+	if container {
+		n.Type += commonContainerKeyPostfix
+		n.NoteContainer = &NoteContainer{Open: true}
+	}
+	return &n
 }
 
-// ToJSON emits this object as JSON.
-func (n *Note) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
-	encoder.StartObject()
-	typeString := noteTypeKey
-	if n.Container {
-		typeString += commonContainerKeyPostfix
+// UnmarshalJSON implements json.Unmarshaler.
+func (n *Note) UnmarshalJSON(data []byte) error {
+	n.NoteData = NoteData{}
+	if err := json.Unmarshal(data, &n.NoteData); err != nil {
+		return err
 	}
-	encoder.KeyedString(commonTypeKey, typeString, false, false)
-	encoder.KeyedString(commonIDKey, n.ID.String(), false, false)
-	encoder.KeyedString(noteTextKey, n.Text, true, true)
-	encoder.KeyedString(commonPageRefKey, n.PageRef, true, true)
-	if n.Container {
-		encoder.KeyedBool(commonOpenKey, n.Open, true)
-		if len(n.Children) != 0 {
-			encoder.Key(commonChildrenKey)
-			encoder.StartArray()
-			for _, one := range n.Children {
-				one.ToJSON(encoder, entity)
-			}
-			encoder.EndArray()
+	if n.Container() {
+		for _, one := range n.Children {
+			one.Parent = n
 		}
 	}
-	encoder.EndObject()
+	return nil
+}
+
+// Container returns true if this is a container.
+func (n *Note) Container() bool {
+	return strings.HasSuffix(n.Type, commonContainerKeyPostfix)
 }

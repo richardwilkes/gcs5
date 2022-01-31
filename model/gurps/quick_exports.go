@@ -12,72 +12,62 @@
 package gurps
 
 import (
+	"encoding/json"
 	"sort"
-
-	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"time"
 )
 
-const (
-	quickExportsMaxKey     = "max"
-	quickExportsExportsKey = "exports"
-)
+// ExportInfo holds information about a recent export so that it can be redone quickly.
+type ExportInfo struct {
+	FilePath     string    `json:"filePath"`
+	TemplatePath string    `json:"templatePath"`
+	ExportPath   string    `json:"exportPath"`
+	LastUsed     time.Time `json:"lastUsed"`
+}
+
+// QuickExportsData holds the QuickExports data that is written to disk.
+type QuickExportsData struct {
+	Max     int           `json:"max"`
+	Exports []*ExportInfo `json:"exports,omitempty"`
+}
 
 // QuickExports holds a list containing information about previous exports.
 type QuickExports struct {
-	max  int
-	info []*ExportInfo
+	QuickExportsData
 }
 
 // NewQuickExports creates a new, empty, QuickExports object.
 func NewQuickExports() *QuickExports {
-	return &QuickExports{max: 20}
+	return &QuickExports{QuickExportsData: QuickExportsData{Max: 20}}
 }
 
-// NewQuickExportsFromJSON creates a new QuickExports from a JSON object.
-func NewQuickExportsFromJSON(data map[string]interface{}) *QuickExports {
-	q := NewQuickExports()
-	if v, ok := data[quickExportsMaxKey]; ok {
-		q.max = xmath.MaxInt(int(encoding.Number(v).AsInt64()), 0)
-	} else {
-		q.max = 20
+// MarshalJSON implements json.Marshaler.
+func (q *QuickExports) MarshalJSON() ([]byte, error) {
+	sort.Slice(q.Exports, func(i, j int) bool { return q.Exports[i].LastUsed.After(q.Exports[j].LastUsed) })
+	if q.Max < 0 {
+		q.Max = 0
 	}
-	if q.max > 0 {
-		array := encoding.Array(data[quickExportsExportsKey])
-		count := xmath.MinInt(len(array), q.max)
-		for i, one := range array {
-			if i == count {
-				break
-			}
-			q.info = append(q.info, NewExportInfoFromJSON(encoding.Object(one)))
-		}
+	if len(q.Exports) > q.Max {
+		list := make([]*ExportInfo, q.Max)
+		copy(list, q.Exports)
+		q.Exports = list
 	}
-	return q
+	return json.Marshal(&q.QuickExportsData)
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (q *QuickExports) UnmarshalJSON(data []byte) error {
+	q.QuickExportsData = QuickExportsData{}
+	if err := json.Unmarshal(data, &q.QuickExportsData); err != nil {
+		return err
+	}
+	if q.Max < 0 {
+		q.Max = 0
+	}
+	return nil
 }
 
 // Empty implements encoding.Empty.
 func (q *QuickExports) Empty() bool {
-	return len(q.info) == 0
-}
-
-// ToJSON emits this object as JSON.
-func (q *QuickExports) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	encoder.KeyedNumber(quickExportsMaxKey, fixed.F64d4FromInt64(int64(q.max)), false)
-	sort.Slice(q.info, func(i, j int) bool { return q.info[i].LastUsed > q.info[j].LastUsed })
-	if len(q.info) > q.max {
-		list := make([]*ExportInfo, q.max)
-		copy(list, q.info)
-		q.info = list
-	}
-	if len(q.info) != 0 {
-		encoder.Key(quickExportsExportsKey)
-		encoder.StartArray()
-		for _, data := range q.info {
-			data.ToJSON(encoder)
-		}
-		encoder.EndArray()
-	}
-	encoder.EndObject()
+	return len(q.Exports) == 0
 }

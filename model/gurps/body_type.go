@@ -12,29 +12,26 @@
 package gurps
 
 import (
+	"embed"
 	"io/fs"
 	"path"
 	"sort"
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/rpgtools/dice"
-	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
+	xfs "github.com/richardwilkes/toolbox/xio/fs"
 )
 
-const (
-	bodyTypeNameKey      = "name"
-	bodyTypeRollKey      = "roll"
-	bodyTypeLocationsKey = "locations"
-)
+//go:embed data
+var embeddedFS embed.FS
 
 // BodyType holds a set of hit locations.
 type BodyType struct {
-	Name           string
-	Roll           *dice.Dice
-	locations      []*HitLocation
+	Name           string         `json:"name,omitempty"`
+	Roll           *dice.Dice     `json:"roll"`
+	Locations      []*HitLocation `json:"locations,omitempty"`
 	owningLocation *HitLocation
 	locationLookup map[string]*HitLocation
 }
@@ -68,60 +65,23 @@ func FactoryBodyTypes() []*BodyType {
 
 // NewBodyTypeFromFile loads an BodyType from a file.
 func NewBodyTypeFromFile(fsys fs.FS, filePath string) (*BodyType, error) {
-	data, err := encoding.LoadJSONFromFS(fsys, filePath)
-	if err != nil {
-		return nil, err
-	}
-	obj := encoding.Object(data)
-	// Check for older formats
-	var exists bool
-	if data, exists = obj["hit_locations"]; exists {
-		obj = encoding.Object(data)
-	}
-	if obj == nil {
-		return nil, errs.New("invalid body type definition file: " + filePath)
-	}
-	return NewBodyTypeFromJSON(obj), nil
-}
-
-// NewBodyTypeFromJSON creates a new BodyType from a JSON object.
-func NewBodyTypeFromJSON(data map[string]interface{}) *BodyType {
-	a := &BodyType{
-		Name: encoding.String(data[bodyTypeNameKey]),
-		Roll: dice.New(encoding.String(data[bodyTypeRollKey])),
-	}
-	array := encoding.Array(data[bodyTypeLocationsKey])
-	if len(array) != 0 {
-		a.locations = make([]*HitLocation, 0, len(array))
-		for _, one := range array {
-			a.AddLocation(NewHitLocationFromJSON(encoding.Object(one)))
+	var b BodyType
+	if err := xfs.LoadJSONFromFS(fsys, filePath, &b); err != nil {
+		var old struct {
+			HitLocations *BodyType `json:"hit_locations"`
 		}
+		if err = xfs.LoadJSONFromFS(fsys, filePath, &old); err != nil {
+			return nil, err
+		}
+		b = *old.HitLocations
 	}
-	a.Update()
-	return a
+	b.Update()
+	return &b, nil
 }
 
 // Save writes the BodyType to the file as JSON.
 func (b *BodyType) Save(filePath string) error {
-	return encoding.SaveJSON(filePath, true, func(encoder *encoding.JSONEncoder) {
-		b.ToJSON(encoder, nil)
-	})
-}
-
-// ToJSON emits this object as JSON.
-func (b *BodyType) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
-	encoder.StartObject()
-	encoder.KeyedString(bodyTypeNameKey, b.Name, true, true)
-	encoder.KeyedString(bodyTypeRollKey, b.Roll.String(), false, false)
-	if len(b.locations) != 0 {
-		encoder.Key(bodyTypeLocationsKey)
-		encoder.StartArray()
-		for _, location := range b.locations {
-			location.ToJSON(encoder, entity)
-		}
-		encoder.EndArray()
-	}
-	encoder.EndObject()
+	return xfs.SaveJSON(filePath, b, true)
 }
 
 // Update the role ranges and populate the lookup map.
@@ -141,30 +101,30 @@ func (b *BodyType) SetOwningLocation(loc *HitLocation) {
 
 func (b *BodyType) updateRollRanges() {
 	start := b.Roll.Minimum(false)
-	for _, location := range b.locations {
+	for _, location := range b.Locations {
 		start = location.updateRollRange(start)
 	}
 }
 
 func (b *BodyType) populateMap(m map[string]*HitLocation) {
-	for _, location := range b.locations {
+	for _, location := range b.Locations {
 		location.populateMap(m)
 	}
 }
 
 // AddLocation adds a HitLocation to the end of list.
 func (b *BodyType) AddLocation(loc *HitLocation) {
-	b.locations = append(b.locations, loc)
+	b.Locations = append(b.Locations, loc)
 	loc.owningTable = b
 }
 
 // RemoveLocation removes a HitLocation.
 func (b *BodyType) RemoveLocation(loc *HitLocation) {
-	for i, one := range b.locations {
+	for i, one := range b.Locations {
 		if one == loc {
-			copy(b.locations[i:], b.locations[i+1:])
-			b.locations[len(b.locations)-1] = nil
-			b.locations = b.locations[:len(b.locations)-1]
+			copy(b.Locations[i:], b.Locations[i+1:])
+			b.Locations[len(b.Locations)-1] = nil
+			b.Locations = b.Locations[:len(b.Locations)-1]
 			loc.owningTable = nil
 		}
 	}

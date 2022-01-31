@@ -51,17 +51,3 @@ type Common struct {
 func (c *Common) Container() bool {
 	return strings.HasSuffix(c.Type, commonContainerKeyPostfix)
 }
-
-// FillWithNameableKeys adds any nameable keys found in this Common to the provided map.
-func (c *Common) FillWithNameableKeys(nameables map[string]string) {
-	ExtractNameables(c.Name, nameables)
-	ExtractNameables(c.Notes, nameables)
-	ExtractNameables(c.VTTNotes, nameables)
-}
-
-// ApplyNameableKeys replaces any nameable keys found in this Common with the corresponding values in the provided map.
-func (c *Common) ApplyNameableKeys(nameables map[string]string) {
-	c.Name = ApplyNameables(c.Name, nameables)
-	c.Notes = ApplyNameables(c.Notes, nameables)
-	c.VTTNotes = ApplyNameables(c.VTTNotes, nameables)
-}

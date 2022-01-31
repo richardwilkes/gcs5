@@ -36,8 +36,9 @@ func (e *Entity) AddDRBonusesFor(id string, tooltip *xio.ByteBuffer, drMap map[s
 	if list, exists := e.featureMap[strings.ToLower(id)]; exists {
 		for _, one := range list {
 			if one.Type == feature.DRBonus {
-				drMap[strings.ToLower(one.Specialization)] += int(one.Amount.AdjustedAmount().AsInt64())
-				one.AddToTooltip(tooltip)
+				drBonus := one.Self.(*DRBonus)
+				drMap[strings.ToLower(drBonus.Specialization)] += int(drBonus.LeveledAmount.AdjustedAmount().AsInt64())
+				drBonus.AddToTooltip(tooltip)
 			}
 		}
 	}
