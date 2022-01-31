@@ -12,71 +12,55 @@
 package paper
 
 import (
-	"strings"
-
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
 // Possible Orientation values.
 const (
-	Portrait Orientation = iota
-	Landscape
+	Portrait  = Orientation("portrait")
+	Landscape = Orientation("landscape")
 )
 
-type orientationData struct {
-	Key        string
-	String     string
-	Dimensions func(size Size) (width, height Length)
+// AllOrientations is the complete set of Orientation values.
+var AllOrientations = []Orientation{
+	Portrait,
+	Landscape,
 }
 
 // Orientation holds the orientation of the page.
-type Orientation uint8
+type Orientation string
 
-var orientationValues = []*orientationData{
-	{
-		Key:        "portrait",
-		String:     i18n.Text("Portrait"),
-		Dimensions: func(size Size) (width, height Length) { return size.Dimensions() },
-	},
-	{
-		Key:    "landscape",
-		String: i18n.Text("Landscape"),
-		Dimensions: func(size Size) (width, height Length) {
-			width, height = size.Dimensions()
-			return height, width
-		},
-	},
-}
-
-// OrientationFromString extracts a Orientation from a key.
-func OrientationFromString(key string) Orientation {
-	for i, one := range orientationValues {
-		if strings.EqualFold(key, one.Key) {
-			return Orientation(i)
+// EnsureValid ensures this is of a known value.
+func (o Orientation) EnsureValid() Orientation {
+	for _, one := range AllOrientations {
+		if one == o {
+			return o
 		}
 	}
-	return 0
-}
-
-// EnsureValid returns the first Orientation if this Orientation is not a known value.
-func (o Orientation) EnsureValid() Orientation {
-	if int(o) < len(orientationValues) {
-		return o
-	}
-	return 0
-}
-
-// Key returns the key used to represent this ThresholdOp.
-func (o Orientation) Key() string {
-	return orientationValues[o.EnsureValid()].Key
+	return AllOrientations[0]
 }
 
 // String implements fmt.Stringer.
 func (o Orientation) String() string {
-	return orientationValues[o.EnsureValid()].String
+	switch o {
+	case Portrait:
+		return i18n.Text("Portrait")
+	case Landscape:
+		return i18n.Text("Landscape")
+	default:
+		return Portrait.String()
+	}
 }
 
 // Dimensions returns the paper dimensions after orienting the paper.
 func (o Orientation) Dimensions(size Size) (width, height Length) {
-	return orientationValues[o.EnsureValid()].Dimensions(size)
+	switch o {
+	case Portrait:
+		return size.Dimensions()
+	case Landscape:
+		width, height = size.Dimensions()
+		return height, width
+	default:
+		return Portrait.Dimensions(size)
+	}
 }

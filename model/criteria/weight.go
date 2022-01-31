@@ -12,40 +12,18 @@
 package criteria
 
 import (
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 )
 
 // Weight holds the criteria for matching a number.
 type Weight struct {
-	Type      NumericCompareType
-	Qualifier measure.Weight
+	Compare   NumericCompareType `json:"compare,omitempty"`
+	Qualifier measure.Weight     `json:"qualifier,omitempty"`
 }
 
-// NewWeightFromJSON creates a new Weight from a JSON object.
-func NewWeightFromJSON(data map[string]interface{}, defUnits measure.WeightUnits) *Weight {
-	n := &Weight{}
-	n.FromJSON(data, defUnits)
-	return n
-}
-
-// FromJSON replaces the current data with data from a JSON object.
-func (n *Weight) FromJSON(data map[string]interface{}, defUnits measure.WeightUnits) {
-	n.Type = NumericCompareTypeFromString(encoding.String(data[typeKey]))
-	n.Qualifier = measure.WeightFromStringForced(encoding.String(data[qualifierKey]), defUnits)
-}
-
-// ToJSON emits the JSON for this object.
-func (n *Weight) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	n.ToInlineJSON(encoder)
-	encoder.EndObject()
-}
-
-// ToInlineJSON emits the JSON key values that comprise this object without the object wrapper.
-func (n *Weight) ToInlineJSON(encoder *encoding.JSONEncoder) {
-	if n.Type != AnyNumber {
-		encoder.KeyedString(typeKey, n.Type.Key(), false, false)
-		encoder.KeyedString(qualifierKey, n.Qualifier.String(), false, false)
+// Normalize the data.
+func (w *Weight) Normalize() {
+	if w.Compare = w.Compare.EnsureValid(); w.Compare == AnyNumber {
+		w.Qualifier = 0
 	}
 }

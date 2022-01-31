@@ -12,6 +12,7 @@
 package paper
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 )
@@ -26,7 +27,7 @@ type Length struct {
 // case units.Inch is used.
 func LengthFromString(text string) Length {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
-	for unit := Millimeter; unit <= Inch; unit++ {
+	for unit := Inch; unit <= Millimeter; unit++ {
 		if strings.HasSuffix(text, unit.Key()) {
 			value, err := strconv.ParseFloat(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())), 64)
 			if err != nil {
@@ -50,4 +51,19 @@ func (l Length) String() string {
 // Pixels returns the number of 72-pixels-per-inch pixels this represents.
 func (l Length) Pixels() float32 {
 	return l.Units.ToPixels(l.Length)
+}
+
+// MarshalJSON implements json.Marshaler.
+func (l Length) MarshalJSON() ([]byte, error) {
+	return json.Marshal(l.String())
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (l *Length) UnmarshalJSON(in []byte) error {
+	var s string
+	if err := json.Unmarshal(in, &s); err != nil {
+		return err
+	}
+	*l = LengthFromString(s)
+	return nil
 }

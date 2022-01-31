@@ -17,6 +17,8 @@ import "github.com/richardwilkes/toolbox/xmath/fixed"
 var (
 	One           = fixed.F64d4FromInt64(1)
 	NegOne        = fixed.F64d4FromInt64(-1)
+	Two           = fixed.F64d4FromInt64(2)
+	OneAndAHalf   = fixed.F64d4FromStringForced("1.5")
 	Half          = fixed.F64d4FromStringForced("0.5")
 	NegHalf       = fixed.F64d4FromStringForced("-0.5")
 	NegPointEight = fixed.F64d4FromStringForced("-0.8")

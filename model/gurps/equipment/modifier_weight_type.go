@@ -13,7 +13,6 @@ package equipment
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
@@ -23,97 +22,84 @@ import (
 // Possible ModifierWeightType values.
 const (
 	// OriginalWeight modifies the original value stored in the equipment. Can be a ±value or a ±% value.
-	OriginalWeight ModifierWeightType = iota
+	OriginalWeight = ModifierWeightType("to_original_weight")
 	// BaseWeight modifies the base weight. Can be a ±value, a ±% value, or a multiplier.
-	BaseWeight
+	BaseWeight = ModifierWeightType("to_base_weight")
 	// FinalBaseWeight modifies the final base weight. Can be a ±value, a ±% value, or a multiplier.
-	FinalBaseWeight
+	FinalBaseWeight = ModifierWeightType("to_final_base_weight")
 	// FinalWeight modifies the final weight. Can be a ±value, a ±% value, or a multiplier.
-	FinalWeight
+	FinalWeight = ModifierWeightType("to_final_weight")
 )
 
-type modifierWeightTypeData struct {
-	Key         string
-	Description string
-	Example     string
-	Permitted   []ModifierWeightValueType
+// AllModifierWeightTypes is the complete set of ModifierWeightType values.
+var AllModifierWeightTypes = []ModifierWeightType{
+	OriginalWeight,
+	BaseWeight,
+	FinalBaseWeight,
+	FinalWeight,
 }
 
 // ModifierWeightType describes how an EquipmentModifier's cost is applied.
-type ModifierWeightType uint8
+type ModifierWeightType string
 
-var modifierWeightTypeValues = []*modifierWeightTypeData{
-	{
-		Key:         "to_original_weight",
-		Description: i18n.Text("to original weight"),
-		Example:     `"+5 lb", "-5 lb", "+10%", "-10%"`,
-		Permitted:   []ModifierWeightValueType{WeightAddition, WeightPercentageAdder},
-	},
-	{
-		Key:         "to_base_weight",
-		Description: i18n.Text("to base weight"),
-		Example:     `"+5 lb", "-5 lb", "x10%", "x3", "x2/3"`,
-		Permitted:   []ModifierWeightValueType{WeightAddition, WeightPercentageMultiplier, WeightMultiplier},
-	},
-	{
-		Key:         "to_final_base_weight",
-		Description: i18n.Text("to final base weight"),
-		Example:     `"+5 lb", "-5 lb", "x10%", "x3", "x2/3"`,
-		Permitted:   []ModifierWeightValueType{WeightAddition, WeightPercentageMultiplier, WeightMultiplier},
-	},
-	{
-		Key:         "to_final_weight",
-		Description: i18n.Text("to final weight"),
-		Example:     `"+5 lb", "-5 lb", "x10%", "x3", "x2/3"`,
-		Permitted:   []ModifierWeightValueType{WeightAddition, WeightPercentageMultiplier, WeightMultiplier},
-	},
-}
-
-// ModifierWeightTypeFromKey extracts a ModifierWeightType from a key.
-func ModifierWeightTypeFromKey(key string) ModifierWeightType {
-	for i, one := range modifierWeightTypeValues {
-		if strings.EqualFold(key, one.Key) {
-			return ModifierWeightType(i)
+// EnsureValid ensures this is of a known value.
+func (m ModifierWeightType) EnsureValid() ModifierWeightType {
+	for _, one := range AllModifierWeightTypes {
+		if one == m {
+			return m
 		}
 	}
-	return 0
+	return AllModifierWeightTypes[0]
+}
+
+// ShortString returns the same thing as .String(), but without the example.
+func (m ModifierWeightType) ShortString() string {
+	switch m {
+	case OriginalWeight:
+		return i18n.Text("to original weight")
+	case BaseWeight:
+		return i18n.Text("to base weight")
+	case FinalBaseWeight:
+		return i18n.Text("to final base weight")
+	case FinalWeight:
+		return i18n.Text("to final weight")
+	default:
+		return OriginalWeight.String()
+	}
+}
+
+// String implements fmt.Stringer.
+func (m ModifierWeightType) String() string {
+	return fmt.Sprintf("%s (e.g. %s)", m.String(), m.Example())
+}
+
+// Example returns example values.
+func (m ModifierWeightType) Example() string {
+	if m.EnsureValid() == OriginalWeight {
+		return `"+5 lb", "-5 lb", "+10%", "-10%"`
+	}
+	return `"+5 lb", "-5 lb", "x10%", "x3", "x2/3"`
+}
+
+// Permitted returns the permitted ModifierCostValueType values.
+func (m ModifierWeightType) Permitted() []ModifierWeightValueType {
+	if m.EnsureValid() == OriginalWeight {
+		return []ModifierWeightValueType{WeightAddition, WeightPercentageAdder}
+	}
+	return []ModifierWeightValueType{WeightAddition, WeightPercentageMultiplier, WeightMultiplier}
 }
 
 // DetermineModifierWeightValueTypeFromString examines a string to determine what type it is, but restricts the result to
 // those allowed for this ModifierWeightType.
 func (m ModifierWeightType) DetermineModifierWeightValueTypeFromString(s string) ModifierWeightValueType {
-	t := DetermineModifierWeightValueTypeFromString(s)
-	permitted := modifierWeightTypeValues[m.EnsureValid()].Permitted
+	mvt := DetermineModifierWeightValueTypeFromString(s)
+	permitted := m.Permitted()
 	for _, one := range permitted {
-		if one == t {
-			return t
+		if one == mvt {
+			return mvt
 		}
 	}
 	return permitted[0]
-}
-
-// EnsureValid returns the first ModifierWeightType if this ModifierWeightType is not a known value.
-func (m ModifierWeightType) EnsureValid() ModifierWeightType {
-	if int(m) < len(modifierWeightTypeValues) {
-		return m
-	}
-	return 0
-}
-
-// Key returns the key used to represent this ModifierWeightType.
-func (m ModifierWeightType) Key() string {
-	return modifierWeightTypeValues[m.EnsureValid()].Key
-}
-
-// ShortString returns the same thing as .String(), but without the example.
-func (m ModifierWeightType) ShortString() string {
-	return modifierWeightTypeValues[m.EnsureValid()].Description
-}
-
-// String implements fmt.Stringer.
-func (m ModifierWeightType) String() string {
-	data := modifierWeightTypeValues[m.EnsureValid()]
-	return fmt.Sprintf("%s (e.g. %s)", data.Description, data.Example)
 }
 
 // ExtractFraction from the string.

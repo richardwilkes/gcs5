@@ -12,6 +12,7 @@
 package f64d4
 
 import (
+	"encoding/json"
 	"strings"
 
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -27,11 +28,11 @@ type Fraction struct {
 func NewFractionFromString(s string) Fraction {
 	parts := strings.SplitN(s, "/", 2)
 	f := Fraction{
-		Numerator:   fixed.F64d4FromStringForced(parts[0]),
+		Numerator:   fixed.F64d4FromStringForced(strings.TrimSpace(parts[0])),
 		Denominator: One,
 	}
 	if len(parts) > 1 {
-		f.Denominator = fixed.F64d4FromStringForced(parts[1])
+		f.Denominator = fixed.F64d4FromStringForced(strings.TrimSpace(parts[1]))
 	}
 	return f
 }
@@ -67,4 +68,19 @@ func (f Fraction) String() string {
 		return s
 	}
 	return s + "/" + f.Denominator.String()
+}
+
+// MarshalJSON implements json.Marshaler.
+func (f Fraction) MarshalJSON() ([]byte, error) {
+	return json.Marshal(f.String())
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (f *Fraction) UnmarshalJSON(in []byte) error {
+	var s string
+	if err := json.Unmarshal(in, &s); err != nil {
+		return err
+	}
+	*f = NewFractionFromString(s)
+	return nil
 }

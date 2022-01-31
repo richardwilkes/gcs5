@@ -19,73 +19,55 @@ import (
 
 // Possible ModifierWeightValueType values.
 const (
-	WeightAddition ModifierWeightValueType = iota
-	WeightPercentageAdder
-	WeightPercentageMultiplier
-	WeightMultiplier
+	WeightAddition             = ModifierWeightValueType("+")
+	WeightPercentageAdder      = ModifierWeightValueType("%")
+	WeightPercentageMultiplier = ModifierWeightValueType("x%")
+	WeightMultiplier           = ModifierWeightValueType("x")
 )
 
-type modifierWeightValueTypeData struct {
-	Format func(fraction f64d4.Fraction) string
+// AllModifierWeightValueTypes is the complete set of ModifierWeightValueType values.
+var AllModifierWeightValueTypes = []ModifierWeightValueType{
+	WeightAddition,
+	WeightPercentageAdder,
+	WeightPercentageMultiplier,
+	WeightMultiplier,
 }
 
 // ModifierWeightValueType describes how an EquipmentModifier's point cost is applied.
-type ModifierWeightValueType uint8
+type ModifierWeightValueType string
 
-var modifierWeightValueTypeValues = []*modifierWeightValueTypeData{
-	{
-		Format: func(fraction f64d4.Fraction) string { return fraction.StringWithSign() },
-	},
-	{
-		Format: func(fraction f64d4.Fraction) string { return fraction.StringWithSign() + "%" },
-	},
-	{
-		Format: func(fraction f64d4.Fraction) string {
-			if fraction.Numerator <= 0 {
-				fraction.Numerator = f64d4.Hundred
-				fraction.Denominator = f64d4.One
-			}
-			return "x" + fraction.String() + "%"
-		},
-	},
-	{
-		Format: func(fraction f64d4.Fraction) string {
-			if fraction.Numerator <= 0 {
-				fraction.Numerator = f64d4.One
-				fraction.Denominator = f64d4.One
-			}
-			return "x" + fraction.String()
-		},
-	},
-}
-
-// DetermineModifierWeightValueTypeFromString examines a string to determine what type it is.
-func DetermineModifierWeightValueTypeFromString(s string) ModifierWeightValueType {
-	s = strings.ToLower(strings.TrimSpace(s))
-	switch {
-	case strings.HasSuffix(s, "%"):
-		if strings.HasPrefix(s, "x") {
-			return WeightPercentageMultiplier
-		}
-		return WeightPercentageAdder
-	case strings.HasPrefix(s, "x") || strings.HasSuffix(s, "x"):
-		return WeightMultiplier
-	default:
-		return WeightAddition
-	}
-}
-
-// EnsureValid returns the first ModifierWeightValueType if this ModifierWeightValueType is not a known value.
+// EnsureValid ensures this is of a known value.
 func (m ModifierWeightValueType) EnsureValid() ModifierWeightValueType {
-	if int(m) < len(modifierWeightValueTypeValues) {
-		return m
+	for _, one := range AllModifierWeightValueTypes {
+		if one == m {
+			return m
+		}
 	}
-	return 0
+	return AllModifierWeightValueTypes[0]
 }
 
 // Format returns a formatted version of the value.
 func (m ModifierWeightValueType) Format(fraction f64d4.Fraction) string {
-	return modifierWeightValueTypeValues[m.EnsureValid()].Format(fraction)
+	switch m {
+	case WeightAddition:
+		return fraction.StringWithSign()
+	case WeightPercentageAdder:
+		return fraction.StringWithSign() + "%"
+	case WeightPercentageMultiplier:
+		if fraction.Numerator <= 0 {
+			fraction.Numerator = f64d4.Hundred
+			fraction.Denominator = f64d4.One
+		}
+		return "x" + fraction.String() + "%"
+	case WeightMultiplier:
+		if fraction.Numerator <= 0 {
+			fraction.Numerator = f64d4.One
+			fraction.Denominator = f64d4.One
+		}
+		return "x" + fraction.String()
+	default:
+		return WeightAddition.Format(fraction)
+	}
 }
 
 // ExtractFraction from the string.
@@ -106,4 +88,20 @@ func (m ModifierWeightValueType) ExtractFraction(s string) f64d4.Fraction {
 	default:
 	}
 	return fraction
+}
+
+// DetermineModifierWeightValueTypeFromString examines a string to determine what type it is.
+func DetermineModifierWeightValueTypeFromString(s string) ModifierWeightValueType {
+	s = strings.ToLower(strings.TrimSpace(s))
+	switch {
+	case strings.HasSuffix(s, "%"):
+		if strings.HasPrefix(s, "x") {
+			return WeightPercentageMultiplier
+		}
+		return WeightPercentageAdder
+	case strings.HasPrefix(s, "x") || strings.HasSuffix(s, "x"):
+		return WeightMultiplier
+	default:
+		return WeightAddition
+	}
 }

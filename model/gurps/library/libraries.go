@@ -13,13 +13,14 @@ package library
 
 import (
 	"context"
+	"io/fs"
 	"net/http"
 	"sort"
 	"sync"
 	"time"
 
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/toolbox/i18n"
+	xfs "github.com/richardwilkes/toolbox/xio/fs"
 )
 
 const (
@@ -30,74 +31,67 @@ const (
 )
 
 // Libraries holds a Library set.
-type Libraries struct {
-	libs map[string]*Library
-}
+type Libraries map[string]*Library
 
 // NewLibraries creates a new, empty, Libraries object.
-func NewLibraries() *Libraries {
-	l := &Libraries{libs: make(map[string]*Library)}
-	l.Master()
-	l.User()
-	return l
+func NewLibraries() Libraries {
+	libs := Libraries(make(map[string]*Library))
+	libs.Master()
+	libs.User()
+	return libs
 }
 
-// NewLibrariesFromJSON creates a new Libraries from a JSON object.
-func NewLibrariesFromJSON(data map[string]interface{}) *Libraries {
-	l := &Libraries{libs: make(map[string]*Library)}
-	for k, v := range data {
-		if lib := NewLibraryFromJSON(k, encoding.Object(v)); lib != nil {
-			l.libs[lib.Key()] = lib
+// NewLibrariesFromFS creates a new Ancestry from a file.
+func NewLibrariesFromFS(fileSystem fs.FS, filePath string) (Libraries, error) {
+	var libs Libraries
+	if err := xfs.LoadJSONFromFS(fileSystem, filePath, &libs); err != nil {
+		return nil, err
+	}
+	for k, v := range libs {
+		if !v.Valid() {
+			delete(libs, k)
 		}
+		v.ConfigureForKey(k)
 	}
-	l.Master()
-	l.User()
-	return l
-}
-
-// ToJSON emits this object as JSON.
-func (l *Libraries) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	for _, lib := range l.List() {
-		encoding.ToKeyedJSON(lib, lib.Key(), encoder)
-	}
-	encoder.EndObject()
+	libs.Master()
+	libs.User()
+	return libs, nil
 }
 
 // Master holds information about the master library.
-func (l *Libraries) Master() *Library {
-	lib, ok := l.libs[masterGitHubAccountName+"/"+masterRepoName]
+func (l Libraries) Master() *Library {
+	lib, ok := l[masterGitHubAccountName+"/"+masterRepoName]
 	if !ok {
 		lib = &Library{
 			Title:             i18n.Text("Master Library"),
 			GitHubAccountName: masterGitHubAccountName,
 			RepoName:          masterRepoName,
-			path:              DefaultMasterLibraryPath(),
+			PathOnDisk:        DefaultMasterLibraryPath(),
 		}
-		l.libs[lib.Key()] = lib
+		l[lib.Key()] = lib
 	}
 	return lib
 }
 
 // User holds information about the user library.
-func (l *Libraries) User() *Library {
-	lib, ok := l.libs[userGitHubAccountName+"/"+userRepoName]
+func (l Libraries) User() *Library {
+	lib, ok := l[userGitHubAccountName+"/"+userRepoName]
 	if !ok {
 		lib = &Library{
 			Title:             i18n.Text("User Library"),
 			GitHubAccountName: userGitHubAccountName,
 			RepoName:          userRepoName,
-			path:              DefaultUserLibraryPath(),
+			PathOnDisk:        DefaultUserLibraryPath(),
 		}
-		l.libs[lib.Key()] = lib
+		l[lib.Key()] = lib
 	}
 	return lib
 }
 
 // List returns an ordered list of Library objects.
-func (l *Libraries) List() []*Library {
-	libs := make([]*Library, 0, len(l.libs))
-	for _, lib := range l.libs {
+func (l Libraries) List() []*Library {
+	libs := make([]*Library, 0, len(l))
+	for _, lib := range l {
 		libs = append(libs, lib)
 	}
 	sort.Slice(libs, func(i, j int) bool { return libs[i].Less(libs[j]) })
@@ -105,13 +99,13 @@ func (l *Libraries) List() []*Library {
 }
 
 // PerformUpdateChecks checks each of the libraries for updates.
-func (l *Libraries) PerformUpdateChecks() {
+func (l Libraries) PerformUpdateChecks() {
 	client := &http.Client{}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
 	var wg sync.WaitGroup
-	wg.Add(len(l.libs))
-	for _, lib := range l.libs {
+	wg.Add(len(l))
+	for _, lib := range l {
 		go func(l *Library) {
 			defer wg.Done()
 			l.CheckForAvailableUpgrade(ctx, client)

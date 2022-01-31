@@ -12,65 +12,49 @@
 package advantage
 
 import (
-	"strings"
-
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
 // Possible ModifierCostType values.
 const (
-	Percentage ModifierCostType = iota // Adds to the percentage multiplier
-	Points                             // Adds a constant to the base value prior to any multiplier or percentage adjustment
-	Multiplier                         // Multiplies the final cost by a constant
+	// Percentage adds to the percentage multiplier.
+	Percentage = ModifierCostType("percentage")
+	// Points adds a constant to the base value prior to any multiplier or percentage adjustment.
+	Points = ModifierCostType("points")
+	// Multiplier multiplies the final cost by a constant.
+	Multiplier = ModifierCostType("multiplier")
 )
 
-type modifierCostTypeData struct {
-	Key    string
-	String string
+// AllModifierCostTypes is the complete set of ModifierCostType values.
+var AllModifierCostTypes = []ModifierCostType{
+	Percentage,
+	Points,
+	Multiplier,
 }
 
 // ModifierCostType describes how an AdvantageModifier's point cost is applied.
-type ModifierCostType uint8
+type ModifierCostType string
 
-var modifierCostTypeValues = []*modifierCostTypeData{
-	{
-		Key:    "percentage",
-		String: "%",
-	},
-	{
-		Key:    "points",
-		String: i18n.Text("points"),
-	},
-	{
-		Key:    "multiplier",
-		String: "×",
-	},
-}
-
-// ModifierCostTypeFromKey extracts a ModifierCostType from a key.
-func ModifierCostTypeFromKey(key string) ModifierCostType {
-	for i, one := range modifierCostTypeValues {
-		if strings.EqualFold(key, one.Key) {
-			return ModifierCostType(i)
+// EnsureValid ensures this is of a known value.
+func (m ModifierCostType) EnsureValid() ModifierCostType {
+	for _, one := range AllModifierCostTypes {
+		if one == m {
+			return m
 		}
 	}
-	return 0
-}
-
-// EnsureValid returns the first ModifierCostType if this ModifierCostType is not a known value.
-func (m ModifierCostType) EnsureValid() ModifierCostType {
-	if int(m) < len(modifierCostTypeValues) {
-		return m
-	}
-	return 0
-}
-
-// Key returns the key used to represent this ModifierCostType.
-func (m ModifierCostType) Key() string {
-	return modifierCostTypeValues[m.EnsureValid()].Key
+	return AllModifierCostTypes[0]
 }
 
 // String implements fmt.Stringer.
 func (m ModifierCostType) String() string {
-	return modifierCostTypeValues[m.EnsureValid()].String
+	switch m {
+	case Percentage:
+		return "%"
+	case Points:
+		return i18n.Text("points")
+	case Multiplier:
+		return "×"
+	default:
+		return Percentage.String()
+	}
 }

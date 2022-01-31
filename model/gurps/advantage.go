@@ -56,9 +56,13 @@ type Advantage struct {
 	UserDesc          string
 	Categories        []string
 	ContainerType     advantage.ContainerType // TODO: Consider merging Container & ContainerType
-	TypeBits          advantage.Type
 	CR                advantage.SelfControlRoll
 	CRAdj             SelfControlRollAdj
+	Mental            bool
+	Physical          bool
+	Social            bool
+	Exotic            bool
+	Supernatural      bool
 	Satisfied         bool
 	RoundCostDown     bool
 	SelfEnabled       bool
@@ -76,7 +80,7 @@ func NewAdvantage(parent *Advantage, container bool) *Advantage {
 		Parent:      parent,
 		Levels:      f64d4.NegOne,
 		Prereq:      NewPrereq(prereq.List, nil),
-		TypeBits:    advantage.Physical,
+		Physical:    true,
 		Satisfied:   true,
 		SelfEnabled: true,
 	}
@@ -233,7 +237,23 @@ func (a *Advantage) TypeAsText() string {
 	if a.Container {
 		return ""
 	}
-	return a.TypeBits.String()
+	list := make([]string, 0, 5)
+	if a.Mental {
+		list = append(list, i18n.Text("Mental"))
+	}
+	if a.Physical {
+		list = append(list, i18n.Text("Physical"))
+	}
+	if a.Social {
+		list = append(list, i18n.Text("Social"))
+	}
+	if a.Exotic {
+		list = append(list, i18n.Text("Exotic"))
+	}
+	if a.Supernatural {
+		list = append(list, i18n.Text("Supernatural"))
+	}
+	return strings.Join(list, ", ")
 }
 
 func (a *Advantage) String() string {

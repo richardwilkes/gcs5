@@ -12,6 +12,7 @@
 package measure
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -43,9 +44,9 @@ func LengthFromStringForced(text string, defaultUnits LengthUnits) Length {
 // or no notation at all, in which case defaultUnits is used.
 func LengthFromString(text string, defaultUnits LengthUnits) (Length, error) {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
-	for unit := Centimeter; unit <= Mile; unit++ {
-		if strings.HasSuffix(text, unit.Key()) {
-			value, err := fixed.F64d4FromString(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())))
+	for _, unit := range AllLengthUnits[1:] {
+		if strings.HasSuffix(text, string(unit)) {
+			value, err := fixed.F64d4FromString(strings.TrimSpace(strings.TrimSuffix(text, string(unit))))
 			if err != nil {
 				return 0, err
 			}
@@ -87,4 +88,20 @@ func LengthFromString(text string, defaultUnits LengthUnits) (Length, error) {
 
 func (l Length) String() string {
 	return FeetAndInches.Format(l)
+}
+
+// MarshalJSON implements json.Marshaler.
+func (l Length) MarshalJSON() ([]byte, error) {
+	return json.Marshal(l.String())
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (l *Length) UnmarshalJSON(in []byte) error {
+	var s string
+	if err := json.Unmarshal(in, &s); err != nil {
+		return err
+	}
+	var err error
+	*l, err = LengthFromString(s, Inch)
+	return err
 }

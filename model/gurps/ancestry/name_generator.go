@@ -16,14 +16,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/toolbox/txt"
+	xfs "github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/rand"
-)
-
-const (
-	nameGeneratorTypeKey         = "type"
-	nameGeneratorTrainingDataKey = "training_data"
 )
 
 type charThreshold struct {
@@ -33,108 +28,85 @@ type charThreshold struct {
 
 // NameGenerator holds the data for name generation.
 type NameGenerator struct {
-	generationType NameGenerationType
-	trainingData   []string
-	min            int
-	max            int
-	entries        map[string][]charThreshold
-}
-
-// NewNameGenerator creates a new NameGenerator.
-func NewNameGenerator(generationType NameGenerationType, trainingData []string) *NameGenerator {
-	g := &NameGenerator{
-		generationType: generationType,
-		trainingData:   make([]string, 0, len(trainingData)),
-	}
-	for _, one := range trainingData {
-		one = strings.ToLower(strings.TrimSpace(one))
-		if utf8.RuneCountInString(one) >= 2 {
-			g.trainingData = append(g.trainingData, one)
-		}
-	}
-	if generationType == MarkovChain {
-		g.min = 20
-		g.max = 2
-		builders := make(map[string]map[rune]int)
-		for _, one := range g.trainingData {
-			runes := []rune(one)
-			length := len(runes)
-			if g.min > length {
-				g.min = length
-			}
-			if g.max < length {
-				g.max = length
-			}
-			for i := 2; i < length; i++ {
-				charGroup := string(runes[i-2 : i])
-				occurrences, exists := builders[charGroup]
-				if !exists {
-					occurrences = make(map[rune]int)
-					builders[charGroup] = occurrences
-				}
-				occurrences[runes[i]]++
-			}
-		}
-		g.entries = make(map[string][]charThreshold)
-		for k, v := range builders {
-			g.entries[k] = makeCharThresholdEntry(v)
-		}
-	}
-	return g
+	Type         NameGenerationType `json:"type"`
+	TrainingData []string           `json:"training_data"`
+	min          int
+	max          int
+	entries      map[string][]charThreshold
+	initialized  bool
 }
 
 // NewNameGeneratorFromFS creates a new NameGenerator from a file.
 func NewNameGeneratorFromFS(fileSystem fs.FS, filePath string) (*NameGenerator, error) {
-	data, err := encoding.LoadJSONFromFS(fileSystem, filePath)
-	if err != nil {
+	var generator NameGenerator
+	if err := xfs.LoadJSONFromFS(fileSystem, filePath, &generator); err != nil {
 		return nil, err
 	}
-	return NewNameGeneratorFromJSON(encoding.Object(data)), nil
+	return &generator, nil
 }
 
-// NewNameGeneratorFromJSON creates a new NameGenerator from a JSON object.
-func NewNameGeneratorFromJSON(data map[string]interface{}) *NameGenerator {
-	array := encoding.Array(data[nameGeneratorTrainingDataKey])
-	trainingData := make([]string, len(array))
-	for i, one := range array {
-		trainingData[i] = encoding.String(one)
+func (n *NameGenerator) initializeIfNeeded() {
+	if !n.initialized {
+		list := make([]string, 0, len(n.TrainingData))
+		for _, one := range n.TrainingData {
+			one = strings.ToLower(strings.TrimSpace(one))
+			if utf8.RuneCountInString(one) >= 2 {
+				list = append(list, one)
+			}
+		}
+		n.TrainingData = list
+		if n.Type == MarkovChain {
+			n.min = 20
+			n.max = 2
+			builders := make(map[string]map[rune]int)
+			for _, one := range n.TrainingData {
+				runes := []rune(one)
+				length := len(runes)
+				if n.min > length {
+					n.min = length
+				}
+				if n.max < length {
+					n.max = length
+				}
+				for i := 2; i < length; i++ {
+					charGroup := string(runes[i-2 : i])
+					occurrences, exists := builders[charGroup]
+					if !exists {
+						occurrences = make(map[rune]int)
+						builders[charGroup] = occurrences
+					}
+					occurrences[runes[i]]++
+				}
+			}
+			n.entries = make(map[string][]charThreshold)
+			for k, v := range builders {
+				n.entries[k] = makeCharThresholdEntry(v)
+			}
+		}
+		n.initialized = true
 	}
-	return NewNameGenerator(NameGenerationTypeFromKey(encoding.String(data[nameGeneratorTypeKey])), trainingData)
-}
-
-// ToJSON emits this object as JSON.
-func (g *NameGenerator) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	encoder.KeyedString(nameGeneratorTypeKey, g.generationType.Key(), false, false)
-	encoder.Key(nameGeneratorTrainingDataKey)
-	encoder.StartArray()
-	for _, one := range g.trainingData {
-		encoder.String(one)
-	}
-	encoder.EndArray()
-	encoder.EndObject()
 }
 
 // Generate a name.
-func (g *NameGenerator) Generate() string {
+func (n *NameGenerator) Generate() string {
 	rnd := rand.NewCryptoRand()
-	switch g.generationType {
+	switch n.Type {
 	case Simple:
-		if len(g.trainingData) == 0 {
+		if len(n.TrainingData) == 0 {
 			return ""
 		}
-		return txt.FirstToUpper(g.trainingData[rnd.Intn(len(g.trainingData))])
+		return txt.FirstToUpper(n.TrainingData[rnd.Intn(len(n.TrainingData))])
 	case MarkovChain:
 		var buffer strings.Builder
 		var sub []rune
-		for k := range g.entries {
+		for k := range n.entries {
 			buffer.WriteString(txt.FirstToUpper(k))
 			sub = []rune(k)
 			break // Only want one, which is random
 		}
-		targetSize := g.min + rnd.Intn(g.max+1-g.min)
+		targetSize := n.min + rnd.Intn(n.max+1-n.min)
 		for i := 2; i < targetSize; i++ {
-			entry, exists := g.entries[string(sub)]
+			entry, exists := n.entries[string(sub)]
 			if !exists {
 				break
 			}

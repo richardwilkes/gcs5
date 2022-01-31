@@ -22,7 +22,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
@@ -36,54 +35,29 @@ const (
 	IncompatibleFutureLibraryVersion = "4"
 )
 
-const (
-	libraryTitleKey    = "title"
-	libraryPathKey     = "path"
-	libraryLastSeenKey = "last_seen"
-)
-
 const releaseFile = "release.txt"
 
 // Library holds information about a library of data files.
 type Library struct {
-	Title             string
-	GitHubAccountName string
-	RepoName          string
-	path              string
-	LastSeen          string
+	Title             string `json:"title,omitempty"`
+	GitHubAccountName string `json:"-"`
+	RepoName          string `json:"-"`
+	PathOnDisk        string `json:"path,omitempty"`
+	LastSeen          string `json:"last_seen,omitempty"`
 	lock              sync.RWMutex
 	upgrade           *Release
 }
 
-// NewLibraryFromJSON creates a Library from a JSON object. If the key matches the User or Master library, those will be
-// returned instead of creating a new one after updating their path and adjusting their LastSeen field. May return nil if
-// the data is invalid.
-func NewLibraryFromJSON(key string, data map[string]interface{}) *Library {
-	lib := &Library{
-		Title:    encoding.String(data[libraryTitleKey]),
-		path:     encoding.String(data[libraryPathKey]),
-		LastSeen: encoding.String(data[libraryLastSeenKey]),
-	}
-	if strings.TrimSpace(lib.path) == "" || strings.TrimSpace(lib.Title) == "" {
-		return nil
-	}
-	parts := strings.SplitN(key, "/", 2)
-	lib.GitHubAccountName = parts[0]
-	lib.RepoName = parts[1]
-	return lib
+// Valid returns true if the library has a path on disk and a title.
+func (l *Library) Valid() bool {
+	return strings.TrimSpace(l.PathOnDisk) != "" && strings.TrimSpace(l.Title) != ""
 }
 
-// ToJSON emits this object as JSON.
-func (l *Library) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	if !l.IsMaster() && !l.IsUser() {
-		encoder.KeyedString(libraryTitleKey, l.Title, false, false)
-	}
-	encoder.KeyedString(libraryPathKey, l.path, false, false)
-	if !l.IsUser() {
-		encoder.KeyedString(libraryLastSeenKey, l.LastSeen, true, true)
-	}
-	encoder.EndObject()
+// ConfigureForKey configures the GitHubAccountName and RepoName from the given key.
+func (l *Library) ConfigureForKey(key string) {
+	parts := strings.SplitN(key, "/", 2)
+	l.GitHubAccountName = strings.TrimSpace(parts[0])
+	l.RepoName = strings.TrimSpace(parts[1])
 }
 
 // Key returns a key representing this Library.
@@ -93,10 +67,10 @@ func (l *Library) Key() string {
 
 // Path returns the path on disk to this Library, creating any necessary directories.
 func (l *Library) Path() string {
-	if err := os.MkdirAll(l.path, 0o750); err != nil {
+	if err := os.MkdirAll(l.PathOnDisk, 0o750); err != nil {
 		jot.Error(errs.Wrap(err))
 	}
-	return l.path
+	return l.PathOnDisk
 }
 
 // SetPath updates the path to the Library as well as the version.
@@ -105,8 +79,8 @@ func (l *Library) SetPath(newPath string) error {
 	if err != nil {
 		return errs.NewWithCause("unable to update library path to "+newPath, err)
 	}
-	if l.path != p {
-		l.path = p
+	if l.PathOnDisk != p {
+		l.PathOnDisk = p
 		l.LastSeen = l.VersionOnDisk()
 	}
 	return nil
@@ -185,7 +159,7 @@ func (l *Library) Less(other *Library) bool {
 
 // VersionOnDisk returns the version of the data on disk, if it can be determined.
 func (l *Library) VersionOnDisk() string {
-	data, err := os.ReadFile(filepath.Join(l.path, releaseFile))
+	data, err := os.ReadFile(filepath.Join(l.PathOnDisk, releaseFile))
 	if err != nil {
 		if !os.IsNotExist(err) {
 			jot.Warn(errs.NewWithCause("unable to load "+releaseFile+" from library: "+l.Title, err))

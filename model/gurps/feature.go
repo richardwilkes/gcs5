@@ -104,19 +104,19 @@ func NewFeature(featureType feature.Type, entity *Entity) *Feature {
 		f.SkillSelectionType = skill.SkillsWithName
 		fallthrough
 	case feature.SkillPointBonus:
-		f.NameCriteria.Type = criteria.Is
-		f.SpecializationCriteria.Type = criteria.Any
-		f.CategoryCriteria.Type = criteria.Any
+		f.NameCriteria.Compare = criteria.Is
+		f.SpecializationCriteria.Compare = criteria.Any
+		f.CategoryCriteria.Compare = criteria.Any
 	case feature.SpellBonus, feature.SpellPointBonus:
 		f.SpellMatchType = spell.AllColleges
-		f.NameCriteria.Type = criteria.Is
-		f.CategoryCriteria.Type = criteria.Any
+		f.NameCriteria.Compare = criteria.Is
+		f.CategoryCriteria.Compare = criteria.Any
 	case feature.WeaponDamageBonus:
 		f.WeaponSelectionType = weapon.WithRequiredSkill
-		f.NameCriteria.Type = criteria.Is
-		f.SpecializationCriteria.Type = criteria.Any
-		f.RelativeLevelCriteria.Type = criteria.AnyNumber
-		f.CategoryCriteria.Type = criteria.Any
+		f.NameCriteria.Compare = criteria.Is
+		f.SpecializationCriteria.Compare = criteria.Any
+		f.RelativeLevelCriteria.Compare = criteria.AnyNumber
+		f.CategoryCriteria.Compare = criteria.Any
 	default:
 		jot.Fatal(1, "invalid feature type: ", f.Type)
 	}
@@ -265,7 +265,7 @@ func (f *Feature) Key() string {
 	case feature.SkillPointBonus:
 		return f.buildKey(SkillPointsID, false)
 	case feature.SpellBonus:
-		if f.CategoryCriteria.Type != criteria.Any {
+		if f.CategoryCriteria.Compare != criteria.Any {
 			return SpellNameID + "*"
 		}
 		switch f.SpellMatchType {
@@ -281,7 +281,7 @@ func (f *Feature) Key() string {
 			jot.Fatal(1, "invalid match type: ", f.SpellMatchType)
 		}
 	case feature.SpellPointBonus:
-		if f.CategoryCriteria.Type != criteria.Any {
+		if f.CategoryCriteria.Compare != criteria.Any {
 			return SpellPointsID + "*"
 		}
 		switch f.SpellMatchType {
@@ -313,8 +313,8 @@ func (f *Feature) Key() string {
 }
 
 func (f *Feature) buildKey(prefix string, considerNameCriteriaOnly bool) string {
-	if f.NameCriteria.Type == criteria.Is && (considerNameCriteriaOnly ||
-		(f.SpecializationCriteria.Type == criteria.Any && f.CategoryCriteria.Type == criteria.Any)) {
+	if f.NameCriteria.Compare == criteria.Is && (considerNameCriteriaOnly ||
+		(f.SpecializationCriteria.Compare == criteria.Any && f.CategoryCriteria.Compare == criteria.Any)) {
 		return prefix + "/" + f.NameCriteria.Qualifier
 	}
 	return prefix + "*"

@@ -12,76 +12,56 @@
 package advantage
 
 import (
-	"strings"
-
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
 // Possible ContainerType values.
 const (
 	// Group is the standard grouping container type.
-	Group ContainerType = iota
+	Group = ContainerType("group")
 	// MetaTrait acts as one normal trait, listed as an advantage if its point total is positive, or a disadvantage if it
 	// is negative.
-	MetaTrait
+	MetaTrait = ContainerType("meta_trait")
 	// Race tracks its point cost separately from normal advantages and disadvantages.
-	Race
+	Race = ContainerType("race")
 	// AlternativeAbilities behaves similar to a MetaTrait , but applies the rules for alternative abilities (see B61 and
 	// P11) to its immediate children
-	AlternativeAbilities
+	AlternativeAbilities = ContainerType("alternative_abilities")
 )
 
-type containerTypeData struct {
-	Key    string
-	String string
+// AllContainerTypes is the complete set of ContainerType values.
+var AllContainerTypes = []ContainerType{
+	Group,
+	MetaTrait,
+	Race,
+	AlternativeAbilities,
 }
 
 // ContainerType holds the type of an advantage container.
-type ContainerType uint8
+type ContainerType string
 
-var containerTypeValues = []*containerTypeData{
-	{
-		Key:    "group",
-		String: i18n.Text("Group"),
-	},
-	{
-		Key:    "meta_trait",
-		String: i18n.Text("Meta-Trait"),
-	},
-	{
-		Key:    "race",
-		String: i18n.Text("Race"),
-	},
-	{
-		Key:    "alternative_abilities",
-		String: i18n.Text("Alternative Abilities"),
-	},
-}
-
-// ContainerTypeFromKey extracts a ContainerType from a key.
-func ContainerTypeFromKey(key string) ContainerType {
-	for i, one := range containerTypeValues {
-		if strings.EqualFold(key, one.Key) {
-			return ContainerType(i)
+// EnsureValid ensures this is of a known value.
+func (c ContainerType) EnsureValid() ContainerType {
+	for _, one := range AllContainerTypes {
+		if one == c {
+			return c
 		}
 	}
-	return 0
-}
-
-// EnsureValid returns the first ContainerType if this ContainerType is not a known value.
-func (c ContainerType) EnsureValid() ContainerType {
-	if int(c) < len(containerTypeValues) {
-		return c
-	}
-	return 0
-}
-
-// Key returns the key used to represent this ContainerType.
-func (c ContainerType) Key() string {
-	return containerTypeValues[c.EnsureValid()].Key
+	return AllContainerTypes[0]
 }
 
 // String implements fmt.Stringer.
 func (c ContainerType) String() string {
-	return containerTypeValues[c.EnsureValid()].String
+	switch c {
+	case Group:
+		return i18n.Text("Group")
+	case MetaTrait:
+		return i18n.Text("Meta-Trait")
+	case Race:
+		return i18n.Text("Race")
+	case AlternativeAbilities:
+		return i18n.Text("Alternative Abilities")
+	default:
+		return Group.String()
+	}
 }

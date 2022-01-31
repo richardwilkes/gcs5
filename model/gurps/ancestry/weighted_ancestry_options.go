@@ -12,60 +12,18 @@
 package ancestry
 
 import (
-	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/richardwilkes/toolbox/xmath/rand"
 )
 
 // WeightedAncestryOptions is a string that has a weight associated with it.
 type WeightedAncestryOptions struct {
-	Weight int
-	Value  *Options
-}
-
-// NewWeightedAncestryOptionsFromJSON creates a new WeightedAncestryOptions from a JSON object.
-func NewWeightedAncestryOptionsFromJSON(data map[string]interface{}) *WeightedAncestryOptions {
-	return &WeightedAncestryOptions{
-		Weight: int(encoding.Number(data[optionWeightKey]).AsInt64()),
-		Value:  NewOptionsFromJSON(encoding.Object(data[optionValueKey])),
-	}
-}
-
-// ToJSON emits this object as JSON.
-func (o *WeightedAncestryOptions) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	encoder.KeyedNumber(optionWeightKey, fixed.F64d4FromInt64(int64(o.Weight)), false)
-	encoding.ToKeyedJSON(o.Value, optionValueKey, encoder)
-	encoder.EndObject()
+	Weight int      `json:"weight"`
+	Value  *Options `json:"value"`
 }
 
 // Valid returns true if this option has a valid weight.
 func (o *WeightedAncestryOptions) Valid() bool {
 	return o.Weight > 0
-}
-
-// WeightedAncestryOptionsFromJSON creates a slice of options from a JSON array.
-func WeightedAncestryOptionsFromJSON(array []interface{}) []*WeightedAncestryOptions {
-	if len(array) == 0 {
-		return nil
-	}
-	options := make([]*WeightedAncestryOptions, len(array))
-	for i, one := range array {
-		options[i] = NewWeightedAncestryOptionsFromJSON(encoding.Object(one))
-	}
-	return options
-}
-
-// WeightedAncestryOptionsToJSON emits the options as JSON.
-func WeightedAncestryOptionsToJSON(key string, options []*WeightedAncestryOptions, encoder *encoding.JSONEncoder) {
-	if len(options) != 0 {
-		encoder.Key(key)
-		encoder.StartArray()
-		for _, one := range options {
-			one.ToJSON(encoder)
-		}
-		encoder.EndArray()
-	}
 }
 
 // ChooseWeightedAncestryOptions selects a string option from the available set.

@@ -14,25 +14,12 @@ package ancestry
 import (
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/eval"
 	"github.com/richardwilkes/toolbox/eval/f64d4eval"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
-)
-
-const (
-	optionsNameKey           = "name"
-	optionsHeightFormulaKey  = "height_formula"
-	optionsWeightFormulaKey  = "weight_formula"
-	optionsAgeFormulaKey     = "age_formula"
-	optionsHairKey           = "hair_options"
-	optionsEyeKey            = "eye_options"
-	optionsSkinKey           = "skin_options"
-	optionsHandednessKey     = "handedness_options"
-	optionsNameGeneratorsKey = "name_generators"
 )
 
 const (
@@ -47,59 +34,15 @@ const (
 
 // Options holds options that may be randomized for an Entity's ancestry.
 type Options struct {
-	Name              string
-	HeightFormula     string
-	WeightFormula     string
-	AgeFormula        string
-	HairOptions       []*StringOption
-	EyeOptions        []*StringOption
-	SkinOptions       []*StringOption
-	HandednessOptions []*StringOption
-	NameGenerators    []string
-}
-
-// NewOptionsFromJSON creates a new Options from a JSON object.
-func NewOptionsFromJSON(data map[string]interface{}) *Options {
-	o := &Options{
-		Name:              encoding.String(data[optionsNameKey]),
-		HeightFormula:     encoding.String(data[optionsHeightFormulaKey]),
-		WeightFormula:     encoding.String(data[optionsWeightFormulaKey]),
-		AgeFormula:        encoding.String(data[optionsAgeFormulaKey]),
-		HairOptions:       StringOptionsFromJSON(encoding.Array(data[optionsHairKey])),
-		EyeOptions:        StringOptionsFromJSON(encoding.Array(data[optionsEyeKey])),
-		SkinOptions:       StringOptionsFromJSON(encoding.Array(data[optionsSkinKey])),
-		HandednessOptions: StringOptionsFromJSON(encoding.Array(data[optionsHandednessKey])),
-	}
-	array := encoding.Array(data[optionsNameGeneratorsKey])
-	if len(array) != 0 {
-		o.NameGenerators = make([]string, len(data))
-		for i, one := range array {
-			o.NameGenerators[i] = encoding.String(one)
-		}
-	}
-	return o
-}
-
-// ToJSON emits this object as JSON.
-func (o *Options) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	encoder.KeyedString(optionsNameKey, o.Name, true, true)
-	encoder.KeyedString(optionsHeightFormulaKey, o.HeightFormula, true, true)
-	encoder.KeyedString(optionsWeightFormulaKey, o.WeightFormula, true, true)
-	encoder.KeyedString(optionsAgeFormulaKey, o.AgeFormula, true, true)
-	StringOptionsToJSON(optionsHairKey, o.HairOptions, encoder)
-	StringOptionsToJSON(optionsEyeKey, o.EyeOptions, encoder)
-	StringOptionsToJSON(optionsSkinKey, o.SkinOptions, encoder)
-	StringOptionsToJSON(optionsHandednessKey, o.HandednessOptions, encoder)
-	if len(o.NameGenerators) != 0 {
-		encoder.Key(optionsNameGeneratorsKey)
-		encoder.StartArray()
-		for _, one := range o.NameGenerators {
-			encoder.String(one)
-		}
-		encoder.EndArray()
-	}
-	encoder.EndObject()
+	Name              string          `json:"name,omitempty"`
+	HeightFormula     string          `json:"height_formula,omitempty"`
+	WeightFormula     string          `json:"weight_formula,omitempty"`
+	AgeFormula        string          `json:"age_formula,omitempty"`
+	HairOptions       []*StringOption `json:"hair_options,omitempty"`
+	EyeOptions        []*StringOption `json:"eye_options,omitempty"`
+	SkinOptions       []*StringOption `json:"skin_options,omitempty"`
+	HandednessOptions []*StringOption `json:"handedness_options,omitempty"`
+	NameGenerators    []string        `json:"name_generators,omitempty"`
 }
 
 // RandomHeight returns a randomized height.

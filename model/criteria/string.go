@@ -11,40 +11,15 @@
 
 package criteria
 
-import (
-	"github.com/richardwilkes/gcs/model/encoding"
-)
-
 // String holds the criteria for matching a string.
 type String struct {
-	Type      StringCompareType
-	Qualifier string
+	Compare   StringCompareType `json:"compare,omitempty"`
+	Qualifier string            `json:"qualifier,omitempty"`
 }
 
-// NewStringFromJSON creates a new String from a JSON object.
-func NewStringFromJSON(data map[string]interface{}) *String {
-	s := &String{}
-	s.FromJSON(data)
-	return s
-}
-
-// FromJSON replaces the current data with data from a JSON object.
-func (s *String) FromJSON(data map[string]interface{}) {
-	s.Type = StringCompareTypeFromString(encoding.String(data[typeKey]))
-	s.Qualifier = encoding.String(data[qualifierKey])
-}
-
-// ToJSON emits the JSON for this object.
-func (s *String) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	s.ToInlineJSON(encoder)
-	encoder.EndObject()
-}
-
-// ToInlineJSON emits the JSON key values that comprise this object without the object wrapper.
-func (s *String) ToInlineJSON(encoder *encoding.JSONEncoder) {
-	if s.Type != Any {
-		encoder.KeyedString(typeKey, s.Type.Key(), false, false)
-		encoder.KeyedString(qualifierKey, s.Qualifier, true, true)
+// Normalize the data.
+func (s *String) Normalize() {
+	if s.Compare = s.Compare.EnsureValid(); s.Compare == Any {
+		s.Qualifier = ""
 	}
 }

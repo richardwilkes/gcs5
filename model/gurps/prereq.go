@@ -69,35 +69,35 @@ func NewPrereq(prereqType prereq.Type, entity *Entity) *Prereq {
 	switch prereqType {
 	case prereq.Advantage:
 		p.Has = true
-		p.NameCriteria.Type = criteria.Is
-		p.NumericCriteria.Type = criteria.AtLeast
-		p.NotesCriteria.Type = criteria.Any
+		p.NameCriteria.Compare = criteria.Is
+		p.NumericCriteria.Compare = criteria.AtLeast
+		p.NotesCriteria.Compare = criteria.Any
 	case prereq.Attribute:
 		p.Has = true
-		p.NumericCriteria.Type = criteria.AtLeast
+		p.NumericCriteria.Compare = criteria.AtLeast
 		p.NumericCriteria.Qualifier = fixed.F64d4FromInt64(10)
 		p.Which = DefaultAttributeIDFor(entity)
 	case prereq.ContainedQuantity:
 		p.Has = true
-		p.NumericCriteria.Type = criteria.AtMost
+		p.NumericCriteria.Compare = criteria.AtMost
 		p.NumericCriteria.Qualifier = f64d4.One
 	case prereq.ContainedWeight:
 		p.Has = true
-		p.WeightCriteria.Type = criteria.AtMost
+		p.WeightCriteria.Compare = criteria.AtMost
 		p.WeightCriteria.Qualifier = measure.WeightFromInt64(5, SheetSettingsFor(entity).DefaultWeightUnits)
 	case prereq.List:
 		p.All = true
-		p.NumericCriteria.Type = criteria.AtLeast
+		p.NumericCriteria.Compare = criteria.AtLeast
 	case prereq.Skill:
 		p.Has = true
-		p.NameCriteria.Type = criteria.Is
-		p.NumericCriteria.Type = criteria.AtLeast
-		p.SpecializationCriteria.Type = criteria.Any
+		p.NameCriteria.Compare = criteria.Is
+		p.NumericCriteria.Compare = criteria.AtLeast
+		p.SpecializationCriteria.Compare = criteria.Any
 	case prereq.Spell:
 		p.Has = true
 		p.SubType = spell.Name
-		p.NameCriteria.Type = criteria.Is
-		p.NumericCriteria.Type = criteria.AtLeast
+		p.NameCriteria.Compare = criteria.Is
+		p.NumericCriteria.Compare = criteria.AtLeast
 		p.NumericCriteria.Qualifier = f64d4.One
 	default:
 		jot.Fatal(1, "invalid prereq type: ", p.Type)
@@ -160,7 +160,7 @@ func (p *Prereq) ToJSON(encoder *encoding.JSONEncoder) {
 	case prereq.Advantage:
 		encoder.KeyedBool(prereqHasKey, p.Has, false)
 		encoding.ToKeyedJSON(&p.NameCriteria, prereqNameKey, encoder)
-		if p.NumericCriteria.Type != criteria.AtLeast || p.NumericCriteria.Qualifier != 0 {
+		if p.NumericCriteria.Compare != criteria.AtLeast || p.NumericCriteria.Qualifier != 0 {
 			encoding.ToKeyedJSON(&p.NumericCriteria, prereqLevelKey, encoder)
 		}
 		encoding.ToKeyedJSON(&p.NotesCriteria, prereqNotesKey, encoder)
@@ -191,7 +191,7 @@ func (p *Prereq) ToJSON(encoder *encoding.JSONEncoder) {
 	case prereq.Skill:
 		encoder.KeyedBool(prereqHasKey, p.Has, false)
 		encoding.ToKeyedJSON(&p.NameCriteria, prereqNameKey, encoder)
-		if p.NumericCriteria.Type != criteria.AtLeast || p.NumericCriteria.Qualifier != 0 {
+		if p.NumericCriteria.Compare != criteria.AtLeast || p.NumericCriteria.Qualifier != 0 {
 			encoding.ToKeyedJSON(&p.NumericCriteria, prereqLevelKey, encoder)
 		}
 		encoding.ToKeyedJSON(&p.SpecializationCriteria, prereqSpecializationKey, encoder)
@@ -329,7 +329,7 @@ func (p *Prereq) Satisfied(entity *Entity, exclude interface{}, buffer *xio.Byte
 	   return satisfied;
 	*/
 	case prereq.List:
-		if p.WhenEnabled && !p.NumericCriteria.Type.Matches(p.NumericCriteria.Qualifier,
+		if p.WhenEnabled && !p.NumericCriteria.Compare.Matches(p.NumericCriteria.Qualifier,
 			fixed.F64d4FromStringForced(strings.Map(func(r rune) rune {
 				if r == '.' || (r >= '0' && r <= '9') {
 					return r
