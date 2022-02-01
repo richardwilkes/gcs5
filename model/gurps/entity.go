@@ -25,7 +25,7 @@ var _ eval.VariableResolver = &Entity{}
 type Entity struct {
 	Profile       *Profile
 	SheetSettings *SheetSettings
-	featureMap    map[string][]*Feature
+	featureMap    map[string][]feature.Feature
 }
 
 // AddDRBonusesFor locates any active DR bonuses and adds them to the map. If 'drMap' isn't nil, it will be returned.
@@ -35,9 +35,8 @@ func (e *Entity) AddDRBonusesFor(id string, tooltip *xio.ByteBuffer, drMap map[s
 	}
 	if list, exists := e.featureMap[strings.ToLower(id)]; exists {
 		for _, one := range list {
-			if one.Type == feature.DRBonus {
-				drBonus := one.Self.(*DRBonus)
-				drMap[strings.ToLower(drBonus.Specialization)] += int(drBonus.LeveledAmount.AdjustedAmount().AsInt64())
+			if drBonus, ok := one.(*feature.DRBonus); ok {
+				drMap[strings.ToLower(drBonus.Specialization)] += int(drBonus.AdjustedAmount().AsInt64())
 				drBonus.AddToTooltip(tooltip)
 			}
 		}

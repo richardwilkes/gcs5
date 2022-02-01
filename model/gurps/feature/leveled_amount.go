@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package feature
 
 import (
 	"fmt"
@@ -43,4 +43,9 @@ func (l *LeveledAmount) Format(what string) string {
 		return fmt.Sprintf(i18n.Text("%s (%s per %s)"), l.AdjustedAmount().StringWithSign(), str, what)
 	}
 	return str
+}
+
+// FormatWithLevel calls Format("level").
+func (l *LeveledAmount) FormatWithLevel() string {
+	return l.Format(i18n.Text("level"))
 }

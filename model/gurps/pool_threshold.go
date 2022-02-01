@@ -12,71 +12,20 @@
 package gurps
 
 import (
-	"sort"
-
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-const (
-	poolThresholdStateKey       = "state"
-	poolThresholdExplanationKey = "explanation"
-	poolThresholdMultiplierKey  = "multiplier"
-	poolThresholdDivisorKey     = "divisor"
-	poolThresholdAdditionKey    = "addition"
-	poolThresholdOpsKey         = "ops"
-)
-
 // PoolThreshold holds a point within an attribute pool where changes in state occur.
 type PoolThreshold struct {
-	State       string
-	Explanation string
-	Multiplier  fixed.F64d4
-	Divisor     fixed.F64d4
-	Addition    fixed.F64d4
-	Ops         []attribute.ThresholdOp
+	State       string                  `json:"state"`
+	Explanation string                  `json:"explanation,omitempty"`
+	Multiplier  fixed.F64d4             `json:"multiplier"`
+	Divisor     fixed.F64d4             `json:"divisor"`
+	Addition    fixed.F64d4             `json:"addition,omitempty"`
+	Ops         []attribute.ThresholdOp `json:"ops,omitempty"`
 	// TODO: Turn the Multiplier, Divisor & Addition fields into an expression field instead
-}
-
-// NewPoolThresholdFromJSON creates a new PoolThreshold from a JSON object.
-func NewPoolThresholdFromJSON(data map[string]interface{}) *PoolThreshold {
-	p := &PoolThreshold{
-		State:       encoding.String(data[poolThresholdStateKey]),
-		Explanation: encoding.String(data[poolThresholdExplanationKey]),
-		Multiplier:  encoding.Number(data[poolThresholdMultiplierKey]),
-		Divisor:     encoding.Number(data[poolThresholdDivisorKey]),
-		Addition:    encoding.Number(data[poolThresholdAdditionKey]),
-	}
-	ops := encoding.Array(data[poolThresholdOpsKey])
-	if len(ops) != 0 {
-		p.Ops = make([]attribute.ThresholdOp, 0, len(ops))
-		for _, one := range ops {
-			p.Ops = append(p.Ops, attribute.ThresholdOpFromString(encoding.String(one)))
-		}
-	}
-	return p
-}
-
-// ToJSON emits this object as JSON.
-func (p *PoolThreshold) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	encoder.KeyedString(poolThresholdStateKey, p.State, false, false)
-	encoder.KeyedString(poolThresholdExplanationKey, p.Explanation, true, true)
-	encoder.KeyedNumber(poolThresholdMultiplierKey, p.Multiplier, false)
-	encoder.KeyedNumber(poolThresholdDivisorKey, p.Divisor, false)
-	encoder.KeyedNumber(poolThresholdAdditionKey, p.Addition, true)
-	if len(p.Ops) != 0 {
-		encoder.Key(poolThresholdOpsKey)
-		encoder.StartArray()
-		sort.Slice(p.Ops, func(i, j int) bool { return p.Ops[i] < p.Ops[j] })
-		for _, op := range p.Ops {
-			encoder.String(op.Key())
-		}
-		encoder.EndArray()
-	}
-	encoder.EndObject()
 }
 
 // Threshold returns the threshold value for the given maximum.

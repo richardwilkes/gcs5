@@ -19,9 +19,6 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-// AttributeIDPrefix is the prefix all references to attribute IDs should use.
-const AttributeIDPrefix = "attr."
-
 // AttributeCalc holds the Attribute data that is only emitted for third parties.
 type AttributeCalc struct {
 	Value   fixed.F64d4  `json:"value"`

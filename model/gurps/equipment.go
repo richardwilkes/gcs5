@@ -19,6 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
+	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -61,7 +62,7 @@ type EquipmentData struct {
 	Uses                   int                  `json:"uses,omitempty"`
 	Weapons                []*Weapon            `json:"weapons,omitempty"`
 	Modifiers              []*EquipmentModifier `json:"modifiers,omitempty"`
-	Features               []*Feature           `json:"features,omitempty"`
+	Features               feature.Features     `json:"features,omitempty"`
 	Prereq                 *Prereq              `json:"prereqs,omitempty"`
 	Categories             []string             `json:"categories,omitempty"`
 	Equipped               bool                 `json:"equipped,omitempty"`
@@ -173,8 +174,7 @@ func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits)
 	}
 	var percentage, reduction fixed.F64d4
 	for _, one := range e.Features {
-		if one.Type == feature.ContainedWeightReduction {
-			cwr := one.Self.(*ContainedWeightReduction)
+		if cwr, ok := one.(*feature.ContainedWeightReduction); ok {
 			if cwr.IsPercentageReduction() {
 				percentage += cwr.PercentageReduction()
 			} else {
@@ -185,8 +185,7 @@ func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits)
 	for _, one := range e.Modifiers {
 		if !one.Disabled {
 			for _, f := range e.Features {
-				if f.Type == feature.ContainedWeightReduction {
-					cwr := f.Self.(*ContainedWeightReduction)
+				if cwr, ok := f.(*feature.ContainedWeightReduction); ok {
 					if cwr.IsPercentageReduction() {
 						percentage += cwr.PercentageReduction()
 					} else {
@@ -206,36 +205,36 @@ func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits)
 }
 
 // FillWithNameableKeys adds any nameable keys found in this Advantage to the provided map.
-func (e *Equipment) FillWithNameableKeys(nameables map[string]string) {
-	ExtractNameables(e.Name, nameables)
-	ExtractNameables(e.Notes, nameables)
-	ExtractNameables(e.VTTNotes, nameables)
-	e.Prereq.FillWithNameableKeys(nameables)
+func (e *Equipment) FillWithNameableKeys(m map[string]string) {
+	nameables.Extract(e.Name, m)
+	nameables.Extract(e.Notes, m)
+	nameables.Extract(e.VTTNotes, m)
+	e.Prereq.FillWithNameableKeys(m)
 	for _, one := range e.Features {
-		one.FillWithNameableKeys(nameables)
+		one.FillWithNameableKeys(m)
 	}
 	for _, one := range e.Weapons {
-		one.FillWithNameableKeys(nameables)
+		one.FillWithNameableKeys(m)
 	}
 	for _, one := range e.Modifiers {
-		one.FillWithNameableKeys(nameables)
+		one.FillWithNameableKeys(m)
 	}
 }
 
 // ApplyNameableKeys replaces any nameable keys found in this Advantage with the corresponding values in the provided map.
-func (e *Equipment) ApplyNameableKeys(nameables map[string]string) {
-	e.Name = ApplyNameables(e.Name, nameables)
-	e.Notes = ApplyNameables(e.Notes, nameables)
-	e.VTTNotes = ApplyNameables(e.VTTNotes, nameables)
-	e.Prereq.ApplyNameableKeys(nameables)
+func (e *Equipment) ApplyNameableKeys(m map[string]string) {
+	e.Name = nameables.Apply(e.Name, m)
+	e.Notes = nameables.Apply(e.Notes, m)
+	e.VTTNotes = nameables.Apply(e.VTTNotes, m)
+	e.Prereq.ApplyNameableKeys(m)
 	for _, one := range e.Features {
-		one.ApplyNameableKeys(nameables)
+		one.ApplyNameableKeys(m)
 	}
 	for _, one := range e.Weapons {
-		one.ApplyNameableKeys(nameables)
+		one.ApplyNameableKeys(m)
 	}
 	for _, one := range e.Modifiers {
-		one.ApplyNameableKeys(nameables)
+		one.ApplyNameableKeys(m)
 	}
 }
 

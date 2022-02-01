@@ -18,13 +18,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio"
 )
-
-// HitLocationPrefix is the prefix used on all hit locations for DR bonuses.
-const HitLocationPrefix = "hit_location."
 
 // HitLocationData holds the Hitlocation data that gets written to disk.
 type HitLocationData struct {
@@ -57,8 +55,8 @@ func (h *HitLocation) MarshalJSON() ([]byte, error) {
 	h.Calc.DR = nil
 	if h.Entity != nil {
 		h.Calc.DR = h.DR(h.Entity, nil, nil)
-		if _, exists := h.Calc.DR[All]; !exists {
-			h.Calc.DR[All] = 0
+		if _, exists := h.Calc.DR[feature.All]; !exists {
+			h.Calc.DR[feature.All] = 0
 		}
 	}
 	data, err := json.Marshal(&h.HitLocationData)
@@ -97,12 +95,12 @@ func (h *HitLocation) DR(entity *Entity, tooltip *xio.ByteBuffer, drMap map[stri
 		drMap = make(map[string]int)
 	}
 	if h.DRBonus != 0 {
-		drMap[All] += h.DRBonus
+		drMap[feature.All] += h.DRBonus
 		if tooltip != nil {
-			fmt.Fprintf(tooltip, "\n%s [%+d against %s attacks]", h.ChoiceName, h.DRBonus, All)
+			fmt.Fprintf(tooltip, "\n%s [%+d against %s attacks]", h.ChoiceName, h.DRBonus, feature.All)
 		}
 	}
-	drMap = entity.AddDRBonusesFor(HitLocationPrefix+h.LocID, tooltip, drMap)
+	drMap = entity.AddDRBonusesFor(feature.HitLocationPrefix+h.LocID, tooltip, drMap)
 	if h.owningTable != nil && h.owningTable.owningLocation != nil {
 		drMap = h.owningTable.owningLocation.DR(entity, tooltip, drMap)
 	}
@@ -112,12 +110,12 @@ func (h *HitLocation) DR(entity *Entity, tooltip *xio.ByteBuffer, drMap map[stri
 			keys = append(keys, k)
 		}
 		txt.SortStringsNaturalAscending(keys)
-		base := drMap[All]
+		base := drMap[feature.All]
 		var buffer bytes.Buffer
 		buffer.WriteByte('\n')
 		for _, k := range keys {
 			value := drMap[k]
-			if !strings.EqualFold(All, k) {
+			if !strings.EqualFold(feature.All, k) {
 				value += base
 			}
 			fmt.Fprintf(&buffer, "\n%d against %s attacks", value, k)
@@ -131,14 +129,14 @@ func (h *HitLocation) DR(entity *Entity, tooltip *xio.ByteBuffer, drMap map[stri
 // DisplayDR returns the DR for this location, formatted as a string.
 func (h *HitLocation) DisplayDR(entity *Entity, tooltip *xio.ByteBuffer) string {
 	drMap := h.DR(entity, tooltip, nil)
-	all, exists := drMap[All]
+	all, exists := drMap[feature.All]
 	if !exists {
-		drMap[All] = 0
+		drMap[feature.All] = 0
 	}
 	keys := make([]string, 0, len(drMap))
-	keys = append(keys, All)
+	keys = append(keys, feature.All)
 	for k := range drMap {
-		if k != All {
+		if k != feature.All {
 			keys = append(keys, k)
 		}
 	}
@@ -146,7 +144,7 @@ func (h *HitLocation) DisplayDR(entity *Entity, tooltip *xio.ByteBuffer) string 
 	var buffer strings.Builder
 	for _, k := range keys {
 		dr := drMap[k]
-		if k != All {
+		if k != feature.All {
 			dr += all
 		}
 		if buffer.Len() != 0 {

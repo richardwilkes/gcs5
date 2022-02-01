@@ -18,6 +18,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
+	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -28,19 +30,19 @@ const advantageTypeKey = "advantage"
 
 // AdvantageItem holds the Advantage data that only exists in non-containers.
 type AdvantageItem struct {
-	Levels         *fixed.F64d4 `json:"levels,omitempty"`
-	BasePoints     fixed.F64d4  `json:"base_points"`
-	PointsPerLevel fixed.F64d4  `json:"points_per_level,omitempty"`
-	Prereq         *Prereq      `json:"prereqs,omitempty"`
-	Weapons        []*Weapon    `json:"weapons,omitempty"`
-	Features       []*Feature   `json:"features,omitempty"`
-	Mental         bool         `json:"mental,omitempty"`
-	Physical       bool         `json:"physical,omitempty"`
-	Social         bool         `json:"social,omitempty"`
-	Exotic         bool         `json:"exotic,omitempty"`
-	Supernatural   bool         `json:"supernatural,omitempty"`
-	Disabled       bool         `json:"disabled,omitempty"`
-	RoundCostDown  bool         `json:"round_down,omitempty"`
+	Levels         *fixed.F64d4     `json:"levels,omitempty"`
+	BasePoints     fixed.F64d4      `json:"base_points"`
+	PointsPerLevel fixed.F64d4      `json:"points_per_level,omitempty"`
+	Prereq         *Prereq          `json:"prereqs,omitempty"`
+	Weapons        []*Weapon        `json:"weapons,omitempty"`
+	Features       feature.Features `json:"features,omitempty"`
+	Mental         bool             `json:"mental,omitempty"`
+	Physical       bool             `json:"physical,omitempty"`
+	Social         bool             `json:"social,omitempty"`
+	Exotic         bool             `json:"exotic,omitempty"`
+	Supernatural   bool             `json:"supernatural,omitempty"`
+	Disabled       bool             `json:"disabled,omitempty"`
+	RoundCostDown  bool             `json:"round_down,omitempty"`
 }
 
 // AdvantageContainer holds the Advantage data that only exists in containers.
@@ -240,36 +242,36 @@ func (a *Advantage) String() string {
 }
 
 // FillWithNameableKeys adds any nameable keys found in this Advantage to the provided map.
-func (a *Advantage) FillWithNameableKeys(nameables map[string]string) {
-	ExtractNameables(a.Name, nameables)
-	ExtractNameables(a.Notes, nameables)
-	ExtractNameables(a.VTTNotes, nameables)
-	a.Prereq.FillWithNameableKeys(nameables)
+func (a *Advantage) FillWithNameableKeys(m map[string]string) {
+	nameables.Extract(a.Name, m)
+	nameables.Extract(a.Notes, m)
+	nameables.Extract(a.VTTNotes, m)
+	a.Prereq.FillWithNameableKeys(m)
 	for _, one := range a.Features {
-		one.FillWithNameableKeys(nameables)
+		one.FillWithNameableKeys(m)
 	}
 	for _, one := range a.Weapons {
-		one.FillWithNameableKeys(nameables)
+		one.FillWithNameableKeys(m)
 	}
 	for _, one := range a.Modifiers {
-		one.FillWithNameableKeys(nameables)
+		one.FillWithNameableKeys(m)
 	}
 }
 
 // ApplyNameableKeys replaces any nameable keys found in this Advantage with the corresponding values in the provided map.
-func (a *Advantage) ApplyNameableKeys(nameables map[string]string) {
-	a.Name = ApplyNameables(a.Name, nameables)
-	a.Notes = ApplyNameables(a.Notes, nameables)
-	a.VTTNotes = ApplyNameables(a.VTTNotes, nameables)
-	a.Prereq.ApplyNameableKeys(nameables)
+func (a *Advantage) ApplyNameableKeys(m map[string]string) {
+	a.Name = nameables.Apply(a.Name, m)
+	a.Notes = nameables.Apply(a.Notes, m)
+	a.VTTNotes = nameables.Apply(a.VTTNotes, m)
+	a.Prereq.ApplyNameableKeys(m)
 	for _, one := range a.Features {
-		one.ApplyNameableKeys(nameables)
+		one.ApplyNameableKeys(m)
 	}
 	for _, one := range a.Weapons {
-		one.ApplyNameableKeys(nameables)
+		one.ApplyNameableKeys(m)
 	}
 	for _, one := range a.Modifiers {
-		one.ApplyNameableKeys(nameables)
+		one.ApplyNameableKeys(m)
 	}
 }
 

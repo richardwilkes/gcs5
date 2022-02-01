@@ -17,6 +17,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
+	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -30,7 +32,7 @@ type AdvantageModifierItem struct {
 	Cost     fixed.F64d4                `json:"cost,omitempty"`
 	Levels   fixed.F64d4                `json:"levels,omitempty"`
 	Affects  *advantage.Affects         `json:"affects,omitempty"`
-	Features []*Feature                 `json:"features,omitempty"`
+	Features feature.Features           `json:"features,omitempty"`
 	Disabled bool                       `json:"disabled,omitempty"`
 }
 
@@ -157,25 +159,25 @@ func (a *AdvantageModifier) CostDescription() string {
 }
 
 // FillWithNameableKeys adds any nameable keys found in this AdvantageModifier to the provided map.
-func (a *AdvantageModifier) FillWithNameableKeys(nameables map[string]string) {
+func (a *AdvantageModifier) FillWithNameableKeys(m map[string]string) {
 	if !a.Disabled {
-		ExtractNameables(a.Name, nameables)
-		ExtractNameables(a.Notes, nameables)
-		ExtractNameables(a.VTTNotes, nameables)
+		nameables.Extract(a.Name, m)
+		nameables.Extract(a.Notes, m)
+		nameables.Extract(a.VTTNotes, m)
 		for _, one := range a.Features {
-			one.FillWithNameableKeys(nameables)
+			one.FillWithNameableKeys(m)
 		}
 	}
 }
 
 // ApplyNameableKeys replaces any nameable keys found in this AdvantageModifier with the corresponding values in the provided map.
-func (a *AdvantageModifier) ApplyNameableKeys(nameables map[string]string) {
+func (a *AdvantageModifier) ApplyNameableKeys(m map[string]string) {
 	if !a.Disabled {
-		a.Name = ApplyNameables(a.Name, nameables)
-		a.Notes = ApplyNameables(a.Notes, nameables)
-		a.VTTNotes = ApplyNameables(a.VTTNotes, nameables)
+		a.Name = nameables.Apply(a.Name, m)
+		a.Notes = nameables.Apply(a.Notes, m)
+		a.VTTNotes = nameables.Apply(a.VTTNotes, m)
 		for _, one := range a.Features {
-			one.ApplyNameableKeys(nameables)
+			one.ApplyNameableKeys(m)
 		}
 	}
 }

@@ -13,32 +13,32 @@ package feature
 
 // Possible Type values.
 const (
-	AttributeBonus           = Type("attribute_bonus")
-	ConditionalModifier      = Type("conditional_modifier")
-	ContainedWeightReduction = Type("contained_weight_reduction")
-	CostReduction            = Type("cost_reduction")
-	DRBonus                  = Type("dr_bonus")
-	ReactionBonus            = Type("reaction_bonus")
-	SkillBonus               = Type("skill_bonus")
-	SkillPointBonus          = Type("skill_point_bonus")
-	SpellBonus               = Type("spell_bonus")
-	SpellPointBonus          = Type("spell_point_bonus")
-	WeaponDamageBonus        = Type("weapon_bonus")
+	AttributeBonusType           = Type("attribute_bonus")
+	ConditionalModifierType      = Type("conditional_modifier")
+	ContainedWeightReductionType = Type("contained_weight_reduction")
+	CostReductionType            = Type("cost_reduction")
+	DRBonusType                  = Type("dr_bonus")
+	ReactionBonusType            = Type("reaction_bonus")
+	SkillBonusType               = Type("skill_bonus")
+	SkillPointBonusType          = Type("skill_point_bonus")
+	SpellBonusType               = Type("spell_bonus")
+	SpellPointBonusType          = Type("spell_point_bonus")
+	WeaponDamageBonusType        = Type("weapon_bonus")
 )
 
 // AllTypes is the complete set of Type values.
 var AllTypes = []Type{
-	AttributeBonus,
-	ConditionalModifier,
-	ContainedWeightReduction,
-	CostReduction,
-	DRBonus,
-	ReactionBonus,
-	SkillBonus,
-	SkillPointBonus,
-	SpellBonus,
-	SpellPointBonus,
-	WeaponDamageBonus,
+	AttributeBonusType,
+	ConditionalModifierType,
+	ContainedWeightReductionType,
+	CostReductionType,
+	DRBonusType,
+	ReactionBonusType,
+	SkillBonusType,
+	SkillPointBonusType,
+	SpellBonusType,
+	SpellPointBonusType,
+	WeaponDamageBonusType,
 }
 
 // Type holds the type of a Feature.

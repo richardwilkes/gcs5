@@ -10,10 +10,3 @@
  */
 
 package gurps
-
-const (
-	// SkillNameID holds the ID for skill name lookups.
-	SkillNameID = "skill.name"
-	// SkillPointsID holds the ID for skill point lookups.
-	SkillPointsID = "skill.points"
-)

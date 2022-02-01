@@ -9,34 +9,41 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package feature
 
 import (
+	"fmt"
+
 	"github.com/richardwilkes/gcs/model/criteria"
 	"github.com/richardwilkes/gcs/model/f64d4"
-	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/toolbox/log/jot"
+	"github.com/richardwilkes/toolbox/xio"
 )
+
+const (
+	// SkillNameID holds the ID for skill name lookups.
+	SkillNameID = "skill.name"
+)
+
+var _ Bonus = &SkillBonus{}
 
 // SkillBonus holds an adjustment to a skill.
 type SkillBonus struct {
-	Bonus
+	Type                   Type                `json:"type"`
+	Parent                 fmt.Stringer        `json:"-"`
 	SelectionType          skill.SelectionType `json:"selection_type"`
 	NameCriteria           criteria.String     `json:"name,omitempty"`
 	SpecializationCriteria criteria.String     `json:"specialization"`
 	CategoryCriteria       criteria.String     `json:"category,omitempty"`
+	LeveledAmount
 }
 
 // NewSkillBonus creates a new SkillBonus.
 func NewSkillBonus() *SkillBonus {
-	s := &SkillBonus{
-		Bonus: Bonus{
-			Feature: Feature{
-				Type: feature.SkillBonus,
-			},
-			LeveledAmount: LeveledAmount{Amount: f64d4.One},
-		},
+	return &SkillBonus{
+		Type:          SkillBonusType,
 		SelectionType: skill.SkillsWithName,
 		NameCriteria: criteria.String{
 			Compare: criteria.Is,
@@ -47,12 +54,12 @@ func NewSkillBonus() *SkillBonus {
 		CategoryCriteria: criteria.String{
 			Compare: criteria.Any,
 		},
+		LeveledAmount: LeveledAmount{Amount: f64d4.One},
 	}
-	s.Self = s
-	return s
 }
 
-func (s *SkillBonus) featureMapKey() string {
+// FeatureMapKey implements Feature.
+func (s *SkillBonus) FeatureMapKey() string {
 	switch s.SelectionType {
 	case skill.SkillsWithName:
 		return s.buildKey(SkillNameID)
@@ -74,18 +81,25 @@ func (s *SkillBonus) buildKey(prefix string) string {
 	return prefix + "*"
 }
 
-func (s *SkillBonus) fillWithNameableKeys(nameables map[string]string) {
-	ExtractNameables(s.SpecializationCriteria.Qualifier, nameables)
+// FillWithNameableKeys implements Feature.
+func (s *SkillBonus) FillWithNameableKeys(m map[string]string) {
+	nameables.Extract(s.SpecializationCriteria.Qualifier, m)
 	if s.SelectionType != skill.ThisWeapon {
-		ExtractNameables(s.NameCriteria.Qualifier, nameables)
-		ExtractNameables(s.CategoryCriteria.Qualifier, nameables)
+		nameables.Extract(s.NameCriteria.Qualifier, m)
+		nameables.Extract(s.CategoryCriteria.Qualifier, m)
 	}
 }
 
-func (s *SkillBonus) applyNameableKeys(nameables map[string]string) {
-	s.SpecializationCriteria.Qualifier = ApplyNameables(s.SpecializationCriteria.Qualifier, nameables)
+// ApplyNameableKeys implements Feature.
+func (s *SkillBonus) ApplyNameableKeys(m map[string]string) {
+	s.SpecializationCriteria.Qualifier = nameables.Apply(s.SpecializationCriteria.Qualifier, m)
 	if s.SelectionType != skill.ThisWeapon {
-		s.NameCriteria.Qualifier = ApplyNameables(s.NameCriteria.Qualifier, nameables)
-		s.CategoryCriteria.Qualifier = ApplyNameables(s.CategoryCriteria.Qualifier, nameables)
+		s.NameCriteria.Qualifier = nameables.Apply(s.NameCriteria.Qualifier, m)
+		s.CategoryCriteria.Qualifier = nameables.Apply(s.CategoryCriteria.Qualifier, m)
 	}
+}
+
+// AddToTooltip implements Bonus.
+func (s *SkillBonus) AddToTooltip(buffer *xio.ByteBuffer) {
+	basicAddToTooltip(s.Parent, &s.LeveledAmount, buffer)
 }

@@ -9,36 +9,42 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package feature
 
 import (
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
+var _ Feature = &ContainedWeightReduction{}
+
 // ContainedWeightReduction holds the data for a weight reduction that can be applied to a container's contents.
 type ContainedWeightReduction struct {
-	Feature
+	Type      Type   `json:"type"`
 	Reduction string `json:"reduction"`
 }
 
 // NewContainedWeightReduction creates a new ContainedWeightReduction.
 func NewContainedWeightReduction() *ContainedWeightReduction {
-	c := &ContainedWeightReduction{
-		Feature: Feature{
-			Type: feature.ContainedWeightReduction,
-		},
+	return &ContainedWeightReduction{
+		Type:      ContainedWeightReductionType,
 		Reduction: "0%",
 	}
-	c.Self = c
-	return c
 }
 
-func (c *ContainedWeightReduction) featureMapKey() string {
+// FeatureMapKey implements Feature.
+func (c *ContainedWeightReduction) FeatureMapKey() string {
 	return "equipment.weight.sum"
+}
+
+// FillWithNameableKeys implements Feature.
+func (c *ContainedWeightReduction) FillWithNameableKeys(_ map[string]string) {
+}
+
+// ApplyNameableKeys implements Feature.
+func (c *ContainedWeightReduction) ApplyNameableKeys(_ map[string]string) {
 }
 
 // IsPercentageReduction returns true if this is a percentage reduction and not a fixed amount.

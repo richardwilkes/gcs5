@@ -18,7 +18,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/equipment"
+	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
+	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -33,7 +35,7 @@ type EquipmentModifierItem struct {
 	CostAmount   string                       `json:"cost,omitempty"`
 	WeightType   equipment.ModifierWeightType `json:"weight_type,omitempty"`
 	WeightAmount string                       `json:"weight,omitempty"`
-	Features     []*Feature                   `json:"features,omitempty"`
+	Features     feature.Features             `json:"features,omitempty"`
 	Disabled     bool                         `json:"disabled,omitempty"`
 }
 
@@ -145,25 +147,25 @@ func (e *EquipmentModifier) WeightDescription(entity *Entity) string {
 }
 
 // FillWithNameableKeys adds any nameable keys found in this EquipmentModifier to the provided map.
-func (e *EquipmentModifier) FillWithNameableKeys(nameables map[string]string) {
+func (e *EquipmentModifier) FillWithNameableKeys(m map[string]string) {
 	if !e.Disabled {
-		ExtractNameables(e.Name, nameables)
-		ExtractNameables(e.Notes, nameables)
-		ExtractNameables(e.VTTNotes, nameables)
+		nameables.Extract(e.Name, m)
+		nameables.Extract(e.Notes, m)
+		nameables.Extract(e.VTTNotes, m)
 		for _, one := range e.Features {
-			one.FillWithNameableKeys(nameables)
+			one.FillWithNameableKeys(m)
 		}
 	}
 }
 
 // ApplyNameableKeys replaces any nameable keys found in this EquipmentModifier with the corresponding values in the provided map.
-func (e *EquipmentModifier) ApplyNameableKeys(nameables map[string]string) {
+func (e *EquipmentModifier) ApplyNameableKeys(m map[string]string) {
 	if !e.Disabled {
-		e.Name = ApplyNameables(e.Name, nameables)
-		e.Notes = ApplyNameables(e.Notes, nameables)
-		e.VTTNotes = ApplyNameables(e.VTTNotes, nameables)
+		e.Name = nameables.Apply(e.Name, m)
+		e.Notes = nameables.Apply(e.Notes, m)
+		e.VTTNotes = nameables.Apply(e.VTTNotes, m)
 		for _, one := range e.Features {
-			one.ApplyNameableKeys(nameables)
+			one.ApplyNameableKeys(m)
 		}
 	}
 }

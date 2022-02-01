@@ -9,32 +9,38 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package feature
 
-import (
-	"github.com/richardwilkes/gcs/model/gurps/feature"
-)
+// AttributeIDPrefix is the prefix all references to attribute IDs should use.
+const AttributeIDPrefix = "attr."
+
+var _ Feature = &CostReduction{}
 
 // CostReduction holds the data for a cost reduction.
 type CostReduction struct {
-	Feature
+	Type       Type   `json:"type"`
 	Attribute  string `json:"attribute,omitempty"`
 	Percentage int    `json:"percentage,omitempty"`
 }
 
 // NewCostReduction creates a new CostReduction.
-func NewCostReduction(entity *Entity) *CostReduction {
-	c := &CostReduction{
-		Feature: Feature{
-			Type: feature.CostReduction,
-		},
-		Attribute:  DefaultAttributeIDFor(entity),
+func NewCostReduction() *CostReduction {
+	return &CostReduction{
+		Type:       CostReductionType,
+		Attribute:  "st",
 		Percentage: 40,
 	}
-	c.Self = c
-	return c
 }
 
-func (c *CostReduction) featureMapKey() string {
+// FeatureMapKey implements Feature.
+func (c *CostReduction) FeatureMapKey() string {
 	return AttributeIDPrefix + c.Attribute
+}
+
+// FillWithNameableKeys implements Feature.
+func (c *CostReduction) FillWithNameableKeys(_ map[string]string) {
+}
+
+// ApplyNameableKeys implements Feature.
+func (c *CostReduction) ApplyNameableKeys(_ map[string]string) {
 }

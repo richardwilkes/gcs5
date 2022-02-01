@@ -18,6 +18,7 @@ import (
 	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
+	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/gcs/model/gurps/spell"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -489,24 +490,24 @@ func (p *Prereq) Satisfied(entity *Entity, exclude interface{}, buffer *xio.Byte
 }
 
 // FillWithNameableKeys adds any nameable keys found in this Prereq to the provided map.
-func (p *Prereq) FillWithNameableKeys(nameables map[string]string) {
+func (p *Prereq) FillWithNameableKeys(m map[string]string) {
 	switch p.Type {
 	case prereq.Advantage:
-		ExtractNameables(p.NameCriteria.Qualifier, nameables)
-		ExtractNameables(p.NotesCriteria.Qualifier, nameables)
+		nameables.Extract(p.NameCriteria.Qualifier, m)
+		nameables.Extract(p.NotesCriteria.Qualifier, m)
 	case prereq.Attribute:
 	case prereq.ContainedQuantity:
 	case prereq.ContainedWeight:
 	case prereq.List:
 		for _, one := range p.Children {
-			one.FillWithNameableKeys(nameables)
+			one.FillWithNameableKeys(m)
 		}
 	case prereq.Skill:
-		ExtractNameables(p.NameCriteria.Qualifier, nameables)
-		ExtractNameables(p.SpecializationCriteria.Qualifier, nameables)
+		nameables.Extract(p.NameCriteria.Qualifier, m)
+		nameables.Extract(p.SpecializationCriteria.Qualifier, m)
 	case prereq.Spell:
 		if p.SubType.UsesStringCriteria() {
-			ExtractNameables(p.NameCriteria.Qualifier, nameables)
+			nameables.Extract(p.NameCriteria.Qualifier, m)
 		}
 	default:
 		jot.Fatal(1, "invalid prereq type: ", p.Type)
@@ -514,24 +515,24 @@ func (p *Prereq) FillWithNameableKeys(nameables map[string]string) {
 }
 
 // ApplyNameableKeys replaces any nameable keys found in this Prereq with the corresponding values in the provided map.
-func (p *Prereq) ApplyNameableKeys(nameables map[string]string) {
+func (p *Prereq) ApplyNameableKeys(m map[string]string) {
 	switch p.Type {
 	case prereq.Advantage:
-		p.NameCriteria.Qualifier = ApplyNameables(p.NameCriteria.Qualifier, nameables)
-		p.NotesCriteria.Qualifier = ApplyNameables(p.NotesCriteria.Qualifier, nameables)
+		p.NameCriteria.Qualifier = nameables.Apply(p.NameCriteria.Qualifier, m)
+		p.NotesCriteria.Qualifier = nameables.Apply(p.NotesCriteria.Qualifier, m)
 	case prereq.Attribute:
 	case prereq.ContainedQuantity:
 	case prereq.ContainedWeight:
 	case prereq.List:
 		for _, one := range p.Children {
-			one.ApplyNameableKeys(nameables)
+			one.ApplyNameableKeys(m)
 		}
 	case prereq.Skill:
-		p.NameCriteria.Qualifier = ApplyNameables(p.NameCriteria.Qualifier, nameables)
-		p.SpecializationCriteria.Qualifier = ApplyNameables(p.SpecializationCriteria.Qualifier, nameables)
+		p.NameCriteria.Qualifier = nameables.Apply(p.NameCriteria.Qualifier, m)
+		p.SpecializationCriteria.Qualifier = nameables.Apply(p.SpecializationCriteria.Qualifier, m)
 	case prereq.Spell:
 		if p.SubType.UsesStringCriteria() {
-			p.NameCriteria.Qualifier = ApplyNameables(p.NameCriteria.Qualifier, nameables)
+			p.NameCriteria.Qualifier = nameables.Apply(p.NameCriteria.Qualifier, m)
 		}
 	default:
 		jot.Fatal(1, "invalid prereq type: ", p.Type)

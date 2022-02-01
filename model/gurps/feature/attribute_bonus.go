@@ -9,41 +9,55 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package feature
 
 import (
+	"fmt"
+
 	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
-	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/toolbox/xio"
 )
+
+var _ Bonus = &AttributeBonus{}
 
 // AttributeBonus holds the data for a bonus to an attribute.
 type AttributeBonus struct {
-	Bonus
+	Type       Type                      `json:"type"`
+	Parent     fmt.Stringer              `json:"-"`
 	Attribute  string                    `json:"attribute"`
 	Limitation attribute.BonusLimitation `json:"limitation,omitempty"`
+	LeveledAmount
 }
 
 // NewAttributeBonus creates a new AttributeBonus.
-func NewAttributeBonus(entity *Entity) *AttributeBonus {
-	a := &AttributeBonus{
-		Bonus: Bonus{
-			Feature: Feature{
-				Type: feature.AttributeBonus,
-			},
-			LeveledAmount: LeveledAmount{Amount: f64d4.One},
-		},
-		Attribute:  DefaultAttributeIDFor(entity),
-		Limitation: attribute.None,
+func NewAttributeBonus() *AttributeBonus {
+	return &AttributeBonus{
+		Type:          AttributeBonusType,
+		Attribute:     "st",
+		Limitation:    attribute.None,
+		LeveledAmount: LeveledAmount{Amount: f64d4.One},
 	}
-	a.Self = a
-	return a
 }
 
-func (a *AttributeBonus) featureMapKey() string {
+// FeatureMapKey implements Feature.
+func (a *AttributeBonus) FeatureMapKey() string {
 	key := AttributeIDPrefix + a.Attribute
 	if a.Limitation != attribute.None {
 		key += "." + string(a.Limitation)
 	}
 	return key
+}
+
+// FillWithNameableKeys implements Feature.
+func (a *AttributeBonus) FillWithNameableKeys(_ map[string]string) {
+}
+
+// ApplyNameableKeys implements Feature.
+func (a *AttributeBonus) ApplyNameableKeys(_ map[string]string) {
+}
+
+// AddToTooltip implements Bonus.
+func (a *AttributeBonus) AddToTooltip(buffer *xio.ByteBuffer) {
+	basicAddToTooltip(a.Parent, &a.LeveledAmount, buffer)
 }

@@ -9,38 +9,46 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package feature
 
 import (
+	"fmt"
+
 	"github.com/richardwilkes/gcs/model/criteria"
 	"github.com/richardwilkes/gcs/model/f64d4"
-	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
 )
 
+const (
+	// ThisWeaponID holds the ID for "this weapon".
+	ThisWeaponID = "\u0001"
+	// WeaponNamedIDPrefix the prefix for "weapon named" IDs.
+	WeaponNamedIDPrefix = "weapon_named."
+)
+
+var _ Bonus = &WeaponDamageBonus{}
+
 // WeaponDamageBonus holds the data for an adjustment to weapon damage.
 type WeaponDamageBonus struct {
-	Bonus
+	Type                   Type                 `json:"type"`
+	Parent                 fmt.Stringer         `json:"-"`
 	SelectionType          weapon.SelectionType `json:"selection_type"`
 	NameCriteria           criteria.String      `json:"name"`
 	SpecializationCriteria criteria.String      `json:"specialization"`
 	RelativeLevelCriteria  criteria.Numeric     `json:"level"`
 	CategoryCriteria       criteria.String      `json:"category"`
 	Percent                bool                 `json:"percent,omitempty"`
+	LeveledAmount
 }
 
 // NewWeaponDamageBonus creates a new WeaponDamageBonus.
 func NewWeaponDamageBonus() *WeaponDamageBonus {
-	s := &WeaponDamageBonus{
-		Bonus: Bonus{
-			Feature: Feature{
-				Type: feature.WeaponDamageBonus,
-			},
-			LeveledAmount: LeveledAmount{Amount: f64d4.One},
-		},
+	return &WeaponDamageBonus{
+		Type:          WeaponDamageBonusType,
 		SelectionType: weapon.WithRequiredSkill,
 		NameCriteria: criteria.String{
 			Compare: criteria.Is,
@@ -54,12 +62,12 @@ func NewWeaponDamageBonus() *WeaponDamageBonus {
 		CategoryCriteria: criteria.String{
 			Compare: criteria.Any,
 		},
+		LeveledAmount: LeveledAmount{Amount: f64d4.One},
 	}
-	s.Self = s
-	return s
 }
 
-func (w *WeaponDamageBonus) featureMapKey() string {
+// FeatureMapKey implements Feature.
+func (w *WeaponDamageBonus) FeatureMapKey() string {
 	switch w.SelectionType {
 	case weapon.WithRequiredSkill:
 		return w.buildKey(WeaponNamedIDPrefix)
@@ -81,28 +89,31 @@ func (w *WeaponDamageBonus) buildKey(prefix string) string {
 	return prefix + "*"
 }
 
-func (w *WeaponDamageBonus) fillWithNameableKeys(nameables map[string]string) {
-	ExtractNameables(w.SpecializationCriteria.Qualifier, nameables)
+// FillWithNameableKeys implements Feature.
+func (w *WeaponDamageBonus) FillWithNameableKeys(m map[string]string) {
+	nameables.Extract(w.SpecializationCriteria.Qualifier, m)
 	if w.SelectionType != weapon.ThisWeapon {
-		ExtractNameables(w.NameCriteria.Qualifier, nameables)
-		ExtractNameables(w.SpecializationCriteria.Qualifier, nameables)
-		ExtractNameables(w.CategoryCriteria.Qualifier, nameables)
+		nameables.Extract(w.NameCriteria.Qualifier, m)
+		nameables.Extract(w.SpecializationCriteria.Qualifier, m)
+		nameables.Extract(w.CategoryCriteria.Qualifier, m)
 	}
 }
 
-func (w *WeaponDamageBonus) applyNameableKeys(nameables map[string]string) {
-	w.SpecializationCriteria.Qualifier = ApplyNameables(w.SpecializationCriteria.Qualifier, nameables)
+// ApplyNameableKeys implements Feature.
+func (w *WeaponDamageBonus) ApplyNameableKeys(m map[string]string) {
+	w.SpecializationCriteria.Qualifier = nameables.Apply(w.SpecializationCriteria.Qualifier, m)
 	if w.SelectionType != weapon.ThisWeapon {
-		w.NameCriteria.Qualifier = ApplyNameables(w.NameCriteria.Qualifier, nameables)
-		w.SpecializationCriteria.Qualifier = ApplyNameables(w.SpecializationCriteria.Qualifier, nameables)
-		w.CategoryCriteria.Qualifier = ApplyNameables(w.CategoryCriteria.Qualifier, nameables)
+		w.NameCriteria.Qualifier = nameables.Apply(w.NameCriteria.Qualifier, m)
+		w.SpecializationCriteria.Qualifier = nameables.Apply(w.SpecializationCriteria.Qualifier, m)
+		w.CategoryCriteria.Qualifier = nameables.Apply(w.CategoryCriteria.Qualifier, m)
 	}
 }
 
-func (w *WeaponDamageBonus) addToTooltip(buffer *xio.ByteBuffer) {
+// AddToTooltip implements Bonus.
+func (w *WeaponDamageBonus) AddToTooltip(buffer *xio.ByteBuffer) {
 	if buffer != nil {
 		buffer.WriteByte('\n')
-		buffer.WriteString(w.ParentName())
+		buffer.WriteString(parentName(w.Parent))
 		buffer.WriteString(" [")
 		buffer.WriteString(w.LeveledAmount.Format(i18n.Text("die")))
 		if w.Percent {
