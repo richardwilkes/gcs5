@@ -12,8 +12,6 @@
 package gurps
 
 import (
-	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -21,82 +19,17 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-const (
-	weaponDamageTypeKey                      = "type"
-	weaponDamageStrengthTypeKey              = "st"
-	weaponDamageBaseKey                      = "base"
-	weaponDamageArmorDivisorKey              = "armor_divisor"
-	weaponDamageFragmentationKey             = "fragmentation"
-	weaponDamageFragmentationArmorDivisorKey = "fragmentation_armor_divisor"
-	weaponDamageFragmentationTypeKey         = "fragmentation_type"
-	weaponDamageModifierPerDieKey            = "modifier_per_die"
-)
-
 // WeaponDamage holds the damage information for a weapon.
 type WeaponDamage struct {
-	Owner                     *Weapon
-	Type                      string
-	StrengthType              weapon.StrengthDamage
-	Base                      *dice.Dice
-	ArmorDivisor              fixed.F64d4
-	Fragmentation             *dice.Dice
-	FragmentationArmorDivisor fixed.F64d4
-	FragmentationType         string
-	ModifierPerDie            fixed.F64d4
-}
-
-// NewWeaponDamageFromJSON creates a new WeaponDamage from a JSON object.
-func NewWeaponDamageFromJSON(owner *Weapon, data map[string]interface{}) *WeaponDamage {
-	w := &WeaponDamage{
-		Owner:          owner,
-		Type:           encoding.String(data[weaponDamageTypeKey]),
-		StrengthType:   weapon.StrengthDamageFromKey(encoding.String(data[weaponDamageStrengthTypeKey])),
-		ArmorDivisor:   encoding.Number(data[weaponDamageArmorDivisorKey]),
-		ModifierPerDie: encoding.Number(data[weaponDamageModifierPerDieKey]),
-	}
-	if w.ArmorDivisor == 0 {
-		w.ArmorDivisor = f64d4.One
-	}
-	if v, exists := data[weaponDamageBaseKey]; exists {
-		w.Base = dice.New(encoding.String(v))
-	}
-	if v, exists := data[weaponDamageFragmentationKey]; exists {
-		w.Fragmentation = dice.New(encoding.String(v))
-		w.FragmentationType = encoding.String(data[weaponDamageFragmentationTypeKey])
-		w.FragmentationArmorDivisor = encoding.Number(data[weaponDamageFragmentationArmorDivisorKey])
-		if w.FragmentationArmorDivisor == 0 {
-			w.FragmentationArmorDivisor = f64d4.One
-		}
-	}
-	return w
-}
-
-// ToJSON emits this object as JSON.
-func (w *WeaponDamage) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	encoder.KeyedString(weaponDamageTypeKey, w.Type, true, true)
-	if w.StrengthType != weapon.None {
-		encoder.KeyedString(weaponDamageStrengthTypeKey, w.StrengthType.Key(), false, false)
-	}
-	if w.Base != nil {
-		if s := w.Base.String(); s != "0" {
-			encoder.KeyedString(weaponDamageBaseKey, s, false, false)
-		}
-	}
-	if w.ArmorDivisor != f64d4.One {
-		encoder.KeyedNumber(weaponDamageArmorDivisorKey, w.ArmorDivisor, true)
-	}
-	if w.Fragmentation != nil {
-		if s := w.Fragmentation.String(); s != "0" {
-			encoder.KeyedString(weaponDamageFragmentationKey, s, false, false)
-			if w.FragmentationArmorDivisor != f64d4.One {
-				encoder.KeyedNumber(weaponDamageFragmentationArmorDivisorKey, w.FragmentationArmorDivisor, true)
-			}
-			encoder.KeyedString(weaponDamageFragmentationTypeKey, w.FragmentationType, true, true)
-		}
-	}
-	encoder.KeyedNumber(weaponDamageModifierPerDieKey, w.ModifierPerDie, true)
-	encoder.EndObject()
+	Owner                     *Weapon               `json:"-"`
+	Type                      string                `json:"type"`
+	StrengthType              weapon.StrengthDamage `json:"st,omitempty"`
+	Base                      *dice.Dice            `json:"base,omitempty"`
+	ArmorDivisor              fixed.F64d4           `json:"armor_divisor,omitempty"`
+	Fragmentation             *dice.Dice            `json:"fragmentation,omitempty"`
+	FragmentationArmorDivisor fixed.F64d4           `json:"fragmentation_armor_divisor,omitempty"`
+	FragmentationType         string                `json:"fragmentation_type,omitempty"`
+	ModifierPerDie            fixed.F64d4           `json:"modifier_per_die,omitempty"`
 }
 
 // DamageTooltip returns a formatted tooltip for the damage.

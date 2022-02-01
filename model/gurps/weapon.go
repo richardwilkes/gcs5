@@ -12,116 +12,64 @@
 package gurps
 
 import (
-	"github.com/richardwilkes/gcs/model/encoding"
+	"encoding/json"
+
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-const (
-	weaponTypeKey            = "type"
-	weaponDamageKey          = "damage"
-	weaponMinimumStrengthKey = "strength"
-	weaponReachKey           = "reach"
-	weaponParryKey           = "parry"
-	weaponBlockKey           = "block"
-	weaponAccuracyKey        = "accuracy"
-	weaponRangeKey           = "range"
-	weaponRateOfFireKey      = "rate_of_fire"
-	weaponShotsKey           = "shots"
-	weaponBulkKey            = "bulk"
-	weaponRecoilKey          = "recoil"
-	weaponUsageKey           = "usage"
-	weaponUsageNotesKey      = "usage_notes"
-	weaponCalcLevelKey       = "level"
-	weaponCalcParryKey       = "parry"
-	weaponCalcBlockKey       = "block"
-	weaponCalcDamageKey      = "damage"
-	weaponCalcRangeKey       = "range"
-)
+// WeaponData holds the Weapon data that is written to disk.
+type WeaponData struct {
+	Type            weapon.Type     `json:"type"`
+	Damage          *WeaponDamage   `json:"damage,omitempty"`
+	MinimumStrength string          `json:"strength,omitempty"`
+	Usage           string          `json:"usage,omitempty"`
+	UsageNotes      string          `json:"usage_notes,omitempty"`
+	Reach           string          `json:"reach,omitempty"`
+	Parry           string          `json:"parry,omitempty"`
+	Block           string          `json:"block,omitempty"`
+	Accuracy        string          `json:"accuracy,omitempty"`
+	Range           string          `json:"range,omitempty"`
+	RateOfFire      string          `json:"rate_of_fire,omitempty"`
+	Shots           string          `json:"shots,omitempty"`
+	Bulk            string          `json:"bulk,omitempty"`
+	Recoil          string          `json:"recoil,omitempty"`
+	Defaults        []*SkillDefault `json:"defaults,omitempty"`
+}
 
 // Weapon holds the stats for a weapon.
 type Weapon struct {
-	Type            weapon.Type
-	Damage          *WeaponDamage
-	MinimumStrength string
-	Usage           string
-	UsageNotes      string
-	Reach           string
-	Parry           string
-	Block           string
-	Accuracy        string
-	Range           string
-	RateOfFire      string
-	Shots           string
-	Bulk            string
-	Recoil          string
-	Defaults        []*SkillDefault
+	WeaponData
 }
 
-// NewWeaponFromJSON creates a new Weapon from a JSON object.
-func NewWeaponFromJSON(data map[string]interface{}) *Weapon {
-	w := &Weapon{
-		Type:            weapon.TypeFromKey(encoding.String(data[weaponTypeKey])),
-		MinimumStrength: encoding.String(data[weaponMinimumStrengthKey]),
-		Usage:           encoding.String(data[weaponUsageKey]),
-		UsageNotes:      encoding.String(data[weaponUsageNotesKey]),
+// MarshalJSON implements json.Marshaler.
+func (w *Weapon) MarshalJSON() ([]byte, error) {
+	type calc struct {
+		Level  fixed.F64d4 `json:"level,omitempty"`
+		Parry  string      `json:"parry,omitempty"`
+		Block  string      `json:"block,omitempty"`
+		Range  string      `json:"range,omitempty"`
+		Damage string      `json:"damage,omitempty"`
 	}
-	w.Damage = NewWeaponDamageFromJSON(w, encoding.Object(data[weaponDamageKey]))
-	switch w.Type {
-	case weapon.Melee:
-		w.Reach = encoding.String(data[weaponReachKey])
-		w.Parry = encoding.String(data[weaponParryKey])
-		w.Block = encoding.String(data[weaponBlockKey])
-	case weapon.Ranged:
-		w.Accuracy = encoding.String(data[weaponAccuracyKey])
-		w.Range = encoding.String(data[weaponRangeKey])
-		w.RateOfFire = encoding.String(data[weaponRateOfFireKey])
-		w.Shots = encoding.String(data[weaponShotsKey])
-		w.Bulk = encoding.String(data[weaponBulkKey])
-		w.Recoil = encoding.String(data[weaponRecoilKey])
+	data := struct {
+		WeaponData
+		Calc calc `json:"calc"`
+	}{
+		WeaponData: w.WeaponData,
+		Calc: calc{
+			Level:  fixed.F64d4FromInt64(int64(xmath.MaxInt(w.SkillLevel(), 0))),
+			Damage: w.Damage.ResolvedDamage(nil),
+		},
 	}
-	w.Defaults = SkillDefaultsListFromJSON(data)
-	return w
-}
-
-// ToJSON emits this object as JSON.
-func (w *Weapon) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	encoder.KeyedString(weaponTypeKey, w.Type.Key(), false, false)
-	encoding.ToKeyedJSON(w.Damage, weaponDamageKey, encoder)
-	encoder.KeyedString(weaponMinimumStrengthKey, w.MinimumStrength, true, true)
-	encoder.KeyedString(weaponUsageKey, w.Usage, true, true)
-	encoder.KeyedString(weaponUsageNotesKey, w.UsageNotes, true, true)
-	switch w.Type {
-	case weapon.Melee:
-		encoder.KeyedString(weaponReachKey, w.Reach, true, true)
-		encoder.KeyedString(weaponParryKey, w.Parry, true, true)
-		encoder.KeyedString(weaponBlockKey, w.Block, true, true)
-	case weapon.Ranged:
-		encoder.KeyedString(weaponAccuracyKey, w.Accuracy, true, true)
-		encoder.KeyedString(weaponRangeKey, w.Range, true, true)
-		encoder.KeyedString(weaponRateOfFireKey, w.RateOfFire, true, true)
-		encoder.KeyedString(weaponShotsKey, w.Shots, true, true)
-		encoder.KeyedString(weaponBulkKey, w.Bulk, true, true)
-		encoder.KeyedString(weaponRecoilKey, w.Recoil, true, true)
+	if w.Type == weapon.Melee {
+		data.Calc.Parry = w.ResolvedParry(nil)
+		data.Calc.Block = w.ResolvedBlock(nil)
+	} else {
+		data.Calc.Range = w.ResolvedRange()
 	}
-	SkillDefaultsListToJSON(w.Defaults, encoder)
-	// Emit the calculated values for third parties
-	encoder.Key(commonCalcKey)
-	encoder.StartObject()
-	encoder.KeyedNumber(weaponCalcLevelKey, fixed.F64d4FromInt64(int64(xmath.MaxInt(w.SkillLevel(), 0))), true)
-	switch w.Type {
-	case weapon.Melee:
-		encoder.KeyedString(weaponCalcParryKey, w.ResolvedParry(nil), true, true)
-		encoder.KeyedString(weaponCalcBlockKey, w.ResolvedBlock(nil), true, true)
-	case weapon.Ranged:
-		encoder.KeyedString(weaponCalcRangeKey, w.ResolvedRange(), true, true)
-	}
-	encoder.KeyedString(weaponCalcDamageKey, w.Damage.ResolvedDamage(nil), true, true)
-	encoder.EndObject()
-	encoder.EndObject()
+	return json.Marshal(&data)
 }
 
 // SkillLevel returns the resolved skill level.
@@ -165,15 +113,15 @@ func (w *Weapon) ResolvedMinimumStrength() int {
 }
 
 // FillWithNameableKeys adds any nameable keys found in this Weapon to the provided map.
-func (w *Weapon) FillWithNameableKeys(nameables map[string]string) {
+func (w *Weapon) FillWithNameableKeys(m map[string]string) {
 	for _, one := range w.Defaults {
-		one.FillWithNameableKeys(nameables)
+		one.FillWithNameableKeys(m)
 	}
 }
 
 // ApplyNameableKeys replaces any nameable keys found in this Weapon with the corresponding values in the provided map.
-func (w *Weapon) ApplyNameableKeys(nameables map[string]string) {
+func (w *Weapon) ApplyNameableKeys(m map[string]string) {
 	for _, one := range w.Defaults {
-		one.ApplyNameableKeys(nameables)
+		one.ApplyNameableKeys(m)
 	}
 }

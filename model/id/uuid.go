@@ -13,7 +13,6 @@ package id
 
 import (
 	"github.com/google/uuid"
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/toolbox/log/jot"
 )
 
@@ -23,15 +22,6 @@ func NewUUID() uuid.UUID {
 	if err != nil {
 		jot.Error(err)
 		// continue on... the id will be garbage, but we can live with that... and this should not be possible anyway
-	}
-	return id
-}
-
-// ParseOrNewUUID parses a UUID from the input or generates a new one should that fail.
-func ParseOrNewUUID(in string) uuid.UUID {
-	id, err := uuid.Parse(encoding.String(in))
-	if err != nil {
-		id = NewUUID()
 	}
 	return id
 }

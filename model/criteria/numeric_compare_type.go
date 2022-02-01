@@ -71,7 +71,7 @@ func (n NumericCompareType) Describe(qualifier fixed.F64d4) string {
 	if v == AnyNumber {
 		return v.String()
 	}
-	return n.String() + " " + qualifier.String()
+	return v.String() + " " + qualifier.String()
 }
 
 // Matches performs a comparison and returns true if the data matches.

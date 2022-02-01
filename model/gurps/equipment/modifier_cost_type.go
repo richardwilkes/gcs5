@@ -63,13 +63,13 @@ func (m ModifierCostType) ShortString() string {
 	case FinalCost:
 		return i18n.Text("to final cost")
 	default:
-		return OriginalCost.String()
+		return OriginalCost.ShortString()
 	}
 }
 
 // String implements fmt.Stringer.
 func (m ModifierCostType) String() string {
-	return fmt.Sprintf("%s (e.g. %s)", m.String(), m.Example())
+	return fmt.Sprintf("%s (e.g. %s)", m.ShortString(), m.Example())
 }
 
 // Example returns example values.

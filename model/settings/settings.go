@@ -56,7 +56,7 @@ type NavigatorSettings struct {
 type Settings struct {
 	LastSeenGCSVersion string                           `json:"last_seen_gcs_version,omitempty"`
 	General            *settings.General                `json:"general,omitempty"`
-	Libraries          *library.Libraries               `json:"libraries,omitempty"`
+	Libraries          library.Libraries                `json:"libraries,omitempty"`
 	LibraryExplorer    NavigatorSettings                `json:"library_explorer"`
 	RecentFiles        []string                         `json:"recent_files,omitempty"`
 	LastDirs           map[string]string                `json:"last_dirs,omitempty"`
@@ -70,7 +70,7 @@ type Settings struct {
 }
 
 // Default returns new default settings.
-func Default() *Settings {
+func Default(entity *gurps.Entity) *Settings {
 	return &Settings{
 		LastSeenGCSVersion: cmdline.AppVersion,
 		General:            settings.NewGeneral(),
@@ -83,7 +83,7 @@ func Default() *Settings {
 		Colors:             make(map[string]unison.Color),
 		Fonts:              make(map[string]unison.FontDescriptor),
 		QuickExports:       gurps.NewQuickExports(),
-		Sheet:              gurps.FactorySheetSettings(),
+		Sheet:              gurps.FactorySheetSettings(entity),
 	}
 }
 
@@ -92,7 +92,7 @@ func Global() *Settings {
 	if global == nil {
 		dice.GURPSFormat = true
 		if err := fs.LoadJSON(Path(), &global); err != nil {
-			global = Default()
+			global = Default(nil)
 		}
 		gurps.GlobalSheetSettingsProvider = func() *gurps.SheetSettings { return global.Sheet }
 	}

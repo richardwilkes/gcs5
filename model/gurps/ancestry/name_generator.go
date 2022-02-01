@@ -89,6 +89,7 @@ func (n *NameGenerator) initializeIfNeeded() {
 
 // Generate a name.
 func (n *NameGenerator) Generate() string {
+	n.initializeIfNeeded()
 	rnd := rand.NewCryptoRand()
 	switch n.Type {
 	case Simple:

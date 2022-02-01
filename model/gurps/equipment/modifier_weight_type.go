@@ -64,13 +64,13 @@ func (m ModifierWeightType) ShortString() string {
 	case FinalWeight:
 		return i18n.Text("to final weight")
 	default:
-		return OriginalWeight.String()
+		return OriginalWeight.ShortString()
 	}
 }
 
 // String implements fmt.Stringer.
 func (m ModifierWeightType) String() string {
-	return fmt.Sprintf("%s (e.g. %s)", m.String(), m.Example())
+	return fmt.Sprintf("%s (e.g. %s)", m.ShortString(), m.Example())
 }
 
 // Example returns example values.

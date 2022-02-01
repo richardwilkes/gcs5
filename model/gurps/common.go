@@ -11,43 +11,6 @@
 
 package gurps
 
-import "C"
-import (
-	"strings"
-
-	"github.com/google/uuid"
-)
-
 const (
-	commonCalcKey             = "calc"
-	commonCategoriesKey       = "categories"
-	commonChildrenKey         = "children"
 	commonContainerKeyPostfix = "_container"
-	commonDisabledKey         = "disabled"
-	commonFeaturesKey         = "features"
-	commonIDKey               = "id"
-	commonModifiersKey        = "modifiers"
-	commonNameKey             = "name"
-	commonNotesKey            = "notes"
-	commonOpenKey             = "open"
-	commonPageRefKey          = "reference"
-	commonSkillDefaultsKey    = "defaults"
-	commonTypeKey             = "type"
-	commonVTTNotesKey         = "vtt_notes"
-	commonWeaponsKey          = "weapons"
 )
-
-// Common data most of the top-level objects share.
-type Common struct {
-	Type     string    `json:"type"`
-	ID       uuid.UUID `json:"id"`
-	Name     string    `json:"name,omitempty"`
-	PageRef  string    `json:"reference,omitempty"`
-	Notes    string    `json:"notes,omitempty"`
-	VTTNotes string    `json:"vtt_notes,omitempty"`
-	Open     bool      `json:"open,omitempty"`
-}
-
-func (c *Common) Container() bool {
-	return strings.HasSuffix(c.Type, commonContainerKeyPostfix)
-}

@@ -37,6 +37,7 @@ const (
 // settings that should be used when an Entity is not available to provide them.
 var GlobalSheetSettingsProvider func() *SheetSettings
 
+// SheetSettingsData holds the SheetSettings data that is written to disk.
 type SheetSettingsData struct {
 	Page                       *settings.Page              `json:"page,omitempty"`
 	BlockLayout                []string                    `json:"block_layout,omitempty"`
@@ -97,6 +98,7 @@ func FactorySheetSettings(entity *Entity) *SheetSettings {
 	return s
 }
 
+// FactoryBlockLayout returns the factory block layout setting.
 func FactoryBlockLayout() []string {
 	return []string{
 		blockLayoutReactionsKey + " " + blockLayoutConditionalModifiersKey,

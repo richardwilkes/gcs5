@@ -22,6 +22,7 @@ import (
 
 var _ Bonus = &ReactionBonus{}
 
+// ReactionBonus holds a modifier due to a reaction.
 type ReactionBonus struct {
 	Type      Type         `json:"type"`
 	Parent    fmt.Stringer `json:"-"`
