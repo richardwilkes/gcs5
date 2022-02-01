@@ -15,6 +15,14 @@ import (
 	"strings"
 )
 
+// Nameables defines methods types that want to participate the nameable adjustments should implement.
+type Nameables interface {
+	// FillWithNameableKeys fills the map with nameable keys.
+	FillWithNameableKeys(m map[string]string)
+	// ApplyNameableKeys applies the nameable keys to this object.
+	ApplyNameableKeys(m map[string]string)
+}
+
 // Extract the nameable sections of the string into the set.
 func Extract(str string, set map[string]string) {
 	count := strings.Count(str, "@")

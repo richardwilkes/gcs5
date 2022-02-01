@@ -48,6 +48,16 @@ func (s SelfControlRoll) EnsureValid() SelfControlRoll {
 	return AllSelfControlRolls[0]
 }
 
+// Index returns of the SelfControlRoll within AllSelfControlRolls.
+func (s SelfControlRoll) Index() int {
+	for i, one := range AllSelfControlRolls {
+		if one == s {
+			return i
+		}
+	}
+	return 0
+}
+
 // String implements fmt.Stringer.
 func (s SelfControlRoll) String() string {
 	switch s {

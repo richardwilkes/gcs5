@@ -14,18 +14,16 @@ package feature
 import (
 	"fmt"
 
+	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
 )
 
 // Feature holds data that affects another object.
 type Feature interface {
+	nameables.Nameables
 	// FeatureMapKey returns the key used for matching within the feature map.
 	FeatureMapKey() string
-	// FillWithNameableKeys fills the map with nameable keys.
-	FillWithNameableKeys(m map[string]string)
-	// ApplyNameableKeys applies the nameable keys to this object.
-	ApplyNameableKeys(m map[string]string)
 }
 
 // Bonus is an extension of a Feature, which provides a numerical bonus or penalty.

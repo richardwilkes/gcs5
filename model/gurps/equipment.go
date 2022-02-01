@@ -20,7 +20,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
-	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -63,7 +62,7 @@ type EquipmentData struct {
 	Weapons                []*Weapon            `json:"weapons,omitempty"`
 	Modifiers              []*EquipmentModifier `json:"modifiers,omitempty"`
 	Features               feature.Features     `json:"features,omitempty"`
-	Prereq                 *Prereq              `json:"prereqs,omitempty"`
+	Prereq                 Prereq               `json:"prereqs,omitempty"`
 	Categories             []string             `json:"categories,omitempty"`
 	Equipped               bool                 `json:"equipped,omitempty"`
 	WeightIgnoredForSkills bool                 `json:"ignore_weight_for_skills,omitempty"`
@@ -89,7 +88,7 @@ func NewEquipment(entity *Entity, parent *Equipment, container bool) *Equipment 
 			ID:            id.NewUUID(),
 			Name:          i18n.Text("Equipment"),
 			LegalityClass: "4",
-			Prereq:        NewPrereq(prereq.List, nil),
+			Prereq:        NewPrereqList(),
 			Equipped:      true,
 		},
 		Entity: entity,

@@ -20,7 +20,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
-	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -33,7 +32,7 @@ type AdvantageItem struct {
 	Levels         *fixed.F64d4     `json:"levels,omitempty"`
 	BasePoints     fixed.F64d4      `json:"base_points"`
 	PointsPerLevel fixed.F64d4      `json:"points_per_level,omitempty"`
-	Prereq         *Prereq          `json:"prereqs,omitempty"`
+	Prereq         Prereq           `json:"prereqs,omitempty"`
 	Weapons        []*Weapon        `json:"weapons,omitempty"`
 	Features       feature.Features `json:"features,omitempty"`
 	Mental         bool             `json:"mental,omitempty"`
@@ -101,7 +100,7 @@ func NewAdvantage(entity *Entity, parent *Advantage, container bool) *Advantage 
 		a.AdvantageContainer = &AdvantageContainer{Open: true}
 	} else {
 		a.AdvantageItem = &AdvantageItem{
-			Prereq:   NewPrereq(prereq.List, nil),
+			Prereq:   NewPrereqList(),
 			Physical: true,
 		}
 	}
