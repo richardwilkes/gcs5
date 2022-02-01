@@ -30,8 +30,8 @@ type AttributePrereq struct {
 	Has                  bool             `json:"has,omitempty"`
 }
 
-// NewAttributePrereq creates a new AttributePrereq.
-func NewAttributePrereq() *AttributePrereq {
+// NewAttributePrereq creates a new AttributePrereq. 'entity' may be nil.
+func NewAttributePrereq(entity *Entity) *AttributePrereq {
 	return &AttributePrereq{
 		Type: prereq.Attribute,
 		CombinedWithCriteria: criteria.String{
@@ -41,7 +41,7 @@ func NewAttributePrereq() *AttributePrereq {
 			Compare:   criteria.AtLeast,
 			Qualifier: fixed.F64d4FromInt64(10),
 		},
-		Which: "st",
+		Which: AttributeIDFor(entity, "st"),
 		Has:   true,
 	}
 }

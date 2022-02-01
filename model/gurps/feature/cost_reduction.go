@@ -24,10 +24,10 @@ type CostReduction struct {
 }
 
 // NewCostReduction creates a new CostReduction.
-func NewCostReduction() *CostReduction {
+func NewCostReduction(attrID string) *CostReduction {
 	return &CostReduction{
 		Type:       CostReductionType,
-		Attribute:  "st",
+		Attribute:  attrID,
 		Percentage: 40,
 	}
 }

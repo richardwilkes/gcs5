@@ -13,15 +13,16 @@ package gurps
 
 import (
 	"encoding/json"
-	"fmt"
 	"math"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 const (
@@ -34,10 +35,12 @@ type SkillItem struct {
 	Specialization               string              `json:"specialization,omitempty"`
 	TechLevel                    string              `json:"tech_level,omitempty"`
 	Difficulty                   AttributeDifficulty `json:"difficulty"`
-	Points                       int                 `json:"points,omitempty"`
-	EncumbrancePenaltyMultiplier int                 `json:"encumbrance_penalty_multiplier,omitempty"`
+	Points                       fixed.F64d4         `json:"points,omitempty"`
+	EncumbrancePenaltyMultiplier fixed.F64d4         `json:"encumbrance_penalty_multiplier,omitempty"`
 	DefaultedFrom                *SkillDefault       `json:"defaulted_from,omitempty"`
 	Defaults                     []*SkillDefault     `json:"defaults,omitempty"`
+	TechniqueDefault             *SkillDefault       `json:"default,omitempty"`
+	TechniqueLimitModifier       *fixed.F64d4        `json:"limit,omitempty"`
 	Prereq                       Prereq              `json:"prereqs,omitempty"`
 	Weapons                      []*Weapon           `json:"weapons,omitempty"`
 	Features                     feature.Features    `json:"features,omitempty"`
@@ -89,14 +92,29 @@ func NewSkill(entity *Entity, parent *Skill, container bool) *Skill {
 	} else {
 		s.SkillItem = &SkillItem{
 			Difficulty: AttributeDifficulty{
-				Attribute:  "dx",
-				Difficulty: skill.A,
+				Attribute:  AttributeIDFor(entity, "dx"),
+				Difficulty: skill.Average,
 			},
-			Points: 1,
+			Points: f64d4.One,
 			Prereq: NewPrereqList(),
 		}
 	}
 	return &s
+}
+
+// NewTechnique creates a new technique (i.e. a specialized use of a Skill). All parameters may be nil or empty.
+func NewTechnique(entity *Entity, parent *Skill, skillName string) *Skill {
+	t := NewSkill(entity, parent, false)
+	t.Type = techniqueTypeKey
+	t.Name = i18n.Text("Technique")
+	if skillName == "" {
+		skillName = i18n.Text("Skill")
+	}
+	t.TechniqueDefault = &SkillDefault{
+		DefaultType: skillTypeKey,
+		Name:        skillName,
+	}
+	return t
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -105,31 +123,31 @@ func (s *Skill) MarshalJSON() ([]byte, error) {
 		s.SkillItem = nil
 	} else {
 		s.SkillContainer = nil
-	}
-	if s.Level.Level > 0 {
-		type calc struct {
-			Level              int    `json:"level"`
-			RelativeSkillLevel string `json:"rsl"`
+		if s.Level.Level > 0 {
+			type calc struct {
+				Level              fixed.F64d4 `json:"level"`
+				RelativeSkillLevel string      `json:"rsl"`
+			}
+			data := struct {
+				SkillData
+				Calc calc `json:"calc"`
+			}{
+				SkillData: s.SkillData,
+				Calc: calc{
+					Level: s.Level.Level,
+				},
+			}
+			rsl := s.AdjustedRelativeLevel()
+			switch {
+			case rsl == math.MinInt:
+				data.Calc.RelativeSkillLevel = "-"
+			case s.Type != techniqueTypeKey:
+				s.Type = ResolveAttributeName(s.Entity, s.Difficulty.Attribute) + rsl.StringWithSign()
+			default:
+				s.Type = rsl.StringWithSign()
+			}
+			return json.Marshal(&data)
 		}
-		data := struct {
-			SkillData
-			Calc calc `json:"calc"`
-		}{
-			SkillData: s.SkillData,
-			Calc: calc{
-				Level: s.Level.Level,
-			},
-		}
-		rsl := s.AdjustedRelativeLevel()
-		switch {
-		case rsl == math.MinInt:
-			data.Calc.RelativeSkillLevel = "-"
-		case s.Type != techniqueTypeKey:
-			s.Type = fmt.Sprintf("%s%+d", ResolveAttributeName(s.Entity, s.Difficulty.Attribute), rsl)
-		default:
-			s.Type = fmt.Sprintf("%+d", rsl)
-		}
-		return json.Marshal(&data)
 	}
 	return json.Marshal(&s.SkillData)
 }
@@ -140,46 +158,16 @@ func (s *Skill) Container() bool {
 }
 
 // AdjustedRelativeLevel returns the relative skill level.
-func (s *Skill) AdjustedRelativeLevel() int {
+func (s *Skill) AdjustedRelativeLevel() fixed.F64d4 {
 	if s.Container() {
-		return math.MinInt
+		return fixed.F64d4Min
 	}
-	// TODO: Implement
-	/*
-	   if (getCharacter() != null) {
-	       if (getLevel() < 0) {
-	           return Integer.MIN_VALUE;
-	       }
-	       int level = getRelativeLevel();
-	       if (this instanceof Technique) {
-	           level += ((Technique) this).getDefault().getModifier();
-	       }
-	       return level;
-	   } else if (getTemplate() != null) {
-	       int points = getPoints();
-	       if (points > 0) {
-	           SkillDifficulty difficulty = getDifficulty();
-	           int             level;
-	           if (this instanceof Technique) {
-	               if (difficulty != SkillDifficulty.A) {
-	                   points--;
-	               }
-	               return points + ((Technique) this).getDefault().getModifier();
-	           }
-	           level = difficulty.getBaseRelativeLevel();
-	           if (difficulty == SkillDifficulty.W) {
-	               points /= 3;
-	           }
-	           if (points > 1) {
-	               if (points < 4) {
-	                   level++;
-	               } else {
-	                   level += 1 + points / 4;
-	               }
-	           }
-	           return level;
-	       }
-	   }
-	*/
-	return math.MinInt
+	if s.Entity != nil && s.Level.Level > 0 {
+		if s.Type == techniqueTypeKey {
+			return s.Level.RelativeLevel + s.TechniqueDefault.Modifier
+		}
+		return s.Level.RelativeLevel
+	}
+	// TODO: Old code had a case for templates... but can't see that being exercised in the actual display anywhere
+	return fixed.F64d4Min
 }

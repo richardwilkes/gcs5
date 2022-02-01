@@ -48,6 +48,18 @@ func DefaultAttributeIDFor(entity *Entity) string {
 	return "st"
 }
 
+// AttributeIDFor looks up the preferred ID and if it cannot be found, falls back to a default. 'entity' may be nil.
+func AttributeIDFor(entity *Entity, preferred string) string {
+	defs := AttributeDefsFor(entity)
+	if _, exists := defs.Set[preferred]; exists {
+		return preferred
+	}
+	if list := defs.List(); len(list) != 0 {
+		return list[0].ID()
+	}
+	return "st"
+}
+
 // FactoryAttributeDefs returns the factory AttributeDef set.
 func FactoryAttributeDefs() *AttributeDefs {
 	defs, err := NewAttributeDefsFromFile(embeddedFS, "data/standard.attr")

@@ -11,9 +11,11 @@
 
 package skill
 
+import "github.com/richardwilkes/toolbox/xmath/fixed"
+
 // Level provides a level & relative level pair, plus a tooltip.
 type Level struct {
-	Level         int
-	RelativeLevel int
+	Level         fixed.F64d4
+	RelativeLevel fixed.F64d4
 	Tooltip       string
 }

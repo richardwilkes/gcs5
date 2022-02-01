@@ -12,15 +12,38 @@
 package gurps
 
 import (
+	"encoding/json"
+	"math"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/gurps/skill"
+	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
+)
+
+const (
+	spellTypeKey            = "spell"
+	ritualMagicSpellTypeKey = "ritual_magic_spell"
 )
 
 // SpellItem holds the Spell data that only exists in non-containers.
 type SpellItem struct {
-	Prereq  Prereq    `json:"prereqs,omitempty"`
-	Weapons []*Weapon `json:"weapons,omitempty"`
+	TechLevel       string              `json:"tech_level,omitempty"`
+	Difficulty      AttributeDifficulty `json:"difficulty"`
+	College         []string            `json:"college,omitempty"`
+	PowerSource     string              `json:"power_source,omitempty"`
+	Class           string              `json:"spell_class,omitempty"`
+	Resist          string              `json:"resist,omitempty"`
+	CastingCost     string              `json:"casting_cost,omitempty"`
+	MaintenanceCost string              `json:"maintenance_cost,omitempty"`
+	CastingTime     string              `json:"casting_time,omitempty"`
+	Duration        string              `json:"duration,omitempty"`
+	Points          fixed.F64d4         `json:"points,omitempty"`
+	Prereq          Prereq              `json:"prereqs,omitempty"`
+	Weapons         []*Weapon           `json:"weapons,omitempty"`
 }
 
 // SpellContainer holds the Spell data that only exists in containers.
@@ -47,11 +70,91 @@ type Spell struct {
 	SpellData
 	Entity            *Entity
 	Parent            *Spell
+	Level             skill.Level
 	UnsatisfiedReason string
 	Satisfied         bool
+}
+
+// NewSpell creates a new Spell.
+func NewSpell(entity *Entity, parent *Spell, container bool) *Spell {
+	s := Spell{
+		SpellData: SpellData{
+			Type: spellTypeKey,
+			ID:   id.NewUUID(),
+			Name: i18n.Text("Spell"),
+		},
+		Entity: entity,
+		Parent: parent,
+	}
+	if container {
+		s.Type += commonContainerKeyPostfix
+		s.SpellContainer = &SpellContainer{Open: true}
+	} else {
+		s.SpellItem = &SpellItem{
+			Difficulty: AttributeDifficulty{
+				Attribute:  AttributeIDFor(entity, "iq"),
+				Difficulty: skill.Hard,
+			},
+			PowerSource: i18n.Text("Arcane"),
+			Class:       i18n.Text("Regular"),
+			CastingCost: "1",
+			CastingTime: "1 sec",
+			Duration:    "Instant",
+			Points:      f64d4.One,
+			Prereq:      NewPrereqList(),
+		}
+	}
+	return &s
+}
+
+// MarshalJSON implements json.Marshaler.
+func (s *Spell) MarshalJSON() ([]byte, error) {
+	if s.Container() {
+		s.SpellItem = nil
+	} else {
+		s.SpellContainer = nil
+		if s.Level.Level > 0 {
+			type calc struct {
+				Level              fixed.F64d4 `json:"level"`
+				RelativeSkillLevel string      `json:"rsl"`
+			}
+			data := struct {
+				SpellData
+				Calc calc `json:"calc"`
+			}{
+				SpellData: s.SpellData,
+				Calc: calc{
+					Level: s.Level.Level,
+				},
+			}
+			rsl := s.AdjustedRelativeLevel()
+			switch {
+			case rsl == math.MinInt:
+				data.Calc.RelativeSkillLevel = "-"
+			case s.Type != ritualMagicSpellTypeKey:
+				s.Type = ResolveAttributeName(s.Entity, s.Difficulty.Attribute) + rsl.StringWithSign()
+			default:
+				s.Type = rsl.StringWithSign()
+			}
+			return json.Marshal(&data)
+		}
+	}
+	return json.Marshal(&s.SpellData)
 }
 
 // Container returns true if this is a container.
 func (s *Spell) Container() bool {
 	return strings.HasSuffix(s.Type, commonContainerKeyPostfix)
+}
+
+// AdjustedRelativeLevel returns the relative skill level.
+func (s *Spell) AdjustedRelativeLevel() fixed.F64d4 {
+	if s.Container() {
+		return fixed.F64d4Min
+	}
+	if s.Entity != nil && s.Level.Level > 0 {
+		return s.Level.RelativeLevel
+	}
+	// TODO: Old code had a case for templates... but can't see that being exercised in the actual display anywhere
+	return fixed.F64d4Min
 }

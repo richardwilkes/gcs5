@@ -17,15 +17,15 @@ import (
 
 // Possible Difficulty values.
 const (
-	E  = Difficulty("e")
-	A  = Difficulty("a")
-	H  = Difficulty("h")
-	VH = Difficulty("vh")
-	W  = Difficulty("w")
+	Easy     = Difficulty("e")
+	Average  = Difficulty("a")
+	Hard     = Difficulty("h")
+	VeryHard = Difficulty("vh")
+	Wildcard = Difficulty("w")
 )
 
 // AllDifficulties is the complete set of Difficulty values.
-var AllDifficulties = []Difficulty{E, A, H, VH, W}
+var AllDifficulties = []Difficulty{Easy, Average, Hard, VeryHard, Wildcard}
 
 // Difficulty holds the difficulty level of a skill.
 type Difficulty string
@@ -48,15 +48,15 @@ func (d Difficulty) String() string {
 // BaseRelativeLevel returns the base relative skill level at 0 points.
 func (d Difficulty) BaseRelativeLevel() int {
 	switch d {
-	case E:
+	case Easy:
 		return 0
-	case A:
+	case Average:
 		return -1
-	case H:
+	case Hard:
 		return -2
-	case VH, W:
+	case VeryHard, Wildcard:
 		return -3
 	default:
-		return E.BaseRelativeLevel()
+		return Easy.BaseRelativeLevel()
 	}
 }

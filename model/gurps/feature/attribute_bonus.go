@@ -31,10 +31,10 @@ type AttributeBonus struct {
 }
 
 // NewAttributeBonus creates a new AttributeBonus.
-func NewAttributeBonus() *AttributeBonus {
+func NewAttributeBonus(attrID string) *AttributeBonus {
 	return &AttributeBonus{
 		Type:          AttributeBonusType,
-		Attribute:     "st",
+		Attribute:     attrID,
 		Limitation:    attribute.None,
 		LeveledAmount: LeveledAmount{Amount: f64d4.One},
 	}

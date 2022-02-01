@@ -38,7 +38,7 @@ func (a *AttributeDifficulty) MarshalJSON() ([]byte, error) {
 func (a *AttributeDifficulty) UnmarshalJSON(data []byte) error {
 	parts := strings.SplitN(string(data), "/", 2)
 	a.Attribute = strings.TrimSpace(parts[0])
-	a.Difficulty = skill.A
+	a.Difficulty = skill.Average
 	if len(parts) == 2 {
 		text := strings.TrimSpace(parts[1])
 		for _, one := range skill.AllDifficulties {
