@@ -19,19 +19,11 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-// AttributeCalc holds the Attribute data that is only emitted for third parties.
-type AttributeCalc struct {
-	Value   fixed.F64d4  `json:"value"`
-	Current *fixed.F64d4 `json:"current,omitempty"`
-	Points  fixed.F64d4  `json:"points"`
-}
-
 // AttributeData holds the Attribute data that is written to disk.
 type AttributeData struct {
-	AttrID     string         `json:"attr_id"`
-	Adjustment fixed.F64d4    `json:"adj"`
-	Damage     fixed.F64d4    `json:"damage,omitempty"`
-	Calc       *AttributeCalc `json:"calc,omitempty"`
+	AttrID     string      `json:"attr_id"`
+	Adjustment fixed.F64d4 `json:"adj"`
+	Damage     fixed.F64d4 `json:"damage,omitempty"`
 }
 
 // Attribute holds the current state of an AttributeDef.
@@ -44,22 +36,31 @@ type Attribute struct {
 
 // MarshalJSON implements json.Marshaler.
 func (a *Attribute) MarshalJSON() ([]byte, error) {
-	a.Calc = nil
 	if a.Entity != nil {
 		if def := a.AttributeDef(); def != nil {
-			a.Calc = &AttributeCalc{
-				Value:  a.Maximum(),
-				Points: a.PointCost(),
+			type calc struct {
+				Value   fixed.F64d4  `json:"value"`
+				Current *fixed.F64d4 `json:"current,omitempty"`
+				Points  fixed.F64d4  `json:"points"`
+			}
+			data := struct {
+				AttributeData
+				Calc calc `json:"calc"`
+			}{
+				AttributeData: a.AttributeData,
+				Calc: calc{
+					Value:  a.Maximum(),
+					Points: a.PointCost(),
+				},
 			}
 			if def.Type == attribute.Pool {
 				current := a.Current()
-				a.Calc.Current = &current
+				data.Calc.Current = &current
 			}
+			return json.Marshal(&data)
 		}
 	}
-	data, err := json.Marshal(a.AttributeData)
-	a.Calc = nil
-	return data, err
+	return json.Marshal(&a.AttributeData)
 }
 
 // ID returns the ID.

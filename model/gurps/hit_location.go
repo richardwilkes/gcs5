@@ -26,42 +26,46 @@ import (
 
 // HitLocationData holds the Hitlocation data that gets written to disk.
 type HitLocationData struct {
-	Entity      *Entity         `json:"-"`
-	LocID       string          `json:"id"`
-	ChoiceName  string          `json:"choice_name"`
-	TableName   string          `json:"table_name"`
-	Slots       int             `json:"slots"`
-	HitPenalty  int             `json:"hit_penalty"`
-	DRBonus     int             `json:"dr_bonus"`
-	Description string          `json:"description"`
-	Calc        HitLocationCalc `json:"calc"`
-	SubTable    *BodyType       `json:"sub_table,omitempty"`
-}
-
-// HitLocationCalc holds the data that we calculate and store for third parties.
-type HitLocationCalc struct {
-	RollRange string         `json:"roll_range"`
-	DR        map[string]int `json:"dr,omitempty"`
+	Entity      *Entity   `json:"-"`
+	LocID       string    `json:"id"`
+	ChoiceName  string    `json:"choice_name"`
+	TableName   string    `json:"table_name"`
+	Slots       int       `json:"slots"`
+	HitPenalty  int       `json:"hit_penalty"`
+	DRBonus     int       `json:"dr_bonus"`
+	Description string    `json:"description"`
+	SubTable    *BodyType `json:"sub_table,omitempty"`
 }
 
 // HitLocation holds a single hit location.
 type HitLocation struct {
 	HitLocationData
+	RollRange   string
 	owningTable *BodyType
 }
 
 // MarshalJSON implements json.Marshaler.
 func (h *HitLocation) MarshalJSON() ([]byte, error) {
-	h.Calc.DR = nil
+	type calc struct {
+		RollRange string         `json:"roll_range"`
+		DR        map[string]int `json:"dr,omitempty"`
+	}
+	data := struct {
+		HitLocationData
+		Calc calc `json:"calc"`
+	}{
+		HitLocationData: h.HitLocationData,
+		Calc: calc{
+			RollRange: h.RollRange,
+		},
+	}
 	if h.Entity != nil {
-		h.Calc.DR = h.DR(h.Entity, nil, nil)
-		if _, exists := h.Calc.DR[feature.All]; !exists {
-			h.Calc.DR[feature.All] = 0
+		data.Calc.DR = h.DR(h.Entity, nil, nil)
+		if _, exists := data.Calc.DR[feature.All]; !exists {
+			data.Calc.DR[feature.All] = 0
 		}
 	}
-	data, err := json.Marshal(&h.HitLocationData)
-	h.Calc.DR = nil
-	return data, err
+	return json.Marshal(&data)
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -70,7 +74,6 @@ func (h *HitLocation) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &h.HitLocationData); err != nil {
 		return err
 	}
-	h.Calc.DR = nil
 	if h.SubTable != nil {
 		h.SubTable.SetOwningLocation(h)
 	}
@@ -175,11 +178,11 @@ func (h *HitLocation) populateMap(m map[string]*HitLocation) {
 func (h *HitLocation) updateRollRange(start int) int {
 	switch h.Slots {
 	case 0:
-		h.Calc.RollRange = "-"
+		h.RollRange = "-"
 	case 1:
-		h.Calc.RollRange = strconv.Itoa(start)
+		h.RollRange = strconv.Itoa(start)
 	default:
-		h.Calc.RollRange = fmt.Sprintf("%d-%d", start, start+h.Slots-1)
+		h.RollRange = fmt.Sprintf("%d-%d", start, start+h.Slots-1)
 	}
 	if h.SubTable != nil {
 		h.SubTable.updateRollRanges()

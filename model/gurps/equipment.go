@@ -38,13 +38,6 @@ type EquipmentContainer struct {
 	Open     bool         `json:"open,omitempty"`
 }
 
-// EquipmentCalc holds the Equipment data that is only emitted for third parties.
-type EquipmentCalc struct {
-	ExtendedValue           fixed.F64d4     `json:"extended_value"`
-	ExtendedWeight          measure.Weight  `json:"extended_weight"`
-	ExtendedWeightForSkills *measure.Weight `json:"extended_weight_for_skills,omitempty"`
-}
-
 // EquipmentData holds the Equipment data that is written to disk.
 type EquipmentData struct {
 	Type                   string               `json:"type"`
@@ -68,7 +61,6 @@ type EquipmentData struct {
 	WeightIgnoredForSkills bool                 `json:"ignore_weight_for_skills,omitempty"`
 	*EquipmentItem         `json:",omitempty"`
 	*EquipmentContainer    `json:",omitempty"`
-	Calc                   *EquipmentCalc `json:"calc,omitempty"`
 }
 
 // Equipment holds a piece of equipment.
@@ -105,23 +97,33 @@ func NewEquipment(entity *Entity, parent *Equipment, container bool) *Equipment 
 
 // MarshalJSON implements json.Marshaler.
 func (e *Equipment) MarshalJSON() ([]byte, error) {
-	if e.Container() {
-		e.EquipmentItem = nil
-	} else {
-		e.EquipmentContainer = nil
+	type calc struct {
+		ExtendedValue           fixed.F64d4     `json:"extended_value"`
+		ExtendedWeight          measure.Weight  `json:"extended_weight"`
+		ExtendedWeightForSkills *measure.Weight `json:"extended_weight_for_skills,omitempty"`
 	}
 	defUnits := SheetSettingsFor(e.Entity).DefaultWeightUnits
-	e.Calc = &EquipmentCalc{
-		ExtendedValue:  e.ExtendedValue(),
-		ExtendedWeight: e.ExtendedWeight(false, defUnits),
+	data := struct {
+		EquipmentData
+		Calc calc `json:"calc"`
+	}{
+		EquipmentData: e.EquipmentData,
+		Calc: calc{
+			ExtendedValue:           e.ExtendedValue(),
+			ExtendedWeight:          e.ExtendedWeight(false, defUnits),
+			ExtendedWeightForSkills: nil,
+		},
 	}
 	if e.WeightIgnoredForSkills {
 		w := e.ExtendedWeight(true, defUnits)
-		e.Calc.ExtendedWeightForSkills = &w
+		data.Calc.ExtendedWeightForSkills = &w
 	}
-	data, err := json.Marshal(&e.EquipmentData)
-	e.Calc = nil
-	return data, err
+	if e.Container() {
+		data.EquipmentItem = nil
+	} else {
+		data.EquipmentContainer = nil
+	}
+	return json.Marshal(&data)
 }
 
 // UnmarshalJSON implements json.Unmarshaler.

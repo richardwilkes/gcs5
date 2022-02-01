@@ -52,11 +52,6 @@ type AdvantageContainer struct {
 	Open          bool                    `json:"open,omitempty"`
 }
 
-// AdvantageCalc holds the Advantage data that is only emitted for third parties.
-type AdvantageCalc struct {
-	Points fixed.F64d4 `json:"points"`
-}
-
 // AdvantageData holds the Advantage data that is written to disk.
 type AdvantageData struct {
 	Type                string                    `json:"type"`
@@ -72,7 +67,6 @@ type AdvantageData struct {
 	Categories          []string                  `json:"categories,omitempty"`
 	*AdvantageItem      `json:",omitempty"`
 	*AdvantageContainer `json:",omitempty"`
-	Calc                *AdvantageCalc `json:"calc,omitempty"`
 }
 
 // Advantage holds an advantage, disadvantage, quirk, or perk.
@@ -109,17 +103,24 @@ func NewAdvantage(entity *Entity, parent *Advantage, container bool) *Advantage 
 
 // MarshalJSON implements json.Marshaler.
 func (a *Advantage) MarshalJSON() ([]byte, error) {
+	type calc struct {
+		Points fixed.F64d4 `json:"points"`
+	}
+	data := struct {
+		AdvantageData
+		Calc calc `json:"calc"`
+	}{
+		AdvantageData: a.AdvantageData,
+		Calc: calc{
+			Points: a.AdjustedPoints(),
+		},
+	}
 	if a.Container() {
-		a.AdvantageItem = nil
+		data.AdvantageItem = nil
 	} else {
-		a.AdvantageContainer = nil
+		data.AdvantageContainer = nil
 	}
-	a.Calc = &AdvantageCalc{
-		Points: a.AdjustedPoints(),
-	}
-	data, err := json.Marshal(&a.AdvantageData)
-	a.Calc = nil
-	return data, err
+	return json.Marshal(&data)
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
