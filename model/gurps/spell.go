@@ -42,7 +42,7 @@ type SpellItem struct {
 	CastingTime     string              `json:"casting_time,omitempty"`
 	Duration        string              `json:"duration,omitempty"`
 	Points          fixed.F64d4         `json:"points,omitempty"`
-	Prereq          Prereq              `json:"prereqs,omitempty"`
+	Prereq          *PrereqList         `json:"prereqs,omitempty"`
 	Weapons         []*Weapon           `json:"weapons,omitempty"`
 }
 

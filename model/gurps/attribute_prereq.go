@@ -27,7 +27,7 @@ type AttributePrereq struct {
 	CombinedWithCriteria criteria.String  `json:"combined_with"`
 	QualifierCriteria    criteria.Numeric `json:"qualifier"`
 	Which                string           `json:"which"`
-	Has                  bool             `json:"has,omitempty"`
+	Has                  bool             `json:"has"`
 }
 
 // NewAttributePrereq creates a new AttributePrereq. 'entity' may be nil.

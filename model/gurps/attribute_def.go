@@ -28,8 +28,8 @@ import (
 // ReservedIDs holds a list of IDs that are reserved for internal use.
 var ReservedIDs = []string{"skill", "parry", "block", "dodge", "sm"}
 
-// AttributeDefData holds the AttributeDef data that is written to disk.
-type AttributeDefData struct {
+// AttributeDef holds the definition of an attribute.
+type AttributeDef struct {
 	DefID               string           `json:"id"`
 	Type                attribute.Type   `json:"type"`
 	Name                string           `json:"name"`
@@ -38,12 +38,7 @@ type AttributeDefData struct {
 	CostPerPoint        fixed.F64d4      `json:"cost_per_point"`
 	CostAdjPercentPerSM fixed.F64d4      `json:"cost_adj_percent_per_sm,omitempty"`
 	Thresholds          []*PoolThreshold `json:"thresholds,omitempty"`
-}
-
-// AttributeDef holds the definition of an attribute.
-type AttributeDef struct {
-	AttributeDefData
-	Order int `json:"-"`
+	Order               int              `json:"-"`
 }
 
 // ID returns the ID.

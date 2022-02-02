@@ -13,6 +13,7 @@ package gurps
 
 import (
 	"encoding/json"
+	"io/fs"
 	"strings"
 
 	"github.com/google/uuid"
@@ -21,7 +22,9 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
+	xfs "github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
@@ -30,9 +33,9 @@ const advantageTypeKey = "advantage"
 // AdvantageItem holds the Advantage data that only exists in non-containers.
 type AdvantageItem struct {
 	Levels         *fixed.F64d4     `json:"levels,omitempty"`
-	BasePoints     fixed.F64d4      `json:"base_points"`
+	BasePoints     fixed.F64d4      `json:"base_points,omitempty"`
 	PointsPerLevel fixed.F64d4      `json:"points_per_level,omitempty"`
-	Prereq         Prereq           `json:"prereqs,omitempty"`
+	Prereq         *PrereqList      `json:"prereqs,omitempty"`
 	Weapons        []*Weapon        `json:"weapons,omitempty"`
 	Features       feature.Features `json:"features,omitempty"`
 	Mental         bool             `json:"mental,omitempty"`
@@ -76,6 +79,30 @@ type Advantage struct {
 	Parent            *Advantage
 	UnsatisfiedReason string
 	Satisfied         bool
+}
+
+type advantageListData struct {
+	Current []*Advantage `json:"advantage_list"`
+}
+
+// NewAdvantagesFromFile loads an Advantages set from a file.
+func NewAdvantagesFromFile(fsys fs.FS, filePath string) ([]*Advantage, error) {
+	var data struct {
+		advantageListData
+		OldKey []*Advantage `json:"rows"`
+	}
+	if err := xfs.LoadJSONFromFS(fsys, filePath, &data); err != nil {
+		return nil, errs.NewWithCause("invalid advantages file: "+filePath, err)
+	}
+	if len(data.Current) != 0 {
+		return data.Current, nil
+	}
+	return data.OldKey, nil
+}
+
+// SaveAdvantages writes the Advantages to the file as JSON.
+func SaveAdvantages(advantages []*Advantage, filePath string) error {
+	return xfs.SaveJSON(filePath, &advantageListData{Current: advantages}, true)
 }
 
 // NewAdvantage creates a new Advantage.

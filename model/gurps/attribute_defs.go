@@ -12,10 +12,12 @@
 package gurps
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/fs"
 	"sort"
 
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
@@ -67,37 +69,42 @@ func FactoryAttributeDefs() *AttributeDefs {
 	return defs
 }
 
+type attributeDefsData struct {
+	Current *AttributeDefs `json:"attribute_definitions"`
+}
+
 // NewAttributeDefsFromFile loads an AttributeDef set from a file.
 func NewAttributeDefsFromFile(fsys fs.FS, filePath string) (*AttributeDefs, error) {
-	var a AttributeDefs
-	if err := xfs.LoadJSONFromFS(fsys, filePath, &a); err != nil {
-		// Check for older formats
-		var old struct {
-			Attributes        *AttributeDefs `json:"attributes"`
-			AttributeSettings *AttributeDefs `json:"attribute_settings"`
-		}
-		if err = xfs.LoadJSONFromFS(fsys, filePath, &a); err != nil {
-			return nil, err
-		}
-		if old.Attributes != nil {
-			return old.Attributes, nil
-		}
-		if old.AttributeSettings != nil {
-			return old.AttributeSettings, nil
-		}
-		return nil, errs.New("invalid attribute definitions file: " + filePath)
+	var data struct {
+		*attributeDefsData
+		OldKey1 *AttributeDefs `json:"attribute_settings"`
+		OldKey2 *AttributeDefs `json:"attributes"`
 	}
-	return &a, nil
+	if err := xfs.LoadJSONFromFS(fsys, filePath, &data); err != nil {
+		return nil, errs.NewWithCause("invalid attribute definitions file: "+filePath, err)
+	}
+	if data.attributeDefsData != nil {
+		return data.attributeDefsData.Current, nil
+	}
+	if data.OldKey1 != nil {
+		return data.OldKey1, nil
+	}
+	return data.OldKey2, nil
 }
 
 // Save writes the AttributeDefs to the file as JSON.
 func (a *AttributeDefs) Save(filePath string) error {
-	return xfs.SaveJSON(filePath, a, true)
+	return jio.Save(filePath, &attributeDefsData{Current: a})
 }
 
 // MarshalJSON implements json.Marshaler.
 func (a *AttributeDefs) MarshalJSON() ([]byte, error) {
-	return json.Marshal(a.List())
+	var buffer bytes.Buffer
+	e := json.NewEncoder(&buffer)
+	e.SetEscapeHTML(false)
+	e.SetIndent("", "  ")
+	err := e.Encode(a.List())
+	return buffer.Bytes(), err
 }
 
 // UnmarshalJSON implements json.Unmarshaler.

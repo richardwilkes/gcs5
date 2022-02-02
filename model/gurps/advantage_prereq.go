@@ -24,10 +24,10 @@ var _ Prereq = &AdvantagePrereq{}
 type AdvantagePrereq struct {
 	Parent        *PrereqList      `json:"-"`
 	Type          prereq.Type      `json:"type"`
-	NameCriteria  criteria.String  `json:"name"`
-	LevelCriteria criteria.Numeric `json:"level"`
-	NotesCriteria criteria.String  `json:"notes"`
-	Has           bool             `json:"has,omitempty"`
+	NameCriteria  criteria.String  `json:"name,omitempty"`
+	LevelCriteria criteria.Numeric `json:"level,omitempty"`
+	NotesCriteria criteria.String  `json:"notes,omitempty"`
+	Has           bool             `json:"has"`
 }
 
 // NewAdvantagePrereq creates a new AdvantagePrereq.

@@ -55,7 +55,7 @@ type EquipmentData struct {
 	Weapons                []*Weapon            `json:"weapons,omitempty"`
 	Modifiers              []*EquipmentModifier `json:"modifiers,omitempty"`
 	Features               feature.Features     `json:"features,omitempty"`
-	Prereq                 Prereq               `json:"prereqs,omitempty"`
+	Prereq                 *PrereqList          `json:"prereqs,omitempty"`
 	Categories             []string             `json:"categories,omitempty"`
 	Equipped               bool                 `json:"equipped,omitempty"`
 	WeightIgnoredForSkills bool                 `json:"ignore_weight_for_skills,omitempty"`

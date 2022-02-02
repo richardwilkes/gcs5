@@ -25,7 +25,7 @@ type ContainedQuantityPrereq struct {
 	Parent            *PrereqList      `json:"-"`
 	Type              prereq.Type      `json:"type"`
 	QualifierCriteria criteria.Numeric `json:"qualifier"`
-	Has               bool             `json:"has,omitempty"`
+	Has               bool             `json:"has"`
 }
 
 // NewContainedQuantityPrereq creates a new ContainedQuantityPrereq.

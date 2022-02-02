@@ -41,7 +41,7 @@ type SkillItem struct {
 	Defaults                     []*SkillDefault     `json:"defaults,omitempty"`
 	TechniqueDefault             *SkillDefault       `json:"default,omitempty"`
 	TechniqueLimitModifier       *fixed.F64d4        `json:"limit,omitempty"`
-	Prereq                       Prereq              `json:"prereqs,omitempty"`
+	Prereq                       *PrereqList         `json:"prereqs,omitempty"`
 	Weapons                      []*Weapon           `json:"weapons,omitempty"`
 	Features                     feature.Features    `json:"features,omitempty"`
 }

@@ -27,7 +27,7 @@ type SkillPrereq struct {
 	NameCriteria           criteria.String  `json:"name"`
 	LevelCriteria          criteria.Numeric `json:"level"`
 	SpecializationCriteria criteria.String  `json:"specialization"`
-	Has                    bool             `json:"has,omitempty"`
+	Has                    bool             `json:"has"`
 }
 
 // NewSkillPrereq creates a new SkillPrereq.

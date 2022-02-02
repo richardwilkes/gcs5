@@ -13,10 +13,14 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/richardwilkes/gcs/internal/ui"
+	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/cmdline"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/log/jotrotate"
 )
 
@@ -32,5 +36,12 @@ func main() {
 	}
 	cl := cmdline.New(true)
 	fileList := jotrotate.ParseAndSetup(cl)
+
+	info, err := gurps.NewAdvantagesFromFile(os.DirFS("samples"), "one.adq")
+	jot.FatalIfErr(err)
+	jot.FatalIfErr(gurps.SaveAdvantages(info, "samples_converted/one.adq"))
+
+	atexit.Exit(0)
+
 	ui.Start(fileList) // Never returns
 }
