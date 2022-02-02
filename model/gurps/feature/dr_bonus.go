@@ -12,11 +12,11 @@
 package feature
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
 )

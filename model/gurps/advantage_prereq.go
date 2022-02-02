@@ -35,13 +35,19 @@ func NewAdvantagePrereq() *AdvantagePrereq {
 	return &AdvantagePrereq{
 		Type: prereq.Advantage,
 		NameCriteria: criteria.String{
-			Compare: criteria.Is,
+			StringData: criteria.StringData{
+				Compare: criteria.Is,
+			},
 		},
 		LevelCriteria: criteria.Numeric{
-			Compare: criteria.AtLeast,
+			NumericData: criteria.NumericData{
+				Compare: criteria.AtLeast,
+			},
 		},
 		NotesCriteria: criteria.String{
-			Compare: criteria.Any,
+			StringData: criteria.StringData{
+				Compare: criteria.Any,
+			},
 		},
 		Has: true,
 	}

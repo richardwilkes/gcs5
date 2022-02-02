@@ -12,12 +12,13 @@
 package gurps
 
 import (
-	"encoding/json"
-
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/settings/display"
+	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/log/jot"
 )
 
 const (
@@ -69,6 +70,9 @@ type SheetSettings struct {
 // SheetSettingsFor returns the SheetSettings for the given Entity, or the global settings if the Entity is nil.
 func SheetSettingsFor(entity *Entity) *SheetSettings {
 	if entity == nil {
+		if GlobalSheetSettingsProvider == nil {
+			jot.Fatal(1, errs.New("GlobalSheetSettingsProvider has not been set yet"))
+		}
 		return GlobalSheetSettingsProvider()
 	}
 	return entity.SheetSettings

@@ -13,17 +13,28 @@ package criteria
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
+	"github.com/richardwilkes/json"
 )
 
 // Weight holds the criteria for matching a number.
 type Weight struct {
+	WeightData
+}
+
+// WeightData holds the criteria for matching a number that should be written to disk.
+type WeightData struct {
 	Compare   NumericCompareType `json:"compare,omitempty"`
 	Qualifier measure.Weight     `json:"qualifier,omitempty"`
 }
 
-// Normalize the data.
-func (w *Weight) Normalize() {
-	if w.Compare = w.Compare.EnsureValid(); w.Compare == AnyNumber {
-		w.Qualifier = 0
-	}
+// ShouldOmit implements json.Omitter.
+func (w Weight) ShouldOmit() bool {
+	return w.Compare.EnsureValid() == AnyNumber
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (w *Weight) UnmarshalJSON(data []byte) error {
+	err := json.Unmarshal(data, &w.WeightData)
+	w.Compare = w.Compare.EnsureValid()
+	return err
 }

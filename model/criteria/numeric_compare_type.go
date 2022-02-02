@@ -18,7 +18,7 @@ import (
 
 // Possible NumericCompareType values.
 const (
-	AnyNumber = NumericCompareType("any")
+	AnyNumber = NumericCompareType("")
 	Equals    = NumericCompareType("is")
 	NotEquals = NumericCompareType("is_not")
 	AtLeast   = NumericCompareType("at_least")

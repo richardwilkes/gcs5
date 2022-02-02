@@ -12,18 +12,29 @@
 package criteria
 
 import (
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 // Numeric holds the criteria for matching a number.
 type Numeric struct {
+	NumericData
+}
+
+// NumericData holds the criteria for matching a number that should be written to disk.
+type NumericData struct {
 	Compare   NumericCompareType `json:"compare,omitempty"`
 	Qualifier fixed.F64d4        `json:"qualifier,omitempty"`
 }
 
-// Normalize the data.
-func (n *Numeric) Normalize() {
-	if n.Compare = n.Compare.EnsureValid(); n.Compare == AnyNumber {
-		n.Qualifier = 0
-	}
+// ShouldOmit implements json.Omitter.
+func (n Numeric) ShouldOmit() bool {
+	return n.Compare.EnsureValid() == AnyNumber
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (n Numeric) UnmarshalJSON(data []byte) error {
+	err := json.Unmarshal(data, &n.NumericData)
+	n.Compare = n.Compare.EnsureValid()
+	return err
 }

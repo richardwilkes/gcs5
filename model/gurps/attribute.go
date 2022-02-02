@@ -12,10 +12,9 @@
 package gurps
 
 import (
-	"encoding/json"
-
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 

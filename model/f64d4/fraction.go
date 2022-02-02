@@ -12,9 +12,9 @@
 package f64d4
 
 import (
-	"encoding/json"
 	"strings"
 
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 

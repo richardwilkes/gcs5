@@ -24,7 +24,7 @@ var _ Prereq = &ContainedQuantityPrereq{}
 type ContainedQuantityPrereq struct {
 	Parent            *PrereqList      `json:"-"`
 	Type              prereq.Type      `json:"type"`
-	QualifierCriteria criteria.Numeric `json:"qualifier"`
+	QualifierCriteria criteria.Numeric `json:"qualifier,omitempty"`
 	Has               bool             `json:"has"`
 }
 
@@ -33,8 +33,10 @@ func NewContainedQuantityPrereq() *ContainedQuantityPrereq {
 	return &ContainedQuantityPrereq{
 		Type: prereq.ContainedQuantity,
 		QualifierCriteria: criteria.Numeric{
-			Compare:   criteria.AtMost,
-			Qualifier: f64d4.One,
+			NumericData: criteria.NumericData{
+				Compare:   criteria.AtMost,
+				Qualifier: f64d4.One,
+			},
 		},
 		Has: true,
 	}

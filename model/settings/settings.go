@@ -12,6 +12,7 @@
 package settings
 
 import (
+	"context"
 	"path"
 	"path/filepath"
 	"runtime"
@@ -21,6 +22,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/gcs/model/gurps/settings"
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/cmdline"
@@ -91,7 +93,7 @@ func Default(entity *gurps.Entity) *Settings {
 func Global() *Settings {
 	if global == nil {
 		dice.GURPSFormat = true
-		if err := fs.LoadJSON(Path(), &global); err != nil {
+		if err := jio.LoadFromFile(context.Background(), Path(), &global); err != nil {
 			global = Default(nil)
 		}
 		gurps.GlobalSheetSettingsProvider = func() *gurps.SheetSettings { return global.Sheet }
@@ -101,7 +103,7 @@ func Global() *Settings {
 
 // Save to the standard path.
 func (s *Settings) Save() error {
-	return fs.SaveJSON(Path(), s, true)
+	return jio.SaveToFile(context.Background(), Path(), s)
 }
 
 // LookupPageRef the PageRef for the given ID. If not found or if the path it points to isn't a readable file, returns

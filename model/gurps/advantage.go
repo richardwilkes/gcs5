@@ -12,7 +12,7 @@
 package gurps
 
 import (
-	"encoding/json"
+	"context"
 	"io/fs"
 	"strings"
 
@@ -22,9 +22,10 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
-	xfs "github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
@@ -86,12 +87,12 @@ type advantageListData struct {
 }
 
 // NewAdvantagesFromFile loads an Advantages set from a file.
-func NewAdvantagesFromFile(fsys fs.FS, filePath string) ([]*Advantage, error) {
+func NewAdvantagesFromFile(fileSystem fs.FS, filePath string) ([]*Advantage, error) {
 	var data struct {
 		advantageListData
 		OldKey []*Advantage `json:"rows"`
 	}
-	if err := xfs.LoadJSONFromFS(fsys, filePath, &data); err != nil {
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
 		return nil, errs.NewWithCause("invalid advantages file: "+filePath, err)
 	}
 	if len(data.Current) != 0 {
@@ -102,7 +103,7 @@ func NewAdvantagesFromFile(fsys fs.FS, filePath string) ([]*Advantage, error) {
 
 // SaveAdvantages writes the Advantages to the file as JSON.
 func SaveAdvantages(advantages []*Advantage, filePath string) error {
-	return xfs.SaveJSON(filePath, &advantageListData{Current: advantages}, true)
+	return jio.SaveToFile(context.Background(), filePath, &advantageListData{Current: advantages})
 }
 
 // NewAdvantage creates a new Advantage.

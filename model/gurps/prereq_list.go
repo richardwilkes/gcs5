@@ -27,7 +27,7 @@ var _ Prereq = &PrereqList{}
 type PrereqList struct {
 	Parent         *PrereqList      `json:"-"`
 	Type           prereq.Type      `json:"type"`
-	WhenTLCriteria criteria.Numeric `json:"when_tl"`
+	WhenTLCriteria criteria.Numeric `json:"when_tl,omitempty"`
 	Prereqs        Prereqs          `json:"prereqs,omitempty"`
 	All            bool             `json:"all,omitempty"`
 	WhenEnabled    bool             `json:"-"`
@@ -38,7 +38,9 @@ func NewPrereqList() *PrereqList {
 	return &PrereqList{
 		Type: prereq.List,
 		WhenTLCriteria: criteria.Numeric{
-			Compare: criteria.AtLeast,
+			NumericData: criteria.NumericData{
+				Compare: criteria.AtLeast,
+			},
 		},
 		All: true,
 	}

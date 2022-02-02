@@ -35,7 +35,7 @@ type SkillBonus struct {
 	Parent                 fmt.Stringer        `json:"-"`
 	SelectionType          skill.SelectionType `json:"selection_type"`
 	NameCriteria           criteria.String     `json:"name,omitempty"`
-	SpecializationCriteria criteria.String     `json:"specialization"`
+	SpecializationCriteria criteria.String     `json:"specialization,omitempty"`
 	CategoryCriteria       criteria.String     `json:"category,omitempty"`
 	LeveledAmount
 }
@@ -46,13 +46,19 @@ func NewSkillBonus() *SkillBonus {
 		Type:          SkillBonusType,
 		SelectionType: skill.SkillsWithName,
 		NameCriteria: criteria.String{
-			Compare: criteria.Is,
+			StringData: criteria.StringData{
+				Compare: criteria.Is,
+			},
 		},
 		SpecializationCriteria: criteria.String{
-			Compare: criteria.Any,
+			StringData: criteria.StringData{
+				Compare: criteria.Any,
+			},
 		},
 		CategoryCriteria: criteria.String{
-			Compare: criteria.Any,
+			StringData: criteria.StringData{
+				Compare: criteria.Any,
+			},
 		},
 		LeveledAmount: LeveledAmount{Amount: f64d4.One},
 	}

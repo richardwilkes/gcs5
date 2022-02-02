@@ -12,9 +12,10 @@
 package paper
 
 import (
-	"encoding/json"
 	"strconv"
 	"strings"
+
+	"github.com/richardwilkes/json"
 )
 
 // Length contains a real-world length value with an attached units.

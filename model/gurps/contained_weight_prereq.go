@@ -24,7 +24,7 @@ var _ Prereq = &ContainedWeightPrereq{}
 type ContainedWeightPrereq struct {
 	Parent         *PrereqList     `json:"-"`
 	Type           prereq.Type     `json:"type"`
-	WeightCriteria criteria.Weight `json:"qualifier"`
+	WeightCriteria criteria.Weight `json:"qualifier,omitempty"`
 	Has            bool            `json:"has"`
 }
 
@@ -33,8 +33,10 @@ func NewContainedWeightPrereq(entity *Entity) *ContainedWeightPrereq {
 	return &ContainedWeightPrereq{
 		Type: prereq.ContainedWeight,
 		WeightCriteria: criteria.Weight{
-			Compare:   criteria.AtMost,
-			Qualifier: measure.WeightFromInt64(5, SheetSettingsFor(entity).DefaultWeightUnits),
+			WeightData: criteria.WeightData{
+				Compare:   criteria.AtMost,
+				Qualifier: measure.WeightFromInt64(5, SheetSettingsFor(entity).DefaultWeightUnits),
+			},
 		},
 		Has: true,
 	}

@@ -24,9 +24,9 @@ var _ Prereq = &SkillPrereq{}
 type SkillPrereq struct {
 	Parent                 *PrereqList      `json:"-"`
 	Type                   prereq.Type      `json:"type"`
-	NameCriteria           criteria.String  `json:"name"`
-	LevelCriteria          criteria.Numeric `json:"level"`
-	SpecializationCriteria criteria.String  `json:"specialization"`
+	NameCriteria           criteria.String  `json:"name,omitempty"`
+	LevelCriteria          criteria.Numeric `json:"level,omitempty"`
+	SpecializationCriteria criteria.String  `json:"specialization,omitempty"`
 	Has                    bool             `json:"has"`
 }
 
@@ -35,13 +35,19 @@ func NewSkillPrereq() *SkillPrereq {
 	return &SkillPrereq{
 		Type: prereq.Skill,
 		NameCriteria: criteria.String{
-			Compare: criteria.Is,
+			StringData: criteria.StringData{
+				Compare: criteria.Is,
+			},
 		},
 		LevelCriteria: criteria.Numeric{
-			Compare: criteria.AtLeast,
+			NumericData: criteria.NumericData{
+				Compare: criteria.AtLeast,
+			},
 		},
 		SpecializationCriteria: criteria.String{
-			Compare: criteria.Any,
+			StringData: criteria.StringData{
+				Compare: criteria.Any,
+			},
 		},
 		Has: true,
 	}

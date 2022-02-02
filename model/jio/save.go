@@ -12,27 +12,34 @@
 package jio
 
 import (
-	"encoding/json"
+	"context"
 	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio/fs/safe"
 )
 
-// Save the data as JSON to the given path. Parent directories will be created automatically, if needed.
-func Save(path string, data interface{}) error {
+// SaveToFile writes the data as JSON to the given path. Parent directories will be created automatically, if needed.
+func SaveToFile(ctx context.Context, path string, data interface{}) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
 		return errs.Wrap(err)
 	}
 	if err := safe.WriteFileWithMode(path, func(w io.Writer) error {
-		encoder := json.NewEncoder(w)
-		encoder.SetEscapeHTML(false)
-		encoder.SetIndent("", "  ")
-		return errs.Wrap(encoder.Encode(data))
+		return Save(ctx, w, data)
 	}, 0o640); err != nil {
 		return errs.NewWithCause(path, err)
 	}
 	return nil
+}
+
+// Save writes the data as JSON.
+func Save(ctx context.Context, w io.Writer, data interface{}) error {
+	encoder := json.NewEncoder(w)
+	encoder.SetContext(ctx)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "\t")
+	return errs.Wrap(encoder.Encode(data))
 }

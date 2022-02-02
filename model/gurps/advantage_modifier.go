@@ -12,7 +12,6 @@
 package gurps
 
 import (
-	"encoding/json"
 	"strings"
 
 	"github.com/google/uuid"
@@ -20,6 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )

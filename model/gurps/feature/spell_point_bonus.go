@@ -49,10 +49,14 @@ func NewSpellPointBonus() *SpellPointBonus {
 		Type:           SpellPointBonusType,
 		SpellMatchType: spell.AllColleges,
 		NameCriteria: criteria.String{
-			Compare: criteria.Is,
+			StringData: criteria.StringData{
+				Compare: criteria.Is,
+			},
 		},
 		CategoryCriteria: criteria.String{
-			Compare: criteria.Any,
+			StringData: criteria.StringData{
+				Compare: criteria.Any,
+			},
 		},
 		LeveledAmount: LeveledAmount{Amount: f64d4.One},
 	}

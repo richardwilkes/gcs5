@@ -12,11 +12,11 @@
 package gurps
 
 import (
-	"encoding/json"
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/json"
 )
 
 // AttributeDifficulty holds an attribute ID and a difficulty.

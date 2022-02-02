@@ -12,9 +12,8 @@
 package gurps
 
 import (
-	"encoding/json"
-
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 )

@@ -24,8 +24,8 @@ var _ Prereq = &AttributePrereq{}
 type AttributePrereq struct {
 	Parent               *PrereqList      `json:"-"`
 	Type                 prereq.Type      `json:"type"`
-	CombinedWithCriteria criteria.String  `json:"combined_with"`
-	QualifierCriteria    criteria.Numeric `json:"qualifier"`
+	CombinedWithCriteria criteria.String  `json:"combined_with,omitempty"`
+	QualifierCriteria    criteria.Numeric `json:"qualifier,omitempty"`
 	Which                string           `json:"which"`
 	Has                  bool             `json:"has"`
 }
@@ -35,11 +35,15 @@ func NewAttributePrereq(entity *Entity) *AttributePrereq {
 	return &AttributePrereq{
 		Type: prereq.Attribute,
 		CombinedWithCriteria: criteria.String{
-			Compare: criteria.Is,
+			StringData: criteria.StringData{
+				Compare: criteria.Is,
+			},
 		},
 		QualifierCriteria: criteria.Numeric{
-			Compare:   criteria.AtLeast,
-			Qualifier: fixed.F64d4FromInt64(10),
+			NumericData: criteria.NumericData{
+				Compare:   criteria.AtLeast,
+				Qualifier: fixed.F64d4FromInt64(10),
+			},
 		},
 		Which: AttributeIDFor(entity, "st"),
 		Has:   true,

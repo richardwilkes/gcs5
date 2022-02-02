@@ -13,14 +13,14 @@ package gurps
 
 import (
 	"bytes"
-	"encoding/json"
+	"context"
 	"io/fs"
 	"sort"
 
 	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
-	xfs "github.com/richardwilkes/toolbox/xio/fs"
 )
 
 // AttributeDefs holds a set of AttributeDef objects.
@@ -74,13 +74,13 @@ type attributeDefsData struct {
 }
 
 // NewAttributeDefsFromFile loads an AttributeDef set from a file.
-func NewAttributeDefsFromFile(fsys fs.FS, filePath string) (*AttributeDefs, error) {
+func NewAttributeDefsFromFile(fileSystem fs.FS, filePath string) (*AttributeDefs, error) {
 	var data struct {
 		*attributeDefsData
 		OldKey1 *AttributeDefs `json:"attribute_settings"`
 		OldKey2 *AttributeDefs `json:"attributes"`
 	}
-	if err := xfs.LoadJSONFromFS(fsys, filePath, &data); err != nil {
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
 		return nil, errs.NewWithCause("invalid attribute definitions file: "+filePath, err)
 	}
 	if data.attributeDefsData != nil {
@@ -94,7 +94,7 @@ func NewAttributeDefsFromFile(fsys fs.FS, filePath string) (*AttributeDefs, erro
 
 // Save writes the AttributeDefs to the file as JSON.
 func (a *AttributeDefs) Save(filePath string) error {
-	return jio.Save(filePath, &attributeDefsData{Current: a})
+	return jio.SaveToFile(context.Background(), filePath, &attributeDefsData{Current: a})
 }
 
 // MarshalJSON implements json.Marshaler.

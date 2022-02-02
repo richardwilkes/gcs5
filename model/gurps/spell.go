@@ -12,7 +12,6 @@
 package gurps
 
 import (
-	"encoding/json"
 	"math"
 	"strings"
 
@@ -20,6 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )

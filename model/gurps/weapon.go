@@ -12,9 +12,8 @@
 package gurps
 
 import (
-	"encoding/json"
-
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/fixed"

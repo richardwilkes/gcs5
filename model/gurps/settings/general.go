@@ -12,12 +12,13 @@
 package settings
 
 import (
+	"context"
 	"io/fs"
 	"os"
 	"os/user"
 	"time"
 
-	xfs "github.com/richardwilkes/toolbox/xio/fs"
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/unison"
 )
 
@@ -63,7 +64,7 @@ func NewGeneralFromFile(fsys fs.FS, filePath string) (*General, error) {
 		General     `json:",inline"`
 		OldLocation *General `json:"general"`
 	}
-	if err := xfs.LoadJSONFromFS(fsys, filePath, &data); err != nil {
+	if err := jio.LoadFromFS(context.Background(), fsys, filePath, &data); err != nil {
 		return nil, err
 	}
 	if data.OldLocation != nil {
@@ -75,7 +76,7 @@ func NewGeneralFromFile(fsys fs.FS, filePath string) (*General, error) {
 
 // Save writes the settings to the file as JSON.
 func (s *General) Save(filePath string) error {
-	return xfs.SaveJSON(filePath, s, true)
+	return jio.SaveToFile(context.Background(), filePath, s)
 }
 
 // UpdateToolTipTiming updates the default tooltip theme to use the timing values from this object.

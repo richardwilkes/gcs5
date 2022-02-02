@@ -27,8 +27,8 @@ type SpellPrereq struct {
 	Parent            *PrereqList          `json:"-"`
 	Type              prereq.Type          `json:"type"`
 	SubType           spell.ComparisonType `json:"sub_type"`
-	QualifierCriteria criteria.String      `json:"qualifier"`
-	QuantityCriteria  criteria.Numeric     `json:"quantity"`
+	QualifierCriteria criteria.String      `json:"qualifier,omitempty"`
+	QuantityCriteria  criteria.Numeric     `json:"quantity,omitempty"`
 	Has               bool                 `json:"has"`
 }
 
@@ -38,11 +38,15 @@ func NewSpellPrereq() *SpellPrereq {
 		Type:    prereq.Spell,
 		SubType: spell.Name,
 		QualifierCriteria: criteria.String{
-			Compare: criteria.Is,
+			StringData: criteria.StringData{
+				Compare: criteria.Is,
+			},
 		},
 		QuantityCriteria: criteria.Numeric{
-			Compare:   criteria.AtLeast,
-			Qualifier: f64d4.One,
+			NumericData: criteria.NumericData{
+				Compare:   criteria.AtLeast,
+				Qualifier: f64d4.One,
+			},
 		},
 		Has: true,
 	}

@@ -12,11 +12,11 @@
 package gurps
 
 import (
-	"encoding/json"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/json"
 )
 
 const noteTypeKey = "note"

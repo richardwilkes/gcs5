@@ -12,12 +12,13 @@
 package ancestry
 
 import (
+	"context"
 	"io/fs"
 	"strings"
 	"unicode/utf8"
 
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/toolbox/txt"
-	xfs "github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/rand"
 )
 
@@ -39,7 +40,7 @@ type NameGenerator struct {
 // NewNameGeneratorFromFS creates a new NameGenerator from a file.
 func NewNameGeneratorFromFS(fileSystem fs.FS, filePath string) (*NameGenerator, error) {
 	var generator NameGenerator
-	if err := xfs.LoadJSONFromFS(fileSystem, filePath, &generator); err != nil {
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &generator); err != nil {
 		return nil, err
 	}
 	return &generator, nil

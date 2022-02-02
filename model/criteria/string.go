@@ -11,15 +11,27 @@
 
 package criteria
 
+import "github.com/richardwilkes/json"
+
 // String holds the criteria for matching a string.
 type String struct {
+	StringData
+}
+
+// StringData holds the criteria for matching a string that should be written to disk.
+type StringData struct {
 	Compare   StringCompareType `json:"compare,omitempty"`
 	Qualifier string            `json:"qualifier,omitempty"`
 }
 
-// Normalize the data.
-func (s *String) Normalize() {
-	if s.Compare = s.Compare.EnsureValid(); s.Compare == Any {
-		s.Qualifier = ""
-	}
+// ShouldOmit implements json.Omitter.
+func (s String) ShouldOmit() bool {
+	return s.Compare.EnsureValid() == Any
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (s *String) UnmarshalJSON(data []byte) error {
+	err := json.Unmarshal(data, &s.StringData)
+	s.Compare = s.Compare.EnsureValid()
+	return err
 }

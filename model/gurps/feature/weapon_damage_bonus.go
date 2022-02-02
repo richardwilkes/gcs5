@@ -37,10 +37,10 @@ type WeaponDamageBonus struct {
 	Type                   Type                 `json:"type"`
 	Parent                 fmt.Stringer         `json:"-"`
 	SelectionType          weapon.SelectionType `json:"selection_type"`
-	NameCriteria           criteria.String      `json:"name"`
+	NameCriteria           criteria.String      `json:"name,omitempty"`
 	SpecializationCriteria criteria.String      `json:"specialization"`
-	RelativeLevelCriteria  criteria.Numeric     `json:"level"`
-	CategoryCriteria       criteria.String      `json:"category"`
+	RelativeLevelCriteria  criteria.Numeric     `json:"level,omitempty"`
+	CategoryCriteria       criteria.String      `json:"category,omitempty"`
 	Percent                bool                 `json:"percent,omitempty"`
 	LeveledAmount
 }
@@ -51,16 +51,24 @@ func NewWeaponDamageBonus() *WeaponDamageBonus {
 		Type:          WeaponDamageBonusType,
 		SelectionType: weapon.WithRequiredSkill,
 		NameCriteria: criteria.String{
-			Compare: criteria.Is,
+			StringData: criteria.StringData{
+				Compare: criteria.Is,
+			},
 		},
 		SpecializationCriteria: criteria.String{
-			Compare: criteria.Any,
+			StringData: criteria.StringData{
+				Compare: criteria.Any,
+			},
 		},
 		RelativeLevelCriteria: criteria.Numeric{
-			Compare: criteria.AtLeast,
+			NumericData: criteria.NumericData{
+				Compare: criteria.AtLeast,
+			},
 		},
 		CategoryCriteria: criteria.String{
-			Compare: criteria.Any,
+			StringData: criteria.StringData{
+				Compare: criteria.Any,
+			},
 		},
 		LeveledAmount: LeveledAmount{Amount: f64d4.One},
 	}

@@ -12,9 +12,10 @@
 package gurps
 
 import (
-	"encoding/json"
 	"sort"
 	"time"
+
+	"github.com/richardwilkes/json"
 )
 
 // ExportInfo holds information about a recent export so that it can be redone quickly.

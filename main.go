@@ -12,12 +12,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
 
 	"github.com/richardwilkes/gcs/internal/ui"
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/gcs/model/settings"
+	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -37,9 +41,21 @@ func main() {
 	cl := cmdline.New(true)
 	fileList := jotrotate.ParseAndSetup(cl)
 
-	info, err := gurps.NewAdvantagesFromFile(os.DirFS("samples"), "one.adq")
+	settings.Global() // Here to force early initialization
+
+	fmt.Println(dice.New("-1"))
+	atexit.Exit(0)
+
+	info, err := gurps.NewAdvantagesFromFile(os.DirFS("samples"), "basic.adq")
 	jot.FatalIfErr(err)
-	jot.FatalIfErr(gurps.SaveAdvantages(info, "samples_converted/one.adq"))
+	jot.FatalIfErr(gurps.SaveAdvantages(info, "samples_converted/basic.adq"))
+
+	var m map[string]interface{}
+	jot.FatalIfErr(jio.LoadFromFile(context.Background(), "samples/basic.adq", &m))
+	jot.FatalIfErr(jio.SaveToFile(context.Background(), "samples/basic-sorted.adq", m))
+	m = make(map[string]interface{})
+	jot.FatalIfErr(jio.LoadFromFile(context.Background(), "samples_converted/basic.adq", &m))
+	jot.FatalIfErr(jio.SaveToFile(context.Background(), "samples_converted/basic-sorted.adq", m))
 
 	atexit.Exit(0)
 

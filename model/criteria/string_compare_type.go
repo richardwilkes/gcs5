@@ -19,7 +19,7 @@ import (
 
 // Possible StringCompareType values.
 const (
-	Any              = StringCompareType("any")
+	Any              = StringCompareType("")
 	Is               = StringCompareType("is")
 	IsNot            = StringCompareType("is_not")
 	Contains         = StringCompareType("contains")

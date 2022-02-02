@@ -12,16 +12,17 @@
 package gurps
 
 import (
+	"context"
 	"embed"
 	"io/fs"
 	"path"
 	"sort"
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
-	xfs "github.com/richardwilkes/toolbox/xio/fs"
 )
 
 //go:embed data
@@ -66,11 +67,11 @@ func FactoryBodyTypes() []*BodyType {
 // NewBodyTypeFromFile loads an BodyType from a file.
 func NewBodyTypeFromFile(fsys fs.FS, filePath string) (*BodyType, error) {
 	var b BodyType
-	if err := xfs.LoadJSONFromFS(fsys, filePath, &b); err != nil {
+	if err := jio.LoadFromFS(context.Background(), fsys, filePath, &b); err != nil {
 		var old struct {
 			HitLocations *BodyType `json:"hit_locations"`
 		}
-		if err = xfs.LoadJSONFromFS(fsys, filePath, &old); err != nil {
+		if err = jio.LoadFromFS(context.Background(), fsys, filePath, &old); err != nil {
 			return nil, err
 		}
 		b = *old.HitLocations
@@ -81,7 +82,7 @@ func NewBodyTypeFromFile(fsys fs.FS, filePath string) (*BodyType, error) {
 
 // Save writes the BodyType to the file as JSON.
 func (b *BodyType) Save(filePath string) error {
-	return xfs.SaveJSON(filePath, b, true)
+	return jio.SaveToFile(context.Background(), filePath, b)
 }
 
 // Update the role ranges and populate the lookup map.

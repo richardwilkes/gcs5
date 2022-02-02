@@ -19,8 +19,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/toolbox/i18n"
-	xfs "github.com/richardwilkes/toolbox/xio/fs"
 )
 
 const (
@@ -44,7 +44,7 @@ func NewLibraries() Libraries {
 // NewLibrariesFromFS creates a new Ancestry from a file.
 func NewLibrariesFromFS(fileSystem fs.FS, filePath string) (Libraries, error) {
 	var libs Libraries
-	if err := xfs.LoadJSONFromFS(fileSystem, filePath, &libs); err != nil {
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &libs); err != nil {
 		return nil, err
 	}
 	for k, v := range libs {

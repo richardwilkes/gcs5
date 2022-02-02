@@ -12,8 +12,7 @@
 package feature
 
 import (
-	"encoding/json"
-
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 )

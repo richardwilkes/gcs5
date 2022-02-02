@@ -12,11 +12,13 @@
 package ancestry
 
 import (
+	"context"
 	"io/fs"
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/toolbox/eval"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
 )
@@ -36,7 +38,7 @@ func AvailableAncestries(libraries *library.Libraries) []*library.NamedFileSet {
 // NewAncestoryFromFS creates a new Ancestry from a file.
 func NewAncestoryFromFS(fileSystem fs.FS, filePath string) (*Ancestry, error) {
 	var ancestry Ancestry
-	if err := xfs.LoadJSONFromFS(fileSystem, filePath, &ancestry); err != nil {
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &ancestry); err != nil {
 		return nil, err
 	}
 	if ancestry.Name == "" {

@@ -12,10 +12,10 @@
 package measure
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
