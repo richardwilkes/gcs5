@@ -112,7 +112,6 @@ func (s *SkillDefault) SkillLevelFast(entity *Entity, requirePoints bool, exclud
 		}
 		return s.finalLevel(level)
 	}
-	return 0
 }
 
 func (s *SkillDefault) bestFast(entity *Entity, requirePoints bool, excludes map[string]bool) fixed.F64d4 {

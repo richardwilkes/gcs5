@@ -190,6 +190,7 @@ func (s *Skill) AdjustedRelativeLevel() fixed.F64d4 {
 	return fixed.F64d4Min
 }
 
+// AdjustedPoints returns the points, adjusted for any bonuses.
 func (s *Skill) AdjustedPoints() fixed.F64d4 {
 	if s.Container() {
 		var total fixed.F64d4

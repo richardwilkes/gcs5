@@ -38,6 +38,7 @@ func (p *PoolThreshold) Threshold(max fixed.F64d4) fixed.F64d4 {
 	return f64d4.Round(max.Mul(p.Multiplier).Div(divisor) + p.Addition)
 }
 
+// ContainsOp returns true if this PoolThreshold contains the specified ThresholdOp.
 func (p *PoolThreshold) ContainsOp(op attribute.ThresholdOp) bool {
 	for _, one := range p.Ops {
 		if one == op {

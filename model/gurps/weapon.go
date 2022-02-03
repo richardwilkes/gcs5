@@ -78,7 +78,7 @@ func (w *Weapon) MarshalJSON() ([]byte, error) {
 	}{
 		WeaponData: w.WeaponData,
 		Calc: calc{
-			Level:  w.SkillLevel().Max(0),
+			Level:  w.SkillLevel(nil).Max(0),
 			Damage: w.Damage.ResolvedDamage(nil),
 		},
 	}
@@ -119,22 +119,19 @@ func (w *Weapon) PC() *Entity {
 }
 
 // SkillLevel returns the resolved skill level.
-func (w *Weapon) SkillLevel() fixed.F64d4 {
-	return w.SkillLevelFor(w.PC(), nil)
-}
-
-func (w *Weapon) SkillLevelFor(entity *Entity, tooltip *xio.ByteBuffer) fixed.F64d4 {
-	if entity == nil || entity.Type != datafile.PC {
+func (w *Weapon) SkillLevel(tooltip *xio.ByteBuffer) fixed.F64d4 {
+	pc := w.PC()
+	if pc == nil {
 		return 0
 	}
 	var primaryTooltip *xio.ByteBuffer
 	if tooltip != nil {
 		primaryTooltip = &xio.ByteBuffer{}
 	}
-	adj := w.skillLevelBaseAdjustment(entity, primaryTooltip) + w.skillLevelPostAdjustment(entity, primaryTooltip)
+	adj := w.skillLevelBaseAdjustment(pc, primaryTooltip) + w.skillLevelPostAdjustment(pc, primaryTooltip)
 	best := fixed.F64d4Min
 	for _, def := range w.Defaults {
-		if level := def.SkillLevelFast(entity, false, nil, true); level != fixed.F64d4Min {
+		if level := def.SkillLevelFast(pc, false, nil, true); level != fixed.F64d4Min {
 			level += adj
 			if best < level {
 				best = level
@@ -327,23 +324,25 @@ func (w *Weapon) resolvedValue(input, baseDefaultType string, tooltip *xio.ByteB
 						}
 						best := fixed.F64d4Min
 						for _, def := range w.Defaults {
-							if level := def.SkillLevelFast(pc, false, nil, true); level != fixed.F64d4Min {
-								level += preAdj
-								if baseDefaultType != def.Type() {
-									level = (level.Div(f64d4.Two) + adj).Trunc()
+							level := def.SkillLevelFast(pc, false, nil, true)
+							if level == fixed.F64d4Min {
+								continue
+							}
+							level += preAdj
+							if baseDefaultType != def.Type() {
+								level = (level.Div(f64d4.Two) + adj).Trunc()
+							}
+							level += postAdj
+							var possibleTooltip *xio.ByteBuffer
+							if def.Type() == "skill" && def.Name == "Karate" {
+								if tooltip != nil {
+									possibleTooltip = &xio.ByteBuffer{}
 								}
-								level += postAdj
-								var possibleTooltip *xio.ByteBuffer
-								if def.Type() == "skill" && def.Name == "Karate" {
-									if tooltip != nil {
-										possibleTooltip = &xio.ByteBuffer{}
-									}
-									level += w.EncumbrancePenalty(pc, possibleTooltip)
-								}
-								if best < level {
-									best = level
-									secondaryTooltip = possibleTooltip
-								}
+								level += w.EncumbrancePenalty(pc, possibleTooltip)
+							}
+							if best < level {
+								best = level
+								secondaryTooltip = possibleTooltip
 							}
 						}
 						if best != fixed.F64d4Min && tooltip != nil {
