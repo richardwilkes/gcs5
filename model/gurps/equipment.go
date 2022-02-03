@@ -25,6 +25,8 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
+var _ WeaponOwner = &Equipment{}
+
 const equipmentTypeKey = "equipment"
 
 // EquipmentItem holds the Equipment data that only exists in non-containers.
@@ -44,7 +46,7 @@ type EquipmentData struct {
 	ID                     uuid.UUID            `json:"id"`
 	Name                   string               `json:"description,omitempty"`
 	PageRef                string               `json:"reference,omitempty"`
-	Notes                  string               `json:"notes,omitempty"`
+	LocalNotes             string               `json:"notes,omitempty"`
 	VTTNotes               string               `json:"vtt_notes,omitempty"`
 	TechLevel              string               `json:"tech_level,omitempty"`
 	LegalityClass          string               `json:"legality_class,omitempty"`
@@ -145,6 +147,36 @@ func (e *Equipment) Container() bool {
 	return strings.HasSuffix(e.Type, commonContainerKeyPostfix)
 }
 
+// OwningEntity returns the owning Entity.
+func (e *Equipment) OwningEntity() *Entity {
+	return e.Entity
+}
+
+// Description returns a description.
+func (e *Equipment) Description() string {
+	return e.Name
+}
+
+// String implements fmt.Stringer.
+func (e *Equipment) String() string {
+	return e.Name
+}
+
+// Notes returns the local notes.
+func (e *Equipment) Notes() string {
+	return e.LocalNotes
+}
+
+// FeatureList returns the list of Features.
+func (e *Equipment) FeatureList() feature.Features {
+	return e.Features
+}
+
+// CategoryList returns the list of categories.
+func (e *Equipment) CategoryList() []string {
+	return e.Categories
+}
+
 // AdjustedValue returns the value after adjustments for any modifiers. Does not include the value of children.
 func (e *Equipment) AdjustedValue() fixed.F64d4 {
 	return ValueAdjustedForModifiers(e.Value, e.Modifiers)
@@ -208,7 +240,7 @@ func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits)
 // FillWithNameableKeys adds any nameable keys found in this Advantage to the provided map.
 func (e *Equipment) FillWithNameableKeys(m map[string]string) {
 	nameables.Extract(e.Name, m)
-	nameables.Extract(e.Notes, m)
+	nameables.Extract(e.LocalNotes, m)
 	nameables.Extract(e.VTTNotes, m)
 	e.Prereq.FillWithNameableKeys(m)
 	for _, one := range e.Features {
@@ -225,7 +257,7 @@ func (e *Equipment) FillWithNameableKeys(m map[string]string) {
 // ApplyNameableKeys replaces any nameable keys found in this Advantage with the corresponding values in the provided map.
 func (e *Equipment) ApplyNameableKeys(m map[string]string) {
 	e.Name = nameables.Apply(e.Name, m)
-	e.Notes = nameables.Apply(e.Notes, m)
+	e.LocalNotes = nameables.Apply(e.LocalNotes, m)
 	e.VTTNotes = nameables.Apply(e.VTTNotes, m)
 	e.Prereq.ApplyNameableKeys(m)
 	for _, one := range e.Features {

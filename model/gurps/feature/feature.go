@@ -17,6 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 // Feature holds data that affects another object.
@@ -29,6 +30,8 @@ type Feature interface {
 // Bonus is an extension of a Feature, which provides a numerical bonus or penalty.
 type Bonus interface {
 	Feature
+	// AdjustedAmount returns the amount, adjusted for level, if requested.
+	AdjustedAmount() fixed.F64d4
 	// AddToTooltip adds this Bonus's details to the tooltip. 'buffer' may be nil.
 	AddToTooltip(buffer *xio.ByteBuffer)
 }

@@ -29,7 +29,7 @@ type PrereqList struct {
 	Type           prereq.Type      `json:"type"`
 	WhenTLCriteria criteria.Numeric `json:"when_tl,omitempty"`
 	Prereqs        Prereqs          `json:"prereqs,omitempty"`
-	All            bool             `json:"all,omitempty"`
+	All            bool             `json:"all"`
 	WhenEnabled    bool             `json:"-"`
 }
 

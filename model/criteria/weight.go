@@ -14,6 +14,7 @@ package criteria
 import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 // Weight holds the criteria for matching a number.
@@ -37,4 +38,9 @@ func (w *Weight) UnmarshalJSON(data []byte) error {
 	err := json.Unmarshal(data, &w.WeightData)
 	w.Compare = w.Compare.EnsureValid()
 	return err
+}
+
+// Matches performs a comparison and returns true if the data matches.
+func (w Weight) Matches(value measure.Weight) bool {
+	return w.Compare.Matches(fixed.F64d4(w.Qualifier), fixed.F64d4(value))
 }

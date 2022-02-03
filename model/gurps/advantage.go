@@ -29,6 +29,8 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
+var _ WeaponOwner = &Advantage{}
+
 const advantageTypeKey = "advantage"
 
 // AdvantageItem holds the Advantage data that only exists in non-containers.
@@ -62,7 +64,7 @@ type AdvantageData struct {
 	ID                  uuid.UUID                 `json:"id"`
 	Name                string                    `json:"name,omitempty"`
 	PageRef             string                    `json:"reference,omitempty"`
-	Notes               string                    `json:"notes,omitempty"`
+	LocalNotes          string                    `json:"notes,omitempty"`
 	VTTNotes            string                    `json:"vtt_notes,omitempty"`
 	CR                  advantage.SelfControlRoll `json:"cr,omitempty"`
 	CRAdj               SelfControlRollAdj        `json:"cr_adj,omitempty"`
@@ -170,6 +172,16 @@ func (a *Advantage) Container() bool {
 	return strings.HasSuffix(a.Type, commonContainerKeyPostfix)
 }
 
+// OwningEntity returns the owning Entity.
+func (a *Advantage) OwningEntity() *Entity {
+	return a.Entity
+}
+
+// Notes returns the local notes.
+func (a *Advantage) Notes() string {
+	return a.LocalNotes
+}
+
 // AdjustedPoints returns the total points, taking levels and modifiers into account. 'entity' may be nil.
 func (a *Advantage) AdjustedPoints() fixed.F64d4 {
 	if a.Disabled {
@@ -259,6 +271,12 @@ func (a *Advantage) TypeAsText() string {
 	return strings.Join(list, ", ")
 }
 
+// Description returns a description, which doesn't include any levels.
+func (a *Advantage) Description() string {
+	return a.Name
+}
+
+// String implements fmt.Stringer.
 func (a *Advantage) String() string {
 	var buffer strings.Builder
 	buffer.WriteString(a.Name)
@@ -269,10 +287,20 @@ func (a *Advantage) String() string {
 	return buffer.String()
 }
 
+// FeatureList returns the list of Features.
+func (a *Advantage) FeatureList() feature.Features {
+	return a.Features
+}
+
+// CategoryList returns the list of categories.
+func (a *Advantage) CategoryList() []string {
+	return a.Categories
+}
+
 // FillWithNameableKeys adds any nameable keys found in this Advantage to the provided map.
 func (a *Advantage) FillWithNameableKeys(m map[string]string) {
 	nameables.Extract(a.Name, m)
-	nameables.Extract(a.Notes, m)
+	nameables.Extract(a.LocalNotes, m)
 	nameables.Extract(a.VTTNotes, m)
 	a.Prereq.FillWithNameableKeys(m)
 	for _, one := range a.Features {
@@ -289,7 +317,7 @@ func (a *Advantage) FillWithNameableKeys(m map[string]string) {
 // ApplyNameableKeys replaces any nameable keys found in this Advantage with the corresponding values in the provided map.
 func (a *Advantage) ApplyNameableKeys(m map[string]string) {
 	a.Name = nameables.Apply(a.Name, m)
-	a.Notes = nameables.Apply(a.Notes, m)
+	a.LocalNotes = nameables.Apply(a.LocalNotes, m)
 	a.VTTNotes = nameables.Apply(a.VTTNotes, m)
 	a.Prereq.ApplyNameableKeys(m)
 	for _, one := range a.Features {
@@ -349,11 +377,11 @@ func (a *Advantage) SecondaryText() string {
 			buffer.WriteString(notes)
 		}
 	}
-	if a.Notes != "" && settings.NotesDisplay.Inline() {
+	if a.LocalNotes != "" && settings.NotesDisplay.Inline() {
 		if buffer.Len() != 0 {
 			buffer.WriteByte('\n')
 		}
-		buffer.WriteString(a.Notes)
+		buffer.WriteString(a.LocalNotes)
 	}
 	return buffer.String()
 }

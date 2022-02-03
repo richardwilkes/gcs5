@@ -11,7 +11,9 @@
 
 package criteria
 
-import "github.com/richardwilkes/json"
+import (
+	"github.com/richardwilkes/json"
+)
 
 // String holds the criteria for matching a string.
 type String struct {
@@ -34,4 +36,14 @@ func (s *String) UnmarshalJSON(data []byte) error {
 	err := json.Unmarshal(data, &s.StringData)
 	s.Compare = s.Compare.EnsureValid()
 	return err
+}
+
+// Matches performs a comparison and returns true if the data matches.
+func (s String) Matches(value ...string) bool {
+	for _, one := range value {
+		if s.Compare.Matches(s.Qualifier, one) {
+			return true
+		}
+	}
+	return false
 }

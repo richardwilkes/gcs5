@@ -37,3 +37,12 @@ func (p *PoolThreshold) Threshold(max fixed.F64d4) fixed.F64d4 {
 	// TODO: Check that rounding here is correct for our purposes
 	return f64d4.Round(max.Mul(p.Multiplier).Div(divisor) + p.Addition)
 }
+
+func (p *PoolThreshold) ContainsOp(op attribute.ThresholdOp) bool {
+	for _, one := range p.Ops {
+		if one == op {
+			return true
+		}
+	}
+	return false
+}

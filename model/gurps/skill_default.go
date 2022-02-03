@@ -14,6 +14,7 @@ package gurps
 import (
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/f64d4"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/id"
@@ -85,4 +86,48 @@ func (s *SkillDefault) ModifierAsString() string {
 	default:
 		return ""
 	}
+}
+
+// SkillLevelFast returns the base skill level for this SkillDefault.
+func (s *SkillDefault) SkillLevelFast(entity *Entity, requirePoints bool, excludes map[string]bool, ruleOf20 bool) fixed.F64d4 {
+	switch s.Type() {
+	case "parry":
+		best := s.bestFast(entity, requirePoints, excludes)
+		if best != fixed.F64d4Min {
+			best = best.Div(f64d4.Two).Trunc() + f64d4.Three + entity.ParryBonus
+		}
+		return s.finalLevel(best)
+	case "block":
+		best := s.bestFast(entity, requirePoints, excludes)
+		if best != fixed.F64d4Min {
+			best = best.Div(f64d4.Two).Trunc() + f64d4.Three + entity.BlockBonus
+		}
+		return s.finalLevel(best)
+	case "skill":
+		return s.finalLevel(s.bestFast(entity, requirePoints, excludes))
+	default:
+		level := entity.ResolveAttribute(s.Type())
+		if ruleOf20 {
+			level = level.Min(f64d4.Twenty)
+		}
+		return s.finalLevel(level)
+	}
+	return 0
+}
+
+func (s *SkillDefault) bestFast(entity *Entity, requirePoints bool, excludes map[string]bool) fixed.F64d4 {
+	best := fixed.F64d4Min
+	for _, sk := range entity.SkillNamed(s.Name, s.Specialization, requirePoints, excludes) {
+		if best < sk.Level.Level {
+			best = sk.Level.Level
+		}
+	}
+	return best
+}
+
+func (s *SkillDefault) finalLevel(level fixed.F64d4) fixed.F64d4 {
+	if level != fixed.F64d4Min {
+		level += s.Modifier
+	}
+	return level
 }

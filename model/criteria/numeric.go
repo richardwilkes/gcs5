@@ -33,8 +33,13 @@ func (n Numeric) ShouldOmit() bool {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (n Numeric) UnmarshalJSON(data []byte) error {
+func (n *Numeric) UnmarshalJSON(data []byte) error {
 	err := json.Unmarshal(data, &n.NumericData)
 	n.Compare = n.Compare.EnsureValid()
 	return err
+}
+
+// Matches performs a comparison and returns true if the data matches.
+func (n Numeric) Matches(value fixed.F64d4) bool {
+	return n.Compare.Matches(n.Qualifier, value)
 }

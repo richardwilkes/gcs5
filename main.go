@@ -21,7 +21,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/model/settings"
-	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -43,19 +42,17 @@ func main() {
 
 	settings.Global() // Here to force early initialization
 
-	fmt.Println(dice.New("-1"))
-	atexit.Exit(0)
-
-	info, err := gurps.NewAdvantagesFromFile(os.DirFS("samples"), "basic.adq")
+	name := "basic.adq"
+	info, err := gurps.NewAdvantagesFromFile(os.DirFS("samples"), name)
 	jot.FatalIfErr(err)
-	jot.FatalIfErr(gurps.SaveAdvantages(info, "samples_converted/basic.adq"))
+	jot.FatalIfErr(gurps.SaveAdvantages(info, "samples_converted/"+name))
 
 	var m map[string]interface{}
-	jot.FatalIfErr(jio.LoadFromFile(context.Background(), "samples/basic.adq", &m))
-	jot.FatalIfErr(jio.SaveToFile(context.Background(), "samples/basic-sorted.adq", m))
+	jot.FatalIfErr(jio.LoadFromFile(context.Background(), "samples/"+name, &m))
+	jot.FatalIfErr(jio.SaveToFile(context.Background(), "samples/sorted-"+name, m))
 	m = make(map[string]interface{})
-	jot.FatalIfErr(jio.LoadFromFile(context.Background(), "samples_converted/basic.adq", &m))
-	jot.FatalIfErr(jio.SaveToFile(context.Background(), "samples_converted/basic-sorted.adq", m))
+	jot.FatalIfErr(jio.LoadFromFile(context.Background(), "samples_converted/"+name, &m))
+	jot.FatalIfErr(jio.SaveToFile(context.Background(), "samples_converted/sorted-"+name, m))
 
 	atexit.Exit(0)
 

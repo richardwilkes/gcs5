@@ -137,3 +137,13 @@ func (a *Attribute) PointCost() fixed.F64d4 {
 	}
 	return def.ComputeCost(a.Entity, a.Adjustment, sm, a.CostReduction)
 }
+
+// IsThresholdOpMet if the given ThresholdOp is met.
+func IsThresholdOpMet(op attribute.ThresholdOp, attributes map[string]*Attribute) bool {
+	for _, one := range attributes {
+		if threshold := one.CurrentThreshold(); threshold != nil && threshold.ContainsOp(op) {
+			return true
+		}
+	}
+	return false
+}

@@ -12,12 +12,31 @@
 package gurps
 
 import (
+	"bufio"
+	"fmt"
+	"strings"
+
+	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/gurps/datafile"
+	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
+
+// WeaponOwner defines the methods required of a Weapon owner.
+type WeaponOwner interface {
+	fmt.Stringer
+	OwningEntity() *Entity
+	Description() string
+	Notes() string
+	FeatureList() feature.Features
+	CategoryList() []string
+}
 
 // WeaponData holds the Weapon data that is written to disk.
 type WeaponData struct {
@@ -41,6 +60,7 @@ type WeaponData struct {
 // Weapon holds the stats for a weapon.
 type Weapon struct {
 	WeaponData
+	Owner WeaponOwner
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -58,7 +78,7 @@ func (w *Weapon) MarshalJSON() ([]byte, error) {
 	}{
 		WeaponData: w.WeaponData,
 		Calc: calc{
-			Level:  fixed.F64d4FromInt64(int64(xmath.MaxInt(w.SkillLevel(), 0))),
+			Level:  w.SkillLevel().Max(0),
 			Damage: w.Damage.ResolvedDamage(nil),
 		},
 	}
@@ -71,32 +91,343 @@ func (w *Weapon) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&data)
 }
 
+func (w *Weapon) String() string {
+	if w.Owner == nil {
+		return ""
+	}
+	return w.Owner.Description()
+}
+
+// Entity returns the owning entity, if any.
+func (w *Weapon) Entity() *Entity {
+	if w.Owner == nil {
+		return nil
+	}
+	entity := w.Owner.OwningEntity()
+	if entity == nil {
+		return nil
+	}
+	return entity
+}
+
+// PC returns the owning PC, if any.
+func (w *Weapon) PC() *Entity {
+	if entity := w.Entity(); entity != nil && entity.Type == datafile.PC {
+		return entity
+	}
+	return nil
+}
+
 // SkillLevel returns the resolved skill level.
-func (w *Weapon) SkillLevel() int {
-	// TODO: Implement
+func (w *Weapon) SkillLevel() fixed.F64d4 {
+	return w.SkillLevelFor(w.PC(), nil)
+}
+
+func (w *Weapon) SkillLevelFor(entity *Entity, tooltip *xio.ByteBuffer) fixed.F64d4 {
+	if entity == nil || entity.Type != datafile.PC {
+		return 0
+	}
+	var primaryTooltip *xio.ByteBuffer
+	if tooltip != nil {
+		primaryTooltip = &xio.ByteBuffer{}
+	}
+	adj := w.skillLevelBaseAdjustment(entity, primaryTooltip) + w.skillLevelPostAdjustment(entity, primaryTooltip)
+	best := fixed.F64d4Min
+	for _, def := range w.Defaults {
+		if level := def.SkillLevelFast(entity, false, nil, true); level != fixed.F64d4Min {
+			level += adj
+			if best < level {
+				best = level
+			}
+		}
+	}
+	if best == fixed.F64d4Min {
+		return 0
+	}
+	if tooltip != nil && primaryTooltip.Len() != 0 {
+		if tooltip.Len() != 0 {
+			tooltip.WriteByte('\n')
+		}
+		tooltip.WriteString(primaryTooltip.String())
+	}
+	if best < 0 {
+		best = 0
+	}
+	return best
+}
+
+func (w *Weapon) skillLevelBaseAdjustment(entity *Entity, tooltip *xio.ByteBuffer) fixed.F64d4 {
+	var adj fixed.F64d4
+	if st, exists := entity.Attributes["st"]; exists {
+		if minST := w.ResolvedMinimumStrength() - (st.Current() + entity.StrikingStrengthBonus); minST > 0 {
+			adj -= minST
+		}
+	}
+	nameQualifier := w.String()
+	for _, bonus := range entity.NamedWeaponSkillBonusesFor(feature.WeaponNamedIDPrefix+"*", nameQualifier, w.Usage,
+		w.Owner.CategoryList(), tooltip) {
+		adj += bonus.AdjustedAmount()
+	}
+	for _, bonus := range entity.NamedWeaponSkillBonusesFor(feature.WeaponNamedIDPrefix+"/"+nameQualifier,
+		nameQualifier, w.Usage, w.Owner.CategoryList(), tooltip) {
+		adj += bonus.AdjustedAmount()
+	}
+	for _, f := range w.Owner.FeatureList() {
+		adj += w.extractSkillBonus(f, tooltip)
+	}
+	if adq, ok := w.Owner.(*Advantage); ok {
+		for _, mod := range adq.Modifiers {
+			if !mod.Disabled {
+				for _, f := range mod.Features {
+					adj += w.extractSkillBonus(f, tooltip)
+				}
+			}
+		}
+	}
+	if eqp, ok := w.Owner.(*Equipment); ok {
+		for _, mod := range eqp.Modifiers {
+			if !mod.Disabled {
+				for _, f := range mod.Features {
+					adj += w.extractSkillBonus(f, tooltip)
+				}
+			}
+		}
+	}
+	return adj
+}
+
+func (w *Weapon) skillLevelPostAdjustment(entity *Entity, tooltip *xio.ByteBuffer) fixed.F64d4 {
+	if w.Type.EnsureValid() == weapon.Melee && strings.Contains(w.Parry, "F") {
+		return w.EncumbrancePenalty(entity, tooltip)
+	}
+	return 0
+}
+
+// EncumbrancePenalty returns the current encumbrance penalty.
+func (w *Weapon) EncumbrancePenalty(entity *Entity, tooltip *xio.ByteBuffer) fixed.F64d4 {
+	if entity == nil {
+		return 0
+	}
+	penalty := entity.EncumbranceLevel(true).Penalty()
+	if penalty != 0 && tooltip != nil {
+		tooltip.WriteByte('\n')
+		tooltip.WriteString(i18n.Text("Encumbrance"))
+		tooltip.WriteString(" [")
+		tooltip.WriteString(penalty.StringWithSign())
+		tooltip.WriteByte(']')
+	}
+	return penalty
+}
+
+func (w *Weapon) extractSkillBonus(f feature.Feature, tooltip *xio.ByteBuffer) fixed.F64d4 {
+	if sb, ok := f.(*feature.SkillBonus); ok {
+		switch sb.SelectionType.EnsureValid() {
+		case skill.SkillsWithName:
+		case skill.ThisWeapon:
+			if sb.SpecializationCriteria.Matches(w.Usage) {
+				sb.AddToTooltip(tooltip)
+				return sb.AdjustedAmount()
+			}
+		case skill.WeaponsWithName:
+			if w.Owner != nil && sb.NameCriteria.Matches(w.Owner.String()) &&
+				sb.SpecializationCriteria.Matches(w.Usage) && sb.CategoryCriteria.Matches(w.Owner.CategoryList()...) {
+				sb.AddToTooltip(tooltip)
+				return sb.AdjustedAmount()
+			}
+		default:
+			jot.Fatal(1, "unhandled selection type: "+string(sb.SelectionType))
+		}
+	}
 	return 0
 }
 
 // ResolvedParry returns the resolved parry level.
 func (w *Weapon) ResolvedParry(tooltip *xio.ByteBuffer) string {
-	// TODO: Implement
-	return ""
+	return w.resolvedValue(w.Parry, "parry", tooltip)
 }
 
 // ResolvedBlock returns the resolved block level.
 func (w *Weapon) ResolvedBlock(tooltip *xio.ByteBuffer) string {
-	// TODO: Implement
-	return ""
+	return w.resolvedValue(w.Block, "block", tooltip)
 }
 
 // ResolvedRange returns the range, fully resolved for the user's ST, if possible.
 func (w *Weapon) ResolvedRange() string {
-	// TODO: Implement
-	return ""
+	pc := w.PC()
+	if pc == nil {
+		return w.Range
+	}
+	stAttr, ok := pc.Attributes["st"]
+	if !ok {
+		return w.Range
+	}
+	st := (stAttr.Current() + pc.ThrowingStrengthBonus).Trunc()
+	var savedRange string
+	calcRange := w.Range
+	for calcRange != savedRange {
+		calcRange = w.resolveRange(calcRange, st)
+		savedRange = calcRange
+	}
+	return calcRange
+}
+
+func (w *Weapon) resolvedValue(input, baseDefaultType string, tooltip *xio.ByteBuffer) string {
+	pc := w.PC()
+	if pc == nil {
+		return input
+	}
+	var buffer strings.Builder
+	skillLevel := fixed.F64d4Max
+	scanner := bufio.NewScanner(strings.NewReader(input))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if buffer.Len() != 0 {
+			buffer.WriteByte('\n')
+		}
+		if line != "" {
+			max := len(line)
+			i := 0
+			for i < max && line[i] == ' ' {
+				i++
+			}
+			if i < max {
+				ch := line[i]
+				neg := false
+				modifier := 0
+				found := false
+				if ch == '-' || ch == '+' {
+					neg = ch == '-'
+					i++
+					if i < max {
+						ch = line[i]
+					}
+				}
+				for i < max && ch >= '0' && ch <= '9' {
+					found = true
+					modifier *= 10
+					modifier += int(ch - '0')
+					i++
+					if i < max {
+						ch = line[i]
+					}
+				}
+				if found {
+					if skillLevel == fixed.F64d4Max {
+						var primaryTooltip, secondaryTooltip *xio.ByteBuffer
+						if tooltip != nil {
+							primaryTooltip = &xio.ByteBuffer{}
+						}
+						preAdj := w.skillLevelBaseAdjustment(pc, primaryTooltip)
+						postAdj := w.skillLevelPostAdjustment(pc, primaryTooltip)
+						adj := f64d4.Three
+						if baseDefaultType == "parry" {
+							adj += pc.ParryBonus
+						} else {
+							adj += pc.BlockBonus
+						}
+						best := fixed.F64d4Min
+						for _, def := range w.Defaults {
+							if level := def.SkillLevelFast(pc, false, nil, true); level != fixed.F64d4Min {
+								level += preAdj
+								if baseDefaultType != def.Type() {
+									level = (level.Div(f64d4.Two) + adj).Trunc()
+								}
+								level += postAdj
+								var possibleTooltip *xio.ByteBuffer
+								if def.Type() == "skill" && def.Name == "Karate" {
+									if tooltip != nil {
+										possibleTooltip = &xio.ByteBuffer{}
+									}
+									level += w.EncumbrancePenalty(pc, possibleTooltip)
+								}
+								if best < level {
+									best = level
+									secondaryTooltip = possibleTooltip
+								}
+							}
+						}
+						if best != fixed.F64d4Min && tooltip != nil {
+							if primaryTooltip.Len() != 0 {
+								if tooltip.Len() != 0 {
+									tooltip.WriteByte('\n')
+								}
+								tooltip.WriteString(primaryTooltip.String())
+							}
+							if secondaryTooltip != nil && secondaryTooltip.Len() != 0 {
+								if tooltip.Len() != 0 {
+									tooltip.WriteByte('\n')
+								}
+								tooltip.WriteString(secondaryTooltip.String())
+							}
+						}
+						skillLevel = best.Max(0)
+					}
+					if neg {
+						modifier = -modifier
+					}
+					num := (skillLevel + fixed.F64d4FromInt64(int64(modifier))).Trunc().String()
+					if i < max {
+						buffer.WriteString(num)
+						line = line[i:]
+					} else {
+						line = num
+					}
+				}
+			}
+		}
+		buffer.WriteString(line)
+	}
+	return buffer.String()
+}
+
+func (w *Weapon) resolveRange(inRange string, st fixed.F64d4) string {
+	where := strings.IndexByte(inRange, 'x')
+	if where == -1 {
+		return inRange
+	}
+	last := where + 1
+	max := len(inRange)
+	if last < max && inRange[last] == ' ' {
+		last++
+	}
+	if last >= max {
+		return inRange
+	}
+	ch := inRange[last]
+	found := false
+	decimal := false
+	started := last
+	for (!decimal && ch == '.') || (ch >= '0' && ch <= '9') {
+		found = true
+		if ch == '.' {
+			decimal = true
+		}
+		last++
+		if last >= max {
+			break
+		}
+		ch = inRange[last]
+	}
+	if !found {
+		return inRange
+	}
+	value, err := fixed.F64d4FromString(inRange[started:last])
+	if err != nil {
+		return inRange
+	}
+	var buffer strings.Builder
+	if where > 0 {
+		buffer.WriteString(inRange[:where])
+	}
+	buffer.WriteString(value.Mul(st).Trunc().String())
+	if last < max {
+		buffer.WriteString(inRange[last:])
+	}
+	return inRange
 }
 
 // ResolvedMinimumStrength returns the resolved minimum strength required to use this weapon, or 0 if there is none.
-func (w *Weapon) ResolvedMinimumStrength() int {
+func (w *Weapon) ResolvedMinimumStrength() fixed.F64d4 {
 	started := false
 	value := 0
 	for _, ch := range w.MinimumStrength {
@@ -108,7 +439,7 @@ func (w *Weapon) ResolvedMinimumStrength() int {
 			break
 		}
 	}
-	return value
+	return fixed.F64d4FromInt64(int64(value))
 }
 
 // FillWithNameableKeys adds any nameable keys found in this Weapon to the provided map.

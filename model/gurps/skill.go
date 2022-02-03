@@ -17,6 +17,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/gurps/datafile"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/id"
@@ -33,7 +34,7 @@ const (
 // SkillItem holds the Skill data that only exists in non-containers.
 type SkillItem struct {
 	Specialization               string              `json:"specialization,omitempty"`
-	TechLevel                    string              `json:"tech_level,omitempty"`
+	TechLevel                    *string             `json:"tech_level,omitempty"`
 	Difficulty                   AttributeDifficulty `json:"difficulty"`
 	Points                       fixed.F64d4         `json:"points,omitempty"`
 	EncumbrancePenaltyMultiplier fixed.F64d4         `json:"encumbrance_penalty_multiplier,omitempty"`
@@ -157,6 +158,23 @@ func (s *Skill) Container() bool {
 	return strings.HasSuffix(s.Type, commonContainerKeyPostfix)
 }
 
+func (s *Skill) String() string {
+	var buffer strings.Builder
+	buffer.WriteString(s.Name)
+	if !s.Container() {
+		if s.TechLevel != nil {
+			buffer.WriteString("/TL")
+			buffer.WriteString(*s.TechLevel)
+		}
+		if s.Specialization != "" {
+			buffer.WriteString(" (")
+			buffer.WriteString(s.Specialization)
+			buffer.WriteByte(')')
+		}
+	}
+	return buffer.String()
+}
+
 // AdjustedRelativeLevel returns the relative skill level.
 func (s *Skill) AdjustedRelativeLevel() fixed.F64d4 {
 	if s.Container() {
@@ -170,4 +188,43 @@ func (s *Skill) AdjustedRelativeLevel() fixed.F64d4 {
 	}
 	// TODO: Old code had a case for templates... but can't see that being exercised in the actual display anywhere
 	return fixed.F64d4Min
+}
+
+func (s *Skill) AdjustedPoints() fixed.F64d4 {
+	if s.Container() {
+		var total fixed.F64d4
+		for _, one := range s.Children {
+			total += one.AdjustedPoints()
+		}
+		return total
+	}
+	points := s.Points
+	if s.Entity != nil && s.Entity.Type == datafile.PC {
+		points += s.Entity.SkillPointComparedBonusFor(feature.SkillPointsID+"*", s.Name, s.Specialization, s.Categories, nil)
+		points += s.Entity.BonusFor(feature.SkillPointsID+"/"+strings.ToLower(s.Name), nil)
+		if points < 0 {
+			points = 0
+		}
+	}
+	return points
+}
+
+// TraverseSkills calls the function 'f' for each skill and its children in the input list. Return true from the function
+// to abort early.
+func TraverseSkills(f func(*Skill) bool, in ...*Skill) {
+	traverseSkills(f, in...)
+}
+
+func traverseSkills(f func(*Skill) bool, in ...*Skill) bool {
+	for _, one := range in {
+		if f(one) {
+			return true
+		}
+		if one.Container() {
+			if traverseSkills(f, one.Children...) {
+				return true
+			}
+		}
+	}
+	return false
 }
