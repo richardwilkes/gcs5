@@ -233,23 +233,3 @@ func (s *Skill) AdjustedPoints() fixed.F64d4 {
 	}
 	return points
 }
-
-// TraverseSkills calls the function 'f' for each skill and its children in the input list. Return true from the function
-// to abort early.
-func TraverseSkills(f func(*Skill) bool, in ...*Skill) {
-	traverseSkills(f, in...)
-}
-
-func traverseSkills(f func(*Skill) bool, in ...*Skill) bool {
-	for _, one := range in {
-		if f(one) {
-			return true
-		}
-		if one.Container() {
-			if traverseSkills(f, one.Children...) {
-				return true
-			}
-		}
-	}
-	return false
-}

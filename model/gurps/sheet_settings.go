@@ -80,10 +80,12 @@ func SheetSettingsFor(entity *Entity) *SheetSettings {
 
 // FactorySheetSettings returns a new SheetSettings with factory defaults.
 func FactorySheetSettings(entity *Entity) *SheetSettings {
-	s := &SheetSettings{
+	return &SheetSettings{
 		SheetSettingsData: SheetSettingsData{
 			Page:                   settings.NewPage(),
 			BlockLayout:            FactoryBlockLayout(),
+			Attributes:             FactoryAttributeDefs(),
+			HitLocations:           FactoryBodyType(),
 			DamageProgression:      attribute.BasicSet,
 			DefaultLengthUnits:     measure.FeetAndInches,
 			DefaultWeightUnits:     measure.Pound,
@@ -95,11 +97,6 @@ func FactorySheetSettings(entity *Entity) *SheetSettings {
 		},
 		Entity: entity,
 	}
-	if entity != nil {
-		s.Attributes = FactoryAttributeDefs()
-		s.HitLocations = FactoryBodyType()
-	}
-	return s
 }
 
 // FactoryBlockLayout returns the factory block layout setting.

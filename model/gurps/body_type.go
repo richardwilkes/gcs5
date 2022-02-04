@@ -67,15 +67,16 @@ func FactoryBodyTypes() []*BodyType {
 // NewBodyTypeFromFile loads an BodyType from a file.
 func NewBodyTypeFromFile(fileSystem fs.FS, filePath string) (*BodyType, error) {
 	var data struct {
-		Current      *BodyType `json:",inline"`
+		BodyType
 		HitLocations *BodyType `json:"hit_locations"`
 	}
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
 		return nil, err
 	}
 	var b *BodyType
-	if data.Current != nil {
-		b = data.Current
+	if data.Locations != nil {
+		b1 := data.BodyType
+		b = &b1
 	} else {
 		b = data.HitLocations
 	}
