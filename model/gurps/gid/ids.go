@@ -20,6 +20,7 @@ const (
 	HitPoints     = "hp"
 	Intelligence  = "iq"
 	Parry         = "parry"
+	SizeModifier  = "sm"
 	Skill         = "skill"
 	Strength      = "st"
 	Technique     = "technique"

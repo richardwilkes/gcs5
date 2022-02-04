@@ -25,6 +25,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox/eval"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -33,18 +34,19 @@ var _ eval.VariableResolver = &Entity{}
 
 // Entity holds the base information for various types of entities: PC, NPC, Creature, etc.
 type Entity struct {
-	Type                  datafile.EntityType
-	Profile               *Profile
-	SheetSettings         *SheetSettings
-	LiftingStrengthBonus  fixed.F64d4
-	StrikingStrengthBonus fixed.F64d4
-	ThrowingStrengthBonus fixed.F64d4
-	ParryBonus            fixed.F64d4
-	BlockBonus            fixed.F64d4
-	Attributes            map[string]*Attribute
-	Skills                []*Skill
-	CarriedEquipment      []*Equipment
-	featureMap            map[string][]feature.Feature
+	Type                       datafile.EntityType
+	Profile                    *Profile
+	SheetSettings              *SheetSettings
+	LiftingStrengthBonus       fixed.F64d4
+	StrikingStrengthBonus      fixed.F64d4
+	ThrowingStrengthBonus      fixed.F64d4
+	ParryBonus                 fixed.F64d4
+	BlockBonus                 fixed.F64d4
+	Attributes                 map[string]*Attribute
+	Skills                     []*Skill
+	CarriedEquipment           []*Equipment
+	featureMap                 map[string][]feature.Feature
+	variableResolverExclusions map[string]bool
 }
 
 // StrengthOrZero returns the current ST value, or zero if no such attribute exists.
@@ -298,8 +300,41 @@ func (e *Entity) BasicLift() measure.Weight {
 
 // ResolveVariable implements eval.VariableResolver.
 func (e *Entity) ResolveVariable(variableName string) string {
-	// TODO implement me
-	return variableName
+	if e.variableResolverExclusions[variableName] {
+		jot.Warn("attempt to resolve variable via itself: $" + variableName)
+		return ""
+	}
+	if e.variableResolverExclusions == nil {
+		e.variableResolverExclusions = make(map[string]bool)
+	}
+	e.variableResolverExclusions[variableName] = true
+	defer func() { delete(e.variableResolverExclusions, variableName) }()
+	if gid.SizeModifier == variableName {
+		return e.Profile.AdjustedSizeModifier().String()
+	}
+	parts := strings.SplitN(variableName, ".", 2)
+	attr := e.Attributes[parts[0]]
+	if attr == nil {
+		jot.Warn("no such variable: $" + variableName)
+		return ""
+	}
+	def := attr.AttributeDef()
+	if def == nil {
+		jot.Warn("no such variable definition: $" + variableName)
+		return ""
+	}
+	if def.Type == attribute.Pool && len(parts) > 1 {
+		switch parts[1] {
+		case "current":
+			return attr.Current().Trunc().String()
+		case "maximum":
+			return attr.Maximum().Trunc().String()
+		default:
+			jot.Warn("no such variable: $" + variableName)
+			return ""
+		}
+	}
+	return attr.Current().String()
 }
 
 // ResolveAttribute resolves the given attribute ID to its current value, or fixed.F64d4Min if it doesn't exist.
@@ -318,6 +353,5 @@ func (e *Entity) ResolveAttribute(attrID string) fixed.F64d4 {
 // PreservesUserDesc returns true if the user description field should be preserved when written to disk. Normally, only
 // character sheets should return true for this.
 func (e *Entity) PreservesUserDesc() bool {
-	// TODO: Implement... should only return true for sheets
-	return true
+	return e.Type == datafile.PC
 }
