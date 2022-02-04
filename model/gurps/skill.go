@@ -12,6 +12,8 @@
 package gurps
 
 import (
+	"context"
+	"io/fs"
 	"math"
 	"strings"
 
@@ -22,7 +24,9 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -70,6 +74,30 @@ type Skill struct {
 	Level             skill.Level
 	UnsatisfiedReason string
 	Satisfied         bool
+}
+
+type skillListData struct {
+	Current []*Skill `json:"skills"`
+}
+
+// NewSkillsFromFile loads an Skill list from a file.
+func NewSkillsFromFile(fileSystem fs.FS, filePath string) ([]*Skill, error) {
+	var data struct {
+		skillListData
+		OldKey []*Skill `json:"rows"`
+	}
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
+		return nil, errs.NewWithCause("invalid skills file: "+filePath, err)
+	}
+	if len(data.Current) != 0 {
+		return data.Current, nil
+	}
+	return data.OldKey, nil
+}
+
+// SaveSkills writes the Skill list to the file as JSON.
+func SaveSkills(skills []*Skill, filePath string) error {
+	return jio.SaveToFile(context.Background(), filePath, &skillListData{Current: skills})
 }
 
 // NewSkill creates a new Skill.

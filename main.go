@@ -15,6 +15,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/richardwilkes/gcs/internal/ui"
@@ -42,18 +43,23 @@ func main() {
 
 	settings.Global() // Here to force early initialization
 
-	name := "basic.adq"
-	info, err := gurps.NewAdvantagesFromFile(os.DirFS("samples"), name)
+	entries, err := os.ReadDir("../gcs_master_library/Library/Settings")
 	jot.FatalIfErr(err)
-	jot.FatalIfErr(gurps.SaveAdvantages(info, "samples_converted/"+name))
+	for _, entry := range entries {
+		name := entry.Name()
+		if strings.HasSuffix(name, ".ghl") {
+			data, err := gurps.NewBodyTypeFromFile(os.DirFS("../gcs_master_library/Library/Settings"), name)
+			jot.FatalIfErr(err)
+			jot.FatalIfErr(data.Save("samples_converted/" + name))
 
-	var m map[string]interface{}
-	jot.FatalIfErr(jio.LoadFromFile(context.Background(), "samples/"+name, &m))
-	jot.FatalIfErr(jio.SaveToFile(context.Background(), "samples/sorted-"+name, m))
-	m = make(map[string]interface{})
-	jot.FatalIfErr(jio.LoadFromFile(context.Background(), "samples_converted/"+name, &m))
-	jot.FatalIfErr(jio.SaveToFile(context.Background(), "samples_converted/sorted-"+name, m))
-
+			var m map[string]interface{}
+			jot.FatalIfErr(jio.LoadFromFile(context.Background(), "../gcs_master_library/Library/Settings/"+name, &m))
+			jot.FatalIfErr(jio.SaveToFile(context.Background(), "samples_converted/orig-sorted-"+name, m))
+			m = make(map[string]interface{})
+			jot.FatalIfErr(jio.LoadFromFile(context.Background(), "samples_converted/"+name, &m))
+			jot.FatalIfErr(jio.SaveToFile(context.Background(), "samples_converted/sorted-"+name, m))
+		}
+	}
 	atexit.Exit(0)
 
 	ui.Start(fileList) // Never returns

@@ -23,23 +23,18 @@ var _ Prereq = &AttributePrereq{}
 
 // AttributePrereq holds a prerequisite for an attribute.
 type AttributePrereq struct {
-	Parent               *PrereqList      `json:"-"`
-	Type                 prereq.Type      `json:"type"`
-	CombinedWithCriteria criteria.String  `json:"combined_with,omitempty"`
-	QualifierCriteria    criteria.Numeric `json:"qualifier,omitempty"`
-	Which                string           `json:"which"`
-	Has                  bool             `json:"has"`
+	Parent            *PrereqList      `json:"-"`
+	Type              prereq.Type      `json:"type"`
+	CombinedWith      string           `json:"combined_with,omitempty"`
+	QualifierCriteria criteria.Numeric `json:"qualifier,omitempty"`
+	Which             string           `json:"which"`
+	Has               bool             `json:"has"`
 }
 
 // NewAttributePrereq creates a new AttributePrereq. 'entity' may be nil.
 func NewAttributePrereq(entity *Entity) *AttributePrereq {
 	return &AttributePrereq{
 		Type: prereq.Attribute,
-		CombinedWithCriteria: criteria.String{
-			StringData: criteria.StringData{
-				Compare: criteria.Is,
-			},
-		},
 		QualifierCriteria: criteria.Numeric{
 			NumericData: criteria.NumericData{
 				Compare:   criteria.AtLeast,

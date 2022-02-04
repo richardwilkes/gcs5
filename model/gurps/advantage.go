@@ -88,7 +88,7 @@ type advantageListData struct {
 	Current []*Advantage `json:"advantages"`
 }
 
-// NewAdvantagesFromFile loads an Advantages set from a file.
+// NewAdvantagesFromFile loads an Advantage list from a file.
 func NewAdvantagesFromFile(fileSystem fs.FS, filePath string) ([]*Advantage, error) {
 	var data struct {
 		advantageListData
@@ -103,7 +103,7 @@ func NewAdvantagesFromFile(fileSystem fs.FS, filePath string) ([]*Advantage, err
 	return data.OldKey, nil
 }
 
-// SaveAdvantages writes the Advantages to the file as JSON.
+// SaveAdvantages writes the Advantage list to the file as JSON.
 func SaveAdvantages(advantages []*Advantage, filePath string) error {
 	return jio.SaveToFile(context.Background(), filePath, &advantageListData{Current: advantages})
 }

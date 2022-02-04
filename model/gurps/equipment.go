@@ -12,6 +12,8 @@
 package gurps
 
 import (
+	"context"
+	"io/fs"
 	"strings"
 
 	"github.com/google/uuid"
@@ -20,7 +22,9 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -72,6 +76,30 @@ type Equipment struct {
 	Parent            *Equipment
 	UnsatisfiedReason string
 	Satisfied         bool
+}
+
+type equipmentListData struct {
+	Current []*Equipment `json:"equipment"`
+}
+
+// NewEquipmentFromFile loads an Equipment list from a file.
+func NewEquipmentFromFile(fileSystem fs.FS, filePath string) ([]*Equipment, error) {
+	var data struct {
+		equipmentListData
+		OldKey []*Equipment `json:"rows"`
+	}
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
+		return nil, errs.NewWithCause("invalid equipment file: "+filePath, err)
+	}
+	if len(data.Current) != 0 {
+		return data.Current, nil
+	}
+	return data.OldKey, nil
+}
+
+// SaveEquipment writes the Equipment list to the file as JSON.
+func SaveEquipment(equipment []*Equipment, filePath string) error {
+	return jio.SaveToFile(context.Background(), filePath, &equipmentListData{Current: equipment})
 }
 
 // NewEquipment creates a new Equipment.
@@ -184,9 +212,14 @@ func (e *Equipment) AdjustedValue() fixed.F64d4 {
 
 // ExtendedValue returns the extended value.
 func (e *Equipment) ExtendedValue() fixed.F64d4 {
-	value := e.Quantity.Mul(e.AdjustedValue())
-	for _, one := range e.Children {
-		value += one.ExtendedValue()
+	value := e.AdjustedValue()
+	if e.Container() {
+		for _, one := range e.Children {
+			value += one.ExtendedValue()
+		}
+		return value
+	} else {
+		value = value.Mul(e.Quantity)
 	}
 	return value
 }
@@ -201,40 +234,45 @@ func (e *Equipment) AdjustedWeight(forSkills bool, defUnits measure.WeightUnits)
 
 // ExtendedWeight returns the extended weight.
 func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits) measure.Weight {
-	var contained fixed.F64d4
-	for _, one := range e.Children {
-		contained += fixed.F64d4(one.AdjustedWeight(forSkills, defUnits))
-	}
-	var percentage, reduction fixed.F64d4
-	for _, one := range e.Features {
-		if cwr, ok := one.(*feature.ContainedWeightReduction); ok {
-			if cwr.IsPercentageReduction() {
-				percentage += cwr.PercentageReduction()
-			} else {
-				reduction += fixed.F64d4(cwr.FixedReduction(defUnits))
+	base := fixed.F64d4(e.AdjustedWeight(forSkills, defUnits))
+	if e.Container() {
+		var contained fixed.F64d4
+		for _, one := range e.Children {
+			contained += fixed.F64d4(one.AdjustedWeight(forSkills, defUnits))
+		}
+		var percentage, reduction fixed.F64d4
+		for _, one := range e.Features {
+			if cwr, ok := one.(*feature.ContainedWeightReduction); ok {
+				if cwr.IsPercentageReduction() {
+					percentage += cwr.PercentageReduction()
+				} else {
+					reduction += fixed.F64d4(cwr.FixedReduction(defUnits))
+				}
 			}
 		}
-	}
-	for _, one := range e.Modifiers {
-		if !one.Disabled {
-			for _, f := range e.Features {
-				if cwr, ok := f.(*feature.ContainedWeightReduction); ok {
-					if cwr.IsPercentageReduction() {
-						percentage += cwr.PercentageReduction()
-					} else {
-						reduction += fixed.F64d4(cwr.FixedReduction(defUnits))
+		for _, one := range e.Modifiers {
+			if !one.Disabled {
+				for _, f := range e.Features {
+					if cwr, ok := f.(*feature.ContainedWeightReduction); ok {
+						if cwr.IsPercentageReduction() {
+							percentage += cwr.PercentageReduction()
+						} else {
+							reduction += fixed.F64d4(cwr.FixedReduction(defUnits))
+						}
 					}
 				}
 			}
 		}
+		if percentage >= fxp.Hundred {
+			contained = 0
+		} else if percentage > 0 {
+			contained -= contained.Mul(percentage).Div(fxp.Hundred)
+		}
+		base += (contained - reduction).Max(0)
+	} else {
+		base = base.Mul(e.Quantity)
 	}
-	if percentage >= fxp.Hundred {
-		contained = 0
-	} else if percentage > 0 {
-		contained -= contained.Mul(percentage).Div(fxp.Hundred)
-	}
-	contained -= reduction
-	return measure.Weight(fixed.F64d4(e.AdjustedWeight(forSkills, defUnits)).Mul(e.Quantity) + contained.Max(0))
+	return measure.Weight(base)
 }
 
 // FillWithNameableKeys adds any nameable keys found in this Advantage to the provided map.

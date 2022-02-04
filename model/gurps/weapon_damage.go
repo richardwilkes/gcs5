@@ -53,6 +53,9 @@ func (w *WeaponDamage) UnmarshalJSON(data []byte) error {
 	if w.ArmorDivisor == 0 {
 		w.ArmorDivisor = fxp.One
 	}
+	if w.Fragmentation != nil && w.FragmentationArmorDivisor == 0 {
+		w.FragmentationArmorDivisor = fxp.One
+	}
 	return nil
 }
 
@@ -63,8 +66,18 @@ func (w *WeaponDamage) MarshalJSON() ([]byte, error) {
 	if armorDivisor == fxp.One {
 		w.ArmorDivisor = 0
 	}
+	fragArmorDivisor := w.FragmentationArmorDivisor
+	if w.Fragmentation == nil {
+		w.FragmentationArmorDivisor = 0
+		w.FragmentationType = ""
+	} else if w.FragmentationArmorDivisor == fxp.One {
+		w.FragmentationArmorDivisor = 0
+	}
 	data, err := json.Marshal(&w.WeaponDamageData)
 	w.ArmorDivisor = armorDivisor
+	if w.Fragmentation != nil {
+		w.FragmentationArmorDivisor = fragArmorDivisor
+	}
 	return data, err
 }
 

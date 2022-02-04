@@ -65,19 +65,22 @@ func FactoryBodyTypes() []*BodyType {
 }
 
 // NewBodyTypeFromFile loads an BodyType from a file.
-func NewBodyTypeFromFile(fsys fs.FS, filePath string) (*BodyType, error) {
-	var b BodyType
-	if err := jio.LoadFromFS(context.Background(), fsys, filePath, &b); err != nil {
-		var old struct {
-			HitLocations *BodyType `json:"hit_locations"`
-		}
-		if err = jio.LoadFromFS(context.Background(), fsys, filePath, &old); err != nil {
-			return nil, err
-		}
-		b = *old.HitLocations
+func NewBodyTypeFromFile(fileSystem fs.FS, filePath string) (*BodyType, error) {
+	var data struct {
+		Current      *BodyType `json:",inline"`
+		HitLocations *BodyType `json:"hit_locations"`
+	}
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
+		return nil, err
+	}
+	var b *BodyType
+	if data.Current != nil {
+		b = data.Current
+	} else {
+		b = data.HitLocations
 	}
 	b.Update()
-	return &b, nil
+	return b, nil
 }
 
 // Save writes the BodyType to the file as JSON.

@@ -6,7 +6,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/richardwilkes/json v0.0.0-20220202023945-ac9125b86187
 	github.com/richardwilkes/pdf v0.0.0-20220115194011-2380c98780aa
-	github.com/richardwilkes/rpgtools v1.4.0
+	github.com/richardwilkes/rpgtools v1.4.1
 	github.com/richardwilkes/toolbox v1.60.0
 	github.com/richardwilkes/unison v0.5.0
 	github.com/stretchr/testify v1.7.0

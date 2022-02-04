@@ -38,7 +38,7 @@ type WeaponDamageBonus struct {
 	Parent                 fmt.Stringer         `json:"-"`
 	SelectionType          weapon.SelectionType `json:"selection_type"`
 	NameCriteria           criteria.String      `json:"name,omitempty"`
-	SpecializationCriteria criteria.String      `json:"specialization"`
+	SpecializationCriteria criteria.String      `json:"specialization,omitempty"`
 	RelativeLevelCriteria  criteria.Numeric     `json:"level,omitempty"`
 	CategoryCriteria       criteria.String      `json:"category,omitempty"`
 	Percent                bool                 `json:"percent,omitempty"`

@@ -12,6 +12,8 @@
 package gurps
 
 import (
+	"context"
+	"io/fs"
 	"strings"
 
 	"github.com/google/uuid"
@@ -19,7 +21,9 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -59,6 +63,30 @@ type AdvantageModifier struct {
 	AdvantageModifierData
 }
 
+type advantageModifierListData struct {
+	Current []*AdvantageModifier `json:"advantage_modifiers"`
+}
+
+// NewAdvantageModifiersFromFile loads an AdvantageModifier list from a file.
+func NewAdvantageModifiersFromFile(fileSystem fs.FS, filePath string) ([]*AdvantageModifier, error) {
+	var data struct {
+		advantageModifierListData
+		OldKey []*AdvantageModifier `json:"rows"`
+	}
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
+		return nil, errs.NewWithCause("invalid advantage modifiers file: "+filePath, err)
+	}
+	if len(data.Current) != 0 {
+		return data.Current, nil
+	}
+	return data.OldKey, nil
+}
+
+// SaveAdvantageModifiers writes the AdvantageModifier list to the file as JSON.
+func SaveAdvantageModifiers(modifiers []*AdvantageModifier, filePath string) error {
+	return jio.SaveToFile(context.Background(), filePath, &advantageModifierListData{Current: modifiers})
+}
+
 // NewAdvantageModifier creates an AdvantageModifier.
 func NewAdvantageModifier(container bool) *AdvantageModifier {
 	a := AdvantageModifier{
@@ -87,8 +115,7 @@ func (a *AdvantageModifier) MarshalJSON() ([]byte, error) {
 	} else {
 		a.AdvantageModifierContainer = nil
 	}
-	data, err := json.Marshal(&a.AdvantageModifierData)
-	return data, err
+	return json.Marshal(&a.AdvantageModifierData)
 }
 
 // Container returns true if this is a container.

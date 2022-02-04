@@ -12,6 +12,8 @@
 package gurps
 
 import (
+	"context"
+	"io/fs"
 	"math"
 	"strings"
 
@@ -20,7 +22,9 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -74,6 +78,30 @@ type Spell struct {
 	Level             skill.Level
 	UnsatisfiedReason string
 	Satisfied         bool
+}
+
+type spellListData struct {
+	Current []*Spell `json:"spells"`
+}
+
+// NewSpellsFromFile loads an Spell list from a file.
+func NewSpellsFromFile(fileSystem fs.FS, filePath string) ([]*Spell, error) {
+	var data struct {
+		spellListData
+		OldKey []*Spell `json:"rows"`
+	}
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
+		return nil, errs.NewWithCause("invalid spells file: "+filePath, err)
+	}
+	if len(data.Current) != 0 {
+		return data.Current, nil
+	}
+	return data.OldKey, nil
+}
+
+// SaveSpells writes the Spell list to the file as JSON.
+func SaveSpells(spells []*Spell, filePath string) error {
+	return jio.SaveToFile(context.Background(), filePath, &spellListData{Current: spells})
 }
 
 // NewSpell creates a new Spell.

@@ -26,6 +26,9 @@ type AttributeDifficulty struct {
 }
 
 func (a *AttributeDifficulty) String() string {
+	if a.Attribute == "" {
+		return string(a.Difficulty)
+	}
 	return a.Attribute + "/" + string(a.Difficulty)
 }
 
@@ -36,16 +39,24 @@ func (a *AttributeDifficulty) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (a *AttributeDifficulty) UnmarshalJSON(data []byte) error {
-	parts := strings.SplitN(string(data), "/", 2)
-	a.Attribute = strings.TrimSpace(parts[0])
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	parts := strings.SplitN(s, "/", 2)
+	if len(parts) == 1 {
+		s = parts[0]
+		a.Attribute = ""
+	} else {
+		s = parts[1]
+		a.Attribute = strings.TrimSpace(parts[0])
+	}
+	s = strings.TrimSpace(s)
 	a.Difficulty = skill.Average
-	if len(parts) == 2 {
-		text := strings.TrimSpace(parts[1])
-		for _, one := range skill.AllDifficulties {
-			if strings.EqualFold(string(one), text) {
-				a.Difficulty = one
-				break
-			}
+	for _, one := range skill.AllDifficulties {
+		if strings.EqualFold(string(one), s) {
+			a.Difficulty = one
+			break
 		}
 	}
 	return nil

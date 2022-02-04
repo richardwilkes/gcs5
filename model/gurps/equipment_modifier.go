@@ -12,6 +12,8 @@
 package gurps
 
 import (
+	"context"
+	"io/fs"
 	"strings"
 
 	"github.com/google/uuid"
@@ -21,7 +23,9 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -62,6 +66,30 @@ type EquipmentModifier struct {
 	EquipmentModifierData
 }
 
+type equipmentModifierListData struct {
+	Current []*EquipmentModifier `json:"equipment_modifiers"`
+}
+
+// NewEquipmentModifiersFromFile loads an EquipmentModifier list from a file.
+func NewEquipmentModifiersFromFile(fileSystem fs.FS, filePath string) ([]*EquipmentModifier, error) {
+	var data struct {
+		equipmentModifierListData
+		OldKey []*EquipmentModifier `json:"rows"`
+	}
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
+		return nil, errs.NewWithCause("invalid equipment modifiers file: "+filePath, err)
+	}
+	if len(data.Current) != 0 {
+		return data.Current, nil
+	}
+	return data.OldKey, nil
+}
+
+// SaveEquipmentModifiers writes the EquipmentModifier list to the file as JSON.
+func SaveEquipmentModifiers(modifiers []*EquipmentModifier, filePath string) error {
+	return jio.SaveToFile(context.Background(), filePath, &equipmentModifierListData{Current: modifiers})
+}
+
 // NewEquipmentModifier creates an EquipmentModifier.
 func NewEquipmentModifier(container bool) *EquipmentModifier {
 	a := EquipmentModifier{
@@ -90,8 +118,7 @@ func (e *EquipmentModifier) MarshalJSON() ([]byte, error) {
 	} else {
 		e.EquipmentModifierContainer = nil
 	}
-	data, err := json.Marshal(&e.EquipmentModifierData)
-	return data, err
+	return json.Marshal(&e.EquipmentModifierData)
 }
 
 // Container returns true if this is a container.
