@@ -217,7 +217,6 @@ func (e *Equipment) ExtendedValue() fixed.F64d4 {
 		for _, one := range e.Children {
 			value += one.ExtendedValue()
 		}
-		return value
 	} else {
 		value = value.Mul(e.Quantity)
 	}
