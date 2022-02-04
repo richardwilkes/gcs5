@@ -13,7 +13,7 @@ package gurps
 
 // TraverseAdvantages calls the function 'f' for each Advantage and its children in the input list. Return true from the
 // function to abort early.
-func TraverseAdvantages(f func(*Advantage) bool, in ...*Advantage) {
+func TraverseAdvantages(f func(*Advantage) bool, onlyEnabled bool, in ...*Advantage) {
 	type trackingInfo struct {
 		list  []*Advantage
 		index int
@@ -32,13 +32,16 @@ func TraverseAdvantages(f func(*Advantage) bool, in ...*Advantage) {
 		if current.index >= len(current.list) {
 			tracking = tracking[:len(tracking)-1]
 		} else {
-			sk := current.list[current.index]
-			if f(sk) {
+			one := current.list[current.index]
+			current.index++
+			if onlyEnabled && !one.Enabled() {
+				continue
+			}
+			if f(one) {
 				return
 			}
-			current.index++
-			if sk.Container() && len(sk.Children) != 0 {
-				tracking = append(tracking, &trackingInfo{list: sk.Children})
+			if one.Container() && len(one.Children) != 0 {
+				tracking = append(tracking, &trackingInfo{list: one.Children})
 			}
 		}
 	}
@@ -46,7 +49,7 @@ func TraverseAdvantages(f func(*Advantage) bool, in ...*Advantage) {
 
 // TraverseAdvantageModifiers calls the function 'f' for each AdvantageModifier and its children in the input list.
 // Return true from the function to abort early.
-func TraverseAdvantageModifiers(f func(*AdvantageModifier) bool, in ...*AdvantageModifier) {
+func TraverseAdvantageModifiers(f func(*AdvantageModifier) bool, onlyEnabled bool, in ...*AdvantageModifier) {
 	type trackingInfo struct {
 		list  []*AdvantageModifier
 		index int
@@ -65,13 +68,16 @@ func TraverseAdvantageModifiers(f func(*AdvantageModifier) bool, in ...*Advantag
 		if current.index >= len(current.list) {
 			tracking = tracking[:len(tracking)-1]
 		} else {
-			sk := current.list[current.index]
-			if f(sk) {
+			one := current.list[current.index]
+			current.index++
+			if onlyEnabled && one.Disabled {
+				continue
+			}
+			if f(one) {
 				return
 			}
-			current.index++
-			if sk.Container() && len(sk.Children) != 0 {
-				tracking = append(tracking, &trackingInfo{list: sk.Children})
+			if one.Container() && len(one.Children) != 0 {
+				tracking = append(tracking, &trackingInfo{list: one.Children})
 			}
 		}
 	}
@@ -98,13 +104,13 @@ func TraverseEquipment(f func(*Equipment) bool, in ...*Equipment) {
 		if current.index >= len(current.list) {
 			tracking = tracking[:len(tracking)-1]
 		} else {
-			sk := current.list[current.index]
-			if f(sk) {
+			one := current.list[current.index]
+			if f(one) {
 				return
 			}
 			current.index++
-			if sk.Container() && len(sk.Children) != 0 {
-				tracking = append(tracking, &trackingInfo{list: sk.Children})
+			if one.Container() && len(one.Children) != 0 {
+				tracking = append(tracking, &trackingInfo{list: one.Children})
 			}
 		}
 	}
@@ -112,7 +118,7 @@ func TraverseEquipment(f func(*Equipment) bool, in ...*Equipment) {
 
 // TraverseEquipmentModifiers calls the function 'f' for each EquipmentModifier and its children in the input list.
 // Return true from the function to abort early.
-func TraverseEquipmentModifiers(f func(*EquipmentModifier) bool, in ...*EquipmentModifier) {
+func TraverseEquipmentModifiers(f func(*EquipmentModifier) bool, onlyEnabled bool, in ...*EquipmentModifier) {
 	type trackingInfo struct {
 		list  []*EquipmentModifier
 		index int
@@ -131,13 +137,16 @@ func TraverseEquipmentModifiers(f func(*EquipmentModifier) bool, in ...*Equipmen
 		if current.index >= len(current.list) {
 			tracking = tracking[:len(tracking)-1]
 		} else {
-			sk := current.list[current.index]
-			if f(sk) {
+			one := current.list[current.index]
+			current.index++
+			if onlyEnabled && one.Disabled {
+				continue
+			}
+			if f(one) {
 				return
 			}
-			current.index++
-			if sk.Container() && len(sk.Children) != 0 {
-				tracking = append(tracking, &trackingInfo{list: sk.Children})
+			if one.Container() && len(one.Children) != 0 {
+				tracking = append(tracking, &trackingInfo{list: one.Children})
 			}
 		}
 	}
@@ -164,13 +173,13 @@ func TraverseSkills(f func(*Skill) bool, in ...*Skill) {
 		if current.index >= len(current.list) {
 			tracking = tracking[:len(tracking)-1]
 		} else {
-			sk := current.list[current.index]
-			if f(sk) {
+			one := current.list[current.index]
+			if f(one) {
 				return
 			}
 			current.index++
-			if sk.Container() && len(sk.Children) != 0 {
-				tracking = append(tracking, &trackingInfo{list: sk.Children})
+			if one.Container() && len(one.Children) != 0 {
+				tracking = append(tracking, &trackingInfo{list: one.Children})
 			}
 		}
 	}
@@ -197,13 +206,13 @@ func TraverseSpells(f func(*Spell) bool, in ...*Spell) {
 		if current.index >= len(current.list) {
 			tracking = tracking[:len(tracking)-1]
 		} else {
-			sk := current.list[current.index]
-			if f(sk) {
+			one := current.list[current.index]
+			if f(one) {
 				return
 			}
 			current.index++
-			if sk.Container() && len(sk.Children) != 0 {
-				tracking = append(tracking, &trackingInfo{list: sk.Children})
+			if one.Container() && len(one.Children) != 0 {
+				tracking = append(tracking, &trackingInfo{list: one.Children})
 			}
 		}
 	}
