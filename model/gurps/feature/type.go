@@ -11,85 +11,45 @@
 
 package feature
 
-import "strings"
-
 // Possible Type values.
 const (
-	AttributeBonus Type = iota
-	ConditionalModifierBonus
-	ContainedWeightReduction
-	CostReduction
-	DRBonus
-	ReactionBonus
-	SkillBonus
-	SkillPointBonus
-	SpellBonus
-	SpellPointBonus
-	WeaponDamageBonus
+	AttributeBonusType           = Type("attribute_bonus")
+	ConditionalModifierType      = Type("conditional_modifier")
+	ContainedWeightReductionType = Type("contained_weight_reduction")
+	CostReductionType            = Type("cost_reduction")
+	DRBonusType                  = Type("dr_bonus")
+	ReactionBonusType            = Type("reaction_bonus")
+	SkillBonusType               = Type("skill_bonus")
+	SkillPointBonusType          = Type("skill_point_bonus")
+	SpellBonusType               = Type("spell_bonus")
+	SpellPointBonusType          = Type("spell_point_bonus")
+	WeaponDamageBonusType        = Type("weapon_bonus")
 )
 
-type typeData struct {
-	Key string
+// AllTypes is the complete set of Type values.
+var AllTypes = []Type{
+	AttributeBonusType,
+	ConditionalModifierType,
+	ContainedWeightReductionType,
+	CostReductionType,
+	DRBonusType,
+	ReactionBonusType,
+	SkillBonusType,
+	SkillPointBonusType,
+	SpellBonusType,
+	SpellPointBonusType,
+	WeaponDamageBonusType,
 }
 
 // Type holds the type of a Feature.
-type Type uint8
+type Type string
 
-var typeValues = []*typeData{
-	{
-		Key: "attribute_bonus",
-	},
-	{
-		Key: "conditional_modifier",
-	},
-	{
-		Key: "contained_weight_reduction",
-	},
-	{
-		Key: "cost_reduction",
-	},
-	{
-		Key: "dr_bonus",
-	},
-	{
-		Key: "reaction_bonus",
-	},
-	{
-		Key: "skill_bonus",
-	},
-	{
-		Key: "skill_point_bonus",
-	},
-	{
-		Key: "spell_bonus",
-	},
-	{
-		Key: "spell_point_bonus",
-	},
-	{
-		Key: "weapon_bonus",
-	},
-}
-
-// TypeFromString extracts a Type from a key.
-func TypeFromString(key string) Type {
-	for i, one := range typeValues {
-		if strings.EqualFold(key, one.Key) {
-			return Type(i)
+// EnsureValid ensures this is of a known value.
+func (a Type) EnsureValid() Type {
+	for _, one := range AllTypes {
+		if one == a {
+			return a
 		}
 	}
-	return 0
-}
-
-// EnsureValid returns the first Type if this Type is not a known value.
-func (t Type) EnsureValid() Type {
-	if int(t) < len(typeValues) {
-		return t
-	}
-	return 0
-}
-
-// Key returns the key used to represent this Type.
-func (t Type) Key() string {
-	return typeValues[t.EnsureValid()].Key
+	return AllTypes[0]
 }

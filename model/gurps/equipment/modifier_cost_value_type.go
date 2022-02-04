@@ -14,43 +14,65 @@ package equipment
 import (
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 // Possible ModifierCostValueType values.
 const (
-	Addition ModifierCostValueType = iota
-	Percentage
-	Multiplier
-	CostFactor
+	Addition   = ModifierCostValueType("+")
+	Percentage = ModifierCostValueType("%")
+	Multiplier = ModifierCostValueType("x")
+	CostFactor = ModifierCostValueType("cf")
 )
 
-type modifierCostValueTypeData struct {
-	Format func(value fixed.F64d4) string
+// AllModifierCostValueTypes is the complete set of ModifierCostValueType values.
+var AllModifierCostValueTypes = []ModifierCostValueType{
+	Addition,
+	Percentage,
+	Multiplier,
+	CostFactor,
 }
 
 // ModifierCostValueType describes how an EquipmentModifier's point cost is applied.
-type ModifierCostValueType uint8
+type ModifierCostValueType string
 
-var modifierCostValueTypeValues = []*modifierCostValueTypeData{
-	{
-		Format: func(value fixed.F64d4) string { return value.StringWithSign() },
-	},
-	{
-		Format: func(value fixed.F64d4) string { return value.StringWithSign() + "%" },
-	},
-	{
-		Format: func(value fixed.F64d4) string {
-			if value <= 0 {
-				value = f64d4.One
-			}
-			return "x" + value.String()
-		},
-	},
-	{
-		Format: func(value fixed.F64d4) string { return value.StringWithSign() + " CF" },
-	},
+// EnsureValid ensures this is of a known value.
+func (m ModifierCostValueType) EnsureValid() ModifierCostValueType {
+	for _, one := range AllModifierCostValueTypes {
+		if one == m {
+			return m
+		}
+	}
+	return AllModifierCostValueTypes[0]
+}
+
+// Format returns a formatted version of the value.
+func (m ModifierCostValueType) Format(value fixed.F64d4) string {
+	switch m {
+	case Addition:
+		return value.StringWithSign()
+	case Percentage:
+		return value.StringWithSign() + "%"
+	case Multiplier:
+		if value <= 0 {
+			value = fxp.One
+		}
+		return "x" + value.String()
+	case CostFactor:
+		return value.StringWithSign() + " CF"
+	default:
+		return Addition.Format(value)
+	}
+}
+
+// ExtractValue from the string.
+func (m ModifierCostValueType) ExtractValue(s string) fixed.F64d4 {
+	v := fixed.F64d4FromStringForced(s)
+	if m.EnsureValid() == Multiplier && v <= 0 {
+		v = fxp.One
+	}
+	return v
 }
 
 // DetermineModifierCostValueTypeFromString examines a string to determine what type it is.
@@ -66,26 +88,4 @@ func DetermineModifierCostValueTypeFromString(s string) ModifierCostValueType {
 	default:
 		return Addition
 	}
-}
-
-// EnsureValid returns the first ModifierCostValueType if this ModifierCostValueType is not a known value.
-func (m ModifierCostValueType) EnsureValid() ModifierCostValueType {
-	if int(m) < len(modifierCostValueTypeValues) {
-		return m
-	}
-	return 0
-}
-
-// Format returns a formatted version of the value.
-func (m ModifierCostValueType) Format(value fixed.F64d4) string {
-	return modifierCostValueTypeValues[m.EnsureValid()].Format(value)
-}
-
-// ExtractValue from the string.
-func (m ModifierCostValueType) ExtractValue(s string) fixed.F64d4 {
-	v := fixed.F64d4FromStringForced(s)
-	if m.EnsureValid() == Multiplier && v <= 0 {
-		v = f64d4.One
-	}
-	return v
 }

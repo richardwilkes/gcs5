@@ -12,90 +12,82 @@
 package gurps
 
 import (
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-const (
-	attributeIDKey          = "attr_id"
-	attributeAdjKey         = "adj"
-	attributeDamageKey      = "damage"
-	attributeCalcValueKey   = "value"
-	attributeCalcPointsKey  = "points"
-	attributeCalcCurrentKey = "current"
-)
-
-// AttributeIDPrefix is the prefix all references to attribute IDs should use.
-const AttributeIDPrefix = "attr."
+// AttributeData holds the Attribute data that is written to disk.
+type AttributeData struct {
+	AttrID     string      `json:"attr_id"`
+	Adjustment fixed.F64d4 `json:"adj"`
+	Damage     fixed.F64d4 `json:"damage,omitempty"`
+}
 
 // Attribute holds the current state of an AttributeDef.
 type Attribute struct {
-	id            string
-	adjustment    fixed.F64d4
-	Bonus         fixed.F64d4
-	CostReduction fixed.F64d4
-	Damage        fixed.F64d4
+	AttributeData
+	Entity        *Entity     `json:"-"`
+	Bonus         fixed.F64d4 `json:"-"`
+	CostReduction fixed.F64d4 `json:"-"`
 }
 
-// NewAttributeFromJSON creates a new Attribute from a JSON object.
-func NewAttributeFromJSON(data map[string]interface{}) *Attribute {
-	a := &Attribute{
-		adjustment: encoding.Number(data[attributeAdjKey]),
-		Damage:     encoding.Number(data[attributeDamageKey]),
-	}
-	a.SetID(encoding.String(data[attributeIDKey]))
-	return a
-}
-
-// ToJSON emits this object as JSON.
-func (a *Attribute) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
-	if def := a.AttributeDef(entity); def != nil {
-		encoder.StartObject()
-		encoder.KeyedString(attributeIDKey, a.id, false, false)
-		encoder.KeyedNumber(attributeAdjKey, a.adjustment, false)
-		if def.Type == attribute.Pool {
-			encoder.KeyedNumber(attributeDamageKey, a.Damage, false)
+// MarshalJSON implements json.Marshaler.
+func (a *Attribute) MarshalJSON() ([]byte, error) {
+	if a.Entity != nil {
+		if def := a.AttributeDef(); def != nil {
+			type calc struct {
+				Value   fixed.F64d4  `json:"value"`
+				Current *fixed.F64d4 `json:"current,omitempty"`
+				Points  fixed.F64d4  `json:"points"`
+			}
+			data := struct {
+				AttributeData
+				Calc calc `json:"calc"`
+			}{
+				AttributeData: a.AttributeData,
+				Calc: calc{
+					Value:  a.Maximum(),
+					Points: a.PointCost(),
+				},
+			}
+			if def.Type == attribute.Pool {
+				current := a.Current()
+				data.Calc.Current = &current
+			}
+			return json.Marshal(&data)
 		}
-
-		// Emit calculated values for third parties
-		encoder.Key(commonCalcKey)
-		encoder.StartObject()
-		encoder.KeyedNumber(attributeCalcValueKey, a.Maximum(entity), false)
-		if def.Type == attribute.Pool {
-			encoder.KeyedNumber(attributeCalcCurrentKey, a.Current(entity), false)
-		}
-		encoder.KeyedNumber(attributeCalcPointsKey, a.PointCost(entity), false)
-		encoder.EndObject()
-
-		encoder.EndObject()
 	}
+	return json.Marshal(&a.AttributeData)
 }
 
 // ID returns the ID.
 func (a *Attribute) ID() string {
-	return a.id
+	return a.AttrID
 }
 
 // SetID sets the ID, sanitizing it in the process (i.e. it may be changed from what you set -- read it back if you want
 // to be sure of what it gets set to.
 func (a *Attribute) SetID(value string) {
-	a.id = id.Sanitize(value, false, ReservedIDs...)
+	a.AttrID = id.Sanitize(value, false, ReservedIDs...)
 }
 
 // AttributeDef looks up the AttributeDef this Attribute references from the Entity. May return nil.
-func (a *Attribute) AttributeDef(entity *Entity) *AttributeDef {
-	return entity.SheetSettings.Attributes.Set[a.id]
+func (a *Attribute) AttributeDef() *AttributeDef {
+	if a.Entity == nil {
+		return nil
+	}
+	return a.Entity.SheetSettings.Attributes.Set[a.AttrID]
 }
 
 // Maximum returns the maximum value of a pool or the adjusted attribute value for other types.
-func (a *Attribute) Maximum(entity *Entity) fixed.F64d4 {
-	def := a.AttributeDef(entity)
+func (a *Attribute) Maximum() fixed.F64d4 {
+	def := a.AttributeDef()
 	if def == nil {
 		return 0
 	}
-	max := def.BaseValue(entity) + a.adjustment + a.Bonus
+	max := def.BaseValue(a.Entity) + a.Adjustment + a.Bonus
 	if def.Type != attribute.Decimal {
 		max = max.Trunc()
 	}
@@ -103,28 +95,28 @@ func (a *Attribute) Maximum(entity *Entity) fixed.F64d4 {
 }
 
 // Current returns the current value. Only valid for pools.
-func (a *Attribute) Current(entity *Entity) fixed.F64d4 {
-	return a.Maximum(entity) - a.Damage
+func (a *Attribute) Current() fixed.F64d4 {
+	return a.Maximum() - a.Damage
 }
 
 // SetCurrent sets the current value.
-func (a *Attribute) SetCurrent(entity *Entity, value fixed.F64d4) {
-	if a.Current(entity) == value {
+func (a *Attribute) SetCurrent(value fixed.F64d4) {
+	if a.Current() == value {
 		return
 	}
-	if def := a.AttributeDef(entity); def != nil {
-		a.adjustment = value - (def.BaseValue(entity) + a.Bonus)
+	if def := a.AttributeDef(); def != nil {
+		a.Adjustment = value - (def.BaseValue(a.Entity) + a.Bonus)
 	}
 }
 
 // CurrentThreshold return the current PoolThreshold, if any.
-func (a *Attribute) CurrentThreshold(entity *Entity) *PoolThreshold {
-	def := a.AttributeDef(entity)
+func (a *Attribute) CurrentThreshold() *PoolThreshold {
+	def := a.AttributeDef()
 	if def == nil {
 		return nil
 	}
-	max := a.Maximum(entity)
-	cur := a.Current(entity)
+	max := a.Maximum()
+	cur := a.Current()
 	for _, threshold := range def.Thresholds {
 		if cur <= threshold.Threshold(max) {
 			return threshold
@@ -134,10 +126,24 @@ func (a *Attribute) CurrentThreshold(entity *Entity) *PoolThreshold {
 }
 
 // PointCost returns the number of points spent on this Attribute.
-func (a *Attribute) PointCost(entity *Entity) fixed.F64d4 {
-	def := a.AttributeDef(entity)
+func (a *Attribute) PointCost() fixed.F64d4 {
+	def := a.AttributeDef()
 	if def == nil {
 		return 0
 	}
-	return def.ComputeCost(entity, a.adjustment, entity.Profile.AdjustedSizeModifier(), a.CostReduction)
+	var sm fixed.F64d4
+	if a.Entity != nil {
+		sm = a.Entity.Profile.AdjustedSizeModifier()
+	}
+	return def.ComputeCost(a.Entity, a.Adjustment, sm, a.CostReduction)
+}
+
+// IsThresholdOpMet if the given ThresholdOp is met.
+func IsThresholdOpMet(op attribute.ThresholdOp, attributes map[string]*Attribute) bool {
+	for _, one := range attributes {
+		if threshold := one.CurrentThreshold(); threshold != nil && threshold.ContainsOp(op) {
+			return true
+		}
+	}
+	return false
 }

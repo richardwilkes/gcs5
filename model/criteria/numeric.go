@@ -12,45 +12,34 @@
 package criteria
 
 import (
-	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
-)
-
-const (
-	typeKey      = "compare"
-	qualifierKey = "qualifier"
 )
 
 // Numeric holds the criteria for matching a number.
 type Numeric struct {
-	Type      NumericCompareType
-	Qualifier fixed.F64d4
+	NumericData
 }
 
-// NewNumericFromJSON creates a new Numeric from a JSON object.
-func NewNumericFromJSON(data map[string]interface{}) *Numeric {
-	n := &Numeric{}
-	n.FromJSON(data)
-	return n
+// NumericData holds the criteria for matching a number that should be written to disk.
+type NumericData struct {
+	Compare   NumericCompareType `json:"compare,omitempty"`
+	Qualifier fixed.F64d4        `json:"qualifier,omitempty"`
 }
 
-// FromJSON replaces the current data with data from a JSON object.
-func (n *Numeric) FromJSON(data map[string]interface{}) {
-	n.Type = NumericCompareTypeFromString(encoding.String(data[typeKey]))
-	n.Qualifier = encoding.Number(data[qualifierKey])
+// ShouldOmit implements json.Omitter.
+func (n Numeric) ShouldOmit() bool {
+	return n.Compare.EnsureValid() == AnyNumber
 }
 
-// ToJSON emits the JSON for this object.
-func (n *Numeric) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	n.ToInlineJSON(encoder)
-	encoder.EndObject()
+// UnmarshalJSON implements json.Unmarshaler.
+func (n *Numeric) UnmarshalJSON(data []byte) error {
+	err := json.Unmarshal(data, &n.NumericData)
+	n.Compare = n.Compare.EnsureValid()
+	return err
 }
 
-// ToInlineJSON emits the JSON key values that comprise this object without the object wrapper.
-func (n *Numeric) ToInlineJSON(encoder *encoding.JSONEncoder) {
-	if n.Type != AnyNumber {
-		encoder.KeyedString(typeKey, n.Type.Key(), false, false)
-		encoder.KeyedNumber(qualifierKey, n.Qualifier, false)
-	}
+// Matches performs a comparison and returns true if the data matches.
+func (n Numeric) Matches(value fixed.F64d4) bool {
+	return n.Compare.Matches(n.Qualifier, value)
 }

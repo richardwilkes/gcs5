@@ -12,65 +12,46 @@
 package attribute
 
 import (
-	"strings"
-
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
 // Possible Type values.
 const (
-	Integer Type = iota
-	Decimal
-	Pool
+	Integer = Type("integer")
+	Decimal = Type("decimal")
+	Pool    = Type("pool")
 )
 
-type typeData struct {
-	Key    string
-	String string
+// AllTypes is the complete set of Type values.
+var AllTypes = []Type{
+	Integer,
+	Decimal,
+	Pool,
 }
 
 // Type holds the type of an attribute definition.
-type Type uint8
+type Type string
 
-var typeValues = []*typeData{
-	{
-		Key:    "integer",
-		String: i18n.Text("Integer"),
-	},
-	{
-		Key:    "decimal",
-		String: i18n.Text("Decimal"),
-	},
-	{
-		Key:    "pool",
-		String: i18n.Text("Pool"),
-	},
-}
-
-// TypeFromKey extracts a Type from a key.
-func TypeFromKey(key string) Type {
-	for i, one := range typeValues {
-		if strings.EqualFold(key, one.Key) {
-			return Type(i)
+// EnsureValid ensures this is of a known value.
+func (t Type) EnsureValid() Type {
+	for _, one := range AllTypes {
+		if one == t {
+			return t
 		}
 	}
-	return 0
-}
-
-// EnsureValid returns the first Type if this Type is not a known value.
-func (t Type) EnsureValid() Type {
-	if int(t) < len(typeValues) {
-		return t
-	}
-	return 0
-}
-
-// Key returns the key used to represent this Type.
-func (t Type) Key() string {
-	return typeValues[t.EnsureValid()].Key
+	return AllTypes[0]
 }
 
 // String implements fmt.Stringer.
 func (t Type) String() string {
-	return typeValues[t.EnsureValid()].String
+	switch t {
+	case Integer:
+		return i18n.Text("Integer")
+	case Decimal:
+		return i18n.Text("Decimal")
+	case Pool:
+		return i18n.Text("Pool")
+	default:
+		return Integer.String()
+	}
 }

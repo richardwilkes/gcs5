@@ -14,80 +14,44 @@ package gurps
 import (
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/gcs/model/gurps/skill"
+	"github.com/richardwilkes/gcs/model/fxp"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
+	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-const (
-	skillDefaultTypeKey           = "type"
-	skillDefaultNameKey           = "name"
-	skillDefaultSpecializationKey = "specialization"
-	skillDefaultModifierKey       = "modifier"
-	skillDefaultLevelKey          = "level"
-	skillDefaultAdjustedLevelKey  = "adjusted_level"
-	skillDefaultPointsKey         = "points"
-)
+var skillBasedDefaultTypes = map[string]bool{
+	gid.Skill: true,
+	gid.Parry: true,
+	gid.Block: true,
+}
 
 // SkillDefault holds data for a Skill default.
 type SkillDefault struct {
-	defaultType    string
-	Name           string
-	Specialization string
-	Modifier       fixed.F64d4
-	Level          fixed.F64d4
-	AdjLevel       fixed.F64d4
-	Points         fixed.F64d4
-}
-
-// NewSkillDefaultFromJSON creates a new SkillDefault from a JSON object.
-func NewSkillDefaultFromJSON(full bool, data map[string]interface{}) *SkillDefault {
-	s := &SkillDefault{
-		Name:           encoding.String(data[skillDefaultNameKey]),
-		Specialization: encoding.String(data[skillDefaultSpecializationKey]),
-		Modifier:       encoding.Number(data[skillDefaultModifierKey]),
-	}
-	s.SetType(encoding.String(data[skillDefaultTypeKey]))
-	if full {
-		s.Level = encoding.Number(data[skillDefaultLevelKey])
-		s.AdjLevel = encoding.Number(data[skillDefaultAdjustedLevelKey])
-		s.Points = encoding.Number(data[skillDefaultPointsKey])
-	}
-	return s
-}
-
-// ToJSON emits this object as JSON.
-func (s *SkillDefault) ToJSON(full bool, encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	encoder.KeyedString(skillDefaultTypeKey, s.defaultType, true, true)
-	if skill.DefaultTypeIsSkillBased(s.defaultType) {
-		encoder.KeyedString(skillDefaultNameKey, s.Name, true, true)
-		encoder.KeyedString(skillDefaultSpecializationKey, s.Specialization, true, true)
-	}
-	encoder.KeyedNumber(skillDefaultModifierKey, s.Modifier, true)
-	if full {
-		encoder.KeyedNumber(skillDefaultLevelKey, s.Level, true)
-		encoder.KeyedNumber(skillDefaultAdjustedLevelKey, s.AdjLevel, true)
-		encoder.KeyedNumber(skillDefaultPointsKey, s.Points, true)
-	}
-	encoder.EndObject()
+	DefaultType    string      `json:"type"`
+	Name           string      `json:"name,omitempty"`
+	Specialization string      `json:"specialization,omitempty"`
+	Modifier       fixed.F64d4 `json:"modifier,omitempty"`
+	Level          fixed.F64d4 `json:"level,omitempty"`
+	AdjLevel       fixed.F64d4 `json:"adjLevel,omitempty"`
+	Points         fixed.F64d4 `json:"points,omitempty"`
 }
 
 // Type returns the type of the SkillDefault.
 func (s *SkillDefault) Type() string {
-	return s.defaultType
+	return s.DefaultType
 }
 
 // SetType sets the type of the SkillDefault.
 func (s *SkillDefault) SetType(t string) {
-	s.defaultType = id.Sanitize(t, true)
+	s.DefaultType = id.Sanitize(t, true)
 }
 
 // FullName returns the full name of the skill to default from.
 func (s *SkillDefault) FullName(entity *Entity) string {
-	if skill.DefaultTypeIsSkillBased(s.defaultType) {
+	if s.SkillBased() {
 		var buffer strings.Builder
 		buffer.WriteString(s.Name)
 		if s.Specialization != "" {
@@ -95,27 +59,27 @@ func (s *SkillDefault) FullName(entity *Entity) string {
 			buffer.WriteString(s.Specialization)
 			buffer.WriteByte(')')
 		}
-		if strings.EqualFold("parry", s.defaultType) {
+		if strings.EqualFold(gid.Parry, s.DefaultType) {
 			buffer.WriteString(i18n.Text(" Parry"))
-		} else if strings.EqualFold("block", s.defaultType) {
+		} else if strings.EqualFold(gid.Block, s.DefaultType) {
 			buffer.WriteString(i18n.Text(" Block"))
 		}
 		return buffer.String()
 	}
-	return ResolveAttributeName(entity, s.defaultType)
+	return ResolveAttributeName(entity, s.DefaultType)
 }
 
 // FillWithNameableKeys adds any nameable keys found in this SkillDefault to the provided map.
-func (s *SkillDefault) FillWithNameableKeys(nameables map[string]string) {
-	ExtractNameables(s.Name, nameables)
-	ExtractNameables(s.Specialization, nameables)
+func (s *SkillDefault) FillWithNameableKeys(m map[string]string) {
+	nameables.Extract(s.Name, m)
+	nameables.Extract(s.Specialization, m)
 }
 
 // ApplyNameableKeys replaces any nameable keys found in this SkillDefault with the corresponding values in the provided
 // map.
-func (s *SkillDefault) ApplyNameableKeys(nameables map[string]string) {
-	s.Name = ApplyNameables(s.Name, nameables)
-	s.Specialization = ApplyNameables(s.Specialization, nameables)
+func (s *SkillDefault) ApplyNameableKeys(m map[string]string) {
+	s.Name = nameables.Apply(s.Name, m)
+	s.Specialization = nameables.Apply(s.Specialization, m)
 }
 
 // ModifierAsString returns the modifier as a string suitable for appending.
@@ -128,4 +92,52 @@ func (s *SkillDefault) ModifierAsString() string {
 	default:
 		return ""
 	}
+}
+
+// SkillBased returns true if the Type() is Skill-based.
+func (s *SkillDefault) SkillBased() bool {
+	return skillBasedDefaultTypes[strings.ToLower(strings.TrimSpace(s.DefaultType))]
+}
+
+// SkillLevelFast returns the base skill level for this SkillDefault.
+func (s *SkillDefault) SkillLevelFast(entity *Entity, requirePoints bool, excludes map[string]bool, ruleOf20 bool) fixed.F64d4 {
+	switch s.Type() {
+	case gid.Parry:
+		best := s.bestFast(entity, requirePoints, excludes)
+		if best != fixed.F64d4Min {
+			best = best.Div(fxp.Two).Trunc() + fxp.Three + entity.ParryBonus
+		}
+		return s.finalLevel(best)
+	case gid.Block:
+		best := s.bestFast(entity, requirePoints, excludes)
+		if best != fixed.F64d4Min {
+			best = best.Div(fxp.Two).Trunc() + fxp.Three + entity.BlockBonus
+		}
+		return s.finalLevel(best)
+	case gid.Skill:
+		return s.finalLevel(s.bestFast(entity, requirePoints, excludes))
+	default:
+		level := entity.ResolveAttribute(s.Type())
+		if ruleOf20 {
+			level = level.Min(fxp.Twenty)
+		}
+		return s.finalLevel(level)
+	}
+}
+
+func (s *SkillDefault) bestFast(entity *Entity, requirePoints bool, excludes map[string]bool) fixed.F64d4 {
+	best := fixed.F64d4Min
+	for _, sk := range entity.SkillNamed(s.Name, s.Specialization, requirePoints, excludes) {
+		if best < sk.Level.Level {
+			best = sk.Level.Level
+		}
+	}
+	return best
+}
+
+func (s *SkillDefault) finalLevel(level fixed.F64d4) fixed.F64d4 {
+	if level != fixed.F64d4Min {
+		level += s.Modifier
+	}
+	return level
 }

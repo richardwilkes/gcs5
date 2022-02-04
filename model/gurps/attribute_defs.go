@@ -12,10 +12,14 @@
 package gurps
 
 import (
+	"bytes"
+	"context"
 	"io/fs"
 	"sort"
 
-	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
+	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 )
@@ -44,7 +48,19 @@ func DefaultAttributeIDFor(entity *Entity) string {
 	if len(list) != 0 {
 		return list[0].ID()
 	}
-	return "st"
+	return gid.Strength
+}
+
+// AttributeIDFor looks up the preferred ID and if it cannot be found, falls back to a default. 'entity' may be nil.
+func AttributeIDFor(entity *Entity, preferred string) string {
+	defs := AttributeDefsFor(entity)
+	if _, exists := defs.Set[preferred]; exists {
+		return preferred
+	}
+	if list := defs.List(); len(list) != 0 {
+		return list[0].ID()
+	}
+	return gid.Strength
 }
 
 // FactoryAttributeDefs returns the factory AttributeDef set.
@@ -54,46 +70,56 @@ func FactoryAttributeDefs() *AttributeDefs {
 	return defs
 }
 
-// NewAttributeDefsFromFile loads an AttributeDef set from a file.
-func NewAttributeDefsFromFile(fsys fs.FS, filePath string) (*AttributeDefs, error) {
-	data, err := encoding.LoadJSONFromFS(fsys, filePath)
-	if err != nil {
-		return nil, err
-	}
-	// Check for older formats
-	if obj := encoding.Object(data); obj != nil {
-		var exists bool
-		if data, exists = obj["attributes"]; !exists {
-			if data, exists = obj["attribute_settings"]; !exists {
-				return nil, errs.New("invalid attribute definitions file: " + filePath)
-			}
-		}
-	}
-	return NewAttributeDefsFromJSON(encoding.Array(data)), nil
+type attributeDefsData struct {
+	Current *AttributeDefs `json:"attribute_definitions"`
 }
 
-// NewAttributeDefsFromJSON creates a new AttributeDefs from a JSON object.
-func NewAttributeDefsFromJSON(data []interface{}) *AttributeDefs {
-	a := &AttributeDefs{Set: make(map[string]*AttributeDef)}
-	for i, one := range encoding.Array(data) {
-		def := NewAttributeDefFromJSON(encoding.Object(one), i+1)
-		a.Set[def.ID()] = def
+// NewAttributeDefsFromFile loads an AttributeDef set from a file.
+func NewAttributeDefsFromFile(fileSystem fs.FS, filePath string) (*AttributeDefs, error) {
+	var data struct {
+		*attributeDefsData
+		OldKey1 *AttributeDefs `json:"attribute_settings"`
+		OldKey2 *AttributeDefs `json:"attributes"`
 	}
-	return a
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
+		return nil, errs.NewWithCause("invalid attribute definitions file: "+filePath, err)
+	}
+	if data.attributeDefsData != nil {
+		return data.attributeDefsData.Current, nil
+	}
+	if data.OldKey1 != nil {
+		return data.OldKey1, nil
+	}
+	return data.OldKey2, nil
 }
 
 // Save writes the AttributeDefs to the file as JSON.
 func (a *AttributeDefs) Save(filePath string) error {
-	return encoding.SaveJSON(filePath, true, a.ToJSON)
+	return jio.SaveToFile(context.Background(), filePath, &attributeDefsData{Current: a})
 }
 
-// ToJSON emits this object as JSON.
-func (a *AttributeDefs) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartArray()
-	for _, def := range a.List() {
-		def.ToJSON(encoder)
+// MarshalJSON implements json.Marshaler.
+func (a *AttributeDefs) MarshalJSON() ([]byte, error) {
+	var buffer bytes.Buffer
+	e := json.NewEncoder(&buffer)
+	e.SetEscapeHTML(false)
+	e.SetIndent("", "  ")
+	err := e.Encode(a.List())
+	return buffer.Bytes(), err
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (a *AttributeDefs) UnmarshalJSON(data []byte) error {
+	var list []*AttributeDef
+	if err := json.Unmarshal(data, &list); err != nil {
+		return err
 	}
-	encoder.EndArray()
+	a.Set = make(map[string]*AttributeDef, len(list))
+	for i, one := range list {
+		one.Order = i + 1
+		a.Set[one.ID()] = one
+	}
+	return nil
 }
 
 // List returns the map of AttributeDef objects as an ordered list.

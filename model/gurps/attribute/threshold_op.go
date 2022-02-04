@@ -12,80 +12,66 @@
 package attribute
 
 import (
-	"strings"
-
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
 // Possible ThresholdOp values.
 const (
-	Unknown ThresholdOp = iota
-	HalveMove
-	HalveDodge
-	HalveST
+	Unknown    = ThresholdOp("unknown")
+	HalveMove  = ThresholdOp("halve_move")
+	HalveDodge = ThresholdOp("halve_dodge")
+	HalveST    = ThresholdOp("halve_st")
 )
 
-type thresholdOpData struct {
-	Key         string
-	String      string
-	Description string
+// AllThresholdOps is the complete set of ThresholdOp values.
+var AllThresholdOps = []ThresholdOp{
+	Unknown,
+	HalveMove,
+	HalveDodge,
+	HalveST,
 }
 
 // ThresholdOp holds an operation to apply when a pool threshold is hit.
-type ThresholdOp uint8
+type ThresholdOp string
 
-var thresholdOpValues = []*thresholdOpData{
-	{
-		Key:         "unknown",
-		String:      i18n.Text("Unknown"),
-		Description: i18n.Text("Unknown"),
-	},
-	{
-		Key:         "halve_move",
-		String:      i18n.Text("Halve Move"),
-		Description: i18n.Text("Halve Move (round up)"),
-	},
-	{
-		Key:         "halve_dodge",
-		String:      i18n.Text("Halve Dodge"),
-		Description: i18n.Text("Halve Dodge (round up)"),
-	},
-	{
-		Key:         "halve_st",
-		String:      i18n.Text("Halve ST"),
-		Description: i18n.Text("Halve ST (round up; does not affect HP and damage)"),
-	},
-}
-
-// ThresholdOpFromString extracts a ThresholdOp from a key.
-func ThresholdOpFromString(key string) ThresholdOp {
-	for i, one := range thresholdOpValues {
-		if strings.EqualFold(key, one.Key) {
-			return ThresholdOp(i)
+// EnsureValid ensures this is of a known value.
+func (t ThresholdOp) EnsureValid() ThresholdOp {
+	for _, one := range AllThresholdOps {
+		if one == t {
+			return t
 		}
 	}
-	return 0
-}
-
-// EnsureValid returns the first ThresholdOp if this ThresholdOp is not a known value.
-func (t ThresholdOp) EnsureValid() ThresholdOp {
-	if int(t) < len(thresholdOpValues) {
-		return t
-	}
-	return 0
-}
-
-// Key returns the key used to represent this ThresholdOp.
-func (t ThresholdOp) Key() string {
-	return thresholdOpValues[t.EnsureValid()].Key
+	return AllThresholdOps[0]
 }
 
 // String implements fmt.Stringer.
 func (t ThresholdOp) String() string {
-	return thresholdOpValues[t.EnsureValid()].String
+	switch t {
+	case Unknown:
+		return i18n.Text("Unknown")
+	case HalveMove:
+		return i18n.Text("Halve Move")
+	case HalveDodge:
+		return i18n.Text("Halve Dodge")
+	case HalveST:
+		return i18n.Text("Halve Strength")
+	default:
+		return Unknown.String()
+	}
 }
 
 // Description of this ThresholdOp's function.
 func (t ThresholdOp) Description() string {
-	return thresholdOpValues[t.EnsureValid()].Description
+	switch t {
+	case Unknown:
+		return i18n.Text("Unknown")
+	case HalveMove:
+		return i18n.Text("Halve Move (round up)")
+	case HalveDodge:
+		return i18n.Text("Halve Dodge (round up)")
+	case HalveST:
+		return i18n.Text("Halve Strength (round up; does not affect HP and damage)")
+	default:
+		return Unknown.String()
+	}
 }

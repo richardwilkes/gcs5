@@ -12,60 +12,42 @@
 package ancestry
 
 import (
-	"strings"
-
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
 // Possible NameGenerationType values.
 const (
-	Simple NameGenerationType = iota
-	MarkovChain
+	Simple      = NameGenerationType("simple")
+	MarkovChain = NameGenerationType("markov_chain")
 )
 
-type nameGenerationTypeData struct {
-	Key    string
-	String string
+// AllNameGenerationTypes is the complete set of NameGenerationType values.
+var AllNameGenerationTypes = []NameGenerationType{
+	Simple,
+	MarkovChain,
 }
 
 // NameGenerationType holds the type of a name generation technique.
-type NameGenerationType uint8
+type NameGenerationType string
 
-var nameGenerationTypeValues = []*nameGenerationTypeData{
-	{
-		Key:    "simple",
-		String: i18n.Text("Simple"),
-	},
-	{
-		Key:    "markov_chain",
-		String: i18n.Text("Markov Chain"),
-	},
-}
-
-// NameGenerationTypeFromKey extracts a NameGenerationType from a key.
-func NameGenerationTypeFromKey(key string) NameGenerationType {
-	for i, one := range nameGenerationTypeValues {
-		if strings.EqualFold(key, one.Key) {
-			return NameGenerationType(i)
+// EnsureValid ensures this is of a known value.
+func (n NameGenerationType) EnsureValid() NameGenerationType {
+	for _, one := range AllNameGenerationTypes {
+		if one == n {
+			return n
 		}
 	}
-	return 0
-}
-
-// EnsureValid returns the first NameGenerationType if this NameGenerationType is not a known value.
-func (a NameGenerationType) EnsureValid() NameGenerationType {
-	if int(a) < len(nameGenerationTypeValues) {
-		return a
-	}
-	return 0
-}
-
-// Key returns the key used to represent this NameGenerationType.
-func (a NameGenerationType) Key() string {
-	return nameGenerationTypeValues[a.EnsureValid()].Key
+	return AllNameGenerationTypes[0]
 }
 
 // String implements fmt.Stringer.
-func (a NameGenerationType) String() string {
-	return nameGenerationTypeValues[a.EnsureValid()].String
+func (n NameGenerationType) String() string {
+	switch n {
+	case Simple:
+		return i18n.Text("Simple")
+	case MarkovChain:
+		return i18n.Text("Markov Chain")
+	default:
+		return Simple.String()
+	}
 }

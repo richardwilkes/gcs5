@@ -12,65 +12,80 @@
 package settings
 
 import (
+	"context"
+	"path"
 	"path/filepath"
+	"runtime"
+	"strings"
+	"time"
 
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/gcs/model/gurps/settings"
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/rpgtools/dice"
+	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/cmdline"
+	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xio/fs/paths"
+	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/unison"
 )
 
-const (
-	settingsLastSeenGCSVersionKey = "last_seen_gcs_version"
-	settingsGeneralKey            = "general"
-	settingsLibrariesKey          = "libraries"
-	settingsLibraryExplorerKey    = "library_explorer"
-	settingsRecentFilesKey        = "recent_files"
-	settingsLastDirsKey           = "last_dirs"
-	settingsPageRefsKey           = "page_refs"
-	settingsKeyBindingsKey        = "key_bindings"
-	settingsWindowPositionsKey    = "window_positions"
-	settingsThemeKey              = "theme"
-	settingsQuickExportsKey       = "quick_exports"
-	settingsSheetKey              = "sheet_settings"
-)
+const maxRecentFiles = 20
 
 var global *Settings
 
+// PageRef holds a path to a file and an offset for all page references within that file.
+type PageRef struct {
+	Path   string `json:"path,omitempty"`
+	Offset int    `json:"offset,omitempty"`
+}
+
+// WindowPosition holds a window's last known frame and when the frame's size or position was last altered.
+type WindowPosition struct {
+	Frame       geom32.Rect `json:"frame"`
+	LastUpdated time.Time   `json:"last_updated"`
+}
+
+// NavigatorSettings holds settings for the navigator view.
+type NavigatorSettings struct {
+	DividerPosition int      `json:"divider_position"`
+	OpenRowKeys     []string `json:"open_row_keys,omitempty"`
+}
+
 // Settings holds the application settings.
 type Settings struct {
-	LastSeenGCSVersion string
-	General            *settings.General
-	Libraries          *library.Libraries
-	LibraryExplorer    *NavigatorSettings
-	RecentFiles        *RecentFiles
-	LastDirs           *LastDirs
-	PageRefs           *PageRefs
-	KeyBindings        *KeyBindings
-	WindowPositions    *WindowPositions
-	Theme              *Theme
-	QuickExports       *gurps.QuickExports
-	Sheet              *gurps.SheetSettings
+	LastSeenGCSVersion string                           `json:"last_seen_gcs_version,omitempty"`
+	General            *settings.General                `json:"general,omitempty"`
+	Libraries          library.Libraries                `json:"libraries,omitempty"`
+	LibraryExplorer    NavigatorSettings                `json:"library_explorer"`
+	RecentFiles        []string                         `json:"recent_files,omitempty"`
+	LastDirs           map[string]string                `json:"last_dirs,omitempty"`
+	PageRefs           map[string]*PageRef              `json:"page_refs,omitempty"`
+	KeyBindings        map[string]string                `json:"key_bindings,omitempty"`
+	WindowPositions    map[string]*WindowPosition       `json:"window_positions,omitempty"`
+	Colors             map[string]unison.Color          `json:"colors,omitempty"`
+	Fonts              map[string]unison.FontDescriptor `json:"fonts,omitempty"`
+	QuickExports       *gurps.QuickExports              `json:"quick_exports,omitempty"`
+	Sheet              *gurps.SheetSettings             `json:"sheet_settings,omitempty"`
 }
 
 // Default returns new default settings.
-func Default() *Settings {
+func Default(entity *gurps.Entity) *Settings {
 	return &Settings{
 		LastSeenGCSVersion: cmdline.AppVersion,
 		General:            settings.NewGeneral(),
 		Libraries:          library.NewLibraries(),
-		LibraryExplorer:    NewNavigatorSettings(),
-		RecentFiles:        NewRecentFiles(),
-		LastDirs:           NewLastDirs(),
-		PageRefs:           NewPageRefs(),
-		KeyBindings:        NewKeyBindings(),
-		WindowPositions:    NewWindowPositions(),
-		Theme:              NewTheme(),
+		LibraryExplorer:    NavigatorSettings{DividerPosition: 300},
+		LastDirs:           make(map[string]string),
+		PageRefs:           make(map[string]*PageRef),
+		KeyBindings:        make(map[string]string),
+		WindowPositions:    make(map[string]*WindowPosition),
+		Colors:             make(map[string]unison.Color),
+		Fonts:              make(map[string]unison.FontDescriptor),
 		QuickExports:       gurps.NewQuickExports(),
-		Sheet:              gurps.FactorySheetSettings(),
+		Sheet:              gurps.FactorySheetSettings(entity),
 	}
 }
 
@@ -78,25 +93,8 @@ func Default() *Settings {
 func Global() *Settings {
 	if global == nil {
 		dice.GURPSFormat = true
-		p := Path()
-		if data, err := encoding.LoadJSON(p); err == nil {
-			obj := encoding.Object(data)
-			global = &Settings{
-				LastSeenGCSVersion: encoding.String(obj[settingsLastSeenGCSVersionKey]),
-				General:            settings.NewGeneralFromJSON(encoding.Object(obj[settingsGeneralKey])),
-				Libraries:          library.NewLibrariesFromJSON(encoding.Object(obj[settingsLibrariesKey])),
-				LibraryExplorer:    NewNavigatorSettingsFromJSON(encoding.Object(obj[settingsLibraryExplorerKey])),
-				RecentFiles:        NewRecentFilesFromJSON(encoding.Object(obj[settingsRecentFilesKey])),
-				LastDirs:           NewLastDirsFromJSON(encoding.Object(obj[settingsLastDirsKey])),
-				PageRefs:           NewPageRefsFromJSON(encoding.Object(obj[settingsPageRefsKey])),
-				KeyBindings:        NewKeyBindingsFromJSON(encoding.Object(obj[settingsKeyBindingsKey])),
-				WindowPositions:    NewWindowPositionsFromJSON(encoding.Object(obj[settingsWindowPositionsKey])),
-				Theme:              NewThemeFromJSON(encoding.Object(obj[settingsThemeKey])),
-				QuickExports:       gurps.NewQuickExportsFromJSON(encoding.Object(obj[settingsQuickExportsKey])),
-				Sheet:              gurps.NewSheetSettingsFromJSON(encoding.Object(obj[settingsSheetKey]), nil),
-			}
-		} else {
-			global = Default()
+		if err := jio.LoadFromFile(context.Background(), Path(), &global); err != nil {
+			global = Default(nil)
 		}
 		gurps.GlobalSheetSettingsProvider = func() *gurps.SheetSettings { return global.Sheet }
 	}
@@ -105,24 +103,65 @@ func Global() *Settings {
 
 // Save to the standard path.
 func (s *Settings) Save() error {
-	return encoding.SaveJSON(Path(), true, s.toJSON)
+	return jio.SaveToFile(context.Background(), Path(), s)
 }
 
-func (s *Settings) toJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	encoder.KeyedString(settingsLastSeenGCSVersionKey, s.LastSeenGCSVersion, false, false)
-	encoding.ToKeyedJSON(s.General, settingsGeneralKey, encoder)
-	encoding.ToKeyedJSON(s.Libraries, settingsLibrariesKey, encoder)
-	encoding.ToKeyedJSON(s.LibraryExplorer, settingsLibraryExplorerKey, encoder)
-	encoding.ToKeyedJSON(s.RecentFiles, settingsRecentFilesKey, encoder)
-	encoding.ToKeyedJSON(s.LastDirs, settingsLastDirsKey, encoder)
-	encoding.ToKeyedJSON(s.PageRefs, settingsPageRefsKey, encoder)
-	encoding.ToKeyedJSON(s.KeyBindings, settingsKeyBindingsKey, encoder)
-	encoding.ToKeyedJSON(s.WindowPositions, settingsWindowPositionsKey, encoder)
-	encoding.ToKeyedJSON(s.Theme, settingsThemeKey, encoder)
-	encoding.ToKeyedJSON(s.QuickExports, settingsQuickExportsKey, encoder)
-	gurps.ToKeyedJSON(s.Sheet, settingsSheetKey, encoder, nil)
-	encoder.EndObject()
+// LookupPageRef the PageRef for the given ID. If not found or if the path it points to isn't a readable file, returns
+// nil.
+func (s *Settings) LookupPageRef(id string) *PageRef {
+	if ref, ok := s.PageRefs[id]; ok && fs.FileIsReadable(ref.Path) {
+		return ref
+	}
+	return nil
+}
+
+// ListRecentFiles returns the current list of recently opened files. Files that are no longer readable for any reason
+// are omitted.
+func (s *Settings) ListRecentFiles() []string {
+	list := make([]string, 0, len(s.RecentFiles))
+	for _, one := range s.RecentFiles {
+		if fs.FileIsReadable(one) {
+			list = append(list, one)
+		}
+	}
+	if len(list) != len(s.RecentFiles) {
+		s.RecentFiles = make([]string, len(list))
+		copy(s.RecentFiles, list)
+	}
+	return list
+}
+
+// AddRecentFile adds a file path to the list of recently opened files.
+func (s *Settings) AddRecentFile(filePath string) {
+	ext := path.Ext(filePath)
+	if runtime.GOOS == toolbox.MacOS || runtime.GOOS == toolbox.WindowsOS {
+		ext = strings.ToLower(ext)
+	}
+	for _, one := range library.AcceptableExtensions() {
+		if one == ext {
+			full, err := filepath.Abs(filePath)
+			if err != nil {
+				return
+			}
+			if fs.FileIsReadable(full) {
+				for i, f := range s.RecentFiles {
+					if f == full {
+						copy(s.RecentFiles[i:], s.RecentFiles[i+1:])
+						s.RecentFiles[len(s.RecentFiles)-1] = ""
+						s.RecentFiles = s.RecentFiles[:len(s.RecentFiles)-1]
+						break
+					}
+				}
+				s.RecentFiles = append(s.RecentFiles, "")
+				copy(s.RecentFiles[1:], s.RecentFiles)
+				s.RecentFiles[0] = full
+				if len(s.RecentFiles) > maxRecentFiles {
+					s.RecentFiles = s.RecentFiles[:maxRecentFiles]
+				}
+			}
+			return
+		}
+	}
 }
 
 // Path returns the path to our settings file.

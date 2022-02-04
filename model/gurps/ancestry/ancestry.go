@@ -12,25 +12,22 @@
 package ancestry
 
 import (
+	"context"
+	"io/fs"
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/toolbox/eval"
-)
-
-const (
-	ancestryNameKey          = "name"
-	ancestryCommonOptionsKey = "common_options"
-	ancestryGenderOptionsKey = "gender_options"
+	xfs "github.com/richardwilkes/toolbox/xio/fs"
 )
 
 // Ancestry holds details necessary to generate ancestry-specific customizations.
 type Ancestry struct {
-	Name          string
-	CommonOptions *Options
-	GenderOptions []*WeightedAncestryOptions
+	Name          string                     `json:"name,omitempty"`
+	CommonOptions *Options                   `json:"common_options,omitempty"`
+	GenderOptions []*WeightedAncestryOptions `json:"gender_options,omitempty"`
 }
 
 // AvailableAncestries scans the libraries and returns the available ancestries.
@@ -38,31 +35,16 @@ func AvailableAncestries(libraries *library.Libraries) []*library.NamedFileSet {
 	return library.ScanForNamedFileSets(embeddedFS, "data", ".ancestry", libraries)
 }
 
-// NewAncestryFromJSON creates a new Ancestry from a JSON object.
-func NewAncestryFromJSON(data map[string]interface{}, defaultName string) *Ancestry {
-	a := &Ancestry{
-		Name:          encoding.String(data[ancestryNameKey]),
-		GenderOptions: WeightedAncestryOptionsFromJSON(encoding.Array(data[ancestryGenderOptionsKey])),
+// NewAncestoryFromFS creates a new Ancestry from a file.
+func NewAncestoryFromFS(fileSystem fs.FS, filePath string) (*Ancestry, error) {
+	var ancestry Ancestry
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &ancestry); err != nil {
+		return nil, err
 	}
-	obj := encoding.Object(data[ancestryCommonOptionsKey])
-	if len(obj) != 0 {
-		a.CommonOptions = NewOptionsFromJSON(obj)
+	if ancestry.Name == "" {
+		ancestry.Name = xfs.BaseName(filePath)
 	}
-	if a.Name == "" {
-		a.Name = defaultName
-	}
-	return a
-}
-
-// ToJSON emits this object as JSON.
-func (a *Ancestry) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	encoder.KeyedString(ancestryNameKey, a.Name, true, true)
-	if a.CommonOptions != nil {
-		encoding.ToKeyedJSON(a.CommonOptions, ancestryCommonOptionsKey, encoder)
-	}
-	WeightedAncestryOptionsToJSON(ancestryGenderOptionsKey, a.GenderOptions, encoder)
-	encoder.EndObject()
+	return &ancestry, nil
 }
 
 // RandomGender returns a randomized gender.

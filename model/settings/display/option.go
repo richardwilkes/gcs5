@@ -12,86 +12,60 @@
 package display
 
 import (
-	"strings"
-
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
 // Possible Option values.
 const (
-	NotShown Option = iota
-	Inline
-	Tooltip
-	InlineAndTooltip
+	NotShown         = Option("not_shown")
+	Inline           = Option("inline")
+	Tooltip          = Option("tooltip")
+	InlineAndTooltip = Option("inline_and_tooltip")
 )
 
-type optionData struct {
-	Key     string
-	String  string
-	Inline  bool
-	Tooltip bool
+// AllOptions is the complete set of Option values.
+var AllOptions = []Option{
+	NotShown,
+	Inline,
+	Tooltip,
+	InlineAndTooltip,
 }
 
 // Option holds a display option.
-type Option uint8
+type Option string
 
-var optionValues = []*optionData{
-	{
-		Key:    "not_shown",
-		String: i18n.Text("Not Shown"),
-	},
-	{
-		Key:    "inline",
-		String: i18n.Text("Inline"),
-		Inline: true,
-	},
-	{
-		Key:     "tooltip",
-		String:  i18n.Text("Tooltip"),
-		Tooltip: true,
-	},
-	{
-		Key:     "inline_and_tooltip",
-		String:  i18n.Text("Inline & Tooltip"),
-		Inline:  true,
-		Tooltip: true,
-	},
-}
-
-// OptionFromString extracts an Option from a key.
-func OptionFromString(key string, def Option) Option {
-	for i, one := range optionValues {
-		if strings.EqualFold(key, one.Key) {
-			return Option(i)
+// EnsureValid ensures this is of a known value.
+func (o Option) EnsureValid() Option {
+	for _, one := range AllOptions {
+		if one == o {
+			return o
 		}
 	}
-	return def.EnsureValid()
-}
-
-// EnsureValid returns the first Option if this Option is not a known value.
-func (o Option) EnsureValid() Option {
-	if int(o) < len(optionValues) {
-		return o
-	}
-	return 0
-}
-
-// Key returns the key used to represent this Option.
-func (o Option) Key() string {
-	return optionValues[o.EnsureValid()].Key
+	return AllOptions[0]
 }
 
 // String implements fmt.Stringer.
 func (o Option) String() string {
-	return optionValues[o.EnsureValid()].String
+	switch o {
+	case NotShown:
+		return i18n.Text("Not Shown")
+	case Inline:
+		return i18n.Text("Inline")
+	case Tooltip:
+		return i18n.Text("Tooltip")
+	case InlineAndTooltip:
+		return i18n.Text("Inline & Tooltip")
+	default:
+		return NotShown.String()
+	}
 }
 
 // Inline returns true if inline notes should be shown.
 func (o Option) Inline() bool {
-	return optionValues[o.EnsureValid()].Inline
+	return o == Inline || o == InlineAndTooltip
 }
 
 // Tooltip returns true if tooltips should be shown.
 func (o Option) Tooltip() bool {
-	return optionValues[o.EnsureValid()].Tooltip
+	return o == Tooltip || o == InlineAndTooltip
 }

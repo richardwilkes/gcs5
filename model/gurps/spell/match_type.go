@@ -11,59 +11,31 @@
 
 package spell
 
-import (
-	"strings"
-)
-
 // Possible MatchType values.
 const (
-	AllColleges MatchType = iota
-	CollegeName
-	PowerSource
-	Spell
+	AllColleges = MatchType("all_colleges")
+	CollegeName = MatchType("college_name")
+	PowerSource = MatchType("power_source_name")
+	Spell       = MatchType("spell_name")
 )
 
-type matchTypeData struct {
-	Key string
+// AllMatchTypes is the complete set of MatchType values.
+var AllMatchTypes = []MatchType{
+	AllColleges,
+	CollegeName,
+	PowerSource,
+	Spell,
 }
 
 // MatchType holds the type of an attribute definition.
-type MatchType uint8
+type MatchType string
 
-var matchTypeValues = []*matchTypeData{
-	{
-		Key: "all_colleges",
-	},
-	{
-		Key: "college_name",
-	},
-	{
-		Key: "power_source_name",
-	},
-	{
-		Key: "spell_name",
-	},
-}
-
-// MatchTypeFromString extracts a MatchType from a key.
-func MatchTypeFromString(key string) MatchType {
-	for i, one := range matchTypeValues {
-		if strings.EqualFold(key, one.Key) {
-			return MatchType(i)
+// EnsureValid ensures this is of a known value.
+func (c MatchType) EnsureValid() MatchType {
+	for _, one := range AllMatchTypes {
+		if one == c {
+			return c
 		}
 	}
-	return 0
-}
-
-// EnsureValid returns the first MatchType if this MatchType is not a known value.
-func (m MatchType) EnsureValid() MatchType {
-	if int(m) < len(matchTypeValues) {
-		return m
-	}
-	return 0
-}
-
-// Key returns the key used to represent this MatchType.
-func (m MatchType) Key() string {
-	return matchTypeValues[m.EnsureValid()].Key
+	return AllMatchTypes[0]
 }

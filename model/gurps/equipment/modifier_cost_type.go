@@ -13,7 +13,6 @@ package equipment
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -22,97 +21,84 @@ import (
 // Possible ModifierCostType values.
 const (
 	// OriginalCost modifies the original value stored in the equipment. Can be a ±value, ±% value, or a multiplier.
-	OriginalCost ModifierCostType = iota
+	OriginalCost = ModifierCostType("to_original_cost")
 	// BaseCost modifies the base cost. Can be an additive multiplier or a CF value.
-	BaseCost
+	BaseCost = ModifierCostType("to_base_cost")
 	// FinalBaseCost modifies the final base cost. Can be a ±value, ±% value, or a multiplier.
-	FinalBaseCost
+	FinalBaseCost = ModifierCostType("to_final_base_cost")
 	// FinalCost modifies the final cost. Can be a ±value, ±% value, or a multiplier.
-	FinalCost
+	FinalCost = ModifierCostType("to_final_cost")
 )
 
-type modifierCostTypeData struct {
-	Key         string
-	Description string
-	Example     string
-	Permitted   []ModifierCostValueType
+// AllModifierCostTypes is the complete set of ModifierCostType values.
+var AllModifierCostTypes = []ModifierCostType{
+	OriginalCost,
+	BaseCost,
+	FinalBaseCost,
+	FinalCost,
 }
 
 // ModifierCostType describes how an EquipmentModifier's cost is applied.
-type ModifierCostType uint8
+type ModifierCostType string
 
-var modifierCostTypeValues = []*modifierCostTypeData{
-	{
-		Key:         "to_original_cost",
-		Description: i18n.Text("to original cost"),
-		Example:     `"+5", "-5", "+10%", "-10%", "x3.2"`,
-		Permitted:   []ModifierCostValueType{Addition, Percentage, Multiplier},
-	},
-	{
-		Key:         "to_base_cost",
-		Description: i18n.Text("to base cost"),
-		Example:     `"x2", "+2 CF", "-0.2 CF"`,
-		Permitted:   []ModifierCostValueType{CostFactor, Multiplier},
-	},
-	{
-		Key:         "to_final_base_cost",
-		Description: i18n.Text("to final base cost"),
-		Example:     `"+5", "-5", "+10%", "-10%", "x3.2"`,
-		Permitted:   []ModifierCostValueType{Addition, Percentage, Multiplier},
-	},
-	{
-		Key:         "to_final_cost",
-		Description: i18n.Text("to final cost"),
-		Example:     `"+5", "-5", "+10%", "-10%", "x3.2"`,
-		Permitted:   []ModifierCostValueType{Addition, Percentage, Multiplier},
-	},
-}
-
-// ModifierCostTypeFromKey extracts a ModifierCostType from a key.
-func ModifierCostTypeFromKey(key string) ModifierCostType {
-	for i, one := range modifierCostTypeValues {
-		if strings.EqualFold(key, one.Key) {
-			return ModifierCostType(i)
+// EnsureValid ensures this is of a known value.
+func (m ModifierCostType) EnsureValid() ModifierCostType {
+	for _, one := range AllModifierCostTypes {
+		if one == m {
+			return m
 		}
 	}
-	return 0
+	return AllModifierCostTypes[0]
+}
+
+// ShortString returns the same thing as .String(), but without the example.
+func (m ModifierCostType) ShortString() string {
+	switch m {
+	case OriginalCost:
+		return i18n.Text("to original cost")
+	case BaseCost:
+		return i18n.Text("to base cost")
+	case FinalBaseCost:
+		return i18n.Text("to final base cost")
+	case FinalCost:
+		return i18n.Text("to final cost")
+	default:
+		return OriginalCost.ShortString()
+	}
+}
+
+// String implements fmt.Stringer.
+func (m ModifierCostType) String() string {
+	return fmt.Sprintf("%s (e.g. %s)", m.ShortString(), m.Example())
+}
+
+// Example returns example values.
+func (m ModifierCostType) Example() string {
+	if m.EnsureValid() == BaseCost {
+		return `"x2", "+2 CF", "-0.2 CF"`
+	}
+	return `"+5", "-5", "+10%", "-10%", "x3.2"`
+}
+
+// Permitted returns the permitted ModifierCostValueType values.
+func (m ModifierCostType) Permitted() []ModifierCostValueType {
+	if m.EnsureValid() == BaseCost {
+		return []ModifierCostValueType{CostFactor, Multiplier}
+	}
+	return []ModifierCostValueType{Addition, Percentage, Multiplier}
 }
 
 // DetermineModifierCostValueTypeFromString examines a string to determine what type it is, but restricts the result to
 // those allowed for this ModifierCostType.
 func (m ModifierCostType) DetermineModifierCostValueTypeFromString(s string) ModifierCostValueType {
-	t := DetermineModifierCostValueTypeFromString(s)
-	permitted := modifierCostTypeValues[m.EnsureValid()].Permitted
+	cvt := DetermineModifierCostValueTypeFromString(s)
+	permitted := m.Permitted()
 	for _, one := range permitted {
-		if one == t {
-			return t
+		if one == cvt {
+			return cvt
 		}
 	}
 	return permitted[0]
-}
-
-// EnsureValid returns the first ModifierCostType if this ModifierCostType is not a known value.
-func (m ModifierCostType) EnsureValid() ModifierCostType {
-	if int(m) < len(modifierCostTypeValues) {
-		return m
-	}
-	return 0
-}
-
-// Key returns the key used to represent this ModifierCostType.
-func (m ModifierCostType) Key() string {
-	return modifierCostTypeValues[m.EnsureValid()].Key
-}
-
-// ShortString returns the same thing as .String(), but without the example.
-func (m ModifierCostType) ShortString() string {
-	return modifierCostTypeValues[m.EnsureValid()].Description
-}
-
-// String implements fmt.Stringer.
-func (m ModifierCostType) String() string {
-	data := modifierCostTypeValues[m.EnsureValid()]
-	return fmt.Sprintf("%s (e.g. %s)", data.Description, data.Example)
 }
 
 // ExtractValue from the string.
@@ -122,6 +108,6 @@ func (m ModifierCostType) ExtractValue(s string) fixed.F64d4 {
 
 // Format returns a formatted version of the value.
 func (m ModifierCostType) Format(s string) string {
-	t := m.DetermineModifierCostValueTypeFromString(s)
-	return t.Format(t.ExtractValue(s))
+	cvt := m.DetermineModifierCostValueTypeFromString(s)
+	return cvt.Format(cvt.ExtractValue(s))
 }

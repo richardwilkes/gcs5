@@ -12,75 +12,54 @@
 package weapon
 
 import (
-	"strings"
-
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
 // Possible StrengthDamage values.
 const (
-	None StrengthDamage = iota
-	Thrust
-	LeveledThrust
-	Swing
-	LeveledSwing
+	None          = StrengthDamage("none")
+	Thrust        = StrengthDamage("thr")
+	LeveledThrust = StrengthDamage("thr_leveled")
+	Swing         = StrengthDamage("sw")
+	LeveledSwing  = StrengthDamage("sw_leveled")
 )
 
-type strengthDamageData struct {
-	Key    string
-	String string
+// AllStrengthDamages is the complete set of StrengthDamage values.
+var AllStrengthDamages = []StrengthDamage{
+	None,
+	Thrust,
+	LeveledThrust,
+	Swing,
+	LeveledSwing,
 }
 
 // StrengthDamage holds the type of strength dice to add to damage.
-type StrengthDamage uint8
+type StrengthDamage string
 
-var strengthDamageValues = []*strengthDamageData{
-	{
-		Key:    "none",
-		String: "",
-	},
-	{
-		Key:    "thr",
-		String: "thr",
-	},
-	{
-		Key:    "thr_leveled",
-		String: "thr " + i18n.Text("(leveled)"),
-	},
-	{
-		Key:    "sw",
-		String: "sw",
-	},
-	{
-		Key:    "sw_leveled",
-		String: "sw " + i18n.Text("(leveled)"),
-	},
-}
-
-// StrengthDamageFromKey extracts a StrengthDamage from a key.
-func StrengthDamageFromKey(key string) StrengthDamage {
-	for i, one := range strengthDamageValues {
-		if strings.EqualFold(key, one.Key) {
-			return StrengthDamage(i)
+// EnsureValid ensures this is of a known value.
+func (s StrengthDamage) EnsureValid() StrengthDamage {
+	for _, one := range AllStrengthDamages {
+		if one == s {
+			return s
 		}
 	}
-	return 0
-}
-
-// EnsureValid returns the first StrengthDamage if this StrengthDamage is not a known value.
-func (s StrengthDamage) EnsureValid() StrengthDamage {
-	if int(s) < len(strengthDamageValues) {
-		return s
-	}
-	return 0
-}
-
-// Key returns the key used to represent this StrengthDamage.
-func (s StrengthDamage) Key() string {
-	return strengthDamageValues[s.EnsureValid()].Key
+	return AllStrengthDamages[0]
 }
 
 // String implements fmt.Stringer.
 func (s StrengthDamage) String() string {
-	return strengthDamageValues[s.EnsureValid()].String
+	switch s {
+	case None:
+		return ""
+	case Thrust:
+		return "thr"
+	case LeveledThrust:
+		return "thr " + i18n.Text("(leveled)")
+	case Swing:
+		return "sw"
+	case LeveledSwing:
+		return "sw " + i18n.Text("(leveled)")
+	default:
+		return None.String()
+	}
 }

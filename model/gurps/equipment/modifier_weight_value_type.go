@@ -14,49 +14,80 @@ package equipment
 import (
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 )
 
 // Possible ModifierWeightValueType values.
 const (
-	WeightAddition ModifierWeightValueType = iota
-	WeightPercentageAdder
-	WeightPercentageMultiplier
-	WeightMultiplier
+	WeightAddition             = ModifierWeightValueType("+")
+	WeightPercentageAdder      = ModifierWeightValueType("%")
+	WeightPercentageMultiplier = ModifierWeightValueType("x%")
+	WeightMultiplier           = ModifierWeightValueType("x")
 )
 
-type modifierWeightValueTypeData struct {
-	Format func(fraction f64d4.Fraction) string
+// AllModifierWeightValueTypes is the complete set of ModifierWeightValueType values.
+var AllModifierWeightValueTypes = []ModifierWeightValueType{
+	WeightAddition,
+	WeightPercentageAdder,
+	WeightPercentageMultiplier,
+	WeightMultiplier,
 }
 
 // ModifierWeightValueType describes how an EquipmentModifier's point cost is applied.
-type ModifierWeightValueType uint8
+type ModifierWeightValueType string
 
-var modifierWeightValueTypeValues = []*modifierWeightValueTypeData{
-	{
-		Format: func(fraction f64d4.Fraction) string { return fraction.StringWithSign() },
-	},
-	{
-		Format: func(fraction f64d4.Fraction) string { return fraction.StringWithSign() + "%" },
-	},
-	{
-		Format: func(fraction f64d4.Fraction) string {
-			if fraction.Numerator <= 0 {
-				fraction.Numerator = f64d4.Hundred
-				fraction.Denominator = f64d4.One
-			}
-			return "x" + fraction.String() + "%"
-		},
-	},
-	{
-		Format: func(fraction f64d4.Fraction) string {
-			if fraction.Numerator <= 0 {
-				fraction.Numerator = f64d4.One
-				fraction.Denominator = f64d4.One
-			}
-			return "x" + fraction.String()
-		},
-	},
+// EnsureValid ensures this is of a known value.
+func (m ModifierWeightValueType) EnsureValid() ModifierWeightValueType {
+	for _, one := range AllModifierWeightValueTypes {
+		if one == m {
+			return m
+		}
+	}
+	return AllModifierWeightValueTypes[0]
+}
+
+// Format returns a formatted version of the value.
+func (m ModifierWeightValueType) Format(fraction fxp.Fraction) string {
+	switch m {
+	case WeightAddition:
+		return fraction.StringWithSign()
+	case WeightPercentageAdder:
+		return fraction.StringWithSign() + "%"
+	case WeightPercentageMultiplier:
+		if fraction.Numerator <= 0 {
+			fraction.Numerator = fxp.Hundred
+			fraction.Denominator = fxp.One
+		}
+		return "x" + fraction.String() + "%"
+	case WeightMultiplier:
+		if fraction.Numerator <= 0 {
+			fraction.Numerator = fxp.One
+			fraction.Denominator = fxp.One
+		}
+		return "x" + fraction.String()
+	default:
+		return WeightAddition.Format(fraction)
+	}
+}
+
+// ExtractFraction from the string.
+func (m ModifierWeightValueType) ExtractFraction(s string) fxp.Fraction {
+	fraction := fxp.NewFractionFromString(s)
+	revised := m.EnsureValid()
+	switch revised {
+	case WeightPercentageMultiplier:
+		if fraction.Numerator <= 0 {
+			fraction.Numerator = fxp.Hundred
+			fraction.Denominator = fxp.One
+		}
+	case WeightMultiplier:
+		if fraction.Numerator <= 0 {
+			fraction.Numerator = fxp.One
+			fraction.Denominator = fxp.One
+		}
+	default:
+	}
+	return fraction
 }
 
 // DetermineModifierWeightValueTypeFromString examines a string to determine what type it is.
@@ -73,37 +104,4 @@ func DetermineModifierWeightValueTypeFromString(s string) ModifierWeightValueTyp
 	default:
 		return WeightAddition
 	}
-}
-
-// EnsureValid returns the first ModifierWeightValueType if this ModifierWeightValueType is not a known value.
-func (m ModifierWeightValueType) EnsureValid() ModifierWeightValueType {
-	if int(m) < len(modifierWeightValueTypeValues) {
-		return m
-	}
-	return 0
-}
-
-// Format returns a formatted version of the value.
-func (m ModifierWeightValueType) Format(fraction f64d4.Fraction) string {
-	return modifierWeightValueTypeValues[m.EnsureValid()].Format(fraction)
-}
-
-// ExtractFraction from the string.
-func (m ModifierWeightValueType) ExtractFraction(s string) f64d4.Fraction {
-	fraction := f64d4.NewFractionFromString(s)
-	revised := m.EnsureValid()
-	switch revised {
-	case WeightPercentageMultiplier:
-		if fraction.Numerator <= 0 {
-			fraction.Numerator = f64d4.Hundred
-			fraction.Denominator = f64d4.One
-		}
-	case WeightMultiplier:
-		if fraction.Numerator <= 0 {
-			fraction.Numerator = f64d4.One
-			fraction.Denominator = f64d4.One
-		}
-	default:
-	}
-	return fraction
 }

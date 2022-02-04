@@ -12,40 +12,35 @@
 package criteria
 
 import (
-	"github.com/richardwilkes/gcs/model/encoding"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
+	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 // Weight holds the criteria for matching a number.
 type Weight struct {
-	Type      NumericCompareType
-	Qualifier measure.Weight
+	WeightData
 }
 
-// NewWeightFromJSON creates a new Weight from a JSON object.
-func NewWeightFromJSON(data map[string]interface{}, defUnits measure.WeightUnits) *Weight {
-	n := &Weight{}
-	n.FromJSON(data, defUnits)
-	return n
+// WeightData holds the criteria for matching a number that should be written to disk.
+type WeightData struct {
+	Compare   NumericCompareType `json:"compare,omitempty"`
+	Qualifier measure.Weight     `json:"qualifier,omitempty"`
 }
 
-// FromJSON replaces the current data with data from a JSON object.
-func (n *Weight) FromJSON(data map[string]interface{}, defUnits measure.WeightUnits) {
-	n.Type = NumericCompareTypeFromString(encoding.String(data[typeKey]))
-	n.Qualifier = measure.WeightFromStringForced(encoding.String(data[qualifierKey]), defUnits)
+// ShouldOmit implements json.Omitter.
+func (w Weight) ShouldOmit() bool {
+	return w.Compare.EnsureValid() == AnyNumber
 }
 
-// ToJSON emits the JSON for this object.
-func (n *Weight) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	n.ToInlineJSON(encoder)
-	encoder.EndObject()
+// UnmarshalJSON implements json.Unmarshaler.
+func (w *Weight) UnmarshalJSON(data []byte) error {
+	err := json.Unmarshal(data, &w.WeightData)
+	w.Compare = w.Compare.EnsureValid()
+	return err
 }
 
-// ToInlineJSON emits the JSON key values that comprise this object without the object wrapper.
-func (n *Weight) ToInlineJSON(encoder *encoding.JSONEncoder) {
-	if n.Type != AnyNumber {
-		encoder.KeyedString(typeKey, n.Type.Key(), false, false)
-		encoder.KeyedString(qualifierKey, n.Qualifier.String(), false, false)
-	}
+// Matches performs a comparison and returns true if the data matches.
+func (w Weight) Matches(value measure.Weight) bool {
+	return w.Compare.Matches(fixed.F64d4(w.Qualifier), fixed.F64d4(value))
 }

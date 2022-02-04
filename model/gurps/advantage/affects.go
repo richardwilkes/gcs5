@@ -12,74 +12,60 @@
 package advantage
 
 import (
-	"strings"
-
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
 // Possible Affects values.
 const (
-	Total Affects = iota
-	BaseOnly
-	LevelsOnly
+	Total      = Affects("total")
+	BaseOnly   = Affects("base_only")
+	LevelsOnly = Affects("levels_only")
 )
 
-type affectsData struct {
-	Key        string
-	String     string
-	ShortTitle string
+// AllAffects is the complete set of Affects values.
+var AllAffects = []Affects{
+	Total,
+	BaseOnly,
+	LevelsOnly,
 }
 
 // Affects describes how an AdvantageModifier affects the point cost.
-type Affects uint8
+type Affects string
 
-var affectsValues = []*affectsData{
-	{
-		Key:        "total",
-		String:     i18n.Text("to cost"),
-		ShortTitle: "",
-	},
-	{
-		Key:        "base_only",
-		String:     i18n.Text("to base cost only"),
-		ShortTitle: i18n.Text("(base only)"),
-	},
-	{
-		Key:        "levels_only",
-		String:     i18n.Text("to leveled cost only"),
-		ShortTitle: i18n.Text("(levels only)"),
-	},
-}
-
-// AffectsFromKey extracts a Affects from a key.
-func AffectsFromKey(key string) Affects {
-	for i, one := range affectsValues {
-		if strings.EqualFold(key, one.Key) {
-			return Affects(i)
+// EnsureValid ensures this is of a known value.
+func (a Affects) EnsureValid() Affects {
+	for _, one := range AllAffects {
+		if one == a {
+			return a
 		}
 	}
-	return 0
-}
-
-// EnsureValid returns the first Affects if this Affects is not a known value.
-func (a Affects) EnsureValid() Affects {
-	if int(a) < len(affectsValues) {
-		return a
-	}
-	return 0
-}
-
-// Key returns the key used to represent this Affects.
-func (a Affects) Key() string {
-	return affectsValues[a.EnsureValid()].Key
+	return AllAffects[0]
 }
 
 // String implements fmt.Stringer.
 func (a Affects) String() string {
-	return affectsValues[a.EnsureValid()].String
+	switch a {
+	case Total:
+		return i18n.Text("to cost")
+	case BaseOnly:
+		return i18n.Text("to base cost only")
+	case LevelsOnly:
+		return i18n.Text("to leveled cost only")
+	default:
+		return Total.String()
+	}
 }
 
 // ShortTitle returns the short version of the title.
 func (a Affects) ShortTitle() string {
-	return affectsValues[a.EnsureValid()].ShortTitle
+	switch a {
+	case Total:
+		return ""
+	case BaseOnly:
+		return i18n.Text("(base only)")
+	case LevelsOnly:
+		return i18n.Text("(levels only)")
+	default:
+		return Total.String()
+	}
 }

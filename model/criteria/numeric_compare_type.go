@@ -12,95 +12,82 @@
 package criteria
 
 import (
-	"strings"
-
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 // Possible NumericCompareType values.
 const (
-	AnyNumber NumericCompareType = iota
-	Equals
-	NotEquals
-	AtLeast
-	AtMost
+	AnyNumber = NumericCompareType("")
+	Equals    = NumericCompareType("is")
+	NotEquals = NumericCompareType("is_not")
+	AtLeast   = NumericCompareType("at_least")
+	AtMost    = NumericCompareType("at_most")
 )
 
-type numericCompareTypeData struct {
-	Key     string
-	String  string
-	Matches func(qualifier, data fixed.F64d4) bool
+// AllNumericCompareTypes is the complete set of NumericCompareType values.
+var AllNumericCompareTypes = []NumericCompareType{
+	AnyNumber,
+	Equals,
+	NotEquals,
+	AtLeast,
+	AtMost,
 }
 
 // NumericCompareType holds the type for a numeric comparison.
-type NumericCompareType uint8
+type NumericCompareType string
 
-var numericCompareTypeValues = []*numericCompareTypeData{
-	{
-		Key:     "any",
-		String:  i18n.Text("is anything"),
-		Matches: func(qualifier, data fixed.F64d4) bool { return true },
-	},
-	{
-		Key:     "is",
-		String:  i18n.Text("is"),
-		Matches: func(qualifier, data fixed.F64d4) bool { return data == qualifier },
-	},
-	{
-		Key:     "is_not",
-		String:  i18n.Text("is not"),
-		Matches: func(qualifier, data fixed.F64d4) bool { return data != qualifier },
-	},
-	{
-		Key:     "at_least",
-		String:  i18n.Text("at least"),
-		Matches: func(qualifier, data fixed.F64d4) bool { return data >= qualifier },
-	},
-	{
-		Key:     "at_most",
-		String:  i18n.Text("at most"),
-		Matches: func(qualifier, data fixed.F64d4) bool { return data <= qualifier },
-	},
-}
-
-// NumericCompareTypeFromString extracts a NumericCompareType from a key.
-func NumericCompareTypeFromString(key string) NumericCompareType {
-	for i, one := range numericCompareTypeValues {
-		if strings.EqualFold(key, one.Key) {
-			return NumericCompareType(i)
+// EnsureValid ensures this is of a known value.
+func (n NumericCompareType) EnsureValid() NumericCompareType {
+	for _, one := range AllNumericCompareTypes {
+		if one == n {
+			return n
 		}
 	}
-	return 0
-}
-
-// EnsureValid returns the first NumericCompareType if this NumericCompareType is not a known value.
-func (n NumericCompareType) EnsureValid() NumericCompareType {
-	if int(n) < len(numericCompareTypeValues) {
-		return n
-	}
-	return 0
-}
-
-// Key returns the key used to represent this NumericCompareType.
-func (n NumericCompareType) Key() string {
-	return numericCompareTypeValues[n.EnsureValid()].Key
+	return AllNumericCompareTypes[0]
 }
 
 // String implements fmt.Stringer.
 func (n NumericCompareType) String() string {
-	return numericCompareTypeValues[n.EnsureValid()].String
+	switch n {
+	case AnyNumber:
+		return i18n.Text("is anything")
+	case Equals:
+		return i18n.Text("is")
+	case NotEquals:
+		return i18n.Text("is not")
+	case AtLeast:
+		return i18n.Text("at least")
+	case AtMost:
+		return i18n.Text("at most")
+	default:
+		return AnyNumber.String()
+	}
 }
 
 // Describe returns a description of this NumericCompareType using a qualifier.
 func (n NumericCompareType) Describe(qualifier fixed.F64d4) string {
-	if n == AnyNumber {
-		return n.String()
+	v := n.EnsureValid()
+	if v == AnyNumber {
+		return v.String()
 	}
-	return n.String() + " " + qualifier.String()
+	return v.String() + " " + qualifier.String()
 }
 
 // Matches performs a comparison and returns true if the data matches.
 func (n NumericCompareType) Matches(qualifier, data fixed.F64d4) bool {
-	return numericCompareTypeValues[n.EnsureValid()].Matches(qualifier, data)
+	switch n {
+	case AnyNumber:
+		return true
+	case Equals:
+		return data == qualifier
+	case NotEquals:
+		return data != qualifier
+	case AtLeast:
+		return data >= qualifier
+	case AtMost:
+		return data <= qualifier
+	default:
+		return AnyNumber.Matches(qualifier, data)
+	}
 }

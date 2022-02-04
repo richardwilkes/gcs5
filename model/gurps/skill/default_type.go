@@ -11,12 +11,16 @@
 
 package skill
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/richardwilkes/gcs/model/gurps/gid"
+)
 
 var skillBasedDefaultTypes = map[string]bool{
-	"skill": true,
-	"parry": true,
-	"block": true,
+	gid.Skill: true,
+	gid.Parry: true,
+	gid.Block: true,
 }
 
 // DefaultTypeIsSkillBased returns true if the SkillDefault type is Skill-based.

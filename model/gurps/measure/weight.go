@@ -14,6 +14,7 @@ package measure
 import (
 	"strings"
 
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
@@ -39,9 +40,9 @@ func WeightFromStringForced(text string, defaultUnits WeightUnits) Weight {
 // defaultUnits is used.
 func WeightFromString(text string, defaultUnits WeightUnits) (Weight, error) {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
-	for unit := Pound; unit <= Gram; unit++ {
-		if strings.HasSuffix(text, unit.Key()) {
-			value, err := fixed.F64d4FromString(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())))
+	for _, unit := range AllWeightUnits {
+		if strings.HasSuffix(text, string(unit)) {
+			value, err := fixed.F64d4FromString(strings.TrimSpace(strings.TrimSuffix(text, string(unit))))
 			if err != nil {
 				return 0, err
 			}
@@ -58,4 +59,20 @@ func WeightFromString(text string, defaultUnits WeightUnits) (Weight, error) {
 
 func (w Weight) String() string {
 	return Pound.Format(w)
+}
+
+// MarshalJSON implements json.Marshaler.
+func (w Weight) MarshalJSON() ([]byte, error) {
+	return json.Marshal(w.String())
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (w *Weight) UnmarshalJSON(in []byte) error {
+	var s string
+	if err := json.Unmarshal(in, &s); err != nil {
+		return err
+	}
+	var err error
+	*w, err = WeightFromString(s, Pound)
+	return err
 }

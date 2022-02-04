@@ -14,6 +14,8 @@ package paper
 import (
 	"strconv"
 	"strings"
+
+	"github.com/richardwilkes/json"
 )
 
 // Length contains a real-world length value with an attached units.
@@ -26,9 +28,9 @@ type Length struct {
 // case units.Inch is used.
 func LengthFromString(text string) Length {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
-	for unit := Millimeter; unit <= Inch; unit++ {
-		if strings.HasSuffix(text, unit.Key()) {
-			value, err := strconv.ParseFloat(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())), 64)
+	for _, unit := range AllUnits {
+		if strings.HasSuffix(text, string(unit)) {
+			value, err := strconv.ParseFloat(strings.TrimSpace(strings.TrimSuffix(text, string(unit))), 64)
 			if err != nil {
 				return Length{Units: unit}
 			}
@@ -44,10 +46,25 @@ func LengthFromString(text string) Length {
 }
 
 func (l Length) String() string {
-	return strconv.FormatFloat(l.Length, 'f', -1, 64) + l.Units.Key()
+	return strconv.FormatFloat(l.Length, 'f', -1, 64) + string(l.Units)
 }
 
 // Pixels returns the number of 72-pixels-per-inch pixels this represents.
 func (l Length) Pixels() float32 {
 	return l.Units.ToPixels(l.Length)
+}
+
+// MarshalJSON implements json.Marshaler.
+func (l Length) MarshalJSON() ([]byte, error) {
+	return json.Marshal(l.String())
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (l *Length) UnmarshalJSON(in []byte) error {
+	var s string
+	if err := json.Unmarshal(in, &s); err != nil {
+		return err
+	}
+	*l = LengthFromString(s)
+	return nil
 }

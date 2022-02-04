@@ -12,11 +12,19 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/richardwilkes/gcs/internal/ui"
+	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/gcs/model/settings"
+	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/cmdline"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/log/jotrotate"
 )
 
@@ -32,5 +40,27 @@ func main() {
 	}
 	cl := cmdline.New(true)
 	fileList := jotrotate.ParseAndSetup(cl)
+
+	settings.Global() // Here to force early initialization
+
+	entries, err := os.ReadDir("../gcs_master_library/Library/Settings")
+	jot.FatalIfErr(err)
+	for _, entry := range entries {
+		name := entry.Name()
+		if strings.HasSuffix(name, ".ghl") {
+			data, err := gurps.NewBodyTypeFromFile(os.DirFS("../gcs_master_library/Library/Settings"), name)
+			jot.FatalIfErr(err)
+			jot.FatalIfErr(data.Save("samples_converted/" + name))
+
+			var m map[string]interface{}
+			jot.FatalIfErr(jio.LoadFromFile(context.Background(), "../gcs_master_library/Library/Settings/"+name, &m))
+			jot.FatalIfErr(jio.SaveToFile(context.Background(), "samples_converted/orig-sorted-"+name, m))
+			m = make(map[string]interface{})
+			jot.FatalIfErr(jio.LoadFromFile(context.Background(), "samples_converted/"+name, &m))
+			jot.FatalIfErr(jio.SaveToFile(context.Background(), "samples_converted/sorted-"+name, m))
+		}
+	}
+	atexit.Exit(0)
+
 	ui.Start(fileList) // Never returns
 }

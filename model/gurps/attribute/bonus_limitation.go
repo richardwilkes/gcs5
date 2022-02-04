@@ -12,70 +12,50 @@
 package attribute
 
 import (
-	"strings"
-
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
 // Possible BonusLimitation values.
 const (
-	None BonusLimitation = iota
-	StrikingOnly
-	LiftingOnly
-	ThrowingOnly
+	None         = BonusLimitation("")
+	StrikingOnly = BonusLimitation("striking_only")
+	LiftingOnly  = BonusLimitation("lifting_only")
+	ThrowingOnly = BonusLimitation("throwing_only")
 )
 
-type bonusLimitationData struct {
-	Key    string
-	String string
+// AllBonusLimitations is the complete set of BonusLimitation values.
+var AllBonusLimitations = []BonusLimitation{
+	None,
+	StrikingOnly,
+	LiftingOnly,
+	ThrowingOnly,
 }
 
 // BonusLimitation holds a limitation for an AttributeBonus.
-type BonusLimitation uint8
+type BonusLimitation string
 
-var bonusLimitationValues = []*bonusLimitationData{
-	{
-		Key:    "none",
-		String: " ",
-	},
-	{
-		Key:    "striking_only",
-		String: i18n.Text("for striking only"),
-	},
-	{
-		Key:    "lifting_only",
-		String: i18n.Text("for lifting only"),
-	},
-	{
-		Key:    "throwing_only",
-		String: i18n.Text("for throwing only"),
-	},
-}
-
-// BonusLimitationFromKey returns the BonusLimitation from a key.
-func BonusLimitationFromKey(key string) BonusLimitation {
-	for i, one := range bonusLimitationValues {
-		if strings.EqualFold(key, one.Key) {
-			return BonusLimitation(i)
+// EnsureValid ensures this is of a known value.
+func (b BonusLimitation) EnsureValid() BonusLimitation {
+	for _, one := range AllBonusLimitations {
+		if one == b {
+			return b
 		}
 	}
-	return 0
-}
-
-// EnsureValid returns the first BonusLimitation if this BonusLimitation is not a known value.
-func (b BonusLimitation) EnsureValid() BonusLimitation {
-	if int(b) < len(bonusLimitationValues) {
-		return b
-	}
-	return 0
-}
-
-// Key returns the key used to represent this BonusLimitation.
-func (b BonusLimitation) Key() string {
-	return bonusLimitationValues[b.EnsureValid()].Key
+	return AllBonusLimitations[0]
 }
 
 // String implements fmt.Stringer.
 func (b BonusLimitation) String() string {
-	return bonusLimitationValues[b.EnsureValid()].String
+	switch b {
+	case None:
+		return ""
+	case StrikingOnly:
+		return i18n.Text("for striking only")
+	case LiftingOnly:
+		return i18n.Text("for lifting only")
+	case ThrowingOnly:
+		return i18n.Text("for throwing only")
+	default:
+		return None.String()
+	}
 }

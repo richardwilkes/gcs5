@@ -17,110 +17,78 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-// HitLocationPrefix is the prefix used on all hit locations for DR bonuses.
-const HitLocationPrefix = "hit_location."
-
-const (
-	hitLocationIDKey            = "id"
-	hitLocationChoiceNameKey    = "choice_name"
-	hitLocationTableNameKey     = "table_name"
-	hitLocationSlotsKey         = "slots"
-	hitLocationHitPenaltyKey    = "hit_penalty"
-	hitLocationDRBonusKey       = "dr_bonus"
-	hitLocationDescriptionKey   = "description"
-	hitLocationSubTableKey      = "sub_table"
-	hitLocationCalcRollRangeKey = "roll_range"
-	hitLocationCalcDRKey        = "dr"
-)
+// HitLocationData holds the Hitlocation data that gets written to disk.
+type HitLocationData struct {
+	Entity      *Entity   `json:"-"`
+	LocID       string    `json:"id"`
+	ChoiceName  string    `json:"choice_name"`
+	TableName   string    `json:"table_name"`
+	Slots       int       `json:"slots"`
+	HitPenalty  int       `json:"hit_penalty"`
+	DRBonus     int       `json:"dr_bonus"`
+	Description string    `json:"description"`
+	SubTable    *BodyType `json:"sub_table,omitempty"`
+}
 
 // HitLocation holds a single hit location.
 type HitLocation struct {
-	id          string
-	ChoiceName  string
-	TableName   string
+	HitLocationData
 	RollRange   string
-	Slots       int
-	HitPenalty  int
-	DRBonus     int
-	Description string
-	SubTable    *BodyType
 	owningTable *BodyType
 }
 
-// NewHitLocationFromJSON creates a new HitLocation from a JSON object.
-func NewHitLocationFromJSON(data map[string]interface{}) *HitLocation {
-	h := &HitLocation{
-		ChoiceName:  encoding.String(data[hitLocationChoiceNameKey]),
-		TableName:   encoding.String(data[hitLocationTableNameKey]),
-		Slots:       int(encoding.Number(data[hitLocationSlotsKey]).AsInt64()),
-		HitPenalty:  int(encoding.Number(data[hitLocationHitPenaltyKey]).AsInt64()),
-		DRBonus:     int(encoding.Number(data[hitLocationDRBonusKey]).AsInt64()),
-		Description: encoding.String(data[hitLocationDescriptionKey]),
+// MarshalJSON implements json.Marshaler.
+func (h *HitLocation) MarshalJSON() ([]byte, error) {
+	type calc struct {
+		RollRange string         `json:"roll_range"`
+		DR        map[string]int `json:"dr,omitempty"`
 	}
-	h.SetID(encoding.String(data[hitLocationIDKey]))
-	if obj := encoding.Object(data[hitLocationSubTableKey]); obj != nil {
-		h.SetSubTable(NewBodyTypeFromJSON(obj))
+	data := struct {
+		HitLocationData
+		Calc calc `json:"calc"`
+	}{
+		HitLocationData: h.HitLocationData,
+		Calc: calc{
+			RollRange: h.RollRange,
+		},
 	}
-	return h
+	if h.Entity != nil {
+		data.Calc.DR = h.DR(h.Entity, nil, nil)
+		if _, exists := data.Calc.DR[feature.All]; !exists {
+			data.Calc.DR[feature.All] = 0
+		}
+	}
+	return json.Marshal(&data)
 }
 
-// ToJSON emits this object as JSON.
-func (h *HitLocation) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
-	encoder.StartObject()
-	encoder.KeyedString(hitLocationIDKey, h.id, false, false)
-	encoder.KeyedString(hitLocationChoiceNameKey, h.ChoiceName, true, true)
-	encoder.KeyedString(hitLocationTableNameKey, h.TableName, true, true)
-	encoder.KeyedNumber(hitLocationSlotsKey, fixed.F64d4FromInt64(int64(h.Slots)), true)
-	encoder.KeyedNumber(hitLocationHitPenaltyKey, fixed.F64d4FromInt64(int64(h.HitPenalty)), true)
-	encoder.KeyedNumber(hitLocationDRBonusKey, fixed.F64d4FromInt64(int64(h.DRBonus)), true)
-	encoder.KeyedString(hitLocationDescriptionKey, h.Description, true, true)
+// UnmarshalJSON implements json.Unmarshaler.
+func (h *HitLocation) UnmarshalJSON(data []byte) error {
+	h.HitLocationData = HitLocationData{}
+	if err := json.Unmarshal(data, &h.HitLocationData); err != nil {
+		return err
+	}
 	if h.SubTable != nil {
-		encoder.Key(hitLocationSubTableKey)
-		h.SubTable.ToJSON(encoder, entity)
+		h.SubTable.SetOwningLocation(h)
 	}
-
-	// Emit the calculated values for third parties
-	encoder.Key(commonCalcKey)
-	encoder.StartObject()
-	encoder.KeyedString(hitLocationCalcRollRangeKey, h.RollRange, false, false)
-	if entity != nil {
-		drMap := h.DR(entity, nil, nil)
-		if _, exists := drMap[All]; !exists {
-			drMap[All] = 0
-		}
-		keys := make([]string, 0, len(drMap))
-		for k := range drMap {
-			keys = append(keys, k)
-		}
-		txt.SortStringsNaturalAscending(keys)
-		encoder.Key(hitLocationCalcDRKey)
-		encoder.StartObject()
-		for _, k := range keys {
-			encoder.KeyedNumber(k, fixed.F64d4FromInt64(int64(drMap[k])), false)
-		}
-		encoder.EndObject()
-	}
-	encoder.EndObject()
-
-	encoder.EndObject()
+	return nil
 }
 
 // ID returns the ID.
 func (h *HitLocation) ID() string {
-	return h.id
+	return h.LocID
 }
 
 // SetID sets the ID, sanitizing it in the process (i.e. it may be changed from what you set -- read it back if you want
 // to be sure of what it gets set to.
 func (h *HitLocation) SetID(value string) {
-	h.id = id.Sanitize(value, false, ReservedIDs...)
+	h.LocID = id.Sanitize(value, false, ReservedIDs...)
 }
 
 // DR computes the DR coverage for this HitLocation. If 'tooltip' isn't nil, the buffer will be updated with details on
@@ -130,12 +98,12 @@ func (h *HitLocation) DR(entity *Entity, tooltip *xio.ByteBuffer, drMap map[stri
 		drMap = make(map[string]int)
 	}
 	if h.DRBonus != 0 {
-		drMap[All] += h.DRBonus
+		drMap[feature.All] += h.DRBonus
 		if tooltip != nil {
-			fmt.Fprintf(tooltip, "\n%s [%+d against %s attacks]", h.ChoiceName, h.DRBonus, All)
+			fmt.Fprintf(tooltip, "\n%s [%+d against %s attacks]", h.ChoiceName, h.DRBonus, feature.All)
 		}
 	}
-	drMap = entity.AddDRBonusesFor(HitLocationPrefix+h.id, tooltip, drMap)
+	drMap = entity.AddDRBonusesFor(feature.HitLocationPrefix+h.LocID, tooltip, drMap)
 	if h.owningTable != nil && h.owningTable.owningLocation != nil {
 		drMap = h.owningTable.owningLocation.DR(entity, tooltip, drMap)
 	}
@@ -145,12 +113,12 @@ func (h *HitLocation) DR(entity *Entity, tooltip *xio.ByteBuffer, drMap map[stri
 			keys = append(keys, k)
 		}
 		txt.SortStringsNaturalAscending(keys)
-		base := drMap[All]
+		base := drMap[feature.All]
 		var buffer bytes.Buffer
 		buffer.WriteByte('\n')
 		for _, k := range keys {
 			value := drMap[k]
-			if !strings.EqualFold(All, k) {
+			if !strings.EqualFold(feature.All, k) {
 				value += base
 			}
 			fmt.Fprintf(&buffer, "\n%d against %s attacks", value, k)
@@ -164,14 +132,14 @@ func (h *HitLocation) DR(entity *Entity, tooltip *xio.ByteBuffer, drMap map[stri
 // DisplayDR returns the DR for this location, formatted as a string.
 func (h *HitLocation) DisplayDR(entity *Entity, tooltip *xio.ByteBuffer) string {
 	drMap := h.DR(entity, tooltip, nil)
-	all, exists := drMap[All]
+	all, exists := drMap[feature.All]
 	if !exists {
-		drMap[All] = 0
+		drMap[feature.All] = 0
 	}
 	keys := make([]string, 0, len(drMap))
-	keys = append(keys, All)
+	keys = append(keys, feature.All)
 	for k := range drMap {
-		if k != All {
+		if k != feature.All {
 			keys = append(keys, k)
 		}
 	}
@@ -179,7 +147,7 @@ func (h *HitLocation) DisplayDR(entity *Entity, tooltip *xio.ByteBuffer) string 
 	var buffer strings.Builder
 	for _, k := range keys {
 		dr := drMap[k]
-		if k != All {
+		if k != feature.All {
 			dr += all
 		}
 		if buffer.Len() != 0 {
@@ -201,7 +169,7 @@ func (h *HitLocation) SetSubTable(bodyType *BodyType) {
 }
 
 func (h *HitLocation) populateMap(m map[string]*HitLocation) {
-	m[h.id] = h
+	m[h.LocID] = h
 	if h.SubTable != nil {
 		h.SubTable.populateMap(m)
 	}

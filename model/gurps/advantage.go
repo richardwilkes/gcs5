@@ -12,174 +12,198 @@
 package gurps
 
 import (
+	"context"
+	"io/fs"
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/google/uuid"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
-	"github.com/richardwilkes/gcs/model/gurps/ancestry"
-	"github.com/richardwilkes/gcs/model/gurps/prereq"
+	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-const (
-	advantageAncestryKey       = "ancestry"
-	advantageBasePointsKey     = "base_points"
-	advantageContainerTypeKey  = "container_type"
-	advantageCRAdjKey          = "cr_adj"
-	advantageCRKey             = "cr"
-	advantageLevelsKey         = "levels"
-	advantagePointsPerLevelKey = "points_per_level"
-	advantagePrereqsKey        = "prereqs"
-	advantageRoundCostDownKey  = "round_down"
-	advantageTypeKey           = "advantage"
-	advantageUserDescKey       = "userdesc"
-	advantageCalcPointsKey     = "points"
-)
+var _ WeaponOwner = &Advantage{}
+
+const advantageTypeKey = "advantage"
+
+// AdvantageItem holds the Advantage data that only exists in non-containers.
+type AdvantageItem struct {
+	Levels         *fixed.F64d4     `json:"levels,omitempty"`
+	BasePoints     fixed.F64d4      `json:"base_points,omitempty"`
+	PointsPerLevel fixed.F64d4      `json:"points_per_level,omitempty"`
+	Prereq         *PrereqList      `json:"prereqs,omitempty"`
+	Weapons        []*Weapon        `json:"weapons,omitempty"`
+	Features       feature.Features `json:"features,omitempty"`
+	Mental         bool             `json:"mental,omitempty"`
+	Physical       bool             `json:"physical,omitempty"`
+	Social         bool             `json:"social,omitempty"`
+	Exotic         bool             `json:"exotic,omitempty"`
+	Supernatural   bool             `json:"supernatural,omitempty"`
+	Disabled       bool             `json:"disabled,omitempty"`
+	RoundCostDown  bool             `json:"round_down,omitempty"`
+}
+
+// AdvantageContainer holds the Advantage data that only exists in containers.
+type AdvantageContainer struct {
+	ContainerType advantage.ContainerType `json:"container_type,omitempty"`
+	Ancestry      string                  `json:"ancestry,omitempty"`
+	Children      []*Advantage            `json:"children,omitempty"`
+	Open          bool                    `json:"open,omitempty"`
+}
+
+// AdvantageData holds the Advantage data that is written to disk.
+type AdvantageData struct {
+	Type                string                    `json:"type"`
+	ID                  uuid.UUID                 `json:"id"`
+	Name                string                    `json:"name,omitempty"`
+	PageRef             string                    `json:"reference,omitempty"`
+	LocalNotes          string                    `json:"notes,omitempty"`
+	VTTNotes            string                    `json:"vtt_notes,omitempty"`
+	CR                  advantage.SelfControlRoll `json:"cr,omitempty"`
+	CRAdj               SelfControlRollAdj        `json:"cr_adj,omitempty"`
+	Modifiers           []*AdvantageModifier      `json:"modifiers,omitempty"`
+	UserDesc            string                    `json:"userdesc,omitempty"`
+	Categories          []string                  `json:"categories,omitempty"`
+	*AdvantageItem      `json:",omitempty"`
+	*AdvantageContainer `json:",omitempty"`
+}
 
 // Advantage holds an advantage, disadvantage, quirk, or perk.
 type Advantage struct {
-	Common
+	AdvantageData
+	Entity            *Entity
 	Parent            *Advantage
-	Levels            fixed.F64d4
-	BasePoints        fixed.F64d4
-	PointsPerLevel    fixed.F64d4
-	Features          []*Feature
-	Modifiers         []*AdvantageModifier
-	Prereq            *Prereq
-	Weapons           []*Weapon
-	Ancestry          *ancestry.Ancestry
-	Children          []*Advantage
 	UnsatisfiedReason string
-	UserDesc          string
-	Categories        []string
-	ContainerType     advantage.ContainerType // TODO: Consider merging Container & ContainerType
-	TypeBits          advantage.Type
-	CR                advantage.SelfControlRoll
-	CRAdj             SelfControlRollAdj
 	Satisfied         bool
-	RoundCostDown     bool
-	SelfEnabled       bool
+}
+
+type advantageListData struct {
+	Current []*Advantage `json:"advantages"`
+}
+
+// NewAdvantagesFromFile loads an Advantage list from a file.
+func NewAdvantagesFromFile(fileSystem fs.FS, filePath string) ([]*Advantage, error) {
+	var data struct {
+		advantageListData
+		OldKey []*Advantage `json:"rows"`
+	}
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
+		return nil, errs.NewWithCause("invalid advantages file: "+filePath, err)
+	}
+	if len(data.Current) != 0 {
+		return data.Current, nil
+	}
+	return data.OldKey, nil
+}
+
+// SaveAdvantages writes the Advantage list to the file as JSON.
+func SaveAdvantages(advantages []*Advantage, filePath string) error {
+	return jio.SaveToFile(context.Background(), filePath, &advantageListData{Current: advantages})
 }
 
 // NewAdvantage creates a new Advantage.
-func NewAdvantage(parent *Advantage, container bool) *Advantage {
-	return &Advantage{
-		Common: Common{
-			ID:        id.NewUUID(),
-			Name:      i18n.Text("Advantage"),
-			Container: container,
-			Open:      true,
+func NewAdvantage(entity *Entity, parent *Advantage, container bool) *Advantage {
+	a := Advantage{
+		AdvantageData: AdvantageData{
+			Type: advantageTypeKey,
+			ID:   id.NewUUID(),
+			Name: i18n.Text("Advantage"),
 		},
-		Parent:      parent,
-		Levels:      f64d4.NegOne,
-		Prereq:      NewPrereq(prereq.List, nil),
-		TypeBits:    advantage.Physical,
-		Satisfied:   true,
-		SelfEnabled: true,
+		Entity: entity,
+		Parent: parent,
 	}
+	if container {
+		a.Type += commonContainerKeyPostfix
+		a.AdvantageContainer = &AdvantageContainer{Open: true}
+	} else {
+		a.AdvantageItem = &AdvantageItem{
+			Prereq:   NewPrereqList(),
+			Physical: true,
+		}
+	}
+	return &a
 }
 
-// NewAdvantageFromJSON creates a new Advantage from a JSON object.
-func NewAdvantageFromJSON(parent *Advantage, data map[string]interface{}, entity *Entity) *Advantage {
-	a := &Advantage{Parent: parent}
-	a.Common.FromJSON(advantageTypeKey, data)
-	if a.Container {
-		a.ContainerType = advantage.ContainerTypeFromKey(encoding.String(data[advantageContainerTypeKey]))
-		array := encoding.Array(data[commonChildrenKey])
-		if len(array) != 0 {
-			a.Children = make([]*Advantage, len(array))
-			for i, one := range array {
-				a.Children[i] = NewAdvantageFromJSON(a, encoding.Object(one), entity)
-			}
-		}
-	} else {
-		a.SelfEnabled = !encoding.Bool(data[commonDisabledKey])
-		a.RoundCostDown = encoding.Bool(data[advantageRoundCostDownKey])
-		a.TypeBits = advantage.TypeFromJSON(data)
-		if v, exists := data[advantageLevelsKey]; exists {
-			a.Levels = encoding.Number(v)
-		} else {
-			a.Levels = f64d4.NegOne
-		}
-		a.BasePoints = encoding.Number(data[advantageBasePointsKey])
-		a.PointsPerLevel = encoding.Number(data[advantagePointsPerLevelKey])
-		a.Prereq = NewPrereqFromJSON(encoding.Object(data[advantagePrereqsKey]), entity)
-		a.Weapons = WeaponsListFromJSON(data)
-		a.Features = FeaturesListFromJSON(data)
+// MarshalJSON implements json.Marshaler.
+func (a *Advantage) MarshalJSON() ([]byte, error) {
+	type calc struct {
+		Points fixed.F64d4 `json:"points"`
 	}
-	a.CR = advantage.SelfControlRollFromJSON(advantageCRKey, data)
-	a.CRAdj = SelfControlRollAdjFromKey(encoding.String(data[advantageCRAdjKey]))
-	a.Modifiers = AdvantageModifiersListFromJSON(commonModifiersKey, data)
-	a.UserDesc = encoding.String(data[advantageUserDescKey])
-	a.Categories = StringListFromJSON(commonCategoriesKey, true, data)
-	return a
+	data := struct {
+		AdvantageData
+		Calc calc `json:"calc"`
+	}{
+		AdvantageData: a.AdvantageData,
+		Calc: calc{
+			Points: a.AdjustedPoints(),
+		},
+	}
+	if a.Container() {
+		data.AdvantageItem = nil
+	} else {
+		data.AdvantageContainer = nil
+	}
+	return json.Marshal(&data)
 }
 
-// ToJSON emits this object as JSON.
-func (a *Advantage) ToJSON(encoder *encoding.JSONEncoder, entity *Entity) {
-	encoder.StartObject()
-	a.Common.ToInlineJSON(advantageTypeKey, encoder)
-	if a.Container {
-		if a.ContainerType != advantage.Group {
-			encoder.KeyedString(advantageContainerTypeKey, a.ContainerType.Key(), false, false)
-			if a.ContainerType == advantage.Race {
-				encoder.KeyedString(advantageAncestryKey, a.Ancestry.Name, true, true)
-			}
-		}
-		if len(a.Children) != 0 {
-			encoder.Key(commonChildrenKey)
-			encoder.StartArray()
-			for _, one := range a.Children {
-				one.ToJSON(encoder, entity)
-			}
-			encoder.EndArray()
-		}
-	} else {
-		encoder.KeyedBool(commonDisabledKey, !a.SelfEnabled, true)
-		encoder.KeyedBool(advantageRoundCostDownKey, a.RoundCostDown, true)
-		a.TypeBits.ToInlineJSON(encoder)
-		if a.Levels >= 0 {
-			encoder.KeyedNumber(advantageLevelsKey, a.Levels, false)
-		}
-		encoder.KeyedNumber(advantageBasePointsKey, a.BasePoints, true)
-		encoder.KeyedNumber(advantagePointsPerLevelKey, a.PointsPerLevel, true)
-		encoding.ToKeyedJSON(a.Prereq, advantagePrereqsKey, encoder)
-		WeaponsListToJSON(a.Weapons, encoder)
-		FeaturesListToJSON(a.Features, encoder)
+// UnmarshalJSON implements json.Unmarshaler.
+func (a *Advantage) UnmarshalJSON(data []byte) error {
+	a.AdvantageData = AdvantageData{}
+	if err := json.Unmarshal(data, &a.AdvantageData); err != nil {
+		return err
 	}
-	a.CR.ToKeyedJSON(advantageCRKey, encoder)
-	if a.CR != advantage.None {
-		a.CRAdj.ToKeyedJSON(advantageCRAdjKey, encoder)
+	if a.Container() {
+		for _, one := range a.Children {
+			one.Parent = a
+		}
 	}
-	AdvantageModifiersListToJSON(commonModifiersKey, a.Modifiers, encoder)
-	if entity != nil && entity.PreservesUserDesc() {
-		encoder.KeyedString(advantageUserDescKey, a.UserDesc, true, true)
-	}
-	StringListToJSON(commonCategoriesKey, a.Categories, encoder)
-	// Emit the calculated values for third parties
-	encoder.Key(commonCalcKey)
-	encoder.StartObject()
-	encoder.KeyedNumber(advantageCalcPointsKey, a.AdjustedPoints(entity), false)
-	encoder.EndObject()
-	encoder.EndObject()
+	return nil
+}
+
+// Container returns true if this is a container.
+func (a *Advantage) Container() bool {
+	return strings.HasSuffix(a.Type, commonContainerKeyPostfix)
+}
+
+// OwningEntity returns the owning Entity.
+func (a *Advantage) OwningEntity() *Entity {
+	return a.Entity
+}
+
+// Notes returns the local notes.
+func (a *Advantage) Notes() string {
+	return a.LocalNotes
+}
+
+// IsLeveled returns true if the Advantage is capable of having levels.
+func (a *Advantage) IsLeveled() bool {
+	return !a.Container() && a.Levels != nil
 }
 
 // AdjustedPoints returns the total points, taking levels and modifiers into account. 'entity' may be nil.
-func (a *Advantage) AdjustedPoints(entity *Entity) fixed.F64d4 {
-	if !a.SelfEnabled {
+func (a *Advantage) AdjustedPoints() fixed.F64d4 {
+	if a.Disabled {
 		return 0
 	}
-	if !a.Container {
-		return AdjustedPoints(entity, a.BasePoints, a.Levels, a.PointsPerLevel, a.CR, a.AllModifiers(), a.RoundCostDown)
+	if !a.Container() {
+		var levels fixed.F64d4
+		if a.Levels != nil {
+			levels = *a.Levels
+		}
+		return AdjustedPoints(a.Entity, a.BasePoints, levels, a.PointsPerLevel, a.CR, a.AllModifiers(), a.RoundCostDown)
 	}
 	var points fixed.F64d4
 	if a.ContainerType == advantage.AlternativeAbilities {
 		values := make([]fixed.F64d4, len(a.Children))
 		for i, one := range a.Children {
-			values[i] = one.AdjustedPoints(entity)
+			values[i] = one.AdjustedPoints()
 			if values[i] > points {
 				points = values[i]
 			}
@@ -190,12 +214,12 @@ func (a *Advantage) AdjustedPoints(entity *Entity) fixed.F64d4 {
 			if !found && max == v {
 				found = true
 			} else {
-				points += f64d4.ApplyRounding(calculateModifierPoints(v, f64d4.Twenty), a.RoundCostDown)
+				points += fxp.ApplyRounding(calculateModifierPoints(v, fxp.Twenty), a.RoundCostDown)
 			}
 		}
 	} else {
 		for _, one := range a.Children {
-			points += one.AdjustedPoints(entity)
+			points += one.AdjustedPoints()
 		}
 	}
 	return points
@@ -215,12 +239,12 @@ func (a *Advantage) AllModifiers() []*AdvantageModifier {
 
 // Enabled returns true if this Advantage and all of its parents are enabled.
 func (a *Advantage) Enabled() bool {
-	if !a.SelfEnabled {
+	if a.Disabled {
 		return false
 	}
 	p := a.Parent
 	for p != nil {
-		if !p.SelfEnabled {
+		if p.Disabled {
 			return false
 		}
 		p = p.Parent
@@ -230,56 +254,92 @@ func (a *Advantage) Enabled() bool {
 
 // TypeAsText returns the set of type bits that are set if this isn't a container, or an empty string if it is.
 func (a *Advantage) TypeAsText() string {
-	if a.Container {
+	if a.Container() {
 		return ""
 	}
-	return a.TypeBits.String()
+	list := make([]string, 0, 5)
+	if a.Mental {
+		list = append(list, i18n.Text("Mental"))
+	}
+	if a.Physical {
+		list = append(list, i18n.Text("Physical"))
+	}
+	if a.Social {
+		list = append(list, i18n.Text("Social"))
+	}
+	if a.Exotic {
+		list = append(list, i18n.Text("Exotic"))
+	}
+	if a.Supernatural {
+		list = append(list, i18n.Text("Supernatural"))
+	}
+	return strings.Join(list, ", ")
 }
 
+// Description returns a description, which doesn't include any levels.
+func (a *Advantage) Description() string {
+	return a.Name
+}
+
+// String implements fmt.Stringer.
 func (a *Advantage) String() string {
 	var buffer strings.Builder
 	buffer.WriteString(a.Name)
-	if !a.Container && a.Levels > 0 {
+	if a.IsLeveled() && *a.Levels > 0 {
 		buffer.WriteByte(' ')
 		buffer.WriteString(a.Levels.String())
 	}
 	return buffer.String()
 }
 
+// FeatureList returns the list of Features.
+func (a *Advantage) FeatureList() feature.Features {
+	return a.Features
+}
+
+// CategoryList returns the list of categories.
+func (a *Advantage) CategoryList() []string {
+	return a.Categories
+}
+
 // FillWithNameableKeys adds any nameable keys found in this Advantage to the provided map.
-func (a *Advantage) FillWithNameableKeys(nameables map[string]string) {
-	a.Common.FillWithNameableKeys(nameables)
-	a.Prereq.FillWithNameableKeys(nameables)
+func (a *Advantage) FillWithNameableKeys(m map[string]string) {
+	nameables.Extract(a.Name, m)
+	nameables.Extract(a.LocalNotes, m)
+	nameables.Extract(a.VTTNotes, m)
+	a.Prereq.FillWithNameableKeys(m)
 	for _, one := range a.Features {
-		one.FillWithNameableKeys(nameables)
+		one.FillWithNameableKeys(m)
 	}
 	for _, one := range a.Weapons {
-		one.FillWithNameableKeys(nameables)
+		one.FillWithNameableKeys(m)
 	}
 	for _, one := range a.Modifiers {
-		one.FillWithNameableKeys(nameables)
+		one.FillWithNameableKeys(m)
 	}
 }
 
 // ApplyNameableKeys replaces any nameable keys found in this Advantage with the corresponding values in the provided map.
-func (a *Advantage) ApplyNameableKeys(nameables map[string]string) {
-	a.Common.ApplyNameableKeys(nameables)
-	a.Prereq.ApplyNameableKeys(nameables)
+func (a *Advantage) ApplyNameableKeys(m map[string]string) {
+	a.Name = nameables.Apply(a.Name, m)
+	a.LocalNotes = nameables.Apply(a.LocalNotes, m)
+	a.VTTNotes = nameables.Apply(a.VTTNotes, m)
+	a.Prereq.ApplyNameableKeys(m)
 	for _, one := range a.Features {
-		one.ApplyNameableKeys(nameables)
+		one.ApplyNameableKeys(m)
 	}
 	for _, one := range a.Weapons {
-		one.ApplyNameableKeys(nameables)
+		one.ApplyNameableKeys(m)
 	}
 	for _, one := range a.Modifiers {
-		one.ApplyNameableKeys(nameables)
+		one.ApplyNameableKeys(m)
 	}
 }
 
 // ActiveModifierFor returns the first modifier that matches the name (case-insensitive).
 func (a *Advantage) ActiveModifierFor(name string) *AdvantageModifier {
 	for _, one := range a.Modifiers {
-		if one.Enabled && strings.EqualFold(one.Name, name) {
+		if !one.Disabled && strings.EqualFold(one.Name, name) {
 			return one
 		}
 	}
@@ -287,7 +347,7 @@ func (a *Advantage) ActiveModifierFor(name string) *AdvantageModifier {
 }
 
 // ModifierNotes returns the notes due to modifiers. 'entity' may be nil.
-func (a *Advantage) ModifierNotes(entity *Entity) string {
+func (a *Advantage) ModifierNotes() string {
 	var buffer strings.Builder
 	if a.CR != advantage.None {
 		buffer.WriteString(a.CR.String())
@@ -297,36 +357,36 @@ func (a *Advantage) ModifierNotes(entity *Entity) string {
 		}
 	}
 	for _, one := range a.Modifiers {
-		if one.Enabled {
+		if !one.Disabled {
 			if buffer.Len() != 0 {
 				buffer.WriteString("; ")
 			}
-			buffer.WriteString(one.FullDescription(entity))
+			buffer.WriteString(one.FullDescription(a.Entity))
 		}
 	}
 	return buffer.String()
 }
 
 // SecondaryText returns the "secondary" text: the text display below an Advantage.
-func (a *Advantage) SecondaryText(entity *Entity) string {
+func (a *Advantage) SecondaryText() string {
 	var buffer strings.Builder
-	settings := SheetSettingsFor(entity)
+	settings := SheetSettingsFor(a.Entity)
 	if a.UserDesc != "" && settings.UserDescriptionDisplay.Inline() {
 		buffer.WriteString(a.UserDesc)
 	}
 	if settings.ModifiersDisplay.Inline() {
-		if notes := a.ModifierNotes(entity); notes != "" {
+		if notes := a.ModifierNotes(); notes != "" {
 			if buffer.Len() != 0 {
 				buffer.WriteByte('\n')
 			}
 			buffer.WriteString(notes)
 		}
 	}
-	if a.Notes != "" && settings.NotesDisplay.Inline() {
+	if a.LocalNotes != "" && settings.NotesDisplay.Inline() {
 		if buffer.Len() != 0 {
 			buffer.WriteByte('\n')
 		}
-		buffer.WriteString(a.Notes)
+		buffer.WriteString(a.LocalNotes)
 	}
 	return buffer.String()
 }
@@ -350,11 +410,11 @@ func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fixed.F64
 	var baseEnh, levelEnh, baseLim, levelLim fixed.F64d4
 	multiplier := cr.Multiplier()
 	for _, one := range modifiers {
-		if one.Enabled {
+		if !one.Disabled {
 			modifier := one.CostModifier()
 			switch one.CostType {
 			case advantage.Percentage:
-				switch one.Affects {
+				switch *one.Affects {
 				case advantage.Total:
 					if modifier < 0 {
 						baseLim += modifier
@@ -377,7 +437,7 @@ func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fixed.F64
 					}
 				}
 			case advantage.Points:
-				if one.Affects == advantage.LevelsOnly {
+				if *one.Affects == advantage.LevelsOnly {
 					pointsPerLevel += modifier
 				} else {
 					basePoints += modifier
@@ -392,14 +452,14 @@ func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fixed.F64
 	if baseEnh != 0 || baseLim != 0 || levelEnh != 0 || levelLim != 0 {
 		if SheetSettingsFor(entity).UseMultiplicativeModifiers {
 			if baseEnh == levelEnh && baseLim == levelLim {
-				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints+leveledPoints, baseEnh), f64d4.NegEighty.Max(baseLim))
+				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints+leveledPoints, baseEnh), fxp.NegEighty.Max(baseLim))
 			} else {
-				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints, baseEnh), f64d4.NegEighty.Max(baseLim)) +
-					modifyPoints(modifyPoints(leveledPoints, levelEnh), f64d4.NegEighty.Max(levelLim))
+				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints, baseEnh), fxp.NegEighty.Max(baseLim)) +
+					modifyPoints(modifyPoints(leveledPoints, levelEnh), fxp.NegEighty.Max(levelLim))
 			}
 		} else {
-			baseMod := f64d4.NegEighty.Max(baseEnh + baseLim)
-			levelMod := f64d4.NegEighty.Max(levelEnh + levelLim)
+			baseMod := fxp.NegEighty.Max(baseEnh + baseLim)
+			levelMod := fxp.NegEighty.Max(levelEnh + levelLim)
 			if baseMod == levelMod {
 				modifiedBasePoints = modifyPoints(modifiedBasePoints+leveledPoints, baseMod)
 			} else {
@@ -409,7 +469,7 @@ func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fixed.F64
 	} else {
 		modifiedBasePoints += leveledPoints
 	}
-	return f64d4.ApplyRounding(modifiedBasePoints.Mul(multiplier), roundCostDown)
+	return fxp.ApplyRounding(modifiedBasePoints.Mul(multiplier), roundCostDown)
 }
 
 func modifyPoints(points, modifier fixed.F64d4) fixed.F64d4 {
@@ -417,5 +477,5 @@ func modifyPoints(points, modifier fixed.F64d4) fixed.F64d4 {
 }
 
 func calculateModifierPoints(points, modifier fixed.F64d4) fixed.F64d4 {
-	return points.Mul(modifier).Div(f64d4.Hundred)
+	return points.Mul(modifier).Div(fxp.Hundred)
 }

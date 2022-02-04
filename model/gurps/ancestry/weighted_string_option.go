@@ -12,65 +12,18 @@
 package ancestry
 
 import (
-	"github.com/richardwilkes/gcs/model/encoding"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/richardwilkes/toolbox/xmath/rand"
-)
-
-const (
-	optionWeightKey = "weight"
-	optionValueKey  = "value"
 )
 
 // StringOption is a string that has a weight associated with it.
 type StringOption struct {
-	Weight int
-	Value  string
-}
-
-// NewStringOptionFromJSON creates a new StringOption from a JSON object.
-func NewStringOptionFromJSON(data map[string]interface{}) *StringOption {
-	return &StringOption{
-		Weight: int(encoding.Number(data[optionWeightKey]).AsInt64()),
-		Value:  encoding.String(data[optionValueKey]),
-	}
-}
-
-// ToJSON emits this object as JSON.
-func (o *StringOption) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	encoder.KeyedNumber(optionWeightKey, fixed.F64d4FromInt64(int64(o.Weight)), false)
-	encoder.KeyedString(optionValueKey, o.Value, false, false)
-	encoder.EndObject()
+	Weight int    `json:"weight"`
+	Value  string `json:"value"`
 }
 
 // Valid returns true if this option has a valid weight.
 func (o *StringOption) Valid() bool {
 	return o.Weight > 0
-}
-
-// StringOptionsFromJSON creates a slice of options from a JSON array.
-func StringOptionsFromJSON(array []interface{}) []*StringOption {
-	if len(array) == 0 {
-		return nil
-	}
-	options := make([]*StringOption, len(array))
-	for i, one := range array {
-		options[i] = NewStringOptionFromJSON(encoding.Object(one))
-	}
-	return options
-}
-
-// StringOptionsToJSON emits the options as JSON.
-func StringOptionsToJSON(key string, options []*StringOption, encoder *encoding.JSONEncoder) {
-	if len(options) != 0 {
-		encoder.Key(key)
-		encoder.StartArray()
-		for _, one := range options {
-			one.ToJSON(encoder)
-		}
-		encoder.EndArray()
-	}
 }
 
 // ChooseStringOption selects a string option from the available set.

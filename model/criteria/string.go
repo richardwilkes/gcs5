@@ -12,39 +12,38 @@
 package criteria
 
 import (
-	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/richardwilkes/json"
 )
 
 // String holds the criteria for matching a string.
 type String struct {
-	Type      StringCompareType
-	Qualifier string
+	StringData
 }
 
-// NewStringFromJSON creates a new String from a JSON object.
-func NewStringFromJSON(data map[string]interface{}) *String {
-	s := &String{}
-	s.FromJSON(data)
-	return s
+// StringData holds the criteria for matching a string that should be written to disk.
+type StringData struct {
+	Compare   StringCompareType `json:"compare,omitempty"`
+	Qualifier string            `json:"qualifier,omitempty"`
 }
 
-// FromJSON replaces the current data with data from a JSON object.
-func (s *String) FromJSON(data map[string]interface{}) {
-	s.Type = StringCompareTypeFromString(encoding.String(data[typeKey]))
-	s.Qualifier = encoding.String(data[qualifierKey])
+// ShouldOmit implements json.Omitter.
+func (s String) ShouldOmit() bool {
+	return s.Compare.EnsureValid() == Any
 }
 
-// ToJSON emits the JSON for this object.
-func (s *String) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	s.ToInlineJSON(encoder)
-	encoder.EndObject()
+// UnmarshalJSON implements json.Unmarshaler.
+func (s *String) UnmarshalJSON(data []byte) error {
+	err := json.Unmarshal(data, &s.StringData)
+	s.Compare = s.Compare.EnsureValid()
+	return err
 }
 
-// ToInlineJSON emits the JSON key values that comprise this object without the object wrapper.
-func (s *String) ToInlineJSON(encoder *encoding.JSONEncoder) {
-	if s.Type != Any {
-		encoder.KeyedString(typeKey, s.Type.Key(), false, false)
-		encoder.KeyedString(qualifierKey, s.Qualifier, true, true)
+// Matches performs a comparison and returns true if the data matches.
+func (s String) Matches(value ...string) bool {
+	for _, one := range value {
+		if s.Compare.Matches(s.Qualifier, one) {
+			return true
+		}
 	}
+	return false
 }

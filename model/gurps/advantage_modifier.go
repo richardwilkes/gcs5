@@ -12,69 +12,115 @@
 package gurps
 
 import (
+	"context"
+	"io/fs"
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/encoding"
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
+	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/nameables"
+	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-const (
-	advantageModifierAffectsKey  = "affects"
-	advantageModifierCostKey     = "cost"
-	advantageModifierCostTypeKey = "cost_type"
-	advantageModifierLevelsKey   = "levels"
-	advantageModifierTypeKey     = "modifier"
-)
+const advantageModifierTypeKey = "modifier"
+
+// AdvantageModifierItem holds the AdvantageModifier data that only exists in non-containers.
+type AdvantageModifierItem struct {
+	CostType advantage.ModifierCostType `json:"cost_type,omitempty"`
+	Cost     fixed.F64d4                `json:"cost,omitempty"`
+	Levels   fixed.F64d4                `json:"levels,omitempty"`
+	Affects  *advantage.Affects         `json:"affects,omitempty"`
+	Features feature.Features           `json:"features,omitempty"`
+	Disabled bool                       `json:"disabled,omitempty"`
+}
+
+// AdvantageModifierContainer holds the AdvantageModifier data that only exists in containers.
+type AdvantageModifierContainer struct {
+	Children []*AdvantageModifier `json:"children,omitempty"`
+	Open     bool                 `json:"open,omitempty"`
+}
+
+// AdvantageModifierData holds the AdvantageModifier data that is written to disk.
+type AdvantageModifierData struct {
+	Type                        string    `json:"type"`
+	ID                          uuid.UUID `json:"id"`
+	Name                        string    `json:"name,omitempty"`
+	PageRef                     string    `json:"reference,omitempty"`
+	Notes                       string    `json:"notes,omitempty"`
+	VTTNotes                    string    `json:"vtt_notes,omitempty"`
+	*AdvantageModifierItem      `json:",omitempty"`
+	*AdvantageModifierContainer `json:",omitempty"`
+}
 
 // AdvantageModifier holds a modifier to an Advantage.
 type AdvantageModifier struct {
-	Common
-	Cost     fixed.F64d4
-	Levels   fixed.F64d4
-	Features []*Feature
-	Children []*AdvantageModifier
-	CostType advantage.ModifierCostType
-	Affects  advantage.Affects
-	Enabled  bool
+	AdvantageModifierData
 }
 
-// NewAdvantageModifierFromJSON creates a new AdvantageModifier from a JSON object.
-func NewAdvantageModifierFromJSON(data map[string]interface{}) *AdvantageModifier {
-	a := &AdvantageModifier{}
-	a.Common.FromJSON(advantageModifierTypeKey, data)
-	if a.Container {
-		a.Children = AdvantageModifiersListFromJSON(commonChildrenKey, data)
-	} else {
-		a.Enabled = !encoding.Bool(data[commonDisabledKey])
-		a.CostType = advantage.ModifierCostTypeFromKey(encoding.String(data[advantageModifierCostTypeKey]))
-		a.Cost = encoding.Number(data[advantageModifierCostKey])
-		if a.CostType != advantage.Multiplier {
-			a.Affects = advantage.AffectsFromKey(encoding.String(data[advantageModifierAffectsKey]))
-		}
-		a.Levels = encoding.Number(data[advantageModifierLevelsKey])
-		a.Features = FeaturesListFromJSON(data)
-	}
-	return a
+type advantageModifierListData struct {
+	Current []*AdvantageModifier `json:"advantage_modifiers"`
 }
 
-// ToJSON emits this object as JSON.
-func (a *AdvantageModifier) ToJSON(encoder *encoding.JSONEncoder) {
-	encoder.StartObject()
-	a.Common.ToInlineJSON(advantageModifierTypeKey, encoder)
-	if a.Container {
-		AdvantageModifiersListToJSON(commonChildrenKey, a.Children, encoder)
-	} else {
-		encoder.KeyedBool(commonDisabledKey, !a.Enabled, true)
-		encoder.KeyedString(advantageModifierCostTypeKey, a.CostType.Key(), false, false)
-		encoder.KeyedNumber(advantageModifierCostKey, a.Cost, false)
-		if a.CostType != advantage.Multiplier {
-			encoder.KeyedString(advantageModifierAffectsKey, a.Affects.Key(), false, false)
-		}
-		encoder.KeyedNumber(advantageModifierLevelsKey, a.Levels, true)
-		FeaturesListToJSON(a.Features, encoder)
+// NewAdvantageModifiersFromFile loads an AdvantageModifier list from a file.
+func NewAdvantageModifiersFromFile(fileSystem fs.FS, filePath string) ([]*AdvantageModifier, error) {
+	var data struct {
+		advantageModifierListData
+		OldKey []*AdvantageModifier `json:"rows"`
 	}
-	encoder.EndObject()
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
+		return nil, errs.NewWithCause("invalid advantage modifiers file: "+filePath, err)
+	}
+	if len(data.Current) != 0 {
+		return data.Current, nil
+	}
+	return data.OldKey, nil
+}
+
+// SaveAdvantageModifiers writes the AdvantageModifier list to the file as JSON.
+func SaveAdvantageModifiers(modifiers []*AdvantageModifier, filePath string) error {
+	return jio.SaveToFile(context.Background(), filePath, &advantageModifierListData{Current: modifiers})
+}
+
+// NewAdvantageModifier creates an AdvantageModifier.
+func NewAdvantageModifier(container bool) *AdvantageModifier {
+	a := AdvantageModifier{
+		AdvantageModifierData: AdvantageModifierData{
+			Type: advantageModifierTypeKey,
+			ID:   id.NewUUID(),
+			Name: i18n.Text("Advantage Modifier"),
+		},
+	}
+	if container {
+		a.Type += commonContainerKeyPostfix
+		a.AdvantageModifierContainer = &AdvantageModifierContainer{Open: true}
+	} else {
+		affects := advantage.Total
+		a.AdvantageModifierItem = &AdvantageModifierItem{
+			Affects: &affects,
+		}
+	}
+	return &a
+}
+
+// MarshalJSON implements json.Marshaler.
+func (a *AdvantageModifier) MarshalJSON() ([]byte, error) {
+	if a.Container() {
+		a.AdvantageModifierItem = nil
+	} else {
+		a.AdvantageModifierContainer = nil
+	}
+	return json.Marshal(&a.AdvantageModifierData)
+}
+
+// Container returns true if this is a container.
+func (a *AdvantageModifier) Container() bool {
+	return strings.HasSuffix(a.Type, commonContainerKeyPostfix)
 }
 
 // CostModifier returns the total cost modifier.
@@ -140,21 +186,25 @@ func (a *AdvantageModifier) CostDescription() string {
 }
 
 // FillWithNameableKeys adds any nameable keys found in this AdvantageModifier to the provided map.
-func (a *AdvantageModifier) FillWithNameableKeys(nameables map[string]string) {
-	if a.Enabled {
-		a.Common.FillWithNameableKeys(nameables)
+func (a *AdvantageModifier) FillWithNameableKeys(m map[string]string) {
+	if !a.Disabled {
+		nameables.Extract(a.Name, m)
+		nameables.Extract(a.Notes, m)
+		nameables.Extract(a.VTTNotes, m)
 		for _, one := range a.Features {
-			one.FillWithNameableKeys(nameables)
+			one.FillWithNameableKeys(m)
 		}
 	}
 }
 
 // ApplyNameableKeys replaces any nameable keys found in this AdvantageModifier with the corresponding values in the provided map.
-func (a *AdvantageModifier) ApplyNameableKeys(nameables map[string]string) {
-	if a.Enabled {
-		a.Common.ApplyNameableKeys(nameables)
+func (a *AdvantageModifier) ApplyNameableKeys(m map[string]string) {
+	if !a.Disabled {
+		a.Name = nameables.Apply(a.Name, m)
+		a.Notes = nameables.Apply(a.Notes, m)
+		a.VTTNotes = nameables.Apply(a.VTTNotes, m)
 		for _, one := range a.Features {
-			one.ApplyNameableKeys(nameables)
+			one.ApplyNameableKeys(m)
 		}
 	}
 }
