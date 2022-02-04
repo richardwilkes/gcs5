@@ -16,9 +16,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/datafile"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/json"
@@ -155,10 +156,8 @@ func (w *Weapon) SkillLevel(tooltip *xio.ByteBuffer) fixed.F64d4 {
 
 func (w *Weapon) skillLevelBaseAdjustment(entity *Entity, tooltip *xio.ByteBuffer) fixed.F64d4 {
 	var adj fixed.F64d4
-	if st, exists := entity.Attributes["st"]; exists {
-		if minST := w.ResolvedMinimumStrength() - (st.Current() + entity.StrikingStrengthBonus); minST > 0 {
-			adj -= minST
-		}
+	if minST := w.ResolvedMinimumStrength() - (entity.StrengthOrZero() + entity.StrikingStrengthBonus); minST > 0 {
+		adj -= minST
 	}
 	nameQualifier := w.String()
 	for _, bonus := range entity.NamedWeaponSkillBonusesFor(feature.WeaponNamedIDPrefix+"*", nameQualifier, w.Usage,
@@ -240,25 +239,22 @@ func (w *Weapon) extractSkillBonus(f feature.Feature, tooltip *xio.ByteBuffer) f
 
 // ResolvedParry returns the resolved parry level.
 func (w *Weapon) ResolvedParry(tooltip *xio.ByteBuffer) string {
-	return w.resolvedValue(w.Parry, "parry", tooltip)
+	return w.resolvedValue(w.Parry, gid.Parry, tooltip)
 }
 
 // ResolvedBlock returns the resolved block level.
 func (w *Weapon) ResolvedBlock(tooltip *xio.ByteBuffer) string {
-	return w.resolvedValue(w.Block, "block", tooltip)
+	return w.resolvedValue(w.Block, gid.Block, tooltip)
 }
 
 // ResolvedRange returns the range, fully resolved for the user's ST, if possible.
 func (w *Weapon) ResolvedRange() string {
+	//nolint:ifshort // No, pc isn't just used on the next line...
 	pc := w.PC()
 	if pc == nil {
 		return w.Range
 	}
-	stAttr, ok := pc.Attributes["st"]
-	if !ok {
-		return w.Range
-	}
-	st := (stAttr.Current() + pc.ThrowingStrengthBonus).Trunc()
+	st := (pc.StrengthOrZero() + pc.ThrowingStrengthBonus).Trunc()
 	var savedRange string
 	calcRange := w.Range
 	for calcRange != savedRange {
@@ -316,8 +312,8 @@ func (w *Weapon) resolvedValue(input, baseDefaultType string, tooltip *xio.ByteB
 						}
 						preAdj := w.skillLevelBaseAdjustment(pc, primaryTooltip)
 						postAdj := w.skillLevelPostAdjustment(pc, primaryTooltip)
-						adj := f64d4.Three
-						if baseDefaultType == "parry" {
+						adj := fxp.Three
+						if baseDefaultType == gid.Parry {
 							adj += pc.ParryBonus
 						} else {
 							adj += pc.BlockBonus
@@ -330,11 +326,11 @@ func (w *Weapon) resolvedValue(input, baseDefaultType string, tooltip *xio.ByteB
 							}
 							level += preAdj
 							if baseDefaultType != def.Type() {
-								level = (level.Div(f64d4.Two) + adj).Trunc()
+								level = (level.Div(fxp.Two) + adj).Trunc()
 							}
 							level += postAdj
 							var possibleTooltip *xio.ByteBuffer
-							if def.Type() == "skill" && def.Name == "Karate" {
+							if def.Type() == gid.Skill && def.Name == "Karate" {
 								if tooltip != nil {
 									possibleTooltip = &xio.ByteBuffer{}
 								}

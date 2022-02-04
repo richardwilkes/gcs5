@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
@@ -92,7 +92,7 @@ func NewEquipment(entity *Entity, parent *Equipment, container bool) *Equipment 
 		e.Type += commonContainerKeyPostfix
 		e.EquipmentContainer = &EquipmentContainer{Open: true}
 	} else {
-		e.EquipmentItem = &EquipmentItem{Quantity: f64d4.One}
+		e.EquipmentItem = &EquipmentItem{Quantity: fxp.One}
 	}
 	return &e
 }
@@ -228,10 +228,10 @@ func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits)
 			}
 		}
 	}
-	if percentage >= f64d4.Hundred {
+	if percentage >= fxp.Hundred {
 		contained = 0
 	} else if percentage > 0 {
-		contained -= contained.Mul(percentage).Div(f64d4.Hundred)
+		contained -= contained.Mul(percentage).Div(fxp.Hundred)
 	}
 	contained -= reduction
 	return measure.Weight(fixed.F64d4(e.AdjustedWeight(forSkills, defUnits)).Mul(e.Quantity) + contained.Max(0))

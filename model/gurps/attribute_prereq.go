@@ -13,6 +13,7 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/criteria"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -45,7 +46,7 @@ func NewAttributePrereq(entity *Entity) *AttributePrereq {
 				Qualifier: fixed.F64d4FromInt64(10),
 			},
 		},
-		Which: AttributeIDFor(entity, "st"),
+		Which: AttributeIDFor(entity, gid.Strength),
 		Has:   true,
 	}
 }

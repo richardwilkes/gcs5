@@ -14,13 +14,19 @@ package gurps
 import (
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
-	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
+
+var skillBasedDefaultTypes = map[string]bool{
+	gid.Skill: true,
+	gid.Parry: true,
+	gid.Block: true,
+}
 
 // SkillDefault holds data for a Skill default.
 type SkillDefault struct {
@@ -45,7 +51,7 @@ func (s *SkillDefault) SetType(t string) {
 
 // FullName returns the full name of the skill to default from.
 func (s *SkillDefault) FullName(entity *Entity) string {
-	if skill.DefaultTypeIsSkillBased(s.DefaultType) {
+	if s.SkillBased() {
 		var buffer strings.Builder
 		buffer.WriteString(s.Name)
 		if s.Specialization != "" {
@@ -53,9 +59,9 @@ func (s *SkillDefault) FullName(entity *Entity) string {
 			buffer.WriteString(s.Specialization)
 			buffer.WriteByte(')')
 		}
-		if strings.EqualFold("parry", s.DefaultType) {
+		if strings.EqualFold(gid.Parry, s.DefaultType) {
 			buffer.WriteString(i18n.Text(" Parry"))
-		} else if strings.EqualFold("block", s.DefaultType) {
+		} else if strings.EqualFold(gid.Block, s.DefaultType) {
 			buffer.WriteString(i18n.Text(" Block"))
 		}
 		return buffer.String()
@@ -88,27 +94,32 @@ func (s *SkillDefault) ModifierAsString() string {
 	}
 }
 
+// SkillBased returns true if the Type() is Skill-based.
+func (s *SkillDefault) SkillBased() bool {
+	return skillBasedDefaultTypes[strings.ToLower(strings.TrimSpace(s.DefaultType))]
+}
+
 // SkillLevelFast returns the base skill level for this SkillDefault.
 func (s *SkillDefault) SkillLevelFast(entity *Entity, requirePoints bool, excludes map[string]bool, ruleOf20 bool) fixed.F64d4 {
 	switch s.Type() {
-	case "parry":
+	case gid.Parry:
 		best := s.bestFast(entity, requirePoints, excludes)
 		if best != fixed.F64d4Min {
-			best = best.Div(f64d4.Two).Trunc() + f64d4.Three + entity.ParryBonus
+			best = best.Div(fxp.Two).Trunc() + fxp.Three + entity.ParryBonus
 		}
 		return s.finalLevel(best)
-	case "block":
+	case gid.Block:
 		best := s.bestFast(entity, requirePoints, excludes)
 		if best != fixed.F64d4Min {
-			best = best.Div(f64d4.Two).Trunc() + f64d4.Three + entity.BlockBonus
+			best = best.Div(fxp.Two).Trunc() + fxp.Three + entity.BlockBonus
 		}
 		return s.finalLevel(best)
-	case "skill":
+	case gid.Skill:
 		return s.finalLevel(s.bestFast(entity, requirePoints, excludes))
 	default:
 		level := entity.ResolveAttribute(s.Type())
 		if ruleOf20 {
-			level = level.Min(f64d4.Twenty)
+			level = level.Min(fxp.Twenty)
 		}
 		return s.finalLevel(level)
 	}

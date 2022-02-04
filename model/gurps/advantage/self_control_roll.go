@@ -12,7 +12,7 @@
 package advantage
 
 import (
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -89,15 +89,15 @@ func (s SelfControlRoll) DescriptionWithCost() string {
 func (s SelfControlRoll) Multiplier() fixed.F64d4 {
 	switch s {
 	case None:
-		return f64d4.One
+		return fxp.One
 	case CR6:
-		return f64d4.Two
+		return fxp.Two
 	case CR9:
-		return f64d4.OneAndAHalf
+		return fxp.OneAndAHalf
 	case CR12:
-		return f64d4.One
+		return fxp.One
 	case CR15:
-		return f64d4.Half
+		return fxp.Half
 	default:
 		return None.Multiplier()
 	}

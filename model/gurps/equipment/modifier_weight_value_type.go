@@ -14,7 +14,7 @@ package equipment
 import (
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 )
 
 // Possible ModifierWeightValueType values.
@@ -47,7 +47,7 @@ func (m ModifierWeightValueType) EnsureValid() ModifierWeightValueType {
 }
 
 // Format returns a formatted version of the value.
-func (m ModifierWeightValueType) Format(fraction f64d4.Fraction) string {
+func (m ModifierWeightValueType) Format(fraction fxp.Fraction) string {
 	switch m {
 	case WeightAddition:
 		return fraction.StringWithSign()
@@ -55,14 +55,14 @@ func (m ModifierWeightValueType) Format(fraction f64d4.Fraction) string {
 		return fraction.StringWithSign() + "%"
 	case WeightPercentageMultiplier:
 		if fraction.Numerator <= 0 {
-			fraction.Numerator = f64d4.Hundred
-			fraction.Denominator = f64d4.One
+			fraction.Numerator = fxp.Hundred
+			fraction.Denominator = fxp.One
 		}
 		return "x" + fraction.String() + "%"
 	case WeightMultiplier:
 		if fraction.Numerator <= 0 {
-			fraction.Numerator = f64d4.One
-			fraction.Denominator = f64d4.One
+			fraction.Numerator = fxp.One
+			fraction.Denominator = fxp.One
 		}
 		return "x" + fraction.String()
 	default:
@@ -71,19 +71,19 @@ func (m ModifierWeightValueType) Format(fraction f64d4.Fraction) string {
 }
 
 // ExtractFraction from the string.
-func (m ModifierWeightValueType) ExtractFraction(s string) f64d4.Fraction {
-	fraction := f64d4.NewFractionFromString(s)
+func (m ModifierWeightValueType) ExtractFraction(s string) fxp.Fraction {
+	fraction := fxp.NewFractionFromString(s)
 	revised := m.EnsureValid()
 	switch revised {
 	case WeightPercentageMultiplier:
 		if fraction.Numerator <= 0 {
-			fraction.Numerator = f64d4.Hundred
-			fraction.Denominator = f64d4.One
+			fraction.Numerator = fxp.Hundred
+			fraction.Denominator = fxp.One
 		}
 	case WeightMultiplier:
 		if fraction.Numerator <= 0 {
-			fraction.Numerator = f64d4.One
-			fraction.Denominator = f64d4.One
+			fraction.Numerator = fxp.One
+			fraction.Denominator = fxp.One
 		}
 	default:
 	}

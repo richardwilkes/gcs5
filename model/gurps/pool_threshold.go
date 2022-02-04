@@ -12,7 +12,7 @@
 package gurps
 
 import (
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -32,10 +32,10 @@ type PoolThreshold struct {
 func (p *PoolThreshold) Threshold(max fixed.F64d4) fixed.F64d4 {
 	divisor := p.Divisor
 	if divisor == 0 {
-		divisor = f64d4.One
+		divisor = fxp.One
 	}
 	// TODO: Check that rounding here is correct for our purposes
-	return f64d4.Round(max.Mul(p.Multiplier).Div(divisor) + p.Addition)
+	return fxp.Round(max.Mul(p.Multiplier).Div(divisor) + p.Addition)
 }
 
 // ContainsOp returns true if this PoolThreshold contains the specified ThresholdOp.

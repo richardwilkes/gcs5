@@ -17,7 +17,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
@@ -85,7 +85,7 @@ type Advantage struct {
 }
 
 type advantageListData struct {
-	Current []*Advantage `json:"advantage_list"`
+	Current []*Advantage `json:"advantages"`
 }
 
 // NewAdvantagesFromFile loads an Advantages set from a file.
@@ -182,6 +182,11 @@ func (a *Advantage) Notes() string {
 	return a.LocalNotes
 }
 
+// IsLeveled returns true if the Advantage is capable of having levels.
+func (a *Advantage) IsLeveled() bool {
+	return !a.Container() && a.Levels != nil
+}
+
 // AdjustedPoints returns the total points, taking levels and modifiers into account. 'entity' may be nil.
 func (a *Advantage) AdjustedPoints() fixed.F64d4 {
 	if a.Disabled {
@@ -209,7 +214,7 @@ func (a *Advantage) AdjustedPoints() fixed.F64d4 {
 			if !found && max == v {
 				found = true
 			} else {
-				points += f64d4.ApplyRounding(calculateModifierPoints(v, f64d4.Twenty), a.RoundCostDown)
+				points += fxp.ApplyRounding(calculateModifierPoints(v, fxp.Twenty), a.RoundCostDown)
 			}
 		}
 	} else {
@@ -280,7 +285,7 @@ func (a *Advantage) Description() string {
 func (a *Advantage) String() string {
 	var buffer strings.Builder
 	buffer.WriteString(a.Name)
-	if !a.Container() && a.Levels != nil && *a.Levels > 0 {
+	if a.IsLeveled() && *a.Levels > 0 {
 		buffer.WriteByte(' ')
 		buffer.WriteString(a.Levels.String())
 	}
@@ -447,14 +452,14 @@ func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fixed.F64
 	if baseEnh != 0 || baseLim != 0 || levelEnh != 0 || levelLim != 0 {
 		if SheetSettingsFor(entity).UseMultiplicativeModifiers {
 			if baseEnh == levelEnh && baseLim == levelLim {
-				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints+leveledPoints, baseEnh), f64d4.NegEighty.Max(baseLim))
+				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints+leveledPoints, baseEnh), fxp.NegEighty.Max(baseLim))
 			} else {
-				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints, baseEnh), f64d4.NegEighty.Max(baseLim)) +
-					modifyPoints(modifyPoints(leveledPoints, levelEnh), f64d4.NegEighty.Max(levelLim))
+				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints, baseEnh), fxp.NegEighty.Max(baseLim)) +
+					modifyPoints(modifyPoints(leveledPoints, levelEnh), fxp.NegEighty.Max(levelLim))
 			}
 		} else {
-			baseMod := f64d4.NegEighty.Max(baseEnh + baseLim)
-			levelMod := f64d4.NegEighty.Max(levelEnh + levelLim)
+			baseMod := fxp.NegEighty.Max(baseEnh + baseLim)
+			levelMod := fxp.NegEighty.Max(levelEnh + levelLim)
 			if baseMod == levelMod {
 				modifiedBasePoints = modifyPoints(modifiedBasePoints+leveledPoints, baseMod)
 			} else {
@@ -464,7 +469,7 @@ func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fixed.F64
 	} else {
 		modifiedBasePoints += leveledPoints
 	}
-	return f64d4.ApplyRounding(modifiedBasePoints.Mul(multiplier), roundCostDown)
+	return fxp.ApplyRounding(modifiedBasePoints.Mul(multiplier), roundCostDown)
 }
 
 func modifyPoints(points, modifier fixed.F64d4) fixed.F64d4 {
@@ -472,5 +477,5 @@ func modifyPoints(points, modifier fixed.F64d4) fixed.F64d4 {
 }
 
 func calculateModifierPoints(points, modifier fixed.F64d4) fixed.F64d4 {
-	return points.Mul(modifier).Div(f64d4.Hundred)
+	return points.Mul(modifier).Div(fxp.Hundred)
 }

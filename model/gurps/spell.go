@@ -16,7 +16,8 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/json"
@@ -92,7 +93,7 @@ func NewSpell(entity *Entity, parent *Spell, container bool) *Spell {
 	} else {
 		s.SpellItem = &SpellItem{
 			Difficulty: AttributeDifficulty{
-				Attribute:  AttributeIDFor(entity, "iq"),
+				Attribute:  AttributeIDFor(entity, gid.Intelligence),
 				Difficulty: skill.Hard,
 			},
 			PowerSource: i18n.Text("Arcane"),
@@ -100,7 +101,7 @@ func NewSpell(entity *Entity, parent *Spell, container bool) *Spell {
 			CastingCost: "1",
 			CastingTime: "1 sec",
 			Duration:    "Instant",
-			Points:      f64d4.One,
+			Points:      fxp.One,
 			Prereq:      NewPrereqList(),
 		}
 	}

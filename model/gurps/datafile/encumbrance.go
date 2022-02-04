@@ -12,7 +12,7 @@
 package datafile
 
 import (
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -70,15 +70,15 @@ func (e Encumbrance) String() string {
 func (e Encumbrance) WeightMultiplier() fixed.F64d4 {
 	switch e {
 	case None:
-		return f64d4.One
+		return fxp.One
 	case Light:
-		return f64d4.Two
+		return fxp.Two
 	case Medium:
-		return f64d4.Three
+		return fxp.Three
 	case Heavy:
-		return f64d4.Six
+		return fxp.Six
 	case ExtraHeavy:
-		return f64d4.Ten
+		return fxp.Ten
 	default:
 		return None.WeightMultiplier()
 	}
@@ -90,13 +90,13 @@ func (e Encumbrance) Penalty() fixed.F64d4 {
 	case None:
 		return 0
 	case Light:
-		return f64d4.NegOne
+		return fxp.NegOne
 	case Medium:
-		return f64d4.NegTwo
+		return fxp.NegTwo
 	case Heavy:
-		return f64d4.NegThree
+		return fxp.NegThree
 	case ExtraHeavy:
-		return f64d4.NegFour
+		return fxp.NegFour
 	default:
 		return None.Penalty()
 	}

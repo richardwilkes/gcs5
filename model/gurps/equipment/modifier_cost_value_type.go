@@ -14,7 +14,7 @@ package equipment
 import (
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
@@ -56,7 +56,7 @@ func (m ModifierCostValueType) Format(value fixed.F64d4) string {
 		return value.StringWithSign() + "%"
 	case Multiplier:
 		if value <= 0 {
-			value = f64d4.One
+			value = fxp.One
 		}
 		return "x" + value.String()
 	case CostFactor:
@@ -70,7 +70,7 @@ func (m ModifierCostValueType) Format(value fixed.F64d4) string {
 func (m ModifierCostValueType) ExtractValue(s string) fixed.F64d4 {
 	v := fixed.F64d4FromStringForced(s)
 	if m.EnsureValid() == Multiplier && v <= 0 {
-		v = f64d4.One
+		v = fxp.One
 	}
 	return v
 }

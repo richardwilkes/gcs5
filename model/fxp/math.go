@@ -9,9 +9,11 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package f64d4
+package fxp
 
-import "github.com/richardwilkes/toolbox/xmath/fixed"
+import (
+	"github.com/richardwilkes/toolbox/xmath/fixed"
+)
 
 // Round the given value.
 func Round(value fixed.F64d4) fixed.F64d4 {
@@ -35,4 +37,9 @@ func ApplyRounding(value fixed.F64d4, roundDown bool) fixed.F64d4 {
 		return value.Trunc() + One
 	}
 	return value
+}
+
+// Mod returns the remainder of x/y.
+func Mod(x, y fixed.F64d4) fixed.F64d4 {
+	return x - (y.Mul(x.Div(y).Trunc()))
 }

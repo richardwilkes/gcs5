@@ -14,7 +14,7 @@ package equipment
 import (
 	"fmt"
 
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/i18n"
 )
@@ -103,7 +103,7 @@ func (m ModifierWeightType) DetermineModifierWeightValueTypeFromString(s string)
 }
 
 // ExtractFraction from the string.
-func (m ModifierWeightType) ExtractFraction(s string) f64d4.Fraction {
+func (m ModifierWeightType) ExtractFraction(s string) fxp.Fraction {
 	return m.DetermineModifierWeightValueTypeFromString(s).ExtractFraction(s)
 }
 

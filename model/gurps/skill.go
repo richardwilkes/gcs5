@@ -16,19 +16,15 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/datafile"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
-)
-
-const (
-	skillTypeKey     = "skill"
-	techniqueTypeKey = "technique"
 )
 
 // SkillItem holds the Skill data that only exists in non-containers.
@@ -80,7 +76,7 @@ type Skill struct {
 func NewSkill(entity *Entity, parent *Skill, container bool) *Skill {
 	s := Skill{
 		SkillData: SkillData{
-			Type: skillTypeKey,
+			Type: gid.Skill,
 			ID:   id.NewUUID(),
 			Name: i18n.Text("Skill"),
 		},
@@ -93,10 +89,10 @@ func NewSkill(entity *Entity, parent *Skill, container bool) *Skill {
 	} else {
 		s.SkillItem = &SkillItem{
 			Difficulty: AttributeDifficulty{
-				Attribute:  AttributeIDFor(entity, "dx"),
+				Attribute:  AttributeIDFor(entity, gid.Dexterity),
 				Difficulty: skill.Average,
 			},
-			Points: f64d4.One,
+			Points: fxp.One,
 			Prereq: NewPrereqList(),
 		}
 	}
@@ -106,13 +102,13 @@ func NewSkill(entity *Entity, parent *Skill, container bool) *Skill {
 // NewTechnique creates a new technique (i.e. a specialized use of a Skill). All parameters may be nil or empty.
 func NewTechnique(entity *Entity, parent *Skill, skillName string) *Skill {
 	t := NewSkill(entity, parent, false)
-	t.Type = techniqueTypeKey
+	t.Type = gid.Technique
 	t.Name = i18n.Text("Technique")
 	if skillName == "" {
 		skillName = i18n.Text("Skill")
 	}
 	t.TechniqueDefault = &SkillDefault{
-		DefaultType: skillTypeKey,
+		DefaultType: gid.Skill,
 		Name:        skillName,
 	}
 	return t
@@ -142,7 +138,7 @@ func (s *Skill) MarshalJSON() ([]byte, error) {
 			switch {
 			case rsl == math.MinInt:
 				data.Calc.RelativeSkillLevel = "-"
-			case s.Type != techniqueTypeKey:
+			case s.Type != gid.Technique:
 				s.Type = ResolveAttributeName(s.Entity, s.Difficulty.Attribute) + rsl.StringWithSign()
 			default:
 				s.Type = rsl.StringWithSign()
@@ -181,7 +177,7 @@ func (s *Skill) AdjustedRelativeLevel() fixed.F64d4 {
 		return fixed.F64d4Min
 	}
 	if s.Entity != nil && s.Level.Level > 0 {
-		if s.Type == techniqueTypeKey {
+		if s.Type == gid.Technique {
 			return s.Level.RelativeLevel + s.TechniqueDefault.Modifier
 		}
 		return s.Level.RelativeLevel

@@ -15,8 +15,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/eval"
@@ -26,7 +27,7 @@ import (
 )
 
 // ReservedIDs holds a list of IDs that are reserved for internal use.
-var ReservedIDs = []string{"skill", "parry", "block", "dodge", "sm"}
+var ReservedIDs = []string{gid.Skill, gid.Parry, gid.Block, "dodge", "sm"}
 
 // AttributeDef holds the definition of an attribute.
 type AttributeDef struct {
@@ -92,10 +93,10 @@ func (a *AttributeDef) ComputeCost(entity *Entity, value, sizeModifier, costRedu
 		costReduction += sizeModifier.Mul(a.CostAdjPercentPerSM)
 	}
 	if costReduction > 0 {
-		if costReduction > f64d4.Eighty {
-			costReduction = f64d4.Eighty
+		if costReduction > fxp.Eighty {
+			costReduction = fxp.Eighty
 		}
-		cost = cost.Mul(f64d4.Hundred - costReduction)
+		cost = cost.Mul(fxp.Hundred - costReduction)
 	}
-	return f64d4.Round(cost)
+	return fxp.Round(cost)
 }

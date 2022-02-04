@@ -15,12 +15,15 @@ import (
 	"math"
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/gcs/model/gurps/datafile"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
+	"github.com/richardwilkes/gcs/model/gurps/weapon"
+	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox/eval"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -44,6 +47,34 @@ type Entity struct {
 	featureMap            map[string][]feature.Feature
 }
 
+// StrengthOrZero returns the current ST value, or zero if no such attribute exists.
+func (e *Entity) StrengthOrZero() fixed.F64d4 {
+	if stAttr, exists := e.Attributes[gid.Strength]; exists {
+		return stAttr.Current()
+	}
+	return 0
+}
+
+// Thrust returns the thrust value for the current strength.
+func (e *Entity) Thrust() *dice.Dice {
+	return e.ThrustFor(int((e.StrengthOrZero() + e.StrikingStrengthBonus).AsInt64()))
+}
+
+// ThrustFor returns the thrust value for the provided strength.
+func (e *Entity) ThrustFor(st int) *dice.Dice {
+	return e.SheetSettings.DamageProgression.Thrust(st)
+}
+
+// Swing returns the swing value for the current strength.
+func (e *Entity) Swing() *dice.Dice {
+	return e.SwingFor(int((e.StrengthOrZero() + e.StrikingStrengthBonus).AsInt64()))
+}
+
+// SwingFor returns the swing value for the provided strength.
+func (e *Entity) SwingFor(st int) *dice.Dice {
+	return e.SheetSettings.DamageProgression.Swing(st)
+}
+
 // SkillPointComparedBonusFor returns the total bonus for the matching skill point bonuses.
 func (e *Entity) SkillPointComparedBonusFor(id, name, specialization string, categories []string, tooltip *xio.ByteBuffer) fixed.F64d4 {
 	var total fixed.F64d4
@@ -57,6 +88,47 @@ func (e *Entity) SkillPointComparedBonusFor(id, name, specialization string, cat
 		}
 	}
 	return total
+}
+
+// AddWeaponComparedDamageBonusesFor adds the bonuses for matching weapons that match to the map. If 'm' is nil, it will
+// be created. The provided map (or the newly created one) will be returned.
+func (e *Entity) AddWeaponComparedDamageBonusesFor(id, nameQualifier, specializationQualifier string, categoryQualifier []string, dieCount int, tooltip *xio.ByteBuffer, m map[*feature.WeaponDamageBonus]bool) map[*feature.WeaponDamageBonus]bool {
+	if m == nil {
+		m = make(map[*feature.WeaponDamageBonus]bool)
+	}
+	for _, one := range e.WeaponComparedDamageBonusesFor(id, nameQualifier, specializationQualifier, categoryQualifier, dieCount, tooltip) {
+		m[one] = true
+	}
+	return m
+}
+
+// WeaponComparedDamageBonusesFor returns the bonuses for matching weapons that match.
+func (e *Entity) WeaponComparedDamageBonusesFor(id, nameQualifier, specializationQualifier string, categoryQualifier []string, dieCount int, tooltip *xio.ByteBuffer) []*feature.WeaponDamageBonus {
+	rsl := fixed.F64d4Min
+	for _, sk := range e.SkillNamed(nameQualifier, specializationQualifier, true, nil) {
+		if rsl < sk.Level.RelativeLevel {
+			rsl = sk.Level.RelativeLevel
+		}
+	}
+	if rsl == fixed.F64d4Min {
+		return nil
+	}
+	var bonuses []*feature.WeaponDamageBonus
+	for _, f := range e.featureMap[strings.ToLower(id)] {
+		//nolint:gocritic // Don't want to invert the logic here
+		if bonus, ok := f.(*feature.WeaponDamageBonus); ok &&
+			bonus.NameCriteria.Matches(nameQualifier) &&
+			bonus.SpecializationCriteria.Matches(specializationQualifier) &&
+			bonus.RelativeLevelCriteria.Matches(rsl) &&
+			bonus.CategoryCriteria.Matches(categoryQualifier...) {
+			bonuses = append(bonuses, bonus)
+			level := bonus.LeveledAmount.Level
+			bonus.LeveledAmount.Level = fixed.F64d4FromInt64(int64(dieCount))
+			bonus.AddToTooltip(tooltip)
+			bonus.LeveledAmount.Level = level
+		}
+	}
+	return bonuses
 }
 
 // BonusFor returns the total bonus for the given ID.
@@ -73,7 +145,8 @@ func (e *Entity) BonusFor(id string, tooltip *xio.ByteBuffer) fixed.F64d4 {
 	return total
 }
 
-// AddDRBonusesFor locates any active DR bonuses and adds them to the map. If 'drMap' isn't nil, it will be returned.
+// AddDRBonusesFor locates any active DR bonuses and adds them to the map. If 'drMap' is nil, it will be created. The
+// provided map (or the newly created one) will be returned.
 func (e *Entity) AddDRBonusesFor(id string, tooltip *xio.ByteBuffer, drMap map[string]int) map[string]int {
 	if drMap == nil {
 		drMap = make(map[string]int)
@@ -94,7 +167,7 @@ func (e *Entity) SkillNamed(name, specialization string, requirePoints bool, exc
 	var list []*Skill
 	TraverseSkills(func(sk *Skill) bool {
 		if !sk.Container() && !excludes[sk.String()] {
-			if !requirePoints || sk.Type == techniqueTypeKey || sk.AdjustedPoints() > 0 {
+			if !requirePoints || sk.Type == gid.Technique || sk.AdjustedPoints() > 0 {
 				if strings.EqualFold(sk.Name, name) {
 					if specialization == "" || strings.EqualFold(sk.Specialization, specialization) {
 						list = append(list, sk)
@@ -107,6 +180,42 @@ func (e *Entity) SkillNamed(name, specialization string, requirePoints bool, exc
 	return list
 }
 
+// AddNamedWeaponDamageBonusesFor adds the bonuses for matching weapons that match to the map. If 'm' is nil, it will
+// be created. The provided map (or the newly created one) will be returned.
+func (e *Entity) AddNamedWeaponDamageBonusesFor(id, nameQualifier, usageQualifier string, categoryQualifier []string, dieCount int, tooltip *xio.ByteBuffer, m map[*feature.WeaponDamageBonus]bool) map[*feature.WeaponDamageBonus]bool {
+	if m == nil {
+		m = make(map[*feature.WeaponDamageBonus]bool)
+	}
+	for _, one := range e.NamedWeaponDamageBonusesFor(id, nameQualifier, usageQualifier, categoryQualifier, dieCount, tooltip) {
+		m[one] = true
+	}
+	return m
+}
+
+// NamedWeaponDamageBonusesFor returns the bonuses for matching weapons.
+func (e *Entity) NamedWeaponDamageBonusesFor(id, nameQualifier, usageQualifier string, categoryQualifiers []string, dieCount int, tooltip *xio.ByteBuffer) []*feature.WeaponDamageBonus {
+	list := e.featureMap[strings.ToLower(id)]
+	if len(list) == 0 {
+		return nil
+	}
+	var bonuses []*feature.WeaponDamageBonus
+	for _, one := range list {
+		//nolint:gocritic // Don't want to invert the logic here
+		if bonus, ok := one.(*feature.WeaponDamageBonus); ok &&
+			bonus.SelectionType == weapon.WithName &&
+			bonus.NameCriteria.Matches(nameQualifier) &&
+			bonus.SpecializationCriteria.Matches(usageQualifier) &&
+			bonus.CategoryCriteria.Matches(categoryQualifiers...) {
+			bonuses = append(bonuses, bonus)
+			level := bonus.LeveledAmount.Level
+			bonus.LeveledAmount.Level = fixed.F64d4FromInt64(int64(dieCount))
+			bonus.AddToTooltip(tooltip)
+			bonus.LeveledAmount.Level = level
+		}
+	}
+	return bonuses
+}
+
 // NamedWeaponSkillBonusesFor returns the bonuses for matching weapons.
 func (e *Entity) NamedWeaponSkillBonusesFor(id, nameQualifier, usageQualifier string, categoryQualifiers []string, tooltip *xio.ByteBuffer) []*feature.SkillBonus {
 	list := e.featureMap[strings.ToLower(id)]
@@ -114,14 +223,14 @@ func (e *Entity) NamedWeaponSkillBonusesFor(id, nameQualifier, usageQualifier st
 		return nil
 	}
 	var bonuses []*feature.SkillBonus
-	for _, bonus := range list {
-		if skillBonus, ok := bonus.(*feature.SkillBonus); ok &&
-			skillBonus.SelectionType == skill.WeaponsWithName &&
-			skillBonus.NameCriteria.Matches(nameQualifier) &&
-			skillBonus.SpecializationCriteria.Matches(usageQualifier) &&
-			skillBonus.CategoryCriteria.Matches(categoryQualifiers...) {
-			bonuses = append(bonuses, skillBonus)
-			skillBonus.AddToTooltip(tooltip)
+	for _, one := range list {
+		if bonus, ok := one.(*feature.SkillBonus); ok &&
+			bonus.SelectionType == skill.WeaponsWithName &&
+			bonus.NameCriteria.Matches(nameQualifier) &&
+			bonus.SpecializationCriteria.Matches(usageQualifier) &&
+			bonus.CategoryCriteria.Matches(categoryQualifiers...) {
+			bonuses = append(bonuses, bonus)
+			bonus.AddToTooltip(tooltip)
 		}
 	}
 	return bonuses
@@ -154,41 +263,37 @@ func (e *Entity) MaximumCarry(encumbrance datafile.Encumbrance) measure.Weight {
 
 // BasicLift returns the entity's Basic Lift.
 func (e *Entity) BasicLift() measure.Weight {
-	stAttr, ok := e.Attributes["st"]
-	if !ok {
-		return 0
-	}
-	st := (stAttr.Current() + e.LiftingStrengthBonus).Trunc()
+	st := (e.StrengthOrZero() + e.LiftingStrengthBonus).Trunc()
 	if IsThresholdOpMet(attribute.HalveST, e.Attributes) {
-		st = st.Div(f64d4.Two)
+		st = st.Div(fxp.Two)
 		if st != st.Trunc() {
-			st = st.Trunc() + f64d4.One
+			st = st.Trunc() + fxp.One
 		}
 	}
-	if st < f64d4.One {
+	if st < fxp.One {
 		return 0
 	}
 	var v fixed.F64d4
 	if e.SheetSettings.DamageProgression == attribute.KnowingYourOwnStrength {
 		var diff fixed.F64d4
-		if st > f64d4.Nineteen {
-			diff = st.Div(f64d4.Ten).Trunc() - f64d4.One
-			st -= diff.Mul(f64d4.Ten)
+		if st > fxp.Nineteen {
+			diff = st.Div(fxp.Ten).Trunc() - fxp.One
+			st -= diff.Mul(fxp.Ten)
 		}
-		v = fixed.F64d4FromFloat64(math.Pow(10, st.AsFloat64()/10)).Mul(f64d4.Two)
-		if st <= f64d4.Six {
-			v = f64d4.Round(v.Mul(f64d4.Ten)).Div(f64d4.Ten)
+		v = fixed.F64d4FromFloat64(math.Pow(10, st.AsFloat64()/10)).Mul(fxp.Two)
+		if st <= fxp.Six {
+			v = fxp.Round(v.Mul(fxp.Ten)).Div(fxp.Ten)
 		} else {
-			v = f64d4.Round(v)
+			v = fxp.Round(v)
 		}
 		v = v.Mul(fixed.F64d4FromFloat64(math.Pow(10, diff.AsFloat64())))
 	} else {
-		v = st.Mul(st).Div(f64d4.Five)
+		v = st.Mul(st).Div(fxp.Five)
 	}
-	if v >= f64d4.Ten {
-		v = f64d4.Round(v)
+	if v >= fxp.Ten {
+		v = fxp.Round(v)
 	}
-	return measure.Weight(v.Mul(f64d4.Ten).Trunc().Div(f64d4.Ten))
+	return measure.Weight(v.Mul(fxp.Ten).Trunc().Div(fxp.Ten))
 }
 
 // ResolveVariable implements eval.VariableResolver.

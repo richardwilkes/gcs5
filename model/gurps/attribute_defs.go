@@ -17,6 +17,7 @@ import (
 	"io/fs"
 	"sort"
 
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
@@ -47,7 +48,7 @@ func DefaultAttributeIDFor(entity *Entity) string {
 	if len(list) != 0 {
 		return list[0].ID()
 	}
-	return "st"
+	return gid.Strength
 }
 
 // AttributeIDFor looks up the preferred ID and if it cannot be found, falls back to a default. 'entity' may be nil.
@@ -59,7 +60,7 @@ func AttributeIDFor(entity *Entity, preferred string) string {
 	if list := defs.List(); len(list) != 0 {
 		return list[0].ID()
 	}
-	return "st"
+	return gid.Strength
 }
 
 // FactoryAttributeDefs returns the factory AttributeDef set.

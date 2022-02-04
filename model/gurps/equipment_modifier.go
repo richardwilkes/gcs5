@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/richardwilkes/gcs/model/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/equipment"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
@@ -182,13 +182,13 @@ func ValueAdjustedForModifiers(value fixed.F64d4, modifiers []*EquipmentModifier
 			t := equipment.BaseCost.DetermineModifierCostValueTypeFromString(one.CostAmount)
 			cf += t.ExtractValue(one.CostAmount)
 			if t == equipment.Multiplier {
-				cf -= f64d4.One
+				cf -= fxp.One
 			}
 		}
 	}
 	if cf != 0 {
-		cf = cf.Max(f64d4.NegPointEight)
-		cost = cost.Mul(cf.Max(f64d4.NegPointEight) + f64d4.One)
+		cf = cf.Max(fxp.NegPointEight)
+		cost = cost.Mul(cf.Max(fxp.NegPointEight) + fxp.One)
 	}
 
 	// Apply all equipment.FinalBaseCost
@@ -219,7 +219,7 @@ func processNonCFStep(costType equipment.ModifierCostType, value fixed.F64d4, mo
 	}
 	cost += additions
 	if percentages != 0 {
-		cost += value.Mul(percentages.Div(f64d4.Hundred))
+		cost += value.Mul(percentages.Div(fxp.Hundred))
 	}
 	return cost
 }
@@ -242,7 +242,7 @@ func WeightAdjustedForModifiers(weight measure.Weight, modifiers []*EquipmentMod
 		}
 	}
 	if percentages != 0 {
-		w += fixed.F64d4(weight).Mul(percentages.Div(f64d4.Hundred))
+		w += fixed.F64d4(weight).Mul(percentages.Div(fxp.Hundred))
 	}
 
 	// Apply all equipment.BaseWeight
@@ -267,7 +267,7 @@ func processMultiplyAddWeightStep(weightType equipment.ModifierWeightType, weigh
 			case equipment.WeightAddition:
 				sum += measure.TrailingWeightUnitsFromString(one.WeightAmount, defUnits).ToPounds(f.Value())
 			case equipment.WeightPercentageMultiplier:
-				weight = weight.Mul(f.Numerator).Div(f.Denominator.Mul(f64d4.Hundred))
+				weight = weight.Mul(f.Numerator).Div(f.Denominator.Mul(fxp.Hundred))
 			case equipment.WeightMultiplier:
 				weight = weight.Mul(f.Numerator).Div(f.Denominator)
 			}

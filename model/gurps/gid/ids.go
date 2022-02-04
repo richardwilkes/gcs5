@@ -9,21 +9,18 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package skill
+package gid
 
-import (
-	"strings"
-
-	"github.com/richardwilkes/gcs/model/gurps/gid"
+// Various commonly used IDs
+const (
+	Block         = "block"
+	Dexterity     = "dx"
+	FatiguePoints = "fp"
+	Health        = "ht"
+	HitPoints     = "hp"
+	Intelligence  = "iq"
+	Parry         = "parry"
+	Skill         = "skill"
+	Strength      = "st"
+	Technique     = "technique"
 )
-
-var skillBasedDefaultTypes = map[string]bool{
-	gid.Skill: true,
-	gid.Parry: true,
-	gid.Block: true,
-}
-
-// DefaultTypeIsSkillBased returns true if the SkillDefault type is Skill-based.
-func DefaultTypeIsSkillBased(skillDefaultType string) bool {
-	return skillBasedDefaultTypes[strings.ToLower(strings.TrimSpace(skillDefaultType))]
-}
