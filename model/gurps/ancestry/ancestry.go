@@ -74,7 +74,7 @@ func (a *Ancestry) RandomHeight(resolver eval.VariableResolver, gender string) m
 	if a.CommonOptions != nil && a.CommonOptions.HeightFormula != "" {
 		return a.CommonOptions.RandomHeight(resolver)
 	}
-	return measure.LengthFromInt64(defaultHeight, measure.Inch)
+	return measure.LengthFromInt(defaultHeight, measure.Inch)
 }
 
 // RandomWeight returns a randomized weight.
@@ -85,7 +85,7 @@ func (a *Ancestry) RandomWeight(resolver eval.VariableResolver, gender string) m
 	if a.CommonOptions != nil && a.CommonOptions.WeightFormula != "" {
 		return a.CommonOptions.RandomWeight(resolver)
 	}
-	return measure.WeightFromInt64(defaultWeight, measure.Pound)
+	return measure.WeightFromInt(defaultWeight, measure.Pound)
 }
 
 // RandomAge returns a randomized age.

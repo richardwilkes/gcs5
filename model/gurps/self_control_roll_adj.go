@@ -109,6 +109,6 @@ func (s SelfControlRollAdj) Features(cr advantage.SelfControlRoll) feature.Featu
 	}
 	f := feature.NewSkillBonus()
 	f.NameCriteria.Qualifier = "Merchant"
-	f.Amount = fixed.F64d4FromInt64(int64(cr.Index() - len(advantage.AllSelfControlRolls)))
+	f.Amount = fixed.F64d4FromInt(cr.Index() - len(advantage.AllSelfControlRolls))
 	return feature.Features{f}
 }

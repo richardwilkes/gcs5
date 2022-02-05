@@ -52,7 +52,7 @@ func (o *Options) RandomHeight(resolver eval.VariableResolver) measure.Length {
 	} else if value, ok := result.(fixed.F64d4); ok {
 		return measure.Length(value)
 	}
-	return measure.LengthFromInt64(defaultHeight, measure.Inch)
+	return measure.LengthFromInt(defaultHeight, measure.Inch)
 }
 
 // RandomWeight returns a randomized weight.
@@ -62,7 +62,7 @@ func (o *Options) RandomWeight(resolver eval.VariableResolver) measure.Weight {
 	} else if value, ok := result.(fixed.F64d4); ok {
 		return measure.Weight(value)
 	}
-	return measure.WeightFromInt64(defaultWeight, measure.Pound)
+	return measure.WeightFromInt(defaultWeight, measure.Pound)
 }
 
 // RandomAge returns a randomized age.
@@ -70,7 +70,7 @@ func (o *Options) RandomAge(resolver eval.VariableResolver) int {
 	if result, err := f64d4eval.NewEvaluator(resolver, true).Evaluate(o.AgeFormula); err != nil {
 		jot.Warn(errs.NewWithCausef(err, "unable to resolve '%s'", o.AgeFormula))
 	} else if value, ok := result.(fixed.F64d4); ok {
-		return int(value.AsInt64())
+		return value.AsInt()
 	}
 	return defaultAge
 }

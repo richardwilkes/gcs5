@@ -26,6 +26,11 @@ func WeightFromInt64(value int64, unit WeightUnits) Weight {
 	return Weight(unit.ToPounds(fixed.F64d4FromInt64(value)))
 }
 
+// WeightFromInt creates a new Weight.
+func WeightFromInt(value int, unit WeightUnits) Weight {
+	return Weight(unit.ToPounds(fixed.F64d4FromInt(value)))
+}
+
 // WeightFromStringForced creates a new Weight. May have any of the known Weight suffixes or no notation at all, in which
 // case defaultUnits is used.
 func WeightFromStringForced(text string, defaultUnits WeightUnits) Weight {

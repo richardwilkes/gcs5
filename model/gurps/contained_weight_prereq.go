@@ -35,7 +35,7 @@ func NewContainedWeightPrereq(entity *Entity) *ContainedWeightPrereq {
 		WeightCriteria: criteria.Weight{
 			WeightData: criteria.WeightData{
 				Compare:   criteria.AtMost,
-				Qualifier: measure.WeightFromInt64(5, SheetSettingsFor(entity).DefaultWeightUnits),
+				Qualifier: measure.WeightFromInt(5, SheetSettingsFor(entity).DefaultWeightUnits),
 			},
 		},
 		Has: true,

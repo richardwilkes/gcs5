@@ -38,7 +38,7 @@ func NewAttributePrereq(entity *Entity) *AttributePrereq {
 		QualifierCriteria: criteria.Numeric{
 			NumericData: criteria.NumericData{
 				Compare:   criteria.AtLeast,
-				Qualifier: fixed.F64d4FromInt64(10),
+				Qualifier: fixed.F64d4FromInt(10),
 			},
 		},
 		Which: AttributeIDFor(entity, gid.Strength),

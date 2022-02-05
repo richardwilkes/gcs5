@@ -69,13 +69,13 @@ func (w WeightUnits) Format(weight Weight) string {
 	case Pound, PoundAlt:
 		return fixed.F64d4(weight).String() + string(w)
 	case Ounce:
-		return fixed.F64d4(weight).Mul(fixed.F64d4FromInt64(16)).String() + string(w)
+		return fixed.F64d4(weight).Mul(fixed.F64d4FromInt(16)).String() + string(w)
 	case Ton:
-		return fixed.F64d4(weight).Div(fixed.F64d4FromInt64(2000)).String() + string(w)
+		return fixed.F64d4(weight).Div(fixed.F64d4FromInt(2000)).String() + string(w)
 	case Kilogram:
-		return fixed.F64d4(weight).Div(fixed.F64d4FromInt64(2)).String() + string(w)
+		return fixed.F64d4(weight).Div(fixed.F64d4FromInt(2)).String() + string(w)
 	case Gram:
-		return fixed.F64d4(weight).Mul(fixed.F64d4FromInt64(500)).String() + string(w)
+		return fixed.F64d4(weight).Mul(fixed.F64d4FromInt(500)).String() + string(w)
 	default:
 		return Pound.Format(weight)
 	}
@@ -87,13 +87,13 @@ func (w WeightUnits) ToPounds(weight fixed.F64d4) fixed.F64d4 {
 	case Pound, PoundAlt:
 		return weight
 	case Ounce:
-		return weight.Div(fixed.F64d4FromInt64(16))
+		return weight.Div(fixed.F64d4FromInt(16))
 	case Ton:
-		return weight.Mul(fixed.F64d4FromInt64(2000))
+		return weight.Mul(fixed.F64d4FromInt(2000))
 	case Kilogram:
-		return weight.Mul(fixed.F64d4FromInt64(2))
+		return weight.Mul(fixed.F64d4FromInt(2))
 	case Gram:
-		return weight.Div(fixed.F64d4FromInt64(500))
+		return weight.Div(fixed.F64d4FromInt(500))
 	default:
 		return Pound.ToPounds(weight)
 	}

@@ -59,7 +59,7 @@ func (e *Entity) StrengthOrZero() fixed.F64d4 {
 
 // Thrust returns the thrust value for the current strength.
 func (e *Entity) Thrust() *dice.Dice {
-	return e.ThrustFor(int((e.StrengthOrZero() + e.StrikingStrengthBonus).AsInt64()))
+	return e.ThrustFor((e.StrengthOrZero() + e.StrikingStrengthBonus).AsInt())
 }
 
 // ThrustFor returns the thrust value for the provided strength.
@@ -69,7 +69,7 @@ func (e *Entity) ThrustFor(st int) *dice.Dice {
 
 // Swing returns the swing value for the current strength.
 func (e *Entity) Swing() *dice.Dice {
-	return e.SwingFor(int((e.StrengthOrZero() + e.StrikingStrengthBonus).AsInt64()))
+	return e.SwingFor((e.StrengthOrZero() + e.StrikingStrengthBonus).AsInt())
 }
 
 // SwingFor returns the swing value for the provided strength.
@@ -125,7 +125,7 @@ func (e *Entity) WeaponComparedDamageBonusesFor(id, nameQualifier, specializatio
 			bonus.CategoryCriteria.Matches(categoryQualifier...) {
 			bonuses = append(bonuses, bonus)
 			level := bonus.LeveledAmount.Level
-			bonus.LeveledAmount.Level = fixed.F64d4FromInt64(int64(dieCount))
+			bonus.LeveledAmount.Level = fixed.F64d4FromInt(dieCount)
 			bonus.AddToTooltip(tooltip)
 			bonus.LeveledAmount.Level = level
 		}
@@ -156,7 +156,7 @@ func (e *Entity) AddDRBonusesFor(id string, tooltip *xio.ByteBuffer, drMap map[s
 	if list, exists := e.featureMap[strings.ToLower(id)]; exists {
 		for _, one := range list {
 			if drBonus, ok := one.(*feature.DRBonus); ok {
-				drMap[strings.ToLower(drBonus.Specialization)] += int(drBonus.AdjustedAmount().AsInt64())
+				drMap[strings.ToLower(drBonus.Specialization)] += drBonus.AdjustedAmount().AsInt()
 				drBonus.AddToTooltip(tooltip)
 			}
 		}
@@ -210,7 +210,7 @@ func (e *Entity) NamedWeaponDamageBonusesFor(id, nameQualifier, usageQualifier s
 			bonus.CategoryCriteria.Matches(categoryQualifiers...) {
 			bonuses = append(bonuses, bonus)
 			level := bonus.LeveledAmount.Level
-			bonus.LeveledAmount.Level = fixed.F64d4FromInt64(int64(dieCount))
+			bonus.LeveledAmount.Level = fixed.F64d4FromInt(dieCount)
 			bonus.AddToTooltip(tooltip)
 			bonus.LeveledAmount.Level = level
 		}

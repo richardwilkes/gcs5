@@ -60,7 +60,7 @@ func (l LengthUnits) EnsureValid() LengthUnits {
 func (l LengthUnits) Format(length Length) string {
 	switch l {
 	case FeetAndInches:
-		oneFoot := fixed.F64d4FromInt64(12)
+		oneFoot := fixed.F64d4FromInt(12)
 		inches := fixed.F64d4(length)
 		feet := inches.Div(oneFoot).Trunc()
 		inches -= feet.Mul(oneFoot)
@@ -80,17 +80,17 @@ func (l LengthUnits) Format(length Length) string {
 	case Inch:
 		return fixed.F64d4(length).String() + string(l)
 	case Feet:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt64(12)).String() + string(l)
+		return fixed.F64d4(length).Div(fixed.F64d4FromInt(12)).String() + string(l)
 	case Yard:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt64(36)).String() + string(l)
+		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36)).String() + string(l)
 	case Mile:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt64(5280)).String() + string(l)
+		return fixed.F64d4(length).Div(fixed.F64d4FromInt(5280)).String() + string(l)
 	case Centimeter:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt64(36)).Mul(fixed.F64d4FromInt64(100)).String() + string(l)
+		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36)).Mul(fixed.F64d4FromInt(100)).String() + string(l)
 	case Kilometer:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt64(36000)).String() + string(l)
+		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36000)).String() + string(l)
 	case Meter:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt64(36)).String() + string(l)
+		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36)).String() + string(l)
 	default:
 		return FeetAndInches.Format(length)
 	}
@@ -102,17 +102,17 @@ func (l LengthUnits) ToInches(length fixed.F64d4) fixed.F64d4 {
 	case FeetAndInches, Inch:
 		return length
 	case Feet:
-		return length.Mul(fixed.F64d4FromInt64(12))
+		return length.Mul(fixed.F64d4FromInt(12))
 	case Yard:
-		return length.Mul(fixed.F64d4FromInt64(36))
+		return length.Mul(fixed.F64d4FromInt(36))
 	case Mile:
-		return length.Mul(fixed.F64d4FromInt64(63360))
+		return length.Mul(fixed.F64d4FromInt(63360))
 	case Centimeter:
-		return length.Mul(fixed.F64d4FromFloat64(36)).Div(fixed.F64d4FromInt64(100))
+		return length.Mul(fixed.F64d4FromInt(36)).Div(fixed.F64d4FromInt(100))
 	case Kilometer:
-		return length.Mul(fixed.F64d4FromInt64(36000))
+		return length.Mul(fixed.F64d4FromInt(36000))
 	case Meter:
-		return length.Mul(fixed.F64d4FromInt64(36))
+		return length.Mul(fixed.F64d4FromInt(36))
 	default:
 		return FeetAndInches.ToInches(length)
 	}

@@ -19,10 +19,10 @@ import (
 )
 
 func TestWeightConversion(t *testing.T) {
-	assert.Equal(t, "1#", measure.Pound.Format(measure.WeightFromInt64(1, measure.Pound)))
-	assert.Equal(t, "15#", measure.Pound.Format(measure.WeightFromInt64(15, measure.Pound)))
-	assert.Equal(t, "0.5kg", measure.Kilogram.Format(measure.WeightFromInt64(1, measure.Pound)))
-	assert.Equal(t, "7.5kg", measure.Kilogram.Format(measure.WeightFromInt64(15, measure.Pound)))
+	assert.Equal(t, "1#", measure.Pound.Format(measure.WeightFromInt(1, measure.Pound)))
+	assert.Equal(t, "15#", measure.Pound.Format(measure.WeightFromInt(15, measure.Pound)))
+	assert.Equal(t, "0.5kg", measure.Kilogram.Format(measure.WeightFromInt(1, measure.Pound)))
+	assert.Equal(t, "7.5kg", measure.Kilogram.Format(measure.WeightFromInt(15, measure.Pound)))
 
 	w, err := measure.WeightFromString("1", measure.Pound)
 	assert.NoError(t, err)

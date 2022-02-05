@@ -360,7 +360,7 @@ func (w *Weapon) resolvedValue(input, baseDefaultType string, tooltip *xio.ByteB
 					if neg {
 						modifier = -modifier
 					}
-					num := (skillLevel + fixed.F64d4FromInt64(int64(modifier))).Trunc().String()
+					num := (skillLevel + fixed.F64d4FromInt(modifier)).Trunc().String()
 					if i < max {
 						buffer.WriteString(num)
 						line = line[i:]
@@ -434,7 +434,7 @@ func (w *Weapon) ResolvedMinimumStrength() fixed.F64d4 {
 			break
 		}
 	}
-	return fixed.F64d4FromInt64(int64(value))
+	return fixed.F64d4FromInt(value)
 }
 
 // FillWithNameableKeys adds any nameable keys found in this Weapon to the provided map.

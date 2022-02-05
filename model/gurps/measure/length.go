@@ -30,6 +30,11 @@ func LengthFromInt64(value int64, unit LengthUnits) Length {
 	return Length(unit.ToInches(fixed.F64d4FromInt64(value)))
 }
 
+// LengthFromInt creates a new Length.
+func LengthFromInt(value int, unit LengthUnits) Length {
+	return Length(unit.ToInches(fixed.F64d4FromInt(value)))
+}
+
 // LengthFromStringForced creates a new Length. May have any of the known Units suffixes, a feet and inches format (e.g.
 // 6'2"), or no notation at all, in which case defaultUnits is used.
 func LengthFromStringForced(text string, defaultUnits LengthUnits) Length {
@@ -83,7 +88,7 @@ func LengthFromString(text string, defaultUnits LengthUnits) (Length, error) {
 			return 0, err
 		}
 	}
-	return Length(feet.Mul(fixed.F64d4FromInt64(12)) + inches), nil
+	return Length(feet.Mul(fixed.F64d4FromInt(12)) + inches), nil
 }
 
 func (l Length) String() string {
