@@ -23,6 +23,8 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
+	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox/eval"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -32,21 +34,43 @@ import (
 
 var _ eval.VariableResolver = &Entity{}
 
+// EntityData holds the Entity data that is written to disk.
+type EntityData struct {
+	Type             datafile.EntityType
+	Profile          *Profile
+	SheetSettings    *SheetSettings
+	Attributes       map[string]*Attribute
+	Skills           []*Skill
+	CarriedEquipment []*Equipment
+	OtherEquipment   []*Equipment
+	CreatedOn        jio.Time
+	ModifiedOn       jio.Time
+}
+
 // Entity holds the base information for various types of entities: PC, NPC, Creature, etc.
 type Entity struct {
-	Type                       datafile.EntityType
-	Profile                    *Profile
-	SheetSettings              *SheetSettings
+	EntityData
 	LiftingStrengthBonus       fixed.F64d4
 	StrikingStrengthBonus      fixed.F64d4
 	ThrowingStrengthBonus      fixed.F64d4
 	ParryBonus                 fixed.F64d4
 	BlockBonus                 fixed.F64d4
-	Attributes                 map[string]*Attribute
-	Skills                     []*Skill
-	CarriedEquipment           []*Equipment
 	featureMap                 map[string][]feature.Feature
 	variableResolverExclusions map[string]bool
+}
+
+// MarshalJSON implements json.Marshaler.
+func (e *Entity) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&e.EntityData)
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (e *Entity) UnmarshalJSON(data []byte) error {
+	e.EntityData = EntityData{}
+	if err := json.Unmarshal(data, &e.EntityData); err != nil {
+		return err
+	}
+	return nil
 }
 
 // StrengthOrZero returns the current ST value, or zero if no such attribute exists.
