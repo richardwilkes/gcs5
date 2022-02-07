@@ -11,82 +11,9 @@
 
 package paper
 
-import (
-	"github.com/richardwilkes/toolbox/i18n"
-)
-
-// Possible Size values.
-const (
-	Letter  = Size("letter")
-	Legal   = Size("legal")
-	Tabloid = Size("tabloid")
-	A0      = Size("a0")
-	A1      = Size("a1")
-	A2      = Size("a2")
-	A3      = Size("a3")
-	A4      = Size("a4")
-	A5      = Size("a5")
-	A6      = Size("a6")
-)
-
-// AllSizes is the complete set of Size values.
-var AllSizes = []Size{
-	Letter,
-	Legal,
-	Tabloid,
-	A0,
-	A1,
-	A2,
-	A3,
-	A4,
-	A5,
-	A6,
-}
-
-// Size holds a standard paper dimension.
-type Size string
-
-// EnsureValid ensures this is of a known value.
-func (s Size) EnsureValid() Size {
-	for _, one := range AllSizes {
-		if one == s {
-			return s
-		}
-	}
-	return AllSizes[0]
-}
-
-// String implements fmt.Stringer.
-func (s Size) String() string {
-	switch s {
-	case Letter:
-		return i18n.Text("Letter")
-	case Legal:
-		return i18n.Text("Legal")
-	case Tabloid:
-		return i18n.Text("Tabloid")
-	case A0:
-		return i18n.Text("A0")
-	case A1:
-		return i18n.Text("A1")
-	case A2:
-		return i18n.Text("A2")
-	case A3:
-		return i18n.Text("A3")
-	case A4:
-		return i18n.Text("A4")
-	case A5:
-		return i18n.Text("A5")
-	case A6:
-		return i18n.Text("A6")
-	default:
-		return Letter.String()
-	}
-}
-
 // Dimensions returns the paper dimensions.
-func (s Size) Dimensions() (width, height Length) {
-	switch s {
+func (enum Size) Dimensions() (width, height Length) {
+	switch enum {
 	case Letter:
 		return Length{Length: 8.5, Units: Inch}, Length{Length: 11, Units: Inch}
 	case Legal:

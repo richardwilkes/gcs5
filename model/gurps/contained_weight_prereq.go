@@ -24,8 +24,8 @@ var _ Prereq = &ContainedWeightPrereq{}
 type ContainedWeightPrereq struct {
 	Parent         *PrereqList     `json:"-"`
 	Type           prereq.Type     `json:"type"`
-	WeightCriteria criteria.Weight `json:"qualifier,omitempty"`
 	Has            bool            `json:"has"`
+	WeightCriteria criteria.Weight `json:"qualifier,omitempty"`
 }
 
 // NewContainedWeightPrereq creates a new ContainedWeightPrereq.

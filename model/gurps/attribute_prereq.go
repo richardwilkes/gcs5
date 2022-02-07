@@ -25,10 +25,10 @@ var _ Prereq = &AttributePrereq{}
 type AttributePrereq struct {
 	Parent            *PrereqList      `json:"-"`
 	Type              prereq.Type      `json:"type"`
+	Has               bool             `json:"has"`
 	CombinedWith      string           `json:"combined_with,omitempty"`
 	QualifierCriteria criteria.Numeric `json:"qualifier,omitempty"`
 	Which             string           `json:"which"`
-	Has               bool             `json:"has"`
 }
 
 // NewAttributePrereq creates a new AttributePrereq. 'entity' may be nil.

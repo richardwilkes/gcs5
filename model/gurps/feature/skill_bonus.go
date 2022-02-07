@@ -31,8 +31,8 @@ var _ Bonus = &SkillBonus{}
 
 // SkillBonus holds an adjustment to a skill.
 type SkillBonus struct {
-	Type                   Type                `json:"type"`
 	Parent                 fmt.Stringer        `json:"-"`
+	Type                   Type                `json:"type"`
 	SelectionType          skill.SelectionType `json:"selection_type"`
 	NameCriteria           criteria.String     `json:"name,omitempty"`
 	SpecializationCriteria criteria.String     `json:"specialization,omitempty"`

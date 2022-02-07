@@ -34,21 +34,21 @@ var _ Bonus = &WeaponDamageBonus{}
 
 // WeaponDamageBonus holds the data for an adjustment to weapon damage.
 type WeaponDamageBonus struct {
-	Type                   Type                 `json:"type"`
 	Parent                 fmt.Stringer         `json:"-"`
+	Type                   Type                 `json:"type"`
+	Percent                bool                 `json:"percent,omitempty"`
 	SelectionType          weapon.SelectionType `json:"selection_type"`
 	NameCriteria           criteria.String      `json:"name,omitempty"`
 	SpecializationCriteria criteria.String      `json:"specialization,omitempty"`
 	RelativeLevelCriteria  criteria.Numeric     `json:"level,omitempty"`
 	CategoryCriteria       criteria.String      `json:"category,omitempty"`
-	Percent                bool                 `json:"percent,omitempty"`
 	LeveledAmount
 }
 
 // NewWeaponDamageBonus creates a new WeaponDamageBonus.
 func NewWeaponDamageBonus() *WeaponDamageBonus {
 	return &WeaponDamageBonus{
-		Type:          WeaponDamageBonusType,
+		Type:          WeaponBonusType,
 		SelectionType: weapon.WithRequiredSkill,
 		NameCriteria: criteria.String{
 			StringData: criteria.StringData{

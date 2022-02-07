@@ -14,75 +14,17 @@ package equipment
 import (
 	"fmt"
 
-	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-// Possible ModifierCostType values.
-const (
-	// OriginalCost modifies the original value stored in the equipment. Can be a ±value, ±% value, or a multiplier.
-	OriginalCost = ModifierCostType("to_original_cost")
-	// BaseCost modifies the base cost. Can be an additive multiplier or a CF value.
-	BaseCost = ModifierCostType("to_base_cost")
-	// FinalBaseCost modifies the final base cost. Can be a ±value, ±% value, or a multiplier.
-	FinalBaseCost = ModifierCostType("to_final_base_cost")
-	// FinalCost modifies the final cost. Can be a ±value, ±% value, or a multiplier.
-	FinalCost = ModifierCostType("to_final_cost")
-)
-
-// AllModifierCostTypes is the complete set of ModifierCostType values.
-var AllModifierCostTypes = []ModifierCostType{
-	OriginalCost,
-	BaseCost,
-	FinalBaseCost,
-	FinalCost,
-}
-
-// ModifierCostType describes how an EquipmentModifier's cost is applied.
-type ModifierCostType string
-
-// EnsureValid ensures this is of a known value.
-func (m ModifierCostType) EnsureValid() ModifierCostType {
-	for _, one := range AllModifierCostTypes {
-		if one == m {
-			return m
-		}
-	}
-	return AllModifierCostTypes[0]
-}
-
-// ShortString returns the same thing as .String(), but without the example.
-func (m ModifierCostType) ShortString() string {
-	switch m {
-	case OriginalCost:
-		return i18n.Text("to original cost")
-	case BaseCost:
-		return i18n.Text("to base cost")
-	case FinalBaseCost:
-		return i18n.Text("to final base cost")
-	case FinalCost:
-		return i18n.Text("to final cost")
-	default:
-		return OriginalCost.ShortString()
-	}
-}
-
-// String implements fmt.Stringer.
-func (m ModifierCostType) String() string {
-	return fmt.Sprintf("%s (e.g. %s)", m.ShortString(), m.Example())
-}
-
-// Example returns example values.
-func (m ModifierCostType) Example() string {
-	if m.EnsureValid() == BaseCost {
-		return `"x2", "+2 CF", "-0.2 CF"`
-	}
-	return `"+5", "-5", "+10%", "-10%", "x3.2"`
+// StringWithExample returns an example along with the normal String() content.
+func (enum ModifierCostType) StringWithExample() string {
+	return fmt.Sprintf("%s (e.g. %s)", enum.String(), enum.AltString())
 }
 
 // Permitted returns the permitted ModifierCostValueType values.
-func (m ModifierCostType) Permitted() []ModifierCostValueType {
-	if m.EnsureValid() == BaseCost {
+func (enum ModifierCostType) Permitted() []ModifierCostValueType {
+	if enum.EnsureValid() == BaseCost {
 		return []ModifierCostValueType{CostFactor, Multiplier}
 	}
 	return []ModifierCostValueType{Addition, Percentage, Multiplier}
@@ -90,9 +32,9 @@ func (m ModifierCostType) Permitted() []ModifierCostValueType {
 
 // DetermineModifierCostValueTypeFromString examines a string to determine what type it is, but restricts the result to
 // those allowed for this ModifierCostType.
-func (m ModifierCostType) DetermineModifierCostValueTypeFromString(s string) ModifierCostValueType {
+func (enum ModifierCostType) DetermineModifierCostValueTypeFromString(s string) ModifierCostValueType {
 	cvt := DetermineModifierCostValueTypeFromString(s)
-	permitted := m.Permitted()
+	permitted := enum.Permitted()
 	for _, one := range permitted {
 		if one == cvt {
 			return cvt
@@ -102,12 +44,12 @@ func (m ModifierCostType) DetermineModifierCostValueTypeFromString(s string) Mod
 }
 
 // ExtractValue from the string.
-func (m ModifierCostType) ExtractValue(s string) fixed.F64d4 {
-	return m.DetermineModifierCostValueTypeFromString(s).ExtractValue(s)
+func (enum ModifierCostType) ExtractValue(s string) fixed.F64d4 {
+	return enum.DetermineModifierCostValueTypeFromString(s).ExtractValue(s)
 }
 
 // Format returns a formatted version of the value.
-func (m ModifierCostType) Format(s string) string {
-	cvt := m.DetermineModifierCostValueTypeFromString(s)
+func (enum ModifierCostType) Format(s string) string {
+	cvt := enum.DetermineModifierCostValueTypeFromString(s)
 	return cvt.Format(cvt.ExtractValue(s))
 }

@@ -11,39 +11,8 @@
 
 package spell
 
-// Possible ComparisonType values.
-const (
-	Name         = ComparisonType("name")
-	Category     = ComparisonType("category")
-	College      = ComparisonType("college")
-	CollegeCount = ComparisonType("college_count")
-	Any          = ComparisonType("any")
-)
-
-// AllComparisonTypes is the complete set of ComparisonType values.
-var AllComparisonTypes = []ComparisonType{
-	Name,
-	Category,
-	College,
-	CollegeCount,
-	Any,
-}
-
-// ComparisonType holds the type of an attribute definition.
-type ComparisonType string
-
-// EnsureValid ensures this is of a known value.
-func (c ComparisonType) EnsureValid() ComparisonType {
-	for _, one := range AllComparisonTypes {
-		if one == c {
-			return c
-		}
-	}
-	return AllComparisonTypes[0]
-}
-
 // UsesStringCriteria returns true if the comparison uses a string value.
-func (c ComparisonType) UsesStringCriteria() bool {
-	v := c.EnsureValid()
+func (enum ComparisonType) UsesStringCriteria() bool {
+	v := enum.EnsureValid()
 	return v == Name || v == Category || v == College
 }

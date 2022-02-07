@@ -43,7 +43,7 @@ var (
 	damageProgressionData = []struct {
 		key    string
 		string string
-		short  string
+		alt    string
 	}{
 		{
 			key:    "basic_set",
@@ -52,27 +52,27 @@ var (
 		{
 			key:    "knowing_your_own_strength",
 			string: i18n.Text("Knowing Your Own Strength"),
-			short:  i18n.Text("Pyramid 3-83, pages 16-19"),
+			alt:    i18n.Text("Pyramid 3-83, pages 16-19"),
 		},
 		{
 			key:    "no_school_grognard_damage",
-			string: i18n.Text("No School Grognard"),
-			short:  i18n.Text("https://noschoolgrognard.blogspot.com/2013/04/adjusting-swing-damage-in-dungeon.html"),
+			string: i18n.Text("No School Grognard Damage"),
+			alt:    i18n.Text("https://noschoolgrognard.blogspot.com/2013/04/adjusting-swing-damage-in-dungeon.html"),
 		},
 		{
 			key:    "thrust_equals_swing_minus_2",
 			string: i18n.Text("Thrust = Swing-2"),
-			short:  i18n.Text("https://github.com/richardwilkes/gcs/issues/97"),
+			alt:    i18n.Text("https://github.com/richardwilkes/gcs/issues/97"),
 		},
 		{
 			key:    "swing_equals_thrust_plus_2",
 			string: i18n.Text("Swing = Thrust+2"),
-			short:  i18n.Text("Houserule originating with Kevin Smyth. See https://gamingballistic.com/2020/12/04/df-eastmarch-boss-fight-and-house-rules/"),
+			alt:    i18n.Text("Houserule originating with Kevin Smyth. See https://gamingballistic.com/2020/12/04/df-eastmarch-boss-fight-and-house-rules/"),
 		},
 		{
 			key:    "phoenix_flame_d3",
-			string: i18n.Text("PhoenixFlame d3"),
-			short:  i18n.Text("Houserule that use d3s instead of d6s for Damage. See: https://github.com/richardwilkes/gcs/pull/393"),
+			string: i18n.Text("Phoenix Flame D3"),
+			alt:    i18n.Text("Houserule that use d3s instead of d6s for Damage. See: https://github.com/richardwilkes/gcs/pull/393"),
 		},
 	}
 )
@@ -98,9 +98,9 @@ func (enum DamageProgression) String() string {
 	return damageProgressionData[enum.EnsureValid()].string
 }
 
-// ShortTitle returns the short version of the title.
-func (enum DamageProgression) ShortTitle() string {
-	return damageProgressionData[enum.EnsureValid()].short
+// AltString returns the alternate string.
+func (enum DamageProgression) AltString() string {
+	return damageProgressionData[enum.EnsureValid()].alt
 }
 
 // ExtractDamageProgression extracts the value from a string.

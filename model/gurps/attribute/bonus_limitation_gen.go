@@ -41,7 +41,8 @@ var (
 		string string
 	}{
 		{
-			key: "none",
+			key:    "none",
+			string: i18n.Text("None"),
 		},
 		{
 			key:    "striking_only",

@@ -50,8 +50,8 @@ func LengthFromStringForced(text string, defaultUnits LengthUnits) Length {
 func LengthFromString(text string, defaultUnits LengthUnits) (Length, error) {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
 	for _, unit := range AllLengthUnits[1:] {
-		if strings.HasSuffix(text, string(unit)) {
-			value, err := fixed.F64d4FromString(strings.TrimSpace(strings.TrimSuffix(text, string(unit))))
+		if strings.HasSuffix(text, unit.Key()) {
+			value, err := fixed.F64d4FromString(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())))
 			if err != nil {
 				return 0, err
 			}

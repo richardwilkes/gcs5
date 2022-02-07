@@ -77,7 +77,6 @@ BUILD_NUMBER=$(date -u "+%Y%m%d%H%M%S")
 echo -e "\033[33mBuilding...\033[0m"
 
 # Generate the source
-find . -iname "*_gen.go" -delete
 go generate ./gen/enumgen.go
 
 # Prepare the bundle

@@ -27,9 +27,9 @@ type SpellPrereq struct {
 	Parent            *PrereqList          `json:"-"`
 	Type              prereq.Type          `json:"type"`
 	SubType           spell.ComparisonType `json:"sub_type"`
+	Has               bool                 `json:"has"`
 	QualifierCriteria criteria.String      `json:"qualifier,omitempty"`
 	QuantityCriteria  criteria.Numeric     `json:"quantity,omitempty"`
-	Has               bool                 `json:"has"`
 }
 
 // NewSpellPrereq creates a new SpellPrereq.

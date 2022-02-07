@@ -46,8 +46,8 @@ func WeightFromStringForced(text string, defaultUnits WeightUnits) Weight {
 func WeightFromString(text string, defaultUnits WeightUnits) (Weight, error) {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
 	for _, unit := range AllWeightUnits {
-		if strings.HasSuffix(text, string(unit)) {
-			value, err := fixed.F64d4FromString(strings.TrimSpace(strings.TrimSuffix(text, string(unit))))
+		if strings.HasSuffix(text, unit.Key()) {
+			value, err := fixed.F64d4FromString(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())))
 			if err != nil {
 				return 0, err
 			}

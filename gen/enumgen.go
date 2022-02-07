@@ -23,10 +23,11 @@ const (
 )
 
 type enumValue struct {
-	Name   string
-	Key    string
-	String string
-	Short  string
+	Name       string
+	Key        string
+	String     string
+	Alt        string
+	NoLocalize bool
 }
 
 type enumInfo struct {
@@ -43,6 +44,105 @@ func main() {
 	)
 	removeExistingGenFiles()
 	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/paper",
+		Name:       "orientation",
+		Desc:       "holds the orientation of the page",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Key: "portrait",
+			},
+			{
+				Key: "landscape",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/paper",
+		Name:       "units",
+		Desc:       "holds the real-world length unit type",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Name:       "Inch",
+				Key:        "in",
+				String:     "in",
+				NoLocalize: true,
+			},
+			{
+				Name:       "Centimeter",
+				Key:        "cm",
+				String:     "cm",
+				NoLocalize: true,
+			},
+			{
+				Name:       "Millimeter",
+				Key:        "mm",
+				String:     "mm",
+				NoLocalize: true,
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/paper",
+		Name:       "size",
+		Desc:       "holds a standard paper dimension",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Key: "letter",
+			},
+			{
+				Key: "legal",
+			},
+			{
+				Key: "tabloid",
+			},
+			{
+				Key: "a0",
+			},
+			{
+				Key: "a1",
+			},
+			{
+				Key: "a2",
+			},
+			{
+				Key: "a3",
+			},
+			{
+				Key: "a4",
+			},
+			{
+				Key: "a5",
+			},
+			{
+				Key: "a6",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/settings/display",
+		Name:       "option",
+		Desc:       "holds a display option",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Key: "not_shown",
+			},
+			{
+				Key: "inline",
+			},
+			{
+				Key: "tooltip",
+			},
+			{
+				Key:    "inline_and_tooltip",
+				String: "Inline & Tooltip",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
 		Pkg:        "model/gurps/advantage",
 		Name:       "affects",
 		Desc:       "describes how an AdvantageModifier affects the point cost",
@@ -55,12 +155,12 @@ func main() {
 			{
 				Key:    "base_only",
 				String: "to base cost only",
-				Short:  "(base only)",
+				Alt:    "(base only)",
 			},
 			{
 				Key:    "levels_only",
 				String: "to leveled cost only",
-				Short:  "(levels only)",
+				Alt:    "(levels only)",
 			},
 		},
 	})
@@ -71,20 +171,17 @@ func main() {
 		StandAlone: true,
 		Values: []enumValue{
 			{
-				Key:    "group",
-				String: "Group",
+				Key: "group",
 			},
 			{
 				Key:    "meta_trait",
 				String: "Meta-Trait",
 			},
 			{
-				Key:    "race",
-				String: "Race",
+				Key: "race",
 			},
 			{
-				Key:    "alternative_abilities",
-				String: "Alternative Abilities",
+				Key: "alternative_abilities",
 			},
 		},
 	})
@@ -138,33 +235,29 @@ func main() {
 		StandAlone: true,
 		Values: []enumValue{
 			{
-				Key:    "basic_set",
-				String: "Basic Set",
+				Key: "basic_set",
 			},
 			{
-				Key:    "knowing_your_own_strength",
-				String: "Knowing Your Own Strength",
-				Short:  "Pyramid 3-83, pages 16-19",
+				Key: "knowing_your_own_strength",
+				Alt: "Pyramid 3-83, pages 16-19",
 			},
 			{
-				Key:    "no_school_grognard_damage",
-				String: "No School Grognard",
-				Short:  "https://noschoolgrognard.blogspot.com/2013/04/adjusting-swing-damage-in-dungeon.html",
+				Key: "no_school_grognard_damage",
+				Alt: "https://noschoolgrognard.blogspot.com/2013/04/adjusting-swing-damage-in-dungeon.html",
 			},
 			{
 				Key:    "thrust_equals_swing_minus_2",
 				String: "Thrust = Swing-2",
-				Short:  "https://github.com/richardwilkes/gcs/issues/97",
+				Alt:    "https://github.com/richardwilkes/gcs/issues/97",
 			},
 			{
 				Key:    "swing_equals_thrust_plus_2",
 				String: "Swing = Thrust+2",
-				Short:  "Houserule originating with Kevin Smyth. See https://gamingballistic.com/2020/12/04/df-eastmarch-boss-fight-and-house-rules/",
+				Alt:    "Houserule originating with Kevin Smyth. See https://gamingballistic.com/2020/12/04/df-eastmarch-boss-fight-and-house-rules/",
 			},
 			{
-				Key:    "phoenix_flame_d3",
-				String: "PhoenixFlame d3",
-				Short:  "Houserule that use d3s instead of d6s for Damage. See: https://github.com/richardwilkes/gcs/pull/393",
+				Key: "phoenix_flame_d3",
+				Alt: "Houserule that use d3s instead of d6s for Damage. See: https://github.com/richardwilkes/gcs/pull/393",
 			},
 		},
 	})
@@ -175,25 +268,22 @@ func main() {
 		StandAlone: true,
 		Values: []enumValue{
 			{
-				Key:    "unknown",
-				String: "Unknown",
-				Short:  "Unknown",
+				Key: "unknown",
+				Alt: "Unknown",
 			},
 			{
-				Key:    "halve_move",
-				String: "Halve Move",
-				Short:  "Halve Move (round up)",
+				Key: "halve_move",
+				Alt: "Halve Move (round up)",
 			},
 			{
-				Key:    "halve_dodge",
-				String: "Halve Dodge",
-				Short:  "Halve Dodge (round up)",
+				Key: "halve_dodge",
+				Alt: "Halve Dodge (round up)",
 			},
 			{
 				Name:   "HalveST",
 				Key:    "halve_st",
 				String: "Halve Strength",
-				Short:  "Halve Strength (round up; does not affect HP and damage)",
+				Alt:    "Halve Strength (round up; does not affect HP and damage)",
 			},
 		},
 	})
@@ -204,16 +294,561 @@ func main() {
 		StandAlone: true,
 		Values: []enumValue{
 			{
-				Key:    "integer",
-				String: "Integer",
+				Key: "integer",
 			},
 			{
-				Key:    "decimal",
-				String: "Decimal",
+				Key: "decimal",
 			},
 			{
-				Key:    "pool",
-				String: "Pool",
+				Key: "pool",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/datafile",
+		Name:       "encumbrance",
+		Desc:       "holds the encumbrance level",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Key: "none",
+			},
+			{
+				Key: "light",
+			},
+			{
+				Key: "medium",
+			},
+			{
+				Key: "heavy",
+			},
+			{
+				Key:    "extra_heavy",
+				String: "X-Heavy",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/datafile",
+		Name:       "type",
+		Desc:       "holds the type of an Entity",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Name:   "PC",
+				Key:    "character",
+				String: "PC",
+			},
+			{
+				Key: "template",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/equipment",
+		Name:       "modifier_cost_type",
+		Desc:       "describes how an EquipmentModifier's cost is applied",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Name: "OriginalCost",
+				Key:  "to_original_cost",
+				Alt:  `"+5", "-5", "+10%", "-10%", "x3.2"`,
+			},
+			{
+				Name: "BaseCost",
+				Key:  "to_base_cost",
+				Alt:  `"x2", "+2 CF", "-0.2 CF"`,
+			},
+			{
+				Name: "FinalBaseCost",
+				Key:  "to_final_base_cost",
+				Alt:  `"+5", "-5", "+10%", "-10%", "x3.2"`,
+			},
+			{
+				Name: "FinalCost",
+				Key:  "to_final_cost",
+				Alt:  `"+5", "-5", "+10%", "-10%", "x3.2"`,
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/equipment",
+		Name:       "modifier_cost_value_type",
+		Desc:       "describes how an EquipmentModifier's cost is applied",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Name: "Addition",
+				Key:  "+",
+			},
+			{
+				Name: "Percentage",
+				Key:  "%",
+			},
+			{
+				Name:   "Multiplier",
+				Key:    "x",
+				String: "x",
+			},
+			{
+				Name:   "CostFactor",
+				Key:    "cf",
+				String: "CF",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/equipment",
+		Name:       "modifier_weight_type",
+		Desc:       "describes how an EquipmentModifier's weight is applied",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Name:   "OriginalWeight",
+				Key:    "to_original_weight",
+				String: "to original weight",
+				Alt:    `"+5 lb", "-5 lb", "+10%", "-10%"`,
+			},
+			{
+				Name:   "BaseWeight",
+				Key:    "to_base_weight",
+				String: "to base weight",
+				Alt:    `"+5 lb", "-5 lb", "x10%", "x3", "x2/3"`,
+			},
+			{
+				Name:   "FinalBaseWeight",
+				Key:    "to_final_base_weight",
+				String: "to final base weight",
+				Alt:    `"+5 lb", "-5 lb", "x10%", "x3", "x2/3"`,
+			},
+			{
+				Name:   "FinalWeight",
+				Key:    "to_final_weight",
+				String: "to final weight",
+				Alt:    `"+5 lb", "-5 lb", "x10%", "x3", "x2/3"`,
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/equipment",
+		Name:       "modifier_weight_value_type",
+		Desc:       "describes how an EquipmentModifier's weight is applied",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Name:       "WeightAddition",
+				Key:        "+",
+				NoLocalize: true,
+			},
+			{
+				Name:       "WeightPercentageAdder",
+				Key:        "%",
+				NoLocalize: true,
+			},
+			{
+				Name:       "WeightPercentageMultiplier",
+				Key:        "x%",
+				String:     "x%",
+				NoLocalize: true,
+			},
+			{
+				Name:       "WeightMultiplier",
+				Key:        "x",
+				String:     "x",
+				NoLocalize: true,
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/feature",
+		Name:       "type",
+		Desc:       "holds the type of a Feature",
+		StandAlone: false,
+		Values: []enumValue{
+			{
+				Key: "attribute_bonus",
+			},
+			{
+				Key: "conditional_modifier",
+			},
+			{
+				Key: "contained_weight_reduction",
+			},
+			{
+				Key: "cost_reduction",
+			},
+			{
+				Name:   "DRBonus",
+				Key:    "dr_bonus",
+				String: "DR Bonus",
+			},
+			{
+				Key: "reaction_bonus",
+			},
+			{
+				Key: "skill_bonus",
+			},
+			{
+				Key: "skill_point_bonus",
+			},
+			{
+				Key: "spell_bonus",
+			},
+			{
+				Key: "spell_point_bonus",
+			},
+			{
+				Key: "weapon_bonus",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/prereq",
+		Name:       "type",
+		Desc:       "holds the type of a Prereq",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Name: "List",
+				Key:  "prereq_list",
+			},
+			{
+				Name: "Advantage",
+				Key:  "advantage_prereq",
+			},
+			{
+				Name: "Attribute",
+				Key:  "attribute_prereq",
+			},
+			{
+				Name: "ContainedQuantity",
+				Key:  "contained_quantity_prereq",
+			},
+			{
+				Name: "ContainedWeight",
+				Key:  "contained_weight_prereq",
+			},
+			{
+				Name: "Skill",
+				Key:  "skill_prereq",
+			},
+			{
+				Name: "Spell",
+				Key:  "spell_prereq",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/skill",
+		Name:       "difficulty",
+		Desc:       "holds the difficulty level of a skill",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Name:       "Easy",
+				Key:        "e",
+				NoLocalize: true,
+			},
+			{
+				Name:       "Average",
+				Key:        "a",
+				NoLocalize: true,
+			},
+			{
+				Name:       "Hard",
+				Key:        "h",
+				NoLocalize: true,
+			},
+			{
+				Name:       "VeryHard",
+				Key:        "vh",
+				String:     "VH",
+				NoLocalize: true,
+			},
+			{
+				Name:       "Wildcard",
+				Key:        "w",
+				NoLocalize: true,
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/skill",
+		Name:       "selection_type",
+		Desc:       "holds the type of a selection",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Key:    "skills_with_name",
+				String: "to skills whose name",
+			},
+			{
+				Key:    "this_weapon",
+				String: "to this weapon",
+			},
+			{
+				Key:    "weapons_with_name",
+				String: "to weapons whose name",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/spell",
+		Name:       "comparison_type",
+		Desc:       "holds the type of a comparison",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Key: "name",
+			},
+			{
+				Key: "category",
+			},
+			{
+				Key: "college",
+			},
+			{
+				Key: "college_count",
+			},
+			{
+				Key: "any",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/spell",
+		Name:       "match_type",
+		Desc:       "holds the type of a match",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Key: "all_colleges",
+			},
+			{
+				Key: "college_name",
+			},
+			{
+				Name: "PowerSource",
+				Key:  "power_source_name",
+			},
+			{
+				Name: "Spell",
+				Key:  "spell_name",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/weapon",
+		Name:       "selection_type",
+		Desc:       "holds the type of a selection",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Name:   "WithRequiredSkill",
+				Key:    "weapons_with_required_skill",
+				String: "to weapons whose required skill name",
+			},
+			{
+				Key:    "this_weapon",
+				String: "to this weapon",
+			},
+			{
+				Name:   "WithName",
+				Key:    "weapons_with_name",
+				String: "to weapons whose name",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/weapon",
+		Name:       "strength_damage",
+		Desc:       "holds the type of strength dice to add to damage",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Key:    "none",
+				String: "None",
+			},
+			{
+				Name:       "Thrust",
+				Key:        "thr",
+				String:     "thr",
+				NoLocalize: true,
+			},
+			{
+				Name:   "LeveledThrust",
+				Key:    "thr_leveled",
+				String: "thr (leveled)",
+			},
+			{
+				Name:       "Swing",
+				Key:        "sw",
+				String:     "sw",
+				NoLocalize: true,
+			},
+			{
+				Name:   "LeveledSwing",
+				Key:    "sw_leveled",
+				String: "sw (leveled)",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/weapon",
+		Name:       "type",
+		Desc:       "holds the type of an weapon definition",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Name: "Melee",
+				Key:  "melee_weapon",
+			},
+			{
+				Name: "Ranged",
+				Key:  "ranged_weapon",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps",
+		Name:       "self_control_roll_adj",
+		Desc:       "holds an Adjustment for a self-control roll",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Name: "NoCRAdj",
+				Key:  "none",
+				Alt:  "None",
+			},
+			{
+				Key:    "action_penalty",
+				String: "Includes an Action Penalty for Failure",
+				Alt:    "%d Action Penalty",
+			},
+			{
+				Key:    "reaction_penalty",
+				String: "Includes a Reaction Penalty for Failure",
+				Alt:    "%d Reaction Penalty",
+			},
+			{
+				Key:    "fright_check_penalty",
+				String: "Includes Fright Check Penalty",
+				Alt:    "%d Fright Check Penalty",
+			},
+			{
+				Key:    "fright_check_bonus",
+				String: "Includes Fright Check Bonus",
+				Alt:    "+%d Fright Check Bonus",
+			},
+			{
+				Key:    "minor_cost_of_living_increase",
+				String: "Includes a Minor Cost of Living Increase",
+				Alt:    "+%d%% Cost of Living Increase",
+			},
+			{
+				Key:    "major_cost_of_living_increase",
+				String: "Includes a Major Cost of Living Increase and Merchant Skill Penalty",
+				Alt:    "+%d%% Cost of Living Increase",
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/measure",
+		Name:       "length_units",
+		Desc:       "holds the length unit type. Note that conversions to/from metric are done using the simplified GURPS metric conversion of 1 yd = 1 meter. For consistency, all metric lengths are converted to meters, then to yards, rather than the variations at different lengths that the GURPS rules suggest",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Name:   "FeetAndInches",
+				Key:    "ftin",
+				String: "Feet & Inches",
+			},
+			{
+				Name:       "Inch",
+				Key:        "in",
+				String:     "in",
+				NoLocalize: true,
+			},
+			{
+				Name:       "Feet",
+				Key:        "ft",
+				String:     "ft",
+				NoLocalize: true,
+			},
+			{
+				Name:       "Yard",
+				Key:        "yd",
+				String:     "yd",
+				NoLocalize: true,
+			},
+			{
+				Name:       "Mile",
+				Key:        "mi",
+				String:     "mi",
+				NoLocalize: true,
+			},
+			{
+				Name:       "Centimeter",
+				Key:        "cm",
+				String:     "cm",
+				NoLocalize: true,
+			},
+			{
+				Name:       "Kilometer",
+				Key:        "km",
+				String:     "km",
+				NoLocalize: true,
+			},
+			{
+				Name:       "Meter",
+				Key:        "m",
+				String:     "m",
+				NoLocalize: true,
+			},
+		},
+	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/gurps/measure",
+		Name:       "weight_units",
+		Desc:       "holds the weight unit type. Note that conversions to/from metric are done using the simplified GURPS metric conversion of 1# = 0.5kg. For consistency, all metric weights are converted to kilograms, then to pounds, rather than the variations at different weights that the GURPS rules suggest",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Name:       "Pound",
+				Key:        "#",
+				String:     "#",
+				NoLocalize: true,
+			},
+			{
+				Name:       "PoundAlt",
+				Key:        "lb",
+				String:     "lb",
+				NoLocalize: true,
+			},
+			{
+				Name:       "Ounce",
+				Key:        "oz",
+				String:     "oz",
+				NoLocalize: true,
+			},
+			{
+				Name:       "Ton",
+				Key:        "tn",
+				String:     "tn",
+				NoLocalize: true,
+			},
+			{
+				Name:       "Kilogram",
+				Key:        "kg",
+				String:     "kg",
+				NoLocalize: true,
+			},
+			{
+				Name:       "Gram",
+				Key:        "g",
+				String:     "g",
+				NoLocalize: true,
 			},
 		},
 	})
@@ -246,7 +881,6 @@ func processSourceTemplate(tmplName string, info *enumInfo) {
 		"last":         last,
 		"toCamelCase":  txt.ToCamelCase,
 		"toIdentifier": toIdentifier,
-		"toKey":        toKey,
 		"wrapComment":  wrapComment,
 	}).ParseFiles(tmplName)
 	jot.FatalIfErr(err)
@@ -287,13 +921,29 @@ func (e *enumInfo) IDFor(v enumValue) string {
 	return id
 }
 
-func (e *enumInfo) HasShort() bool {
+func (e *enumInfo) HasAlt() bool {
 	for _, one := range e.Values {
-		if one.Short != "" {
+		if one.Alt != "" {
 			return true
 		}
 	}
 	return false
+}
+
+func (e *enumInfo) NeedI18N() bool {
+	for _, one := range e.Values {
+		if !one.NoLocalize || one.Alt != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func (e *enumValue) StringValue() string {
+	if e.String == "" {
+		return strings.Title(strings.ReplaceAll(e.Key, "_", " "))
+	}
+	return e.String
 }
 
 func last(in []enumValue) enumValue {
@@ -336,43 +986,6 @@ func toIdentifier(in string) string {
 		}
 	}
 	return buffer.String()
-}
-
-func toKey(in string) string {
-	var buffer strings.Builder
-	lastWasUnderscore := false
-	lastWasLower := false
-	runes := []rune(in)
-	for i, ch := range runes {
-		isUpper := ch >= 'A' && ch <= 'Z'
-		isLower := ch >= 'a' && ch <= 'z'
-		isDigit := ch >= '0' && ch <= '9'
-		isAlpha := isUpper || isLower
-		if buffer.Len() == 0 && !isAlpha {
-			if !isDigit {
-				continue
-			}
-		}
-		if isAlpha || isDigit {
-			if i != 0 && !lastWasUnderscore && isUpper {
-				if lastWasLower {
-					buffer.WriteRune('_')
-				} else if i+1 < len(runes) {
-					nextCh := runes[i+1]
-					if nextCh >= 'a' && nextCh <= 'z' {
-						buffer.WriteRune('_')
-					}
-				}
-			}
-			buffer.WriteRune(unicode.ToLower(ch))
-			lastWasUnderscore = false
-			lastWasLower = isLower
-		} else if !lastWasUnderscore {
-			buffer.WriteRune('_')
-			lastWasUnderscore = true
-		}
-	}
-	return strings.TrimRight(buffer.String(), "_")
 }
 
 func wrapComment(in string, cols int) string {

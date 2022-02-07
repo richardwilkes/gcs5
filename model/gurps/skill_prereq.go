@@ -24,10 +24,10 @@ var _ Prereq = &SkillPrereq{}
 type SkillPrereq struct {
 	Parent                 *PrereqList      `json:"-"`
 	Type                   prereq.Type      `json:"type"`
+	Has                    bool             `json:"has"`
 	NameCriteria           criteria.String  `json:"name,omitempty"`
 	LevelCriteria          criteria.Numeric `json:"level,omitempty"`
 	SpecializationCriteria criteria.String  `json:"specialization,omitempty"`
-	Has                    bool             `json:"has"`
 }
 
 // NewSkillPrereq creates a new SkillPrereq.

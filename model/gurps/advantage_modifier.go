@@ -177,7 +177,7 @@ func (a *AdvantageModifier) CostDescription() string {
 		if a.CostType == advantage.Percentage {
 			buffer.WriteByte('%')
 		}
-		if desc := a.Affects.ShortTitle(); desc != "" {
+		if desc := a.Affects.AltString(); desc != "" {
 			buffer.WriteByte(' ')
 			buffer.WriteString(desc)
 		}

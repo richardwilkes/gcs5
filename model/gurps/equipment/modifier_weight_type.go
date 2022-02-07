@@ -16,74 +16,16 @@ import (
 
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
-	"github.com/richardwilkes/toolbox/i18n"
 )
 
-// Possible ModifierWeightType values.
-const (
-	// OriginalWeight modifies the original value stored in the equipment. Can be a ±value or a ±% value.
-	OriginalWeight = ModifierWeightType("to_original_weight")
-	// BaseWeight modifies the base weight. Can be a ±value, a ±% value, or a multiplier.
-	BaseWeight = ModifierWeightType("to_base_weight")
-	// FinalBaseWeight modifies the final base weight. Can be a ±value, a ±% value, or a multiplier.
-	FinalBaseWeight = ModifierWeightType("to_final_base_weight")
-	// FinalWeight modifies the final weight. Can be a ±value, a ±% value, or a multiplier.
-	FinalWeight = ModifierWeightType("to_final_weight")
-)
-
-// AllModifierWeightTypes is the complete set of ModifierWeightType values.
-var AllModifierWeightTypes = []ModifierWeightType{
-	OriginalWeight,
-	BaseWeight,
-	FinalBaseWeight,
-	FinalWeight,
-}
-
-// ModifierWeightType describes how an EquipmentModifier's cost is applied.
-type ModifierWeightType string
-
-// EnsureValid ensures this is of a known value.
-func (m ModifierWeightType) EnsureValid() ModifierWeightType {
-	for _, one := range AllModifierWeightTypes {
-		if one == m {
-			return m
-		}
-	}
-	return AllModifierWeightTypes[0]
-}
-
-// ShortString returns the same thing as .String(), but without the example.
-func (m ModifierWeightType) ShortString() string {
-	switch m {
-	case OriginalWeight:
-		return i18n.Text("to original weight")
-	case BaseWeight:
-		return i18n.Text("to base weight")
-	case FinalBaseWeight:
-		return i18n.Text("to final base weight")
-	case FinalWeight:
-		return i18n.Text("to final weight")
-	default:
-		return OriginalWeight.ShortString()
-	}
-}
-
-// String implements fmt.Stringer.
-func (m ModifierWeightType) String() string {
-	return fmt.Sprintf("%s (e.g. %s)", m.ShortString(), m.Example())
-}
-
-// Example returns example values.
-func (m ModifierWeightType) Example() string {
-	if m.EnsureValid() == OriginalWeight {
-		return `"+5 lb", "-5 lb", "+10%", "-10%"`
-	}
-	return `"+5 lb", "-5 lb", "x10%", "x3", "x2/3"`
+// StringWithExample returns an example along with the normal String() content.
+func (enum ModifierWeightType) StringWithExample() string {
+	return fmt.Sprintf("%s (e.g. %s)", enum.String(), enum.AltString())
 }
 
 // Permitted returns the permitted ModifierCostValueType values.
-func (m ModifierWeightType) Permitted() []ModifierWeightValueType {
-	if m.EnsureValid() == OriginalWeight {
+func (enum ModifierWeightType) Permitted() []ModifierWeightValueType {
+	if enum.EnsureValid() == OriginalWeight {
 		return []ModifierWeightValueType{WeightAddition, WeightPercentageAdder}
 	}
 	return []ModifierWeightValueType{WeightAddition, WeightPercentageMultiplier, WeightMultiplier}
@@ -91,9 +33,9 @@ func (m ModifierWeightType) Permitted() []ModifierWeightValueType {
 
 // DetermineModifierWeightValueTypeFromString examines a string to determine what type it is, but restricts the result to
 // those allowed for this ModifierWeightType.
-func (m ModifierWeightType) DetermineModifierWeightValueTypeFromString(s string) ModifierWeightValueType {
+func (enum ModifierWeightType) DetermineModifierWeightValueTypeFromString(s string) ModifierWeightValueType {
 	mvt := DetermineModifierWeightValueTypeFromString(s)
-	permitted := m.Permitted()
+	permitted := enum.Permitted()
 	for _, one := range permitted {
 		if one == mvt {
 			return mvt
@@ -103,13 +45,13 @@ func (m ModifierWeightType) DetermineModifierWeightValueTypeFromString(s string)
 }
 
 // ExtractFraction from the string.
-func (m ModifierWeightType) ExtractFraction(s string) fxp.Fraction {
-	return m.DetermineModifierWeightValueTypeFromString(s).ExtractFraction(s)
+func (enum ModifierWeightType) ExtractFraction(s string) fxp.Fraction {
+	return enum.DetermineModifierWeightValueTypeFromString(s).ExtractFraction(s)
 }
 
 // Format returns a formatted version of the value.
-func (m ModifierWeightType) Format(s string, defUnits measure.WeightUnits) string {
-	t := m.DetermineModifierWeightValueTypeFromString(s)
+func (enum ModifierWeightType) Format(s string, defUnits measure.WeightUnits) string {
+	t := enum.DetermineModifierWeightValueTypeFromString(s)
 	result := t.Format(t.ExtractFraction(s))
 	if t == WeightAddition {
 		result += " " + string(measure.TrailingWeightUnitsFromString(s, defUnits))

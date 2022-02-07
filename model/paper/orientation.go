@@ -11,50 +11,9 @@
 
 package paper
 
-import (
-	"github.com/richardwilkes/toolbox/i18n"
-)
-
-// Possible Orientation values.
-const (
-	Portrait  = Orientation("portrait")
-	Landscape = Orientation("landscape")
-)
-
-// AllOrientations is the complete set of Orientation values.
-var AllOrientations = []Orientation{
-	Portrait,
-	Landscape,
-}
-
-// Orientation holds the orientation of the page.
-type Orientation string
-
-// EnsureValid ensures this is of a known value.
-func (o Orientation) EnsureValid() Orientation {
-	for _, one := range AllOrientations {
-		if one == o {
-			return o
-		}
-	}
-	return AllOrientations[0]
-}
-
-// String implements fmt.Stringer.
-func (o Orientation) String() string {
-	switch o {
-	case Portrait:
-		return i18n.Text("Portrait")
-	case Landscape:
-		return i18n.Text("Landscape")
-	default:
-		return Portrait.String()
-	}
-}
-
 // Dimensions returns the paper dimensions after orienting the paper.
-func (o Orientation) Dimensions(size Size) (width, height Length) {
-	switch o {
+func (enum Orientation) Dimensions(size Size) (width, height Length) {
+	switch enum {
 	case Portrait:
 		return size.Dimensions()
 	case Landscape:

@@ -35,11 +35,11 @@ const equipmentModifierTypeKey = "modifier"
 // EquipmentModifierItem holds the EquipmentModifier data that only exists in non-containers.
 type EquipmentModifierItem struct {
 	TechLevel    string                       `json:"tech_level,omitempty"`
-	CostType     equipment.ModifierCostType   `json:"cost_type,omitempty"`
 	CostAmount   string                       `json:"cost,omitempty"`
-	WeightType   equipment.ModifierWeightType `json:"weight_type,omitempty"`
 	WeightAmount string                       `json:"weight,omitempty"`
 	Features     feature.Features             `json:"features,omitempty"`
+	CostType     equipment.ModifierCostType   `json:"cost_type,omitempty"`
+	WeightType   equipment.ModifierWeightType `json:"weight_type,omitempty"`
 	Disabled     bool                         `json:"disabled,omitempty"`
 }
 
@@ -162,7 +162,7 @@ func (e *EquipmentModifier) CostDescription() string {
 	if e.Container() || (e.CostType == equipment.OriginalCost && e.CostAmount == "+0") {
 		return ""
 	}
-	return e.CostType.Format(e.CostAmount) + " " + e.CostType.ShortString()
+	return e.CostType.Format(e.CostAmount) + " " + e.CostType.String()
 }
 
 // WeightDescription returns the formatted weight.
@@ -170,7 +170,7 @@ func (e *EquipmentModifier) WeightDescription(entity *Entity) string {
 	if e.Container() || (e.WeightType == equipment.OriginalWeight && (e.WeightAmount == "+0" || strings.HasPrefix(e.WeightAmount, "+0 "))) {
 		return ""
 	}
-	return e.WeightType.Format(e.WeightAmount, SheetSettingsFor(entity).DefaultWeightUnits) + " " + e.WeightType.ShortString()
+	return e.WeightType.Format(e.WeightAmount, SheetSettingsFor(entity).DefaultWeightUnits) + " " + e.WeightType.AltString()
 }
 
 // FillWithNameableKeys adds any nameable keys found in this EquipmentModifier to the provided map.

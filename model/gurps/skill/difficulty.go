@@ -11,43 +11,9 @@
 
 package skill
 
-import (
-	"strings"
-)
-
-// Possible Difficulty values.
-const (
-	Easy     = Difficulty("e")
-	Average  = Difficulty("a")
-	Hard     = Difficulty("h")
-	VeryHard = Difficulty("vh")
-	Wildcard = Difficulty("w")
-)
-
-// AllDifficulties is the complete set of Difficulty values.
-var AllDifficulties = []Difficulty{Easy, Average, Hard, VeryHard, Wildcard}
-
-// Difficulty holds the difficulty level of a skill.
-type Difficulty string
-
-// EnsureValid ensures this is of a known value.
-func (d Difficulty) EnsureValid() Difficulty {
-	for _, one := range AllDifficulties {
-		if one == d {
-			return d
-		}
-	}
-	return AllDifficulties[0]
-}
-
-// String implements fmt.Stringer.
-func (d Difficulty) String() string {
-	return strings.ToUpper(string(d.EnsureValid()))
-}
-
 // BaseRelativeLevel returns the base relative skill level at 0 points.
-func (d Difficulty) BaseRelativeLevel() int {
-	switch d {
+func (enum Difficulty) BaseRelativeLevel() int {
+	switch enum {
 	case Easy:
 		return 0
 	case Average:

@@ -37,7 +37,7 @@ var (
 	affectsData = []struct {
 		key    string
 		string string
-		short  string
+		alt    string
 	}{
 		{
 			key:    "total",
@@ -46,12 +46,12 @@ var (
 		{
 			key:    "base_only",
 			string: i18n.Text("to base cost only"),
-			short:  i18n.Text("(base only)"),
+			alt:    i18n.Text("(base only)"),
 		},
 		{
 			key:    "levels_only",
 			string: i18n.Text("to leveled cost only"),
-			short:  i18n.Text("(levels only)"),
+			alt:    i18n.Text("(levels only)"),
 		},
 	}
 )
@@ -77,9 +77,9 @@ func (enum Affects) String() string {
 	return affectsData[enum.EnsureValid()].string
 }
 
-// ShortTitle returns the short version of the title.
-func (enum Affects) ShortTitle() string {
-	return affectsData[enum.EnsureValid()].short
+// AltString returns the alternate string.
+func (enum Affects) AltString() string {
+	return affectsData[enum.EnsureValid()].alt
 }
 
 // ExtractAffects extracts the value from a string.

@@ -19,7 +19,7 @@ import (
 // Tooltip returns the tooltip for the DamageProgression.
 func (enum DamageProgression) Tooltip() string {
 	tooltip := i18n.Text("Determines the method used to calculate thrust and swing damage")
-	if footnote := enum.ShortTitle(); footnote != "" {
+	if footnote := enum.AltString(); footnote != "" {
 		return tooltip + ".\n" + footnote
 	}
 	return tooltip

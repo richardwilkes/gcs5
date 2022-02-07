@@ -36,7 +36,7 @@ var _ eval.VariableResolver = &Entity{}
 
 // EntityData holds the Entity data that is written to disk.
 type EntityData struct {
-	Type             datafile.EntityType
+	Type             datafile.Type
 	Profile          *Profile
 	SheetSettings    *SheetSettings
 	Attributes       map[string]*Attribute
@@ -265,7 +265,7 @@ func (e *Entity) NamedWeaponSkillBonusesFor(id, nameQualifier, usageQualifier st
 // EncumbranceLevel returns the current Encumbrance level.
 func (e *Entity) EncumbranceLevel(forSkills bool) datafile.Encumbrance {
 	carried := e.WeightCarried(forSkills)
-	for _, one := range datafile.AllEncumbrances {
+	for _, one := range datafile.AllEncumbrance {
 		if carried <= e.MaximumCarry(one) {
 			return one
 		}

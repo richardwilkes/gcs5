@@ -35,8 +35,8 @@ var _ Bonus = &SpellPointBonus{}
 
 // SpellPointBonus holds an adjustment to a spell's points.
 type SpellPointBonus struct {
-	Type             Type            `json:"type"`
 	Parent           fmt.Stringer    `json:"-"`
+	Type             Type            `json:"type"`
 	SpellMatchType   spell.MatchType `json:"match,omitempty"`
 	NameCriteria     criteria.String `json:"name,omitempty"`
 	CategoryCriteria criteria.String `json:"category,omitempty"`

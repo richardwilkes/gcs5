@@ -17,8 +17,9 @@ package {{fileLeaf .Pkg}}
 
 import (
     "strings"
+    {{- if .NeedI18N}}
 
-	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/i18n"{{end}}
 )
 
 // Possible values.
@@ -37,17 +38,17 @@ var (
         {{- end}}
     }
     {{$pname}} = []struct {
-    	key    string
+    	key string
 	    string string
-        {{- if .HasShort}}
-	    short  string
+        {{- if .HasAlt}}
+	    alt string
 	    {{- end}}
     }{
         {{- range .Values}}
         {
-            {{if .Key}}key: "{{toKey .Key}}",{{end}}
-            {{if .String}}string: i18n.Text("{{.String}}"),{{end}}
-            {{if .Short}}short: i18n.Text("{{.Short}}"),{{end}}
+            key: "{{.Key}}",
+            string: {{if not .NoLocalize}}i18n.Text({{end}}{{printf "%q" .StringValue}}{{if not .NoLocalize}}){{end}},
+            {{if .Alt}}alt: i18n.Text({{printf "%q" .Alt}}),{{end}}
         },
         {{- end}}
     }
@@ -74,10 +75,10 @@ func (enum {{$name}}) String() string {
 	return {{$pname}}[enum.EnsureValid()].string
 }
 
-{{- if .HasShort}}
-// ShortTitle returns the short version of the title.
-func (enum {{$name}}) ShortTitle() string {
-	return {{$pname}}[enum.EnsureValid()].short
+{{- if .HasAlt}}
+// AltString returns the alternate string.
+func (enum {{$name}}) AltString() string {
+	return {{$pname}}[enum.EnsureValid()].alt
 }
 {{end}}
 

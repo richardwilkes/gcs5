@@ -30,7 +30,7 @@ func LengthFromString(text string) Length {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
 	for _, unit := range AllUnits {
 		if strings.HasSuffix(text, string(unit)) {
-			value, err := strconv.ParseFloat(strings.TrimSpace(strings.TrimSuffix(text, string(unit))), 64)
+			value, err := strconv.ParseFloat(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())), 64)
 			if err != nil {
 				return Length{Units: unit}
 			}
@@ -46,7 +46,7 @@ func LengthFromString(text string) Length {
 }
 
 func (l Length) String() string {
-	return strconv.FormatFloat(l.Length, 'f', -1, 64) + string(l.Units)
+	return strconv.FormatFloat(l.Length, 'f', -1, 64) + l.Units.Key()
 }
 
 // Pixels returns the number of 72-pixels-per-inch pixels this represents.

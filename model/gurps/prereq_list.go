@@ -27,10 +27,10 @@ var _ Prereq = &PrereqList{}
 type PrereqList struct {
 	Parent         *PrereqList      `json:"-"`
 	Type           prereq.Type      `json:"type"`
-	WhenTLCriteria criteria.Numeric `json:"when_tl,omitempty"`
-	Prereqs        Prereqs          `json:"prereqs,omitempty"`
 	All            bool             `json:"all"`
 	WhenEnabled    bool             `json:"-"`
+	WhenTLCriteria criteria.Numeric `json:"when_tl,omitempty"`
+	Prereqs        Prereqs          `json:"prereqs,omitempty"`
 }
 
 // NewPrereqList creates a new PrereqList.

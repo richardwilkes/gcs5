@@ -39,27 +39,27 @@ var (
 	thresholdOpData = []struct {
 		key    string
 		string string
-		short  string
+		alt    string
 	}{
 		{
 			key:    "unknown",
 			string: i18n.Text("Unknown"),
-			short:  i18n.Text("Unknown"),
+			alt:    i18n.Text("Unknown"),
 		},
 		{
 			key:    "halve_move",
 			string: i18n.Text("Halve Move"),
-			short:  i18n.Text("Halve Move (round up)"),
+			alt:    i18n.Text("Halve Move (round up)"),
 		},
 		{
 			key:    "halve_dodge",
 			string: i18n.Text("Halve Dodge"),
-			short:  i18n.Text("Halve Dodge (round up)"),
+			alt:    i18n.Text("Halve Dodge (round up)"),
 		},
 		{
 			key:    "halve_st",
 			string: i18n.Text("Halve Strength"),
-			short:  i18n.Text("Halve Strength (round up; does not affect HP and damage)"),
+			alt:    i18n.Text("Halve Strength (round up; does not affect HP and damage)"),
 		},
 	}
 )
@@ -85,9 +85,9 @@ func (enum ThresholdOp) String() string {
 	return thresholdOpData[enum.EnsureValid()].string
 }
 
-// ShortTitle returns the short version of the title.
-func (enum ThresholdOp) ShortTitle() string {
-	return thresholdOpData[enum.EnsureValid()].short
+// AltString returns the alternate string.
+func (enum ThresholdOp) AltString() string {
+	return thresholdOpData[enum.EnsureValid()].alt
 }
 
 // ExtractThresholdOp extracts the value from a string.

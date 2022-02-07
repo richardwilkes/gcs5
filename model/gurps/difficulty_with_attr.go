@@ -51,14 +51,7 @@ func (a *AttributeDifficulty) UnmarshalJSON(data []byte) error {
 		s = parts[1]
 		a.Attribute = strings.TrimSpace(parts[0])
 	}
-	s = strings.TrimSpace(s)
-	a.Difficulty = skill.Average
-	for _, one := range skill.AllDifficulties {
-		if strings.EqualFold(string(one), s) {
-			a.Difficulty = one
-			break
-		}
-	}
+	a.Difficulty = skill.ExtractDifficulty(strings.TrimSpace(s))
 	return nil
 }
 

@@ -24,8 +24,8 @@ var _ Prereq = &ContainedQuantityPrereq{}
 type ContainedQuantityPrereq struct {
 	Parent            *PrereqList      `json:"-"`
 	Type              prereq.Type      `json:"type"`
-	QualifierCriteria criteria.Numeric `json:"qualifier,omitempty"`
 	Has               bool             `json:"has"`
+	QualifierCriteria criteria.Numeric `json:"qualifier,omitempty"`
 }
 
 // NewContainedQuantityPrereq creates a new ContainedQuantityPrereq.

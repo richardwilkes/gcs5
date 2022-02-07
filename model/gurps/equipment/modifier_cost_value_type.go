@@ -18,58 +18,29 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-// Possible ModifierCostValueType values.
-const (
-	Addition   = ModifierCostValueType("+")
-	Percentage = ModifierCostValueType("%")
-	Multiplier = ModifierCostValueType("x")
-	CostFactor = ModifierCostValueType("cf")
-)
-
-// AllModifierCostValueTypes is the complete set of ModifierCostValueType values.
-var AllModifierCostValueTypes = []ModifierCostValueType{
-	Addition,
-	Percentage,
-	Multiplier,
-	CostFactor,
-}
-
-// ModifierCostValueType describes how an EquipmentModifier's point cost is applied.
-type ModifierCostValueType string
-
-// EnsureValid ensures this is of a known value.
-func (m ModifierCostValueType) EnsureValid() ModifierCostValueType {
-	for _, one := range AllModifierCostValueTypes {
-		if one == m {
-			return m
-		}
-	}
-	return AllModifierCostValueTypes[0]
-}
-
 // Format returns a formatted version of the value.
-func (m ModifierCostValueType) Format(value fixed.F64d4) string {
-	switch m {
+func (enum ModifierCostValueType) Format(value fixed.F64d4) string {
+	switch enum {
 	case Addition:
 		return value.StringWithSign()
 	case Percentage:
-		return value.StringWithSign() + "%"
+		return value.StringWithSign() + enum.String()
 	case Multiplier:
 		if value <= 0 {
 			value = fxp.One
 		}
-		return "x" + value.String()
+		return enum.String() + value.String()
 	case CostFactor:
-		return value.StringWithSign() + " CF"
+		return value.StringWithSign() + " " + enum.String()
 	default:
 		return Addition.Format(value)
 	}
 }
 
 // ExtractValue from the string.
-func (m ModifierCostValueType) ExtractValue(s string) fixed.F64d4 {
+func (enum ModifierCostValueType) ExtractValue(s string) fixed.F64d4 {
 	v := fixed.F64d4FromStringForced(s)
-	if m.EnsureValid() == Multiplier && v <= 0 {
+	if enum.EnsureValid() == Multiplier && v <= 0 {
 		v = fxp.One
 	}
 	return v
@@ -79,11 +50,11 @@ func (m ModifierCostValueType) ExtractValue(s string) fixed.F64d4 {
 func DetermineModifierCostValueTypeFromString(s string) ModifierCostValueType {
 	s = strings.ToLower(strings.TrimSpace(s))
 	switch {
-	case strings.HasSuffix(s, "cf"):
+	case strings.HasSuffix(s, CostFactor.Key()):
 		return CostFactor
-	case strings.HasSuffix(s, "%"):
+	case strings.HasSuffix(s, Percentage.Key()):
 		return Percentage
-	case strings.HasPrefix(s, "x") || strings.HasSuffix(s, "x"):
+	case strings.HasPrefix(s, Multiplier.Key()) || strings.HasSuffix(s, Multiplier.Key()):
 		return Multiplier
 	default:
 		return Addition

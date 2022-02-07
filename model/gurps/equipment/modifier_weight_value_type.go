@@ -17,42 +17,13 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 )
 
-// Possible ModifierWeightValueType values.
-const (
-	WeightAddition             = ModifierWeightValueType("+")
-	WeightPercentageAdder      = ModifierWeightValueType("%")
-	WeightPercentageMultiplier = ModifierWeightValueType("x%")
-	WeightMultiplier           = ModifierWeightValueType("x")
-)
-
-// AllModifierWeightValueTypes is the complete set of ModifierWeightValueType values.
-var AllModifierWeightValueTypes = []ModifierWeightValueType{
-	WeightAddition,
-	WeightPercentageAdder,
-	WeightPercentageMultiplier,
-	WeightMultiplier,
-}
-
-// ModifierWeightValueType describes how an EquipmentModifier's point cost is applied.
-type ModifierWeightValueType string
-
-// EnsureValid ensures this is of a known value.
-func (m ModifierWeightValueType) EnsureValid() ModifierWeightValueType {
-	for _, one := range AllModifierWeightValueTypes {
-		if one == m {
-			return m
-		}
-	}
-	return AllModifierWeightValueTypes[0]
-}
-
 // Format returns a formatted version of the value.
-func (m ModifierWeightValueType) Format(fraction fxp.Fraction) string {
-	switch m {
+func (enum ModifierWeightValueType) Format(fraction fxp.Fraction) string {
+	switch enum {
 	case WeightAddition:
 		return fraction.StringWithSign()
 	case WeightPercentageAdder:
-		return fraction.StringWithSign() + "%"
+		return fraction.StringWithSign() + enum.String()
 	case WeightPercentageMultiplier:
 		if fraction.Numerator <= 0 {
 			fraction.Numerator = fxp.Hundred
@@ -64,16 +35,16 @@ func (m ModifierWeightValueType) Format(fraction fxp.Fraction) string {
 			fraction.Numerator = fxp.One
 			fraction.Denominator = fxp.One
 		}
-		return "x" + fraction.String()
+		return enum.String() + fraction.String()
 	default:
 		return WeightAddition.Format(fraction)
 	}
 }
 
 // ExtractFraction from the string.
-func (m ModifierWeightValueType) ExtractFraction(s string) fxp.Fraction {
+func (enum ModifierWeightValueType) ExtractFraction(s string) fxp.Fraction {
 	fraction := fxp.NewFractionFromString(s)
-	revised := m.EnsureValid()
+	revised := enum.EnsureValid()
 	switch revised {
 	case WeightPercentageMultiplier:
 		if fraction.Numerator <= 0 {

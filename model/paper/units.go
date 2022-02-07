@@ -11,36 +11,9 @@
 
 package paper
 
-// Possible Units values.
-const (
-	Inch       = Units("in")
-	Centimeter = Units("cm")
-	Millimeter = Units("mm")
-)
-
-// AllUnits is the complete set of Unit values.
-var AllUnits = []Units{
-	Inch,
-	Centimeter,
-	Millimeter,
-}
-
-// Units holds the real-world length unit type.
-type Units string
-
-// EnsureValid ensures this is of a known value.
-func (u Units) EnsureValid() Units {
-	for _, one := range AllUnits {
-		if one == u {
-			return u
-		}
-	}
-	return AllUnits[0]
-}
-
 // ToPixels converts the given length in this Units to the number of 72-pixels-per-inch pixels it represents.
-func (u Units) ToPixels(length float64) float32 {
-	switch u {
+func (enum Units) ToPixels(length float64) float32 {
+	switch enum {
 	case Inch:
 		return float32(length * 72)
 	case Centimeter:
