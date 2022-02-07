@@ -53,9 +53,9 @@ type AdvantageItem struct {
 // AdvantageContainer holds the Advantage data that only exists in containers.
 type AdvantageContainer struct {
 	ContainerType advantage.ContainerType `json:"container_type,omitempty"`
+	Open          bool                    `json:"open,omitempty"`
 	Ancestry      string                  `json:"ancestry,omitempty"`
 	Children      []*Advantage            `json:"children,omitempty"`
-	Open          bool                    `json:"open,omitempty"`
 }
 
 // AdvantageData holds the Advantage data that is written to disk.

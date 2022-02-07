@@ -1,0 +1,103 @@
+{{- $info := .}}
+{{- $name := toIdentifier .Name}}
+{{- $pname := .LocalType}}
+{{- $standalone := .StandAlone}}
+/*
+ * Copyright ©1998-2022 by Richard A. Wilkes. All rights reserved.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, version 2.0. If a copy of the MPL was not distributed with
+ * this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, version 2.0.
+ */
+
+package {{fileLeaf .Pkg}}
+
+import (
+    "strings"
+
+	"github.com/richardwilkes/toolbox/i18n"
+)
+
+// Possible values.
+const (
+	{{- range $i, $one := .Values}}
+	{{$info.IDFor $one}}{{if eq $i 0}} {{$name}} = iota{{end}}
+	{{- end}}
+	Last{{$name}} = {{$info.IDFor (last .Values)}}
+)
+
+var (
+    {{wrapComment (printf "All%s holds all possible values." $name) 116}}
+    All{{$name}} = []{{$name}}{
+        {{- range .Values}}
+        {{$info.IDFor .}},
+        {{- end}}
+    }
+    {{$pname}} = []struct {
+    	key    string
+	    string string
+        {{- if .HasShort}}
+	    short  string
+	    {{- end}}
+    }{
+        {{- range .Values}}
+        {
+            {{if .Key}}key: "{{toKey .Key}}",{{end}}
+            {{if .String}}string: i18n.Text("{{.String}}"),{{end}}
+            {{if .Short}}short: i18n.Text("{{.Short}}"),{{end}}
+        },
+        {{- end}}
+    }
+)
+
+{{wrapComment (printf "%s %s." $name .Desc) 120}}
+type {{$name}} byte
+
+// EnsureValid ensures this is of a known value.
+func (enum {{$name}}) EnsureValid() {{$name}} {
+	if enum <= Last{{$name}} {
+		return enum
+	}
+	return 0
+}
+
+// Key returns the key used in serialization.
+func (enum {{$name}}) Key() string {
+	return {{$pname}}[enum.EnsureValid()].key
+}
+
+// String implements fmt.Stringer.
+func (enum {{$name}}) String() string {
+	return {{$pname}}[enum.EnsureValid()].string
+}
+
+{{- if .HasShort}}
+// ShortTitle returns the short version of the title.
+func (enum {{$name}}) ShortTitle() string {
+	return {{$pname}}[enum.EnsureValid()].short
+}
+{{end}}
+
+{{wrapComment (printf "Extract%s extracts the value from a string." $name) 120}}
+func Extract{{$name}}(str string) {{$name}} {
+    for i, one := range {{$pname}} {
+        if strings.EqualFold(one.key, str) {
+            return {{$name}}(i)
+        }
+    }
+    return 0
+}
+
+// MarshalText implements the encoding.TextMarshaler interface.
+func (enum {{$name}}) MarshalText() (text []byte, err error) {
+    return []byte(enum.Key()), nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+func (enum *{{$name}}) UnmarshalText(text []byte) error {
+    *enum = Extract{{$name}}(string(text))
+    return nil
+}

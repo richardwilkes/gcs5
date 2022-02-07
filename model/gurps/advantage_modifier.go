@@ -33,11 +33,11 @@ const advantageModifierTypeKey = "modifier"
 // AdvantageModifierItem holds the AdvantageModifier data that only exists in non-containers.
 type AdvantageModifierItem struct {
 	CostType advantage.ModifierCostType `json:"cost_type,omitempty"`
+	Disabled bool                       `json:"disabled,omitempty"`
 	Cost     fixed.F64d4                `json:"cost,omitempty"`
 	Levels   fixed.F64d4                `json:"levels,omitempty"`
 	Affects  *advantage.Affects         `json:"affects,omitempty"`
 	Features feature.Features           `json:"features,omitempty"`
-	Disabled bool                       `json:"disabled,omitempty"`
 }
 
 // AdvantageModifierContainer holds the AdvantageModifier data that only exists in containers.

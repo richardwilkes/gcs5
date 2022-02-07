@@ -16,91 +16,18 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-// Possible DamageProgression values.
-const (
-	BasicSet                = DamageProgression("basic_set")
-	KnowingYourOwnStrength  = DamageProgression("knowing_your_own_strength")
-	NoSchoolGrognardDamage  = DamageProgression("no_school_grognard_damage")
-	ThrustEqualsSwingMinus2 = DamageProgression("thrust_equals_swing_minus_2")
-	SwingEqualsThrustPlus2  = DamageProgression("swing_equals_thrust_plus_2")
-	PhoenixFlameD3          = DamageProgression("phoenix_flame_d3")
-)
-
-// AllDamageProgressions is the complete set of DamageProgression values.
-var AllDamageProgressions = []DamageProgression{
-	BasicSet,
-	KnowingYourOwnStrength,
-	NoSchoolGrognardDamage,
-	ThrustEqualsSwingMinus2,
-	SwingEqualsThrustPlus2,
-	PhoenixFlameD3,
-}
-
-// DamageProgression controls how Thrust and Swing are calculated.
-type DamageProgression string
-
-// EnsureValid ensures this is of a known value.
-func (d DamageProgression) EnsureValid() DamageProgression {
-	for _, one := range AllDamageProgressions {
-		if one == d {
-			return d
-		}
-	}
-	return AllDamageProgressions[0]
-}
-
-// String implements fmt.Stringer.
-func (d DamageProgression) String() string {
-	switch d {
-	case BasicSet:
-		return i18n.Text("Basic Set")
-	case KnowingYourOwnStrength:
-		return i18n.Text("Knowing Your Own Strength")
-	case NoSchoolGrognardDamage:
-		return i18n.Text("No School Grognard")
-	case ThrustEqualsSwingMinus2:
-		return i18n.Text("Thrust = Swing-2")
-	case SwingEqualsThrustPlus2:
-		return i18n.Text("Swing = Thrust+2")
-	case PhoenixFlameD3:
-		return i18n.Text("PhoenixFlame d3")
-	default:
-		return BasicSet.String()
-	}
-}
-
-// Footnote returns a footnote for the DamageProgression, if any.
-func (d DamageProgression) Footnote() string {
-	switch d {
-	case BasicSet:
-		return ""
-	case KnowingYourOwnStrength:
-		return i18n.Text("Pyramid 3-83, pages 16-19")
-	case NoSchoolGrognardDamage:
-		return i18n.Text("https://noschoolgrognard.blogspot.com/2013/04/adjusting-swing-damage-in-dungeon.html")
-	case ThrustEqualsSwingMinus2:
-		return i18n.Text("https://github.com/richardwilkes/gcs/issues/97")
-	case SwingEqualsThrustPlus2:
-		return i18n.Text("Houserule originating with Kevin Smyth. See https://gamingballistic.com/2020/12/04/df-eastmarch-boss-fight-and-house-rules/")
-	case PhoenixFlameD3:
-		return i18n.Text("Houserule that use d3s instead of d6s for Damage. See: https://github.com/richardwilkes/gcs/pull/393")
-	default:
-		return BasicSet.String()
-	}
-}
-
 // Tooltip returns the tooltip for the DamageProgression.
-func (d DamageProgression) Tooltip() string {
+func (enum DamageProgression) Tooltip() string {
 	tooltip := i18n.Text("Determines the method used to calculate thrust and swing damage")
-	if footnote := d.Footnote(); footnote != "" {
+	if footnote := enum.ShortTitle(); footnote != "" {
 		return tooltip + ".\n" + footnote
 	}
 	return tooltip
 }
 
 // Thrust returns the thrust damage for the given strength.
-func (d DamageProgression) Thrust(strength int) *dice.Dice {
-	switch d {
+func (enum DamageProgression) Thrust(strength int) *dice.Dice {
+	switch enum {
 	case BasicSet:
 		if strength < 19 {
 			return &dice.Dice{
@@ -193,8 +120,8 @@ func (d DamageProgression) Thrust(strength int) *dice.Dice {
 }
 
 // Swing returns the swing damage for the given strength.
-func (d DamageProgression) Swing(strength int) *dice.Dice {
-	switch d {
+func (enum DamageProgression) Swing(strength int) *dice.Dice {
+	switch enum {
 	case BasicSet:
 		if strength < 10 {
 			return &dice.Dice{
