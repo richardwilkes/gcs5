@@ -18,6 +18,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/gcs/model/gurps/spell"
 	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 var _ Prereq = &SpellPrereq{}
@@ -74,78 +75,85 @@ func (s *SpellPrereq) ApplyNameableKeys(m map[string]string) {
 }
 
 // Satisfied implements Prereq.
-func (s *SpellPrereq) Satisfied(entity *Entity, exclude interface{}, buffer *xio.ByteBuffer, prefix string) bool {
-	satisfied := false
-	// TODO: Implement
-	/*
-	   Set<String> colleges  = new HashSet<>();
-	   String      techLevel = null;
-	   int         count     = 0;
-	   boolean     satisfied;
-	   if (exclude instanceof Spell) {
-	       techLevel = ((Spell) exclude).getTechLevel();
-	   }
-	   for (Spell spell : character.getSpellsIterator()) {
-	       if (exclude != spell && spell.getPoints() > 0) {
-	           boolean ok;
-	           if (techLevel != null) {
-	               String otherTL = spell.getTechLevel();
-
-	               ok = otherTL == null || techLevel.equals(otherTL);
-	           } else {
-	               ok = true;
-	           }
-	           if (ok) {
-	               if (KEY_NAME.equals(mType)) {
-	                   if (mStringCriteria.matches(spell.getName())) {
-	                       count++;
-	                   }
-	               } else if (KEY_ANY.equals(mType)) {
-	                   count++;
-	               } else if (KEY_CATEGORY.equals(mType)) {
-	                   for (String category : spell.getCategories()) {
-	                       if (mStringCriteria.matches(category)) {
-	                           count++;
-	                           break;
-	                       }
-	                   }
-	               } else if (KEY_COLLEGE.equals(mType)) {
-	                   for (String college : spell.getColleges()) {
-	                       if (mStringCriteria.matches(college)) {
-	                           count++;
-	                           break;
-	                       }
-	                   }
-	               } else if (Objects.equals(mType, KEY_COLLEGE_COUNT)) {
-	                   colleges.addAll(spell.getColleges());
-	               }
-	           }
-	       }
-	   }
-
-	   if (Objects.equals(mType, KEY_COLLEGE_COUNT)) {
-	       count = colleges.size();
-	   }
-
-	   satisfied = mQuantityCriteria.matches(count);
-	   if (!has()) {
-	       satisfied = !satisfied;
-	   }
-	   if (!satisfied && builder != null) {
-	       String oneSpell       = I18n.text("spell");
-	       String multipleSpells = I18n.text("spells");
-	       if (Objects.equals(mType, KEY_NAME)) {
-	           builder.append(MessageFormat.format(I18n.text("\n{0}{1} {2} {3} whose name {4}"), prefix, getHasText(), mQuantityCriteria.toString(""), mQuantityCriteria.getQualifier() == 1 ? oneSpell : multipleSpells, mStringCriteria.toString()));
-	       } else if (Objects.equals(mType, KEY_ANY)) {
-	           builder.append(MessageFormat.format(I18n.text("\n{0}{1} {2} {3} of any kind"), prefix, getHasText(), mQuantityCriteria.toString(""), mQuantityCriteria.getQualifier() == 1 ? oneSpell : multipleSpells));
-	       } else if (Objects.equals(mType, KEY_CATEGORY)) {
-	           builder.append(MessageFormat.format(I18n.text("\n{0}{1} {2} {3} whose category {4}"), prefix, getHasText(), mQuantityCriteria.toString(""), mQuantityCriteria.getQualifier() == 1 ? oneSpell : multipleSpells, mStringCriteria.toString()));
-	       } else if (Objects.equals(mType, KEY_COLLEGE)) {
-	           builder.append(MessageFormat.format(I18n.text("\n{0}{1} {2} {3} whose college {4}"), prefix, getHasText(), mQuantityCriteria.toString(""), mQuantityCriteria.getQualifier() == 1 ? oneSpell : multipleSpells, mStringCriteria.toString()));
-	       } else if (Objects.equals(mType, KEY_COLLEGE_COUNT)) {
-	           builder.append(MessageFormat.format(I18n.text("\n{0}{1} college count which {2}"), prefix, getHasText(), mQuantityCriteria.toString()));
-	       }
-	   }
-	*/
+func (s *SpellPrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xio.ByteBuffer, prefix string) bool {
+	var techLevel *string
+	if sp, ok := exclude.(*Spell); ok {
+		techLevel = sp.TechLevel
+	}
+	count := 0
+	colleges := make(map[string]bool)
+	TraverseSpells(func(sp *Spell) bool {
+		if exclude == sp || sp.Points == 0 {
+			return false
+		}
+		if techLevel != nil && sp.TechLevel != nil && *techLevel != *sp.TechLevel {
+			return false
+		}
+		switch s.SubType {
+		case spell.Name:
+			if s.QualifierCriteria.Matches(sp.Name) {
+				count++
+			}
+		case spell.Category:
+			for _, one := range sp.Categories {
+				if s.QualifierCriteria.Matches(one) {
+					count++
+					break
+				}
+			}
+		case spell.College:
+			for _, one := range sp.College {
+				if s.QualifierCriteria.Matches(one) {
+					count++
+					break
+				}
+			}
+		case spell.CollegeCount:
+			for _, one := range sp.College {
+				colleges[one] = true
+			}
+		case spell.Any:
+			count++
+		}
+		return false
+	}, entity.Spells...)
+	if s.SubType == spell.CollegeCount {
+		count = len(colleges)
+	}
+	satisfied := s.QuantityCriteria.Matches(fixed.F64d4FromInt(count))
+	if !s.Has {
+		satisfied = !satisfied
+	}
+	if !satisfied && tooltip != nil {
+		tooltip.WriteByte('\n')
+		tooltip.WriteString(prefix)
+		tooltip.WriteString(HasText(s.Has))
+		if s.SubType == spell.CollegeCount {
+			tooltip.WriteString(" college count which ")
+			tooltip.WriteString(s.QuantityCriteria.String())
+		} else {
+			tooltip.WriteByte(' ')
+			tooltip.WriteString(s.QuantityCriteria.String())
+			if s.QuantityCriteria.Qualifier == fxp.One {
+				tooltip.WriteString(" spell ")
+			} else {
+				tooltip.WriteString(" spells ")
+			}
+			tooltip.WriteByte(' ')
+			if s.SubType == spell.Any {
+				tooltip.WriteString(" of any kind")
+			} else {
+				switch s.SubType {
+				case spell.Name:
+					tooltip.WriteString(" whose name ")
+				case spell.Category:
+					tooltip.WriteString(" whose category ")
+				case spell.College:
+					tooltip.WriteString(" whose college ")
+				}
+				tooltip.WriteString(s.QualifierCriteria.String())
+			}
+		}
+	}
 	return satisfied
 }

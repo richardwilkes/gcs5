@@ -47,3 +47,7 @@ func (s String) Matches(value ...string) bool {
 	}
 	return false
 }
+
+func (s String) String() string {
+	return s.Compare.Describe(s.Qualifier)
+}

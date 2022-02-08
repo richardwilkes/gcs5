@@ -20,6 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/toolbox/eval"
+	"github.com/richardwilkes/toolbox/log/jot"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
 )
 
@@ -31,8 +32,24 @@ type Ancestry struct {
 }
 
 // AvailableAncestries scans the libraries and returns the available ancestries.
-func AvailableAncestries(libraries *library.Libraries) []*library.NamedFileSet {
+func AvailableAncestries(libraries library.Libraries) []*library.NamedFileSet {
 	return library.ScanForNamedFileSets(embeddedFS, "data", ".ancestry", libraries)
+}
+
+// Lookup an Ancestry by name.
+func Lookup(name string, libraries library.Libraries) *Ancestry {
+	for _, lib := range AvailableAncestries(libraries) {
+		for _, one := range lib.List {
+			if one.Name == name {
+				if a, err := NewAncestoryFromFS(one.FileSystem, one.FilePath); err != nil {
+					jot.Warn(err)
+				} else {
+					return a
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // NewAncestoryFromFS creates a new Ancestry from a file.
@@ -110,8 +127,8 @@ func (a *Ancestry) RandomHair(gender string) string {
 	return defaultHair
 }
 
-// RandomEye returns a randomized eye.
-func (a *Ancestry) RandomEye(gender string) string {
+// RandomEyes returns a randomized eyes.
+func (a *Ancestry) RandomEyes(gender string) string {
 	if options := a.GenderedOptions(gender); options != nil && len(options.EyeOptions) != 0 {
 		return options.RandomEye()
 	}

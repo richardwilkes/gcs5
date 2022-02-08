@@ -15,6 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/criteria"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
 )
 
@@ -58,26 +59,24 @@ func (c *ContainedWeightPrereq) ApplyNameableKeys(m map[string]string) {
 }
 
 // Satisfied implements Prereq.
-func (c *ContainedWeightPrereq) Satisfied(entity *Entity, exclude interface{}, buffer *xio.ByteBuffer, prefix string) bool {
+func (c *ContainedWeightPrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xio.ByteBuffer, prefix string) bool {
 	satisfied := false
-	// TODO: Implement
-	/*
-	   boolean satisfied = false;
-	   if (exclude instanceof Equipment equipment) {
-	       satisfied = !equipment.canHaveChildren();
-	       if (!satisfied) {
-	           WeightValue weight = new WeightValue(equipment.getExtendedWeight(false));
-	           weight.subtract(equipment.getAdjustedWeight(false));
-	           satisfied = mWeightCompare.matches(weight);
-	       }
-	   }
-	   if (!has()) {
-	       satisfied = !satisfied;
-	   }
-	   if (!satisfied && builder != null) {
-	       builder.append(MessageFormat.format(I18n.text("\n{0}{1} a contained weight which {2}"), prefix, getHasText(), mWeightCompare));
-	   }
-	   return satisfied;
-	*/
+	if eqp, ok := exclude.(*Equipment); ok {
+		if satisfied = !eqp.Container(); !satisfied {
+			units := SheetSettingsFor(entity).DefaultWeightUnits
+			weight := eqp.ExtendedWeight(false, units) - eqp.AdjustedWeight(false, units)
+			satisfied = c.WeightCriteria.Matches(weight)
+		}
+	}
+	if !c.Has {
+		satisfied = !satisfied
+	}
+	if !satisfied && tooltip != nil {
+		tooltip.WriteByte('\n')
+		tooltip.WriteString(prefix)
+		tooltip.WriteString(HasText(c.Has))
+		tooltip.WriteString(i18n.Text(" a contained weight which "))
+		tooltip.WriteString(c.WeightCriteria.String())
+	}
 	return satisfied
 }

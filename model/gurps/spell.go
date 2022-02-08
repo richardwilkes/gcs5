@@ -36,7 +36,7 @@ const (
 
 // SpellItem holds the Spell data that only exists in non-containers.
 type SpellItem struct {
-	TechLevel       string              `json:"tech_level,omitempty"`
+	TechLevel       *string             `json:"tech_level,omitempty"`
 	Difficulty      AttributeDifficulty `json:"difficulty"`
 	College         []string            `json:"college,omitempty"`
 	PowerSource     string              `json:"power_source,omitempty"`

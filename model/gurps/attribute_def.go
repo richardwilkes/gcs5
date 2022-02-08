@@ -42,6 +42,18 @@ type AttributeDef struct {
 	Order               int              `json:"-"`
 }
 
+// Clone a copy of this.
+func (a *AttributeDef) Clone() *AttributeDef {
+	clone := *a
+	if a.Thresholds != nil {
+		clone.Thresholds = make([]*PoolThreshold, len(a.Thresholds))
+		for i, one := range a.Thresholds {
+			clone.Thresholds[i] = one.Clone()
+		}
+	}
+	return &clone
+}
+
 // ID returns the ID.
 func (a *AttributeDef) ID() string {
 	return a.DefID

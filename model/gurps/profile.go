@@ -12,6 +12,9 @@
 package gurps
 
 import (
+	"strconv"
+
+	"github.com/richardwilkes/gcs/model/gurps/ancestry"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -65,4 +68,22 @@ func (p *Profile) Portrait() *unison.Image {
 // AdjustedSizeModifier returns the adjusted size modifier.
 func (p *Profile) AdjustedSizeModifier() fixed.F64d4 {
 	return (p.SizeModifier + p.SizeModifierBonus).Trunc()
+}
+
+// AutoFill fills in the default profile entries.
+func (p *Profile) AutoFill(entity *Entity) {
+	generalSettings := SettingsProvider.GeneralSettings()
+	p.TechLevel = generalSettings.DefaultTechLevel
+	p.PlayerName = generalSettings.DefaultPlayerName
+	a := entity.Ancestry()
+	p.Gender = a.RandomGender()
+	p.Age = strconv.Itoa(a.RandomAge(entity, p.Gender))
+	p.Eyes = a.RandomEyes(p.Gender)
+	p.Hair = a.RandomHair(p.Gender)
+	p.Skin = a.RandomSkin(p.Gender)
+	p.Handedness = a.RandomHandedness(p.Gender)
+	p.Height = a.RandomHeight(entity, p.Gender)
+	p.Weight = a.RandomWeight(entity, p.Gender)
+	p.Name = a.RandomName(ancestry.AvailableNameGenerators(SettingsProvider.Libraries()), p.Gender)
+	p.Birthday = generalSettings.CalendarRef(SettingsProvider.Libraries()).RandomBirthday(p.Birthday)
 }

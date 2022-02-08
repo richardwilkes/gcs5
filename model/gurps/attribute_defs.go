@@ -122,6 +122,15 @@ func (a *AttributeDefs) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// Clone a copy of this.
+func (a *AttributeDefs) Clone() *AttributeDefs {
+	clone := &AttributeDefs{Set: make(map[string]*AttributeDef)}
+	for k, v := range a.Set {
+		clone.Set[k] = v.Clone()
+	}
+	return clone
+}
+
 // List returns the map of AttributeDef objects as an ordered list.
 func (a *AttributeDefs) List() []*AttributeDef {
 	list := make([]*AttributeDef, 0, len(a.Set))

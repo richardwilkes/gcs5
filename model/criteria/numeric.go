@@ -43,3 +43,7 @@ func (n *Numeric) UnmarshalJSON(data []byte) error {
 func (n Numeric) Matches(value fixed.F64d4) bool {
 	return n.Compare.Matches(n.Qualifier, value)
 }
+
+func (n Numeric) String() string {
+	return n.Compare.Describe(n.Qualifier)
+}

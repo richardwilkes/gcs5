@@ -22,7 +22,7 @@ import (
 
 // Start the UI.
 func Start(files []string) {
-	libs := settings.Global().Libraries
+	libs := settings.Global().LibrarySet
 	go libs.PerformUpdateChecks()
 	unison.Start(
 		unison.StartupFinishedCallback(func() {

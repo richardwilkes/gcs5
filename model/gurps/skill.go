@@ -13,6 +13,7 @@ package gurps
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"math"
 	"strings"
@@ -28,6 +29,7 @@ import (
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
@@ -71,7 +73,7 @@ type Skill struct {
 	SkillData
 	Entity            *Entity
 	Parent            *Skill
-	Level             skill.Level
+	LevelData         skill.Level
 	UnsatisfiedReason string
 	Satisfied         bool
 }
@@ -148,7 +150,7 @@ func (s *Skill) MarshalJSON() ([]byte, error) {
 		s.SkillItem = nil
 	} else {
 		s.SkillContainer = nil
-		if s.Level.Level > 0 {
+		if s.LevelData.Level > 0 {
 			type calc struct {
 				Level              fixed.F64d4 `json:"level"`
 				RelativeSkillLevel string      `json:"rsl"`
@@ -159,7 +161,7 @@ func (s *Skill) MarshalJSON() ([]byte, error) {
 			}{
 				SkillData: s.SkillData,
 				Calc: calc{
-					Level: s.Level.Level,
+					Level: s.LevelData.Level,
 				},
 			}
 			rsl := s.AdjustedRelativeLevel()
@@ -204,11 +206,11 @@ func (s *Skill) AdjustedRelativeLevel() fixed.F64d4 {
 	if s.Container() {
 		return fixed.F64d4Min
 	}
-	if s.Entity != nil && s.Level.Level > 0 {
+	if s.Entity != nil && s.LevelData.Level > 0 {
 		if s.Type == gid.Technique {
-			return s.Level.RelativeLevel + s.TechniqueDefault.Modifier
+			return s.LevelData.RelativeLevel + s.TechniqueDefault.Modifier
 		}
-		return s.Level.RelativeLevel
+		return s.LevelData.RelativeLevel
 	}
 	// TODO: Old code had a case for templates... but can't see that being exercised in the actual display anywhere
 	return fixed.F64d4Min
@@ -232,4 +234,139 @@ func (s *Skill) AdjustedPoints() fixed.F64d4 {
 		}
 	}
 	return points
+}
+
+// Level returns the computed level.
+func (s *Skill) Level(excludes map[string]bool) fixed.F64d4 {
+	return s.CalculateLevel(s.Name, s.Specialization, s.Categories, s.Defaults, s.Difficulty, s.Points,
+		s.EncumbrancePenaltyMultiplier, excludes).Level
+}
+
+// CalculateLevel computes the level.
+func (s *Skill) CalculateLevel(name, specialization string, categories []string, defaults []*SkillDefault, attrDiff AttributeDifficulty, points, encPenaltyMult fixed.F64d4, excludes map[string]bool) skill.Level {
+	var tooltip xio.ByteBuffer
+	relativeLevel := attrDiff.Difficulty.BaseRelativeLevel()
+	level := s.Entity.ResolveAttributeCurrent(attrDiff.Attribute)
+	if level != fixed.F64d4Min {
+		if attrDiff.Difficulty == skill.Wildcard {
+			points = points.Div(fxp.Three).Trunc()
+		} else if s.DefaultedFrom != nil && s.DefaultedFrom.Points > 0 {
+			points += s.DefaultedFrom.Points
+		}
+		switch {
+		case points == 1:
+		// relativeLevel is preset to this point value
+		case points > 0 && points < fxp.Four:
+			relativeLevel += fxp.One
+		case points > 0:
+			relativeLevel += fxp.One + points.Div(4).Trunc()
+		case s.DefaultedFrom != nil && s.DefaultedFrom.Points < 0:
+			relativeLevel = s.DefaultedFrom.AdjLevel - level
+		default:
+			level = fixed.F64d4Min
+			relativeLevel = 0
+		}
+		if level != fixed.F64d4Min {
+			level += relativeLevel
+			if s.DefaultedFrom != nil && level < s.DefaultedFrom.AdjLevel {
+				level = s.DefaultedFrom.AdjLevel
+			}
+			if s.Entity != nil {
+				bonus := s.Entity.SkillComparedBonusFor(feature.SkillNameID+"*", name, specialization, categories, &tooltip)
+				level += bonus
+				relativeLevel += bonus
+				bonus = s.Entity.BonusFor(feature.SkillNameID+"/"+strings.ToLower(name), &tooltip)
+				level += bonus
+				relativeLevel += bonus
+				bonus = s.Entity.EncumbranceLevel(true).Penalty().Mul(encPenaltyMult)
+				level += bonus
+				if bonus != 0 {
+					fmt.Fprintf(&tooltip, i18n.Text("\nEncumbrance [%s]"), bonus.StringWithSign())
+				}
+			}
+		}
+	}
+	return skill.Level{
+		Level:         level,
+		RelativeLevel: relativeLevel,
+		Tooltip:       tooltip.String(),
+	}
+}
+
+// UpdateLevel updates the level of the skill, returning true if it has changed.
+func (s *Skill) UpdateLevel() bool {
+	saved := s.LevelData
+	s.DefaultedFrom = s.bestDefaultWithPoints(nil)
+	s.LevelData = s.CalculateLevel(s.Name, s.Specialization, s.Categories, s.Defaults, s.Difficulty, s.Points,
+		s.EncumbrancePenaltyMultiplier, nil)
+	return saved != s.LevelData
+}
+
+func (s *Skill) bestDefaultWithPoints(excluded *SkillDefault) *SkillDefault {
+	best := s.bestDefault(excluded)
+	if best != nil {
+		baseLine := s.Entity.ResolveAttributeCurrent(s.Difficulty.Attribute) + s.Difficulty.Difficulty.BaseRelativeLevel()
+		level := best.Level
+		best.AdjLevel = level
+		switch {
+		case level == baseLine:
+			best.Points = fxp.One
+		case level == baseLine+fxp.One:
+			best.Points = fxp.Two
+		case level > baseLine+fxp.One:
+			best.Points = fxp.Four.Mul(level - (baseLine + fxp.One))
+		default:
+			best.Points = -level.Min(0)
+		}
+	}
+	return best
+}
+
+func (s *Skill) bestDefault(excluded *SkillDefault) *SkillDefault {
+	if s.Entity == nil || len(s.Defaults) == 0 {
+		return nil
+	}
+	excludes := make(map[string]bool)
+	excludes[s.String()] = true
+	var bestDef *SkillDefault
+	best := fixed.F64d4Min
+	for _, def := range s.Defaults {
+		// For skill-based defaults, prune out any that already use a default that we are involved with
+		if def.Equivalent(excluded) || s.inDefaultChain(def, make(map[*Skill]bool)) {
+			continue
+		}
+		level := def.SkillLevel(s.Entity, true, excludes, s.Type != gid.Technique)
+		if def.SkillBased() {
+			if other := s.Entity.BestSkillNamed(def.Name, def.Specialization, true, excludes); other != nil {
+				level -= s.Entity.SkillComparedBonusFor(feature.SkillNameID+"*", def.Name, def.Specialization, s.Categories, nil)
+				level -= s.Entity.BonusFor(feature.SkillNameID+"/"+strings.ToLower(def.Name), nil)
+			}
+		}
+		if best < level {
+			best = s.LevelData.Level
+			bestDef = def.CloneWithoutLevelOrPoints()
+			bestDef.Level = level
+		}
+	}
+	return bestDef
+}
+
+func (s *Skill) inDefaultChain(def *SkillDefault, lookedAt map[*Skill]bool) bool {
+	if s.Entity == nil || def == nil || !def.SkillBased() {
+		return false
+	}
+	hadOne := false
+	for _, one := range s.Entity.SkillNamed(def.Name, def.Specialization, true, nil) {
+		if one == s {
+			return true
+		}
+		if _, has := lookedAt[one]; !has {
+			lookedAt[one] = true
+			if s.inDefaultChain(one.DefaultedFrom, lookedAt) {
+				return true
+			}
+		}
+		hadOne = true
+	}
+	return !hadOne
 }

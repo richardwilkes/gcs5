@@ -28,6 +28,16 @@ type PoolThreshold struct {
 	// TODO: Turn the Multiplier, Divisor & Addition fields into an expression field instead
 }
 
+// Clone a copy of this.
+func (p *PoolThreshold) Clone() *PoolThreshold {
+	clone := *p
+	if p.Ops != nil {
+		clone.Ops = make([]attribute.ThresholdOp, len(p.Ops))
+		copy(clone.Ops, p.Ops)
+	}
+	return &clone
+}
+
 // Threshold returns the threshold value for the given maximum.
 func (p *PoolThreshold) Threshold(max fixed.F64d4) fixed.F64d4 {
 	divisor := p.Divisor

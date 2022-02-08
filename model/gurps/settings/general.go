@@ -18,7 +18,9 @@ import (
 	"os/user"
 	"time"
 
+	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
 
@@ -26,7 +28,7 @@ import (
 type General struct {
 	DefaultPlayerName           string `json:"default_player_name,omitempty"`
 	DefaultTechLevel            string `json:"default_tech_level,omitempty"`
-	CalendarRef                 string `json:"calendar_ref,omitempty"`
+	CalendarName                string `json:"calendar_ref,omitempty"`
 	GCalcKey                    string `json:"gurps_calculator_key,omitempty"`
 	InitialPoints               int    `json:"initial_points,omitempty"`
 	ToolTipDelayMillis          int    `json:"tooltip_initial_delay_milliseconds,omitempty"`
@@ -83,4 +85,15 @@ func (s *General) Save(filePath string) error {
 func (s *General) UpdateToolTipTiming() {
 	unison.DefaultTooltipTheme.Delay = time.Duration(s.ToolTipDelayMillis) * time.Millisecond
 	unison.DefaultTooltipTheme.Dismissal = time.Duration(s.ToolTipDismissalSeconds) * time.Second
+}
+
+// CalendarRef returns the CalendarRef these settings refer to.
+func (s *General) CalendarRef(libraries library.Libraries) *CalendarRef {
+	ref := LookupCalendarRef(s.CalendarName, libraries)
+	if ref == nil {
+		if ref = LookupCalendarRef("Gregorian", libraries); ref == nil {
+			jot.Fatal(1, "unable to load default calendar (Gregorian)")
+		}
+	}
+	return ref
 }

@@ -29,7 +29,7 @@ type NameGeneratorRef struct {
 }
 
 // AvailableNameGenerators scans the libraries and returns the available name generators.
-func AvailableNameGenerators(libraries *library.Libraries) []*NameGeneratorRef {
+func AvailableNameGenerators(libraries library.Libraries) []*NameGeneratorRef {
 	var list []*NameGeneratorRef
 	seen := make(map[string]bool)
 	for _, set := range library.ScanForNamedFileSets(embeddedFS, "data", ".names", libraries) {

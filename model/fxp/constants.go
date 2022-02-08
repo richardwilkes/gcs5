@@ -27,6 +27,7 @@ var (
 	OneAndAHalf   = fixed.F64d4FromStringForced("1.5")
 	Two           = fixed.F64d4FromInt(2)
 	Three         = fixed.F64d4FromInt(3)
+	Four          = fixed.F64d4FromInt(4)
 	Five          = fixed.F64d4FromInt(5)
 	Six           = fixed.F64d4FromInt(6)
 	Ten           = fixed.F64d4FromInt(10)

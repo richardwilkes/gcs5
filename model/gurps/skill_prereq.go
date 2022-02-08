@@ -15,6 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/criteria"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
 )
 
@@ -73,48 +74,47 @@ func (s *SkillPrereq) ApplyNameableKeys(m map[string]string) {
 }
 
 // Satisfied implements Prereq.
-func (s *SkillPrereq) Satisfied(entity *Entity, exclude interface{}, buffer *xio.ByteBuffer, prefix string) bool {
+func (s *SkillPrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xio.ByteBuffer, prefix string) bool {
 	satisfied := false
-	// TODO: Implement
-	/*
-	   String          techLevel     = null;
-	   StringCriteria  nameCriteria  = getNameCriteria();
-	   IntegerCriteria levelCriteria = getLevelCriteria();
-
-	   if (exclude instanceof Skill) {
-	       techLevel = ((Skill) exclude).getTechLevel();
-	   }
-
-	   for (Skill skill : character.getSkillsIterator()) {
-	       if (exclude != skill && nameCriteria.matches(skill.getName()) && mSpecializationCriteria.matches(skill.getSpecialization())) {
-	           satisfied = levelCriteria.matches(skill.getLevel());
-	           if (satisfied && techLevel != null) {
-	               String otherTL = skill.getTechLevel();
-	               satisfied = otherTL == null || techLevel.equals(otherTL);
-	           }
-	           if (satisfied) {
-	               break;
-	           }
-	       }
-	   }
-	   if (!has()) {
-	       satisfied = !satisfied;
-	   }
-	   if (!satisfied && builder != null) {
-	       builder.append(MessageFormat.format(I18n.text("\n{0}{1} a skill whose name {2}"), prefix, getHasText(), nameCriteria.toString()));
-	       boolean notAnySpecialization = !mSpecializationCriteria.isTypeAnything();
-	       if (notAnySpecialization) {
-	           builder.append(MessageFormat.format(I18n.text(", specialization {0},"), mSpecializationCriteria.toString()));
-	       }
-	       if (techLevel == null) {
-	           builder.append(MessageFormat.format(I18n.text(" and level {0}"), levelCriteria.toString()));
-	       } else {
-	           if (notAnySpecialization) {
-	               builder.append(",");
-	           }
-	           builder.append(MessageFormat.format(I18n.text(" level {0} and tech level matches"), levelCriteria.toString()));
-	       }
-	   }
-	*/
+	var techLevel *string
+	if sk, ok := exclude.(*Skill); ok {
+		techLevel = sk.TechLevel
+	}
+	TraverseSkills(func(sk *Skill) bool {
+		if exclude == sk || !s.NameCriteria.Matches(sk.Name) || !s.SpecializationCriteria.Matches(sk.Specialization) {
+			return false
+		}
+		satisfied = s.LevelCriteria.Matches(sk.LevelData.Level)
+		if satisfied && techLevel != nil {
+			satisfied = sk.TechLevel == nil || *techLevel == *sk.TechLevel
+		}
+		return satisfied
+	}, entity.Skills...)
+	if !s.Has {
+		satisfied = !satisfied
+	}
+	if !satisfied && tooltip != nil {
+		tooltip.WriteByte('\n')
+		tooltip.WriteString(prefix)
+		tooltip.WriteString(HasText(s.Has))
+		tooltip.WriteString(i18n.Text(" a skill whose name "))
+		tooltip.WriteString(s.NameCriteria.String())
+		if s.SpecializationCriteria.Compare != criteria.Any {
+			tooltip.WriteString(i18n.Text(", specialization "))
+			tooltip.WriteString(s.SpecializationCriteria.String())
+			tooltip.WriteByte(',')
+		}
+		if techLevel == nil {
+			tooltip.WriteString(i18n.Text(" and level "))
+			tooltip.WriteString(s.LevelCriteria.String())
+		} else {
+			if s.SpecializationCriteria.Compare != criteria.Any {
+				tooltip.WriteByte(',')
+			}
+			tooltip.WriteString(i18n.Text(" level "))
+			tooltip.WriteString(s.LevelCriteria.String())
+			tooltip.WriteString(i18n.Text(" and tech level matches"))
+		}
+	}
 	return satisfied
 }

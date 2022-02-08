@@ -13,6 +13,8 @@ package gid
 
 // Various commonly used IDs
 const (
+	BasicMove     = "basic_move"
+	BasicSpeed    = "basic_speed"
 	Block         = "block"
 	Dexterity     = "dx"
 	FatiguePoints = "fp"

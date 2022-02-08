@@ -84,6 +84,21 @@ func NewBodyTypeFromFile(fileSystem fs.FS, filePath string) (*BodyType, error) {
 	return b, nil
 }
 
+// Clone a copy of this.
+func (b *BodyType) Clone(entity *Entity, owningLocation *HitLocation) *BodyType {
+	clone := &BodyType{
+		Name:           b.Name,
+		Roll:           dice.New(b.Roll.String()),
+		Locations:      make([]*HitLocation, len(b.Locations)),
+		owningLocation: owningLocation,
+	}
+	for i, one := range b.Locations {
+		clone.Locations[i] = one.Clone(entity, clone)
+	}
+	clone.Update()
+	return clone
+}
+
 // Save writes the BodyType to the file as JSON.
 func (b *BodyType) Save(filePath string) error {
 	return jio.SaveToFile(context.Background(), filePath, b)

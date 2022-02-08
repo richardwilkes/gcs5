@@ -15,6 +15,15 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
+// Ceil returns the value rounded up to the nearest whole number.
+func Ceil(value fixed.F64d4) fixed.F64d4 {
+	v := value.Trunc()
+	if value != v {
+		v += One
+	}
+	return v
+}
+
 // Round the given value.
 func Round(value fixed.F64d4) fixed.F64d4 {
 	rem := value

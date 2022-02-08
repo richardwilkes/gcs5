@@ -58,7 +58,7 @@ type NavigatorSettings struct {
 type Settings struct {
 	LastSeenGCSVersion string                           `json:"last_seen_gcs_version,omitempty"`
 	General            *settings.General                `json:"general,omitempty"`
-	Libraries          library.Libraries                `json:"libraries,omitempty"`
+	LibrarySet         library.Libraries                `json:"libraries,omitempty"`
 	LibraryExplorer    NavigatorSettings                `json:"library_explorer"`
 	RecentFiles        []string                         `json:"recent_files,omitempty"`
 	LastDirs           map[string]string                `json:"last_dirs,omitempty"`
@@ -76,7 +76,7 @@ func Default(entity *gurps.Entity) *Settings {
 	return &Settings{
 		LastSeenGCSVersion: cmdline.AppVersion,
 		General:            settings.NewGeneral(),
-		Libraries:          library.NewLibraries(),
+		LibrarySet:         library.NewLibraries(),
 		LibraryExplorer:    NavigatorSettings{DividerPosition: 300},
 		LastDirs:           make(map[string]string),
 		PageRefs:           make(map[string]*PageRef),
@@ -96,7 +96,7 @@ func Global() *Settings {
 		if err := jio.LoadFromFile(context.Background(), Path(), &global); err != nil {
 			global = Default(nil)
 		}
-		gurps.GlobalSheetSettingsProvider = func() *gurps.SheetSettings { return global.Sheet }
+		gurps.SettingsProvider = global
 	}
 	return global
 }
@@ -162,6 +162,21 @@ func (s *Settings) AddRecentFile(filePath string) {
 			return
 		}
 	}
+}
+
+// GeneralSettings implements gurps.SettingsProvider.
+func (s *Settings) GeneralSettings() *settings.General {
+	return s.General
+}
+
+// SheetSettings implements gurps.SettingsProvider.
+func (s *Settings) SheetSettings() *gurps.SheetSettings {
+	return s.Sheet
+}
+
+// Libraries implements gurps.SettingsProvider.
+func (s *Settings) Libraries() library.Libraries {
+	return s.LibrarySet
 }
 
 // Path returns the path to our settings file.

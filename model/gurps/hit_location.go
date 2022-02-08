@@ -26,7 +26,6 @@ import (
 
 // HitLocationData holds the Hitlocation data that gets written to disk.
 type HitLocationData struct {
-	Entity      *Entity   `json:"-"`
 	LocID       string    `json:"id"`
 	ChoiceName  string    `json:"choice_name"`
 	TableName   string    `json:"table_name"`
@@ -40,8 +39,20 @@ type HitLocationData struct {
 // HitLocation holds a single hit location.
 type HitLocation struct {
 	HitLocationData
+	Entity      *Entity
 	RollRange   string
 	owningTable *BodyType
+}
+
+// Clone a copy of this.
+func (h *HitLocation) Clone(entity *Entity, owningTable *BodyType) *HitLocation {
+	clone := *h
+	clone.Entity = entity
+	clone.owningTable = owningTable
+	if h.SubTable != nil {
+		clone.SubTable = h.SubTable.Clone(entity, &clone)
+	}
+	return &clone
 }
 
 // MarshalJSON implements json.Marshaler.

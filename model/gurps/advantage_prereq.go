@@ -15,7 +15,9 @@ import (
 	"github.com/richardwilkes/gcs/model/criteria"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 var _ Prereq = &AdvantagePrereq{}
@@ -73,41 +75,42 @@ func (a *AdvantagePrereq) ApplyNameableKeys(m map[string]string) {
 }
 
 // Satisfied implements Prereq.
-func (a *AdvantagePrereq) Satisfied(entity *Entity, exclude interface{}, buffer *xio.ByteBuffer, prefix string) bool {
+func (a *AdvantagePrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xio.ByteBuffer, prefix string) bool {
 	satisfied := false
-	// TODO: Implement
-	/*
-	   StringCriteria  nameCriteria  = getNameCriteria();
-	   IntegerCriteria levelCriteria = getLevelCriteria();
-
-	   for (Advantage advantage : character.getAdvantagesIterator(false)) {
-	       if (exclude != advantage && nameCriteria.matches(advantage.getName())) {
-	           String notes         = advantage.getNotes();
-	           String modifierNotes = advantage.getModifierNotes();
-
-	           if (!modifierNotes.isEmpty()) {
-	               notes = modifierNotes + '\n' + notes;
-	           }
-	           if (mNotesCriteria.matches(notes)) {
-	               int levels = advantage.getLevels();
-	               if (levels < 0) {
-	                   levels = 0;
-	               }
-	               satisfied = levelCriteria.matches(levels);
-	               break;
-	           }
-	       }
-	   }
-	   if (!has()) {
-	       satisfied = !satisfied;
-	   }
-	   if (!satisfied && builder != null) {
-	       builder.append(MessageFormat.format(I18n.text("\n{0}{1} an advantage whose name {2}"), prefix, getHasText(), nameCriteria.toString()));
-	       if (!mNotesCriteria.isTypeAnything()) {
-	           builder.append(MessageFormat.format(I18n.text(", notes {0},"), mNotesCriteria.toString()));
-	       }
-	       builder.append(MessageFormat.format(I18n.text(" and level {0}"), levelCriteria.toString()));
-	   }
-	*/
+	TraverseAdvantages(func(adq *Advantage) bool {
+		if exclude == adq || !a.NameCriteria.Matches(adq.Name) {
+			return false
+		}
+		notes := adq.Notes()
+		if modNotes := adq.ModifierNotes(); modNotes != "" {
+			notes += "\n" + modNotes
+		}
+		if !a.NotesCriteria.Matches(notes) {
+			return false
+		}
+		var levels fixed.F64d4
+		if adq.Levels != nil {
+			levels = adq.Levels.Max(0)
+		}
+		satisfied = a.LevelCriteria.Matches(levels)
+		return satisfied
+	}, true, entity.Advantages...)
+	if !a.Has {
+		satisfied = !satisfied
+	}
+	if !satisfied && tooltip != nil {
+		tooltip.WriteByte('\n')
+		tooltip.WriteString(prefix)
+		tooltip.WriteString(HasText(a.Has))
+		tooltip.WriteString(i18n.Text(" an advantage whose name "))
+		tooltip.WriteString(a.NameCriteria.String())
+		if a.NotesCriteria.Compare != criteria.Any {
+			tooltip.WriteString(i18n.Text(", notes "))
+			tooltip.WriteString(a.NotesCriteria.String())
+			tooltip.WriteByte(',')
+		}
+		tooltip.WriteString(i18n.Text(" and level "))
+		tooltip.WriteString(a.LevelCriteria.String())
+	}
 	return satisfied
 }

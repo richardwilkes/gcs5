@@ -44,3 +44,7 @@ func (w *Weight) UnmarshalJSON(data []byte) error {
 func (w Weight) Matches(value measure.Weight) bool {
 	return w.Compare.Matches(fixed.F64d4(w.Qualifier), fixed.F64d4(value))
 }
+
+func (w Weight) String() string {
+	return w.Compare.Describe(fixed.F64d4(w.Qualifier))
+}

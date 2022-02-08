@@ -36,3 +36,9 @@ func NewPage() *Page {
 		RightMargin:  paper.Length{Length: 0.25, Units: paper.Inch},
 	}
 }
+
+// Clone a copy of this.
+func (p *Page) Clone() *Page {
+	clone := *p
+	return &clone
+}

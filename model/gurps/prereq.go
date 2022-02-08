@@ -13,6 +13,7 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
 )
 
@@ -24,4 +25,12 @@ type Prereq interface {
 	// Satisfied returns true if this Prereq is satisfied by the specified Entity. 'buffer' will be used, if not nil, to
 	// write a description of what was unsatisfied. 'prefix' will be appended to each line of the description.
 	Satisfied(entity *Entity, exclude interface{}, buffer *xio.ByteBuffer, prefix string) bool
+}
+
+// HasText returns the appropriate text for has.
+func HasText(has bool) string {
+	if has {
+		return i18n.Text("Has")
+	}
+	return i18n.Text("Does not have")
 }

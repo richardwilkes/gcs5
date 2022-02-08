@@ -15,7 +15,9 @@ import (
 	"github.com/richardwilkes/gcs/model/criteria"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 var _ Prereq = &ContainedQuantityPrereq{}
@@ -58,30 +60,26 @@ func (c *ContainedQuantityPrereq) ApplyNameableKeys(m map[string]string) {
 }
 
 // Satisfied implements Prereq.
-func (c *ContainedQuantityPrereq) Satisfied(entity *Entity, exclude interface{}, buffer *xio.ByteBuffer, prefix string) bool {
+func (c *ContainedQuantityPrereq) Satisfied(_ *Entity, exclude interface{}, tooltip *xio.ByteBuffer, prefix string) bool {
 	satisfied := false
-	// TODO: Implement
-	/*
-	   boolean satisfied = false;
-	   if (exclude instanceof Equipment equipment) {
-	       satisfied = !equipment.canHaveChildren();
-	       if (!satisfied) {
-	           int qty = 0;
-	           for (Row child : equipment.getChildren()) {
-	               if (child instanceof Equipment) {
-	                   qty += ((Equipment) child).getQuantity();
-	               }
-	           }
-	           satisfied = mQuantityCompare.matches(qty);
-	       }
-	   }
-	   if (!has()) {
-	       satisfied = !satisfied;
-	   }
-	   if (!satisfied && builder != null) {
-	       builder.append(MessageFormat.format(I18n.text("\n{0}{1} a contained quantity which {2}"), prefix, getHasText(), mQuantityCompare));
-	   }
-	   return satisfied;
-	*/
+	if eqp, ok := exclude.(*Equipment); ok {
+		if satisfied = !eqp.Container(); !satisfied {
+			var qty fixed.F64d4
+			for _, child := range eqp.Children {
+				qty += child.Quantity
+			}
+			satisfied = c.QualifierCriteria.Matches(qty)
+		}
+	}
+	if !c.Has {
+		satisfied = !satisfied
+	}
+	if !satisfied && tooltip != nil {
+		tooltip.WriteByte('\n')
+		tooltip.WriteString(prefix)
+		tooltip.WriteString(HasText(c.Has))
+		tooltip.WriteString(i18n.Text(" a contained quantity which "))
+		tooltip.WriteString(c.QualifierCriteria.String())
+	}
 	return satisfied
 }

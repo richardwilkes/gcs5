@@ -33,6 +33,16 @@ type Attribute struct {
 	CostReduction fixed.F64d4 `json:"-"`
 }
 
+// NewAttribute creates a new Attribute.
+func NewAttribute(entity *Entity, attrID string) *Attribute {
+	return &Attribute{
+		AttributeData: AttributeData{
+			AttrID: attrID,
+		},
+		Entity: entity,
+	}
+}
+
 // MarshalJSON implements json.Marshaler.
 func (a *Attribute) MarshalJSON() ([]byte, error) {
 	if a.Entity != nil {
@@ -146,4 +156,15 @@ func IsThresholdOpMet(op attribute.ThresholdOp, attributes map[string]*Attribute
 		}
 	}
 	return false
+}
+
+// CountThresholdOpMet counts the number of times the given ThresholdOp is met.
+func CountThresholdOpMet(op attribute.ThresholdOp, attributes map[string]*Attribute) int {
+	total := 0
+	for _, one := range attributes {
+		if threshold := one.CurrentThreshold(); threshold != nil && threshold.ContainsOp(op) {
+			total++
+		}
+	}
+	return total
 }

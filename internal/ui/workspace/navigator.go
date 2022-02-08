@@ -52,7 +52,7 @@ func newNavigator() *Navigator {
 
 	n.table.ColumnSizes = make([]unison.ColumnSize, 1)
 	globalSettings := settings.Global()
-	libs := globalSettings.Libraries.List()
+	libs := globalSettings.LibrarySet.List()
 	rows := make([]unison.TableRowData, 0, len(libs))
 	for _, one := range libs {
 		rows = append(rows, NewLibraryNode(n, one))

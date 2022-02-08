@@ -13,6 +13,7 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
+	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/settings/display"
@@ -20,6 +21,14 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 )
+
+// SettingsProvider must be initialized prior to using this package. It provides access to settings to avoid circular
+// references.
+var SettingsProvider interface {
+	GeneralSettings() *settings.General
+	SheetSettings() *SheetSettings
+	Libraries() library.Libraries
+}
 
 const (
 	blockLayoutReactionsKey            = "reactions"
@@ -33,10 +42,6 @@ const (
 	blockLayoutOtherEquipmentKey       = "other_equipment"
 	blockLayoutNotesKey                = "notes"
 )
-
-// GlobalSheetSettingsProvider must be initialized prior to using this package. It provides access to the global sheet
-// settings that should be used when an Entity is not available to provide them.
-var GlobalSheetSettingsProvider func() *SheetSettings
 
 // SheetSettingsData holds the SheetSettings data that is written to disk.
 type SheetSettingsData struct {
@@ -70,10 +75,10 @@ type SheetSettings struct {
 // SheetSettingsFor returns the SheetSettings for the given Entity, or the global settings if the Entity is nil.
 func SheetSettingsFor(entity *Entity) *SheetSettings {
 	if entity == nil {
-		if GlobalSheetSettingsProvider == nil {
-			jot.Fatal(1, errs.New("GlobalSheetSettingsProvider has not been set yet"))
+		if SettingsProvider == nil {
+			jot.Fatal(1, errs.New("SettingsProvider has not been set yet"))
 		}
-		return GlobalSheetSettingsProvider()
+		return SettingsProvider.SheetSettings()
 	}
 	return entity.SheetSettings
 }
@@ -136,4 +141,15 @@ func (s *SheetSettings) Normalize() {
 		s.Attributes = nil
 		s.HitLocations = nil
 	}
+}
+
+// Clone creates a copy of this.
+func (s *SheetSettings) Clone(entity *Entity) *SheetSettings {
+	clone := *s
+	clone.Page = s.Page.Clone()
+	clone.BlockLayout = make([]string, len(s.BlockLayout))
+	copy(clone.BlockLayout, s.BlockLayout)
+	clone.Attributes = s.Attributes.Clone()
+	clone.HitLocations = s.HitLocations.Clone(entity, nil)
+	return &clone
 }
