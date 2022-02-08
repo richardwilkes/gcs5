@@ -29,7 +29,7 @@ type Length struct {
 func LengthFromString(text string) Length {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
 	for _, unit := range AllUnits {
-		if strings.HasSuffix(text, string(unit)) {
+		if strings.HasSuffix(text, unit.Key()) {
 			value, err := strconv.ParseFloat(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())), 64)
 			if err != nil {
 				return Length{Units: unit}

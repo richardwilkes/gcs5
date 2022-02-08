@@ -42,7 +42,7 @@ func NewConditionalModifierBonus() *ConditionalModifier {
 
 // FeatureMapKey implements Feature.
 func (c *ConditionalModifier) FeatureMapKey() string {
-	return string(ConditionalModifierType)
+	return ConditionalModifierType.Key()
 }
 
 // FillWithNameableKeys implements Feature.

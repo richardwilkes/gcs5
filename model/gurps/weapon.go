@@ -14,6 +14,7 @@ package gurps
 import (
 	"bufio"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/fxp"
@@ -237,7 +238,7 @@ func (w *Weapon) extractSkillBonus(f feature.Feature, tooltip *xio.ByteBuffer) f
 				return sb.AdjustedAmount()
 			}
 		default:
-			jot.Fatal(1, "unhandled selection type: "+string(sb.SelectionType))
+			jot.Fatal(1, "unhandled selection type: "+strconv.Itoa(int(sb.SelectionType)))
 		}
 	}
 	return 0

@@ -54,7 +54,7 @@ func (enum ModifierWeightType) Format(s string, defUnits measure.WeightUnits) st
 	t := enum.DetermineModifierWeightValueTypeFromString(s)
 	result := t.Format(t.ExtractFraction(s))
 	if t == WeightAddition {
-		result += " " + string(measure.TrailingWeightUnitsFromString(s, defUnits))
+		result += " " + measure.TrailingWeightUnitsFromString(s, defUnits).String()
 	}
 	return result
 }

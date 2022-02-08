@@ -45,7 +45,7 @@ func NewAttributeBonus(attrID string) *AttributeBonus {
 func (a *AttributeBonus) FeatureMapKey() string {
 	key := AttributeIDPrefix + a.Attribute
 	if a.Limitation != attribute.None {
-		key += "." + string(a.Limitation)
+		key += "." + a.Limitation.Key()
 	}
 	return key
 }

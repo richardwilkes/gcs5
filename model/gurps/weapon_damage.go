@@ -12,6 +12,7 @@
 package gurps
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/fxp"
@@ -313,7 +314,7 @@ func (w *WeaponDamage) extractWeaponDamageBonus(f feature.Feature, set map[*feat
 				}
 			}
 		default:
-			jot.Fatal(1, "unknown selection type: "+string(bonus.SelectionType))
+			jot.Fatal(1, "unknown selection type: "+strconv.Itoa(int(bonus.SelectionType)))
 		}
 		bonus.LeveledAmount.Level = level
 	}
