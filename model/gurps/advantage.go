@@ -163,6 +163,8 @@ func (a *Advantage) UnmarshalJSON(data []byte) error {
 		for _, one := range a.Children {
 			one.Parent = a
 		}
+	} else if a.Prereq == nil {
+		a.Prereq = NewPrereqList()
 	}
 	return nil
 }
@@ -175,6 +177,20 @@ func (a *Advantage) Container() bool {
 // OwningEntity returns the owning Entity.
 func (a *Advantage) OwningEntity() *Entity {
 	return a.Entity
+}
+
+// SetOwningEntity sets the owning entity and configures any sub-components as needed.
+func (a *Advantage) SetOwningEntity(entity *Entity) {
+	a.Entity = entity
+	if a.Container() {
+		for _, child := range a.Children {
+			child.SetOwningEntity(entity)
+		}
+	} else {
+		for _, w := range a.Weapons {
+			w.SetOwner(a)
+		}
+	}
 }
 
 // Notes returns the local notes.

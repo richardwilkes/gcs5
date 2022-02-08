@@ -99,6 +99,12 @@ func (w *Weapon) String() string {
 	return w.Owner.Description()
 }
 
+// SetOwner sets the owner and ensures sub-components have their owners set.
+func (w *Weapon) SetOwner(owner WeaponOwner) {
+	w.Owner = owner
+	w.Damage.Owner = w
+}
+
 // Entity returns the owning entity, if any.
 func (w *Weapon) Entity() *Entity {
 	if w.Owner == nil {

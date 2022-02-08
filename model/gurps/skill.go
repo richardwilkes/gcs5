@@ -61,7 +61,7 @@ type SkillData struct {
 	ID              uuid.UUID `json:"id"`
 	Name            string    `json:"name,omitempty"`
 	PageRef         string    `json:"reference,omitempty"`
-	Notes           string    `json:"notes,omitempty"`
+	LocalNotes      string    `json:"notes,omitempty"`
 	VTTNotes        string    `json:"vtt_notes,omitempty"`
 	Categories      []string  `json:"categories,omitempty"`
 	*SkillItem      `json:",omitempty"`
@@ -179,9 +179,64 @@ func (s *Skill) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&s.SkillData)
 }
 
+// UnmarshalJSON implements json.Unmarshaler.
+func (s *Skill) UnmarshalJSON(data []byte) error {
+	s.SkillData = SkillData{}
+	if err := json.Unmarshal(data, &s.SkillData); err != nil {
+		return err
+	}
+	if s.Container() {
+		for _, one := range s.Children {
+			one.Parent = s
+		}
+	} else if s.Prereq == nil {
+		s.Prereq = NewPrereqList()
+	}
+	return nil
+}
+
 // Container returns true if this is a container.
 func (s *Skill) Container() bool {
 	return strings.HasSuffix(s.Type, commonContainerKeyPostfix)
+}
+
+// OwningEntity returns the owning Entity.
+func (s *Skill) OwningEntity() *Entity {
+	return s.Entity
+}
+
+// SetOwningEntity sets the owning entity and configures any sub-components as needed.
+func (s *Skill) SetOwningEntity(entity *Entity) {
+	s.Entity = entity
+	if s.Container() {
+		for _, child := range s.Children {
+			child.SetOwningEntity(entity)
+		}
+	} else {
+		for _, w := range s.Weapons {
+			w.SetOwner(s)
+		}
+	}
+}
+
+// Notes implements WeaponOwner.
+func (s *Skill) Notes() string {
+	return s.LocalNotes
+}
+
+// FeatureList returns the list of Features.
+func (s *Skill) FeatureList() feature.Features {
+	return s.Features
+}
+
+// CategoryList returns the list of categories.
+func (s *Skill) CategoryList() []string {
+	return s.Categories
+}
+
+// Description implements WeaponOwner.
+func (s *Skill) Description() string {
+	return s.String()
 }
 
 func (s *Skill) String() string {

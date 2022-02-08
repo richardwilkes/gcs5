@@ -19,10 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/id"
-	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/eval"
-	"github.com/richardwilkes/toolbox/eval/f64d4eval"
-	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
@@ -86,16 +83,7 @@ func (a *AttributeDef) Primary() bool {
 
 // BaseValue returns the resolved base value.
 func (a *AttributeDef) BaseValue(resolver eval.VariableResolver) fixed.F64d4 {
-	result, err := f64d4eval.NewEvaluator(resolver, true).Evaluate(a.AttributeBase)
-	if err != nil {
-		jot.Warn(errs.NewWithCausef(err, "unable to resolve '%s'", a.AttributeBase))
-		return 0
-	}
-	if value, ok := result.(fixed.F64d4); ok {
-		return value
-	}
-	jot.Warn(errs.Newf("unable to resolve '%s' to a number", a.AttributeBase))
-	return 0
+	return fxp.EvaluateToNumber(a.AttributeBase, resolver)
 }
 
 // ComputeCost returns the value adjusted for a cost reduction.

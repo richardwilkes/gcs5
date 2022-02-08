@@ -33,11 +33,6 @@ var _ WeaponOwner = &Equipment{}
 
 const equipmentTypeKey = "equipment"
 
-// EquipmentItem holds the Equipment data that only exists in non-containers.
-type EquipmentItem struct {
-	Quantity fixed.F64d4 `json:"quantity,omitempty"`
-}
-
 // EquipmentContainer holds the Equipment data that only exists in containers.
 type EquipmentContainer struct {
 	Children []*Equipment `json:"children,omitempty"`
@@ -54,6 +49,7 @@ type EquipmentData struct {
 	VTTNotes               string               `json:"vtt_notes,omitempty"`
 	TechLevel              string               `json:"tech_level,omitempty"`
 	LegalityClass          string               `json:"legality_class,omitempty"`
+	Quantity               fixed.F64d4          `json:"quantity,omitempty"`
 	Value                  fixed.F64d4          `json:"value,omitempty"`
 	Weight                 measure.Weight       `json:"weight,omitempty"`
 	MaxUses                int                  `json:"max_uses,omitempty"`
@@ -65,7 +61,6 @@ type EquipmentData struct {
 	Categories             []string             `json:"categories,omitempty"`
 	Equipped               bool                 `json:"equipped,omitempty"`
 	WeightIgnoredForSkills bool                 `json:"ignore_weight_for_skills,omitempty"`
-	*EquipmentItem         `json:",omitempty"`
 	*EquipmentContainer    `json:",omitempty"`
 }
 
@@ -111,6 +106,7 @@ func NewEquipment(entity *Entity, parent *Equipment, container bool) *Equipment 
 			Name:          i18n.Text("Equipment"),
 			LegalityClass: "4",
 			Prereq:        NewPrereqList(),
+			Quantity:      fxp.One,
 			Equipped:      true,
 		},
 		Entity: entity,
@@ -119,8 +115,6 @@ func NewEquipment(entity *Entity, parent *Equipment, container bool) *Equipment 
 	if container {
 		e.Type += commonContainerKeyPostfix
 		e.EquipmentContainer = &EquipmentContainer{Open: true}
-	} else {
-		e.EquipmentItem = &EquipmentItem{Quantity: fxp.One}
 	}
 	return &e
 }
@@ -148,9 +142,7 @@ func (e *Equipment) MarshalJSON() ([]byte, error) {
 		w := e.ExtendedWeight(true, defUnits)
 		data.Calc.ExtendedWeightForSkills = &w
 	}
-	if e.Container() {
-		data.EquipmentItem = nil
-	} else {
+	if !e.Container() {
 		data.EquipmentContainer = nil
 	}
 	return json.Marshal(&data)
@@ -162,7 +154,20 @@ func (e *Equipment) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &e.EquipmentData); err != nil {
 		return err
 	}
+	if e.Prereq == nil {
+		e.Prereq = NewPrereqList()
+	}
 	if e.Container() {
+		if e.Quantity == 0 {
+			// Old formats omitted the quantity for containers. Try to see if it was omitted or if it was explicitly
+			// set to zero.
+			m := make(map[string]interface{})
+			if err := json.Unmarshal(data, &m); err == nil {
+				if _, exists := m["quantity"]; !exists {
+					e.Quantity = fxp.One
+				}
+			}
+		}
 		for _, one := range e.Children {
 			one.Parent = e
 		}
@@ -178,6 +183,19 @@ func (e *Equipment) Container() bool {
 // OwningEntity returns the owning Entity.
 func (e *Equipment) OwningEntity() *Entity {
 	return e.Entity
+}
+
+// SetOwningEntity sets the owning entity and configures any sub-components as needed.
+func (e *Equipment) SetOwningEntity(entity *Entity) {
+	e.Entity = entity
+	for _, w := range e.Weapons {
+		w.SetOwner(e)
+	}
+	if e.Container() {
+		for _, child := range e.Children {
+			child.SetOwningEntity(entity)
+		}
+	}
 }
 
 // Description returns a description.
@@ -212,13 +230,14 @@ func (e *Equipment) AdjustedValue() fixed.F64d4 {
 
 // ExtendedValue returns the extended value.
 func (e *Equipment) ExtendedValue() fixed.F64d4 {
-	value := e.AdjustedValue()
+	if e.Quantity <= 0 {
+		return 0
+	}
+	value := e.AdjustedValue().Mul(e.Quantity)
 	if e.Container() {
 		for _, one := range e.Children {
 			value += one.ExtendedValue()
 		}
-	} else {
-		value = value.Mul(e.Quantity)
 	}
 	return value
 }
@@ -233,7 +252,10 @@ func (e *Equipment) AdjustedWeight(forSkills bool, defUnits measure.WeightUnits)
 
 // ExtendedWeight returns the extended weight.
 func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits) measure.Weight {
-	base := fixed.F64d4(e.AdjustedWeight(forSkills, defUnits))
+	if e.Quantity <= 0 {
+		return 0
+	}
+	base := fixed.F64d4(e.AdjustedWeight(forSkills, defUnits)).Mul(e.Quantity)
 	if e.Container() {
 		var contained fixed.F64d4
 		for _, one := range e.Children {
@@ -268,8 +290,6 @@ func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits)
 			contained -= contained.Mul(percentage).Div(fxp.Hundred)
 		}
 		base += (contained - reduction).Max(0)
-	} else {
-		base = base.Mul(e.Quantity)
 	}
 	return measure.Weight(base)
 }

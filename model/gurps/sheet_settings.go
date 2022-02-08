@@ -49,13 +49,13 @@ type SheetSettingsData struct {
 	BlockLayout                []string                    `json:"block_layout,omitempty"`
 	Attributes                 *AttributeDefs              `json:"attributes,omitempty"`
 	HitLocations               *BodyType                   `json:"hit_locations,omitempty"`
-	DamageProgression          attribute.DamageProgression `json:"damage_progression,omitempty"`
-	DefaultLengthUnits         measure.LengthUnits         `json:"default_length_units,omitempty"`
-	DefaultWeightUnits         measure.WeightUnits         `json:"default_weight_units,omitempty"`
-	UserDescriptionDisplay     display.Option              `json:"user_description_display,omitempty"`
-	ModifiersDisplay           display.Option              `json:"modifiers_display,omitempty"`
-	NotesDisplay               display.Option              `json:"notes_display,omitempty"`
-	SkillLevelAdjDisplay       display.Option              `json:"skill_level_adj_display,omitempty"`
+	DamageProgression          attribute.DamageProgression `json:"damage_progression"`
+	DefaultLengthUnits         measure.LengthUnits         `json:"default_length_units"`
+	DefaultWeightUnits         measure.WeightUnits         `json:"default_weight_units"`
+	UserDescriptionDisplay     display.Option              `json:"user_description_display"`
+	ModifiersDisplay           display.Option              `json:"modifiers_display"`
+	NotesDisplay               display.Option              `json:"notes_display"`
+	SkillLevelAdjDisplay       display.Option              `json:"skill_level_adj_display"`
 	UseMultiplicativeModifiers bool                        `json:"use_multiplicative_modifiers,omitempty"`
 	UseModifyingDicePlusAdds   bool                        `json:"use_modifying_dice_plus_adds,omitempty"`
 	ShowCollegeInSheetSpells   bool                        `json:"show_college_in_sheet_spells,omitempty"`
@@ -120,9 +120,7 @@ func FactoryBlockLayout() []string {
 
 // MarshalJSON implements json.Marshaler.
 func (s *SheetSettings) MarshalJSON() ([]byte, error) {
-	s.Normalize()
-	data, err := json.Marshal(&s.SheetSettingsData)
-	return data, err
+	return json.Marshal(&s.SheetSettingsData)
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -131,16 +129,7 @@ func (s *SheetSettings) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &s.SheetSettingsData); err != nil {
 		return err
 	}
-	s.Normalize()
 	return nil
-}
-
-// Normalize the data.
-func (s *SheetSettings) Normalize() {
-	if s.Entity == nil {
-		s.Attributes = nil
-		s.HitLocations = nil
-	}
 }
 
 // Clone creates a copy of this.

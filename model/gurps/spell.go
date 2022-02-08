@@ -62,7 +62,7 @@ type SpellData struct {
 	ID              uuid.UUID `json:"id"`
 	Name            string    `json:"name,omitempty"`
 	PageRef         string    `json:"reference,omitempty"`
-	Notes           string    `json:"notes,omitempty"`
+	LocalNotes      string    `json:"notes,omitempty"`
 	VTTNotes        string    `json:"vtt_notes,omitempty"`
 	Categories      []string  `json:"categories,omitempty"`
 	*SpellItem      `json:",omitempty"`
@@ -168,6 +168,22 @@ func (s *Spell) MarshalJSON() ([]byte, error) {
 		}
 	}
 	return json.Marshal(&s.SpellData)
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (s *Spell) UnmarshalJSON(data []byte) error {
+	s.SpellData = SpellData{}
+	if err := json.Unmarshal(data, &s.SpellData); err != nil {
+		return err
+	}
+	if s.Container() {
+		for _, one := range s.Children {
+			one.Parent = s
+		}
+	} else if s.Prereq == nil {
+		s.Prereq = NewPrereqList()
+	}
+	return nil
 }
 
 // Container returns true if this is a container.
@@ -303,4 +319,55 @@ func (s *Spell) RitualMagicSatisfied(tooltip *xio.ByteBuffer, prefix string) boo
 		}
 	}
 	return false
+}
+
+// OwningEntity returns the owning Entity.
+func (s *Spell) OwningEntity() *Entity {
+	return s.Entity
+}
+
+// SetOwningEntity sets the owning entity and configures any sub-components as needed.
+func (s *Spell) SetOwningEntity(entity *Entity) {
+	s.Entity = entity
+	if s.Container() {
+		for _, child := range s.Children {
+			child.SetOwningEntity(entity)
+		}
+	} else {
+		for _, w := range s.Weapons {
+			w.SetOwner(s)
+		}
+	}
+}
+
+// Notes implements WeaponOwner.
+func (s *Spell) Notes() string {
+	return s.LocalNotes
+}
+
+// FeatureList returns the list of Features.
+func (s *Spell) FeatureList() feature.Features {
+	return nil
+}
+
+// CategoryList returns the list of categories.
+func (s *Spell) CategoryList() []string {
+	return s.Categories
+}
+
+// Description implements WeaponOwner.
+func (s *Spell) Description() string {
+	return s.String()
+}
+
+func (s *Spell) String() string {
+	var buffer strings.Builder
+	buffer.WriteString(s.Name)
+	if !s.Container() {
+		if s.TechLevel != nil {
+			buffer.WriteString("/TL")
+			buffer.WriteString(*s.TechLevel)
+		}
+	}
+	return buffer.String()
 }

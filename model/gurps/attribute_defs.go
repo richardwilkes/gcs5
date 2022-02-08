@@ -103,7 +103,6 @@ func (a *AttributeDefs) MarshalJSON() ([]byte, error) {
 	var buffer bytes.Buffer
 	e := json.NewEncoder(&buffer)
 	e.SetEscapeHTML(false)
-	e.SetIndent("", "  ")
 	err := e.Encode(a.List())
 	return buffer.Bytes(), err
 }

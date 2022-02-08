@@ -217,3 +217,36 @@ func TraverseSpells(f func(*Spell) bool, in ...*Spell) {
 		}
 	}
 }
+
+// TraverseNotes calls the function 'f' for each Note and its children in the input list. Return true from the function
+// to abort early.
+func TraverseNotes(f func(*Note) bool, in ...*Note) {
+	type trackingInfo struct {
+		list  []*Note
+		index int
+	}
+	tracking := []*trackingInfo{
+		{
+			list:  in,
+			index: 0,
+		},
+	}
+	for {
+		if len(tracking) == 0 {
+			return
+		}
+		current := tracking[len(tracking)-1]
+		if current.index >= len(current.list) {
+			tracking = tracking[:len(tracking)-1]
+		} else {
+			one := current.list[current.index]
+			if f(one) {
+				return
+			}
+			current.index++
+			if one.Container() && len(one.Children) != 0 {
+				tracking = append(tracking, &trackingInfo{list: one.Children})
+			}
+		}
+	}
+}

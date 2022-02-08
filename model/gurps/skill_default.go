@@ -35,7 +35,7 @@ type SkillDefault struct {
 	Specialization string      `json:"specialization,omitempty"`
 	Modifier       fixed.F64d4 `json:"modifier,omitempty"`
 	Level          fixed.F64d4 `json:"level,omitempty"`
-	AdjLevel       fixed.F64d4 `json:"adjLevel,omitempty"`
+	AdjLevel       fixed.F64d4 `json:"adjusted_level,omitempty"`
 	Points         fixed.F64d4 `json:"points,omitempty"`
 }
 
@@ -50,7 +50,7 @@ func (s *SkillDefault) CloneWithoutLevelOrPoints() *SkillDefault {
 
 // Equivalent returns true if this can be considered equivalent to other.
 func (s *SkillDefault) Equivalent(other *SkillDefault) bool {
-	return s.DefaultType == other.DefaultType && s.Modifier == other.Modifier && s.Name == other.Name &&
+	return other != nil && s.DefaultType == other.DefaultType && s.Modifier == other.Modifier && s.Name == other.Name &&
 		s.Specialization == other.Specialization
 }
 

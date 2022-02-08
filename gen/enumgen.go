@@ -761,7 +761,7 @@ func main() {
 		Values: []enumValue{
 			{
 				Name:   "FeetAndInches",
-				Key:    "ftin",
+				Key:    "ft_in",
 				String: "Feet & Inches",
 			},
 			{

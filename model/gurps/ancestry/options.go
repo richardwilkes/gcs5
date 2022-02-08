@@ -14,10 +14,9 @@ package ancestry
 import (
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
-	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/eval"
-	"github.com/richardwilkes/toolbox/eval/f64d4eval"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -47,32 +46,29 @@ type Options struct {
 
 // RandomHeight returns a randomized height.
 func (o *Options) RandomHeight(resolver eval.VariableResolver) measure.Length {
-	if result, err := f64d4eval.NewEvaluator(resolver, true).Evaluate(o.HeightFormula); err != nil {
-		jot.Warn(errs.NewWithCausef(err, "unable to resolve '%s'", o.HeightFormula))
-	} else if value, ok := result.(fixed.F64d4); ok {
-		return measure.Length(value)
+	value := fxp.EvaluateToNumber(o.HeightFormula, resolver)
+	if value <= 0 {
+		return measure.LengthFromInt(defaultHeight, measure.Inch)
 	}
-	return measure.LengthFromInt(defaultHeight, measure.Inch)
+	return measure.Length(value)
 }
 
 // RandomWeight returns a randomized weight.
 func (o *Options) RandomWeight(resolver eval.VariableResolver) measure.Weight {
-	if result, err := f64d4eval.NewEvaluator(resolver, true).Evaluate(o.WeightFormula); err != nil {
-		jot.Warn(errs.NewWithCausef(err, "unable to resolve '%s'", o.WeightFormula))
-	} else if value, ok := result.(fixed.F64d4); ok {
-		return measure.Weight(value)
+	value := fxp.EvaluateToNumber(o.WeightFormula, resolver)
+	if value <= 0 {
+		return measure.WeightFromInt(defaultWeight, measure.Pound)
 	}
-	return measure.WeightFromInt(defaultWeight, measure.Pound)
+	return measure.Weight(value)
 }
 
 // RandomAge returns a randomized age.
 func (o *Options) RandomAge(resolver eval.VariableResolver) int {
-	if result, err := f64d4eval.NewEvaluator(resolver, true).Evaluate(o.AgeFormula); err != nil {
-		jot.Warn(errs.NewWithCausef(err, "unable to resolve '%s'", o.AgeFormula))
-	} else if value, ok := result.(fixed.F64d4); ok {
-		return value.AsInt()
+	value := fxp.EvaluateToNumber(o.AgeFormula, resolver).Trunc()
+	if value <= 0 {
+		value = fixed.F64d4FromInt(defaultAge)
 	}
-	return defaultAge
+	return value.AsInt()
 }
 
 // RandomHair returns a randomized hair.

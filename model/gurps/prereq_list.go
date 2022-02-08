@@ -46,6 +46,11 @@ func NewPrereqList() *PrereqList {
 	}
 }
 
+// ShouldOmit implements json.Omitter.
+func (p *PrereqList) ShouldOmit() bool {
+	return p.All && p.WhenTLCriteria.Compare == criteria.AtLeast && p.WhenTLCriteria.Qualifier == 0 && len(p.Prereqs) == 0
+}
+
 // Clone implements Prereq.
 func (p *PrereqList) Clone(parent *PrereqList) Prereq {
 	clone := *p

@@ -114,6 +114,7 @@ func (e *Entity) Save(filePath string) error {
 
 // MarshalJSON implements json.Marshaler.
 func (e *Entity) MarshalJSON() ([]byte, error) {
+	e.Recalculate()
 	type calc struct {
 		Swing                 *dice.Dice     `json:"swing"`
 		Thrust                *dice.Dice     `json:"thrust"`
@@ -164,6 +165,7 @@ func (e *Entity) UnmarshalJSON(data []byte) error {
 
 // Recalculate the statistics.
 func (e *Entity) Recalculate() {
+	e.ensureAttachments()
 	e.UpdateSkills()
 	e.UpdateSpells()
 	for i := 0; i < 5; i++ {
@@ -180,14 +182,46 @@ func (e *Entity) Recalculate() {
 	}
 }
 
+func (e *Entity) ensureAttachments() {
+	e.SheetSettings.Entity = e
+	for _, attr := range e.Attributes.Set {
+		attr.Entity = e
+	}
+	for _, one := range e.Advantages {
+		one.SetOwningEntity(e)
+	}
+	for _, one := range e.Skills {
+		one.SetOwningEntity(e)
+	}
+	for _, one := range e.Spells {
+		one.SetOwningEntity(e)
+	}
+	for _, one := range e.CarriedEquipment {
+		one.SetOwningEntity(e)
+	}
+	for _, one := range e.OtherEquipment {
+		one.SetOwningEntity(e)
+	}
+}
+
 func (e *Entity) processFeatures() {
 	m := make(map[string][]feature.Feature)
 	TraverseAdvantages(func(a *Advantage) bool {
-		for _, f := range a.Features {
-			processFeature(a, m, f, a.Levels.Max(0))
+		if !a.Container() {
+			for _, f := range a.Features {
+				var levels fixed.F64d4
+				if a.Levels != nil {
+					levels = a.Levels.Max(0)
+				}
+				processFeature(a, m, f, levels)
+			}
 		}
 		for _, f := range a.CRAdj.Features(a.CR) {
-			processFeature(a, m, f, a.Levels.Max(0))
+			var levels fixed.F64d4
+			if a.Levels != nil {
+				levels = a.Levels.Max(0)
+			}
+			processFeature(a, m, f, levels)
 		}
 		for _, mod := range a.Modifiers {
 			if !mod.Disabled {
@@ -199,8 +233,10 @@ func (e *Entity) processFeatures() {
 		return false
 	}, true, e.Advantages...)
 	TraverseSkills(func(s *Skill) bool {
-		for _, f := range s.Features {
-			processFeature(s, m, f, 0)
+		if !s.Container() {
+			for _, f := range s.Features {
+				processFeature(s, m, f, 0)
+			}
 		}
 		return false
 	}, e.Skills...)
@@ -237,37 +273,52 @@ func (e *Entity) processPrereqs() {
 	const prefix = "\n- "
 	notMetPrefix := i18n.Text("Prerequisites have not been met:")
 	TraverseAdvantages(func(a *Advantage) bool {
-		var tooltip xio.ByteBuffer
-		if a.Satisfied = a.Prereq.Satisfied(e, a, &tooltip, prefix); a.Satisfied {
+		if a.Container() {
+			a.Satisfied = true
 			a.UnsatisfiedReason = ""
 		} else {
-			a.UnsatisfiedReason = notMetPrefix + tooltip.String()
+			var tooltip xio.ByteBuffer
+			if a.Satisfied = a.Prereq.Satisfied(e, a, &tooltip, prefix); a.Satisfied {
+				a.UnsatisfiedReason = ""
+			} else {
+				a.UnsatisfiedReason = notMetPrefix + tooltip.String()
+			}
 		}
 		return false
 	}, true, e.Advantages...)
 	TraverseSkills(func(s *Skill) bool {
-		var tooltip xio.ByteBuffer
-		s.Satisfied = s.Prereq.Satisfied(e, s, &tooltip, prefix)
-		if s.Satisfied && s.Type == gid.Technique {
-			s.Satisfied = s.TechniqueSatisfied(&tooltip, prefix)
-		}
-		if s.Satisfied {
+		if s.Container() {
+			s.Satisfied = true
 			s.UnsatisfiedReason = ""
 		} else {
-			s.UnsatisfiedReason = notMetPrefix + tooltip.String()
+			var tooltip xio.ByteBuffer
+			s.Satisfied = s.Prereq.Satisfied(e, s, &tooltip, prefix)
+			if s.Satisfied && s.Type == gid.Technique {
+				s.Satisfied = s.TechniqueSatisfied(&tooltip, prefix)
+			}
+			if s.Satisfied {
+				s.UnsatisfiedReason = ""
+			} else {
+				s.UnsatisfiedReason = notMetPrefix + tooltip.String()
+			}
 		}
 		return false
 	}, e.Skills...)
 	TraverseSpells(func(s *Spell) bool {
-		var tooltip xio.ByteBuffer
-		s.Satisfied = s.Prereq.Satisfied(e, s, &tooltip, prefix)
-		if s.Satisfied && s.Type == gid.RitualMagicSpell {
-			s.Satisfied = s.RitualMagicSatisfied(&tooltip, prefix)
-		}
-		if s.Satisfied {
+		if s.Container() {
+			s.Satisfied = true
 			s.UnsatisfiedReason = ""
 		} else {
-			s.UnsatisfiedReason = notMetPrefix + tooltip.String()
+			var tooltip xio.ByteBuffer
+			s.Satisfied = s.Prereq.Satisfied(e, s, &tooltip, prefix)
+			if s.Satisfied && s.Type == gid.RitualMagicSpell {
+				s.Satisfied = s.RitualMagicSatisfied(&tooltip, prefix)
+			}
+			if s.Satisfied {
+				s.UnsatisfiedReason = ""
+			} else {
+				s.UnsatisfiedReason = notMetPrefix + tooltip.String()
+			}
 		}
 		return false
 	}, e.Spells...)
