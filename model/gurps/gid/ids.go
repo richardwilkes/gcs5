@@ -17,6 +17,7 @@ const (
 	BasicSpeed       = "basic_speed"
 	Block            = "block"
 	Dexterity        = "dx"
+	Dodge            = "dodge"
 	FatiguePoints    = "fp"
 	Health           = "ht"
 	HitPoints        = "hp"

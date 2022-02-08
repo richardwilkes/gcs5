@@ -256,6 +256,27 @@ func (e *Entity) processFeatures() {
 		}
 		return false
 	}, e.CarriedEquipment...)
+	e.featureMap = m
+	e.LiftingStrengthBonus = e.BonusFor(gid.Strength+"."+attribute.LiftingOnly.Key(), nil).Trunc()
+	e.StrikingStrengthBonus = e.BonusFor(gid.Strength+"."+attribute.StrikingOnly.Key(), nil).Trunc()
+	e.ThrowingStrengthBonus = e.BonusFor(gid.Strength+"."+attribute.ThrowingOnly.Key(), nil).Trunc()
+	for _, attr := range e.Attributes.Set {
+		if def := attr.AttributeDef(); def != nil {
+			attrID := feature.AttributeIDPrefix + attr.AttrID
+			attr.Bonus = e.BonusFor(attrID, nil)
+			if def.Type == attribute.Decimal {
+				attr.Bonus = attr.Bonus.Trunc()
+			}
+			attr.CostReduction = e.CostReductionFor(attrID)
+		} else {
+			attr.Bonus = 0
+			attr.CostReduction = 0
+		}
+	}
+	e.Profile.Update(e)
+	e.DodgeBonus = e.BonusFor(feature.AttributeIDPrefix+gid.Dodge, nil).Trunc()
+	e.ParryBonus = e.BonusFor(feature.AttributeIDPrefix+gid.Parry, nil).Trunc()
+	e.BlockBonus = e.BonusFor(feature.AttributeIDPrefix+gid.Block, nil).Trunc()
 }
 
 func processFeature(parent fmt.Stringer, m map[string][]feature.Feature, f feature.Feature, levels fixed.F64d4) {
@@ -532,6 +553,20 @@ func (e *Entity) BonusFor(featureID string, tooltip *xio.ByteBuffer) fixed.F64d4
 		}
 	}
 	return total
+}
+
+// CostReductionFor returns the total cost reduction for the given ID.
+func (e *Entity) CostReductionFor(featureID string) fixed.F64d4 {
+	var total fixed.F64d4
+	for _, f := range e.featureMap[strings.ToLower(featureID)] {
+		if reduction, ok := f.(*feature.CostReduction); ok {
+			total += reduction.Percentage
+		}
+	}
+	if total > fxp.Eighty {
+		total = fxp.Eighty
+	}
+	return total.Min(0)
 }
 
 // AddDRBonusesFor locates any active DR bonuses and adds them to the map. If 'drMap' is nil, it will be created. The

@@ -33,6 +33,7 @@ var (
 	Ten           = fixed.F64d4FromInt(10)
 	Nineteen      = fixed.F64d4FromInt(19)
 	Twenty        = fixed.F64d4FromInt(20)
+	Forty         = fixed.F64d4FromInt(40)
 	Eighty        = fixed.F64d4FromInt(80)
 	Hundred       = fixed.F64d4FromInt(100)
 )

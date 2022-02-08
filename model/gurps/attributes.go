@@ -26,8 +26,10 @@ type Attributes struct {
 // NewAttributes creates a new Attributes.
 func NewAttributes(entity *Entity) *Attributes {
 	a := &Attributes{Set: make(map[string]*Attribute)}
+	i := 0
 	for attrID := range entity.SheetSettings.Attributes.Set {
-		a.Set[attrID] = NewAttribute(entity, attrID)
+		a.Set[attrID] = NewAttribute(entity, attrID, i)
+		i++
 	}
 	return a
 }
@@ -48,7 +50,8 @@ func (a *Attributes) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	a.Set = make(map[string]*Attribute, len(list))
-	for _, one := range list {
+	for i, one := range list {
+		one.Order = i
 		a.Set[one.ID()] = one
 	}
 	return nil
@@ -69,6 +72,8 @@ func (a *Attributes) List() []*Attribute {
 	for _, v := range a.Set {
 		list = append(list, v)
 	}
-	sort.Slice(list, func(i, j int) bool { return list[i].AttrID < list[j].AttrID })
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].Order < list[j].Order
+	})
 	return list
 }

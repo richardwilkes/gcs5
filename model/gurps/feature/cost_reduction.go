@@ -11,6 +11,11 @@
 
 package feature
 
+import (
+	"github.com/richardwilkes/gcs/model/fxp"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
+)
+
 // AttributeIDPrefix is the prefix all references to attribute IDs should use.
 const AttributeIDPrefix = "attr."
 
@@ -18,9 +23,9 @@ var _ Feature = &CostReduction{}
 
 // CostReduction holds the data for a cost reduction.
 type CostReduction struct {
-	Type       Type   `json:"type"`
-	Attribute  string `json:"attribute,omitempty"`
-	Percentage int    `json:"percentage,omitempty"`
+	Type       Type        `json:"type"`
+	Attribute  string      `json:"attribute,omitempty"`
+	Percentage fixed.F64d4 `json:"percentage,omitempty"`
 }
 
 // NewCostReduction creates a new CostReduction.
@@ -28,7 +33,7 @@ func NewCostReduction(attrID string) *CostReduction {
 	return &CostReduction{
 		Type:       CostReductionType,
 		Attribute:  attrID,
-		Percentage: 40,
+		Percentage: fxp.Forty,
 	}
 }
 

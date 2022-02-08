@@ -31,15 +31,17 @@ type Attribute struct {
 	Entity        *Entity     `json:"-"`
 	Bonus         fixed.F64d4 `json:"-"`
 	CostReduction fixed.F64d4 `json:"-"`
+	Order         int         `json:"-"`
 }
 
 // NewAttribute creates a new Attribute.
-func NewAttribute(entity *Entity, attrID string) *Attribute {
+func NewAttribute(entity *Entity, attrID string, order int) *Attribute {
 	return &Attribute{
 		AttributeData: AttributeData{
 			AttrID: attrID,
 		},
 		Entity: entity,
+		Order:  order,
 	}
 }
 
@@ -70,6 +72,12 @@ func (a *Attribute) MarshalJSON() ([]byte, error) {
 		}
 	}
 	return json.Marshal(&a.AttributeData)
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (a *Attribute) UnmarshalJSON(data []byte) error {
+	a.AttributeData = AttributeData{}
+	return json.Unmarshal(data, &a.AttributeData)
 }
 
 // Clone a copy of this.

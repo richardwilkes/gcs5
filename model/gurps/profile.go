@@ -15,6 +15,8 @@ import (
 	"strconv"
 
 	"github.com/richardwilkes/gcs/model/gurps/ancestry"
+	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -49,6 +51,11 @@ type Profile struct {
 	Weight            measure.Weight `json:"weight,omitempty"`
 	SizeModifier      fixed.F64d4    `json:"SM,omitempty"`
 	SizeModifierBonus fixed.F64d4    `json:"-"`
+}
+
+// Update any derived values.
+func (p *Profile) Update(entity *Entity) {
+	p.SizeModifierBonus = entity.BonusFor(feature.AttributeIDPrefix+gid.SizeModifier, nil)
 }
 
 // Portrait returns the portrait image, if there is one.
