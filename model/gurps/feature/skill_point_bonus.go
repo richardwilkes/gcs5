@@ -19,6 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 const (
@@ -82,6 +83,16 @@ func (s *SkillPointBonus) ApplyNameableKeys(m map[string]string) {
 	s.NameCriteria.Qualifier = nameables.Apply(s.NameCriteria.Qualifier, m)
 	s.SpecializationCriteria.Qualifier = nameables.Apply(s.SpecializationCriteria.Qualifier, m)
 	s.CategoryCriteria.Qualifier = nameables.Apply(s.CategoryCriteria.Qualifier, m)
+}
+
+// SetParent implements Bonus.
+func (s *SkillPointBonus) SetParent(parent fmt.Stringer) {
+	s.Parent = parent
+}
+
+// SetLevel implements Bonus.
+func (s *SkillPointBonus) SetLevel(level fixed.F64d4) {
+	s.Level = level
 }
 
 // AddToTooltip implements Bonus.

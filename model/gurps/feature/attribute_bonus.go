@@ -17,6 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 var _ Bonus = &AttributeBonus{}
@@ -55,6 +56,16 @@ func (a *AttributeBonus) FillWithNameableKeys(_ map[string]string) {
 
 // ApplyNameableKeys implements Feature.
 func (a *AttributeBonus) ApplyNameableKeys(_ map[string]string) {
+}
+
+// SetParent implements Bonus.
+func (a *AttributeBonus) SetParent(parent fmt.Stringer) {
+	a.Parent = parent
+}
+
+// SetLevel implements Bonus.
+func (a *AttributeBonus) SetLevel(level fixed.F64d4) {
+	a.Level = level
 }
 
 // AddToTooltip implements Bonus.

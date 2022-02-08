@@ -13,6 +13,7 @@ package gurps
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"math"
 	"strings"
@@ -167,25 +168,123 @@ func (e *Entity) UnmarshalJSON(data []byte) error {
 // Recalculate the statistics.
 func (e *Entity) Recalculate() {
 	e.UpdateSkills()
-	// TODO: Implement
-	/*
-		  updateSkills();
-		  updateSpells();
-		  int     maxTries = 5;
-		  boolean changed;
-		  do {
-			  // Unfortunately, there are what amount to circular references in the GURPS logic, so
-			  // we need to potentially run though this process a few times until things stabilize.
-			  // To avoid a potential endless loop, though, we cap the iterations.
-			  processFeaturesAndPrereqs();
-			  changed = updateSkills();
-			  changed |= updateSpells();
-		  } while (changed && --maxTries > 0);
-		  calculateAttributePoints();
-		  calculateAdvantagePoints();
-		  calculateSkillPoints();
-		  calculateSpellPoints();
-	*/
+	e.UpdateSpells()
+	for i := 0; i < 5; i++ {
+		// Unfortunately, there are what amount to circular references in the GURPS logic, so we need to potentially run
+		// though this process a few times until things stabilize. To avoid a potential endless loop, though, we cap the
+		// iterations.
+		e.processFeatures()
+		e.processPrereqs()
+		skillsChanged := e.UpdateSkills()
+		spellsChanged := e.UpdateSpells()
+		if !skillsChanged && !spellsChanged {
+			break
+		}
+	}
+}
+
+func (e *Entity) processFeatures() {
+	m := make(map[string][]feature.Feature)
+	TraverseAdvantages(func(a *Advantage) bool {
+		for _, f := range a.Features {
+			processFeature(a, m, f, a.Levels.Max(0))
+		}
+		for _, f := range a.CRAdj.Features(a.CR) {
+			processFeature(a, m, f, a.Levels.Max(0))
+		}
+		for _, mod := range a.Modifiers {
+			if !mod.Disabled {
+				for _, f := range mod.Features {
+					processFeature(a, m, f, mod.Levels)
+				}
+			}
+		}
+		return false
+	}, true, e.Advantages...)
+	TraverseSkills(func(s *Skill) bool {
+		for _, f := range s.Features {
+			processFeature(s, m, f, 0)
+		}
+		return false
+	}, e.Skills...)
+	TraverseEquipment(func(eqp *Equipment) bool {
+		if !eqp.Equipped || eqp.Quantity <= 0 {
+			return false
+		}
+		for _, f := range eqp.Features {
+			processFeature(eqp, m, f, 0)
+		}
+		for _, mod := range eqp.Modifiers {
+			if !mod.Disabled {
+				for _, f := range mod.Features {
+					processFeature(eqp, m, f, 0)
+				}
+			}
+		}
+		return false
+	}, e.CarriedEquipment...)
+}
+
+func processFeature(parent fmt.Stringer, m map[string][]feature.Feature, f feature.Feature, levels fixed.F64d4) {
+	key := strings.ToLower(f.FeatureMapKey())
+	list := m[key]
+	if bonus, ok := f.(feature.Bonus); ok {
+		bonus.SetParent(parent)
+		bonus.SetLevel(levels)
+	}
+	list = append(list, f)
+	m[key] = list
+}
+
+func (e *Entity) processPrereqs() {
+	const prefix = "\n- "
+	notMetPrefix := i18n.Text("Prerequisites have not been met:")
+	TraverseAdvantages(func(a *Advantage) bool {
+		var tooltip xio.ByteBuffer
+		if a.Satisfied = a.Prereq.Satisfied(e, a, &tooltip, prefix); a.Satisfied {
+			a.UnsatisfiedReason = ""
+		} else {
+			a.UnsatisfiedReason = notMetPrefix + tooltip.String()
+		}
+		return false
+	}, true, e.Advantages...)
+	TraverseSkills(func(s *Skill) bool {
+		var tooltip xio.ByteBuffer
+		s.Satisfied = s.Prereq.Satisfied(e, s, &tooltip, prefix)
+		if s.Satisfied && s.Type == gid.Technique {
+			s.Satisfied = s.TechniqueSatisfied(&tooltip, prefix)
+		}
+		if s.Satisfied {
+			s.UnsatisfiedReason = ""
+		} else {
+			s.UnsatisfiedReason = notMetPrefix + tooltip.String()
+		}
+		return false
+	}, e.Skills...)
+	TraverseSpells(func(s *Spell) bool {
+		var tooltip xio.ByteBuffer
+		s.Satisfied = s.Prereq.Satisfied(e, s, &tooltip, prefix)
+		if s.Satisfied && s.Type == gid.RitualMagicSpell {
+			s.Satisfied = s.RitualMagicSatisfied(&tooltip, prefix)
+		}
+		if s.Satisfied {
+			s.UnsatisfiedReason = ""
+		} else {
+			s.UnsatisfiedReason = notMetPrefix + tooltip.String()
+		}
+		return false
+	}, e.Spells...)
+	equipmentFunc := func(eqp *Equipment) bool {
+		var tooltip xio.ByteBuffer
+		if eqp.Satisfied = eqp.Prereq.Satisfied(e, eqp, &tooltip, prefix); eqp.Satisfied {
+			eqp.UnsatisfiedReason = ""
+		} else {
+			eqp.UnsatisfiedReason = notMetPrefix + tooltip.String()
+		}
+		return false
+	}
+	TraverseEquipment(equipmentFunc, e.CarriedEquipment...)
+	TraverseEquipment(equipmentFunc, e.OtherEquipment...)
 }
 
 // UpdateSkills updates the levels of all skills.
@@ -198,6 +297,95 @@ func (e *Entity) UpdateSkills() bool {
 		return false
 	}, e.Skills...)
 	return changed
+}
+
+// UpdateSpells updates the levels of all spells.
+func (e *Entity) UpdateSpells() bool {
+	changed := false
+	TraverseSpells(func(s *Spell) bool {
+		if s.UpdateLevel() {
+			changed = true
+		}
+		return false
+	}, e.Spells...)
+	return changed
+}
+
+// AttributePoints returns the number of points spent on attributes.
+func (e *Entity) AttributePoints() fixed.F64d4 {
+	var total fixed.F64d4
+	for _, attr := range e.Attributes {
+		total += attr.PointCost()
+	}
+	return total
+}
+
+// AdvantagePoints returns the number of points spent on advantages.
+func (e *Entity) AdvantagePoints() (ad, disad, race, perk, quirk fixed.F64d4) {
+	for _, one := range e.Advantages {
+		a, d, r, p, q := calculateSingleAdvantagePoints(one)
+		ad += a
+		disad += d
+		race += r
+		perk += p
+		quirk += q
+	}
+	return
+}
+
+func calculateSingleAdvantagePoints(adq *Advantage) (ad, disad, race, perk, quirk fixed.F64d4) {
+	if adq.Container() {
+		switch adq.ContainerType {
+		case advantage.Group:
+			for _, child := range adq.Children {
+				a, d, r, p, q := calculateSingleAdvantagePoints(child)
+				ad += a
+				disad += d
+				race += r
+				perk += p
+				quirk += q
+			}
+			return
+		case advantage.Race:
+			return 0, 0, adq.AdjustedPoints(), 0, 0
+		}
+	}
+	pts := adq.AdjustedPoints()
+	switch {
+	case pts == fxp.One:
+		perk += pts
+	case pts == fxp.NegOne:
+		quirk += pts
+	case pts > 0:
+		ad += pts
+	case pts < 0:
+		disad += pts
+	}
+	return
+}
+
+// SkillPoints returns the number of points spent on skills.
+func (e *Entity) SkillPoints() fixed.F64d4 {
+	var total fixed.F64d4
+	TraverseSkills(func(s *Skill) bool {
+		if !s.Container() {
+			total += s.Points
+		}
+		return false
+	}, e.Skills...)
+	return total
+}
+
+// SpellPoints returns the number of points spent on spells.
+func (e *Entity) SpellPoints() fixed.F64d4 {
+	var total fixed.F64d4
+	TraverseSpells(func(s *Spell) bool {
+		if !s.Container() {
+			total += s.Points
+		}
+		return false
+	}, e.Spells...)
+	return total
 }
 
 // WealthCarried returns the current wealth being carried.
@@ -369,6 +557,20 @@ func (e *Entity) SkillPointComparedBonusFor(featureID, name, specialization stri
 		if bonus, ok := f.(*feature.SkillPointBonus); ok &&
 			bonus.NameCriteria.Matches(name) &&
 			bonus.SpecializationCriteria.Matches(specialization) &&
+			bonus.CategoryCriteria.Matches(categories...) {
+			total += bonus.AdjustedAmount()
+			bonus.AddToTooltip(tooltip)
+		}
+	}
+	return total
+}
+
+// SpellComparedBonusFor returns the total bonus for the matching spell bonuses.
+func (e *Entity) SpellComparedBonusFor(featureID, name string, categories []string, tooltip *xio.ByteBuffer) fixed.F64d4 {
+	var total fixed.F64d4
+	for _, f := range e.featureMap[strings.ToLower(featureID)] {
+		if bonus, ok := f.(*feature.SpellBonus); ok &&
+			bonus.NameCriteria.Matches(name) &&
 			bonus.CategoryCriteria.Matches(categories...) {
 			total += bonus.AdjustedAmount()
 			bonus.AddToTooltip(tooltip)

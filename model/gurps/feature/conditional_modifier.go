@@ -18,6 +18,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 var _ Bonus = &ConditionalModifier{}
@@ -52,6 +53,16 @@ func (c *ConditionalModifier) FillWithNameableKeys(m map[string]string) {
 // ApplyNameableKeys implements Feature.
 func (c *ConditionalModifier) ApplyNameableKeys(m map[string]string) {
 	c.Situation = nameables.Apply(c.Situation, m)
+}
+
+// SetParent implements Bonus.
+func (c *ConditionalModifier) SetParent(parent fmt.Stringer) {
+	c.Parent = parent
+}
+
+// SetLevel implements Bonus.
+func (c *ConditionalModifier) SetLevel(level fixed.F64d4) {
+	c.Level = level
 }
 
 // AddToTooltip implements Bonus.

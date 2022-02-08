@@ -30,6 +30,10 @@ type Feature interface {
 // Bonus is an extension of a Feature, which provides a numerical bonus or penalty.
 type Bonus interface {
 	Feature
+	// SetParent sets the parent to use.
+	SetParent(parent fmt.Stringer)
+	// SetLevel sets the level.
+	SetLevel(level fixed.F64d4)
 	// AdjustedAmount returns the amount, adjusted for level, if requested.
 	AdjustedAmount() fixed.F64d4
 	// AddToTooltip adds this Bonus's details to the tooltip. 'buffer' may be nil.

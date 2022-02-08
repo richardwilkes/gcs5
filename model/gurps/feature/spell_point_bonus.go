@@ -20,6 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/spell"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 const (
@@ -103,6 +104,16 @@ func (s *SpellPointBonus) ApplyNameableKeys(m map[string]string) {
 		s.NameCriteria.Qualifier = nameables.Apply(s.NameCriteria.Qualifier, m)
 	}
 	s.CategoryCriteria.Qualifier = nameables.Apply(s.CategoryCriteria.Qualifier, m)
+}
+
+// SetParent implements Bonus.
+func (s *SpellPointBonus) SetParent(parent fmt.Stringer) {
+	s.Parent = parent
+}
+
+// SetLevel implements Bonus.
+func (s *SpellPointBonus) SetLevel(level fixed.F64d4) {
+	s.Level = level
 }
 
 // AddToTooltip implements Bonus.

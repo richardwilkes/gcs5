@@ -99,7 +99,6 @@ func (p *PrereqList) Satisfied(entity *Entity, exclude interface{}, buffer *xio.
 	}
 	satisfied := count == len(p.Prereqs) || (!p.All && count > 0)
 	if !satisfied && local != nil {
-		buffer.WriteByte('\n')
 		buffer.WriteString(prefix)
 		if p.All {
 			buffer.WriteString(i18n.Text("Requires all of:"))

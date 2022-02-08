@@ -238,12 +238,12 @@ func (s *Skill) AdjustedPoints() fixed.F64d4 {
 
 // Level returns the computed level.
 func (s *Skill) Level(excludes map[string]bool) fixed.F64d4 {
-	return s.CalculateLevel(s.Name, s.Specialization, s.Categories, s.Defaults, s.Difficulty, s.Points,
-		s.EncumbrancePenaltyMultiplier, excludes).Level
+	return s.CalculateLevel(s.Name, s.Specialization, s.Categories, s.Difficulty, s.Points,
+		s.EncumbrancePenaltyMultiplier).Level
 }
 
 // CalculateLevel computes the level.
-func (s *Skill) CalculateLevel(name, specialization string, categories []string, defaults []*SkillDefault, attrDiff AttributeDifficulty, points, encPenaltyMult fixed.F64d4, excludes map[string]bool) skill.Level {
+func (s *Skill) CalculateLevel(name, specialization string, categories []string, attrDiff AttributeDifficulty, points, encPenaltyMult fixed.F64d4) skill.Level {
 	var tooltip xio.ByteBuffer
 	relativeLevel := attrDiff.Difficulty.BaseRelativeLevel()
 	level := s.Entity.ResolveAttributeCurrent(attrDiff.Attribute)
@@ -254,12 +254,12 @@ func (s *Skill) CalculateLevel(name, specialization string, categories []string,
 			points += s.DefaultedFrom.Points
 		}
 		switch {
-		case points == 1:
+		case points == fxp.One:
 		// relativeLevel is preset to this point value
 		case points > 0 && points < fxp.Four:
 			relativeLevel += fxp.One
 		case points > 0:
-			relativeLevel += fxp.One + points.Div(4).Trunc()
+			relativeLevel += fxp.One + points.Div(fxp.Four).Trunc()
 		case s.DefaultedFrom != nil && s.DefaultedFrom.Points < 0:
 			relativeLevel = s.DefaultedFrom.AdjLevel - level
 		default:
@@ -297,8 +297,8 @@ func (s *Skill) CalculateLevel(name, specialization string, categories []string,
 func (s *Skill) UpdateLevel() bool {
 	saved := s.LevelData
 	s.DefaultedFrom = s.bestDefaultWithPoints(nil)
-	s.LevelData = s.CalculateLevel(s.Name, s.Specialization, s.Categories, s.Defaults, s.Difficulty, s.Points,
-		s.EncumbrancePenaltyMultiplier, nil)
+	s.LevelData = s.CalculateLevel(s.Name, s.Specialization, s.Categories, s.Difficulty, s.Points,
+		s.EncumbrancePenaltyMultiplier)
 	return saved != s.LevelData
 }
 
@@ -369,4 +369,23 @@ func (s *Skill) inDefaultChain(def *SkillDefault, lookedAt map[*Skill]bool) bool
 		hadOne = true
 	}
 	return !hadOne
+}
+
+// TechniqueSatisfied returns true if the Technique is satisfied.
+func (s *Skill) TechniqueSatisfied(tooltip *xio.ByteBuffer, prefix string) bool {
+	if s.Type != gid.Technique || !s.TechniqueDefault.SkillBased() {
+		return true
+	}
+	sk := s.Entity.BestSkillNamed(s.TechniqueDefault.Name, s.TechniqueDefault.Specialization, false, nil)
+	satisfied := sk != nil && (sk.Type == gid.Technique || sk.Points > 0)
+	if !satisfied && tooltip != nil {
+		tooltip.WriteString(prefix)
+		if sk == nil {
+			tooltip.WriteString(i18n.Text("Requires a skill named "))
+		} else {
+			tooltip.WriteString(i18n.Text("Requires at least 1 point in the skill named "))
+		}
+		tooltip.WriteString(s.TechniqueDefault.FullName(s.Entity))
+	}
+	return satisfied
 }

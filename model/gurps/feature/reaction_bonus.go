@@ -18,6 +18,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 var _ Bonus = &ReactionBonus{}
@@ -52,6 +53,16 @@ func (r *ReactionBonus) FillWithNameableKeys(m map[string]string) {
 // ApplyNameableKeys implements Feature.
 func (r *ReactionBonus) ApplyNameableKeys(m map[string]string) {
 	r.Situation = nameables.Apply(r.Situation, m)
+}
+
+// SetParent implements Bonus.
+func (r *ReactionBonus) SetParent(parent fmt.Stringer) {
+	r.Parent = parent
+}
+
+// SetLevel implements Bonus.
+func (r *ReactionBonus) SetLevel(level fixed.F64d4) {
+	r.Level = level
 }
 
 // AddToTooltip implements Bonus.

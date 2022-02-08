@@ -19,6 +19,7 @@ import (
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 // HitLocationPrefix is the prefix used on all hit locations for DR bonuses.
@@ -75,6 +76,16 @@ func (d *DRBonus) FillWithNameableKeys(m map[string]string) {
 
 // ApplyNameableKeys implements Feature.
 func (d *DRBonus) ApplyNameableKeys(m map[string]string) {
+}
+
+// SetParent implements Bonus.
+func (d *DRBonus) SetParent(parent fmt.Stringer) {
+	d.Parent = parent
+}
+
+// SetLevel implements Bonus.
+func (d *DRBonus) SetLevel(level fixed.F64d4) {
+	d.Level = level
 }
 
 // AddToTooltip implements Bonus.

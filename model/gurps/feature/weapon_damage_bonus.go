@@ -21,6 +21,7 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 const (
@@ -115,6 +116,16 @@ func (w *WeaponDamageBonus) ApplyNameableKeys(m map[string]string) {
 		w.SpecializationCriteria.Qualifier = nameables.Apply(w.SpecializationCriteria.Qualifier, m)
 		w.CategoryCriteria.Qualifier = nameables.Apply(w.CategoryCriteria.Qualifier, m)
 	}
+}
+
+// SetParent implements Bonus.
+func (w *WeaponDamageBonus) SetParent(parent fmt.Stringer) {
+	w.Parent = parent
+}
+
+// SetLevel implements Bonus.
+func (w *WeaponDamageBonus) SetLevel(level fixed.F64d4) {
+	w.Level = level
 }
 
 // AddToTooltip implements Bonus.
