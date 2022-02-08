@@ -72,6 +72,13 @@ func (a *Attribute) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&a.AttributeData)
 }
 
+// Clone a copy of this.
+func (a *Attribute) Clone(entity *Entity) *Attribute {
+	clone := *a
+	clone.Entity = entity
+	return &clone
+}
+
 // ID returns the ID.
 func (a *Attribute) ID() string {
 	return a.AttrID
@@ -149,8 +156,8 @@ func (a *Attribute) PointCost() fixed.F64d4 {
 }
 
 // IsThresholdOpMet if the given ThresholdOp is met.
-func IsThresholdOpMet(op attribute.ThresholdOp, attributes map[string]*Attribute) bool {
-	for _, one := range attributes {
+func IsThresholdOpMet(op attribute.ThresholdOp, attributes *Attributes) bool {
+	for _, one := range attributes.Set {
 		if threshold := one.CurrentThreshold(); threshold != nil && threshold.ContainsOp(op) {
 			return true
 		}
@@ -159,9 +166,9 @@ func IsThresholdOpMet(op attribute.ThresholdOp, attributes map[string]*Attribute
 }
 
 // CountThresholdOpMet counts the number of times the given ThresholdOp is met.
-func CountThresholdOpMet(op attribute.ThresholdOp, attributes map[string]*Attribute) int {
+func CountThresholdOpMet(op attribute.ThresholdOp, attributes *Attributes) int {
 	total := 0
-	for _, one := range attributes {
+	for _, one := range attributes.Set {
 		if threshold := one.CurrentThreshold(); threshold != nil && threshold.ContainsOp(op) {
 			total++
 		}

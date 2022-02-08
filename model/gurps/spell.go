@@ -33,20 +33,21 @@ import (
 
 // SpellItem holds the Spell data that only exists in non-containers.
 type SpellItem struct {
-	TechLevel       *string             `json:"tech_level,omitempty"`
-	Difficulty      AttributeDifficulty `json:"difficulty"`
-	College         []string            `json:"college,omitempty"`
-	PowerSource     string              `json:"power_source,omitempty"`
-	Class           string              `json:"spell_class,omitempty"`
-	Resist          string              `json:"resist,omitempty"`
-	CastingCost     string              `json:"casting_cost,omitempty"`
-	MaintenanceCost string              `json:"maintenance_cost,omitempty"`
-	CastingTime     string              `json:"casting_time,omitempty"`
-	Duration        string              `json:"duration,omitempty"`
-	RitualSkillName string              `json:"base_skill,omitempty"`
-	Points          fixed.F64d4         `json:"points,omitempty"`
-	Prereq          *PrereqList         `json:"prereqs,omitempty"`
-	Weapons         []*Weapon           `json:"weapons,omitempty"`
+	TechLevel         *string             `json:"tech_level,omitempty"`
+	Difficulty        AttributeDifficulty `json:"difficulty"`
+	College           []string            `json:"college,omitempty"`
+	PowerSource       string              `json:"power_source,omitempty"`
+	Class             string              `json:"spell_class,omitempty"`
+	Resist            string              `json:"resist,omitempty"`
+	CastingCost       string              `json:"casting_cost,omitempty"`
+	MaintenanceCost   string              `json:"maintenance_cost,omitempty"`
+	CastingTime       string              `json:"casting_time,omitempty"`
+	Duration          string              `json:"duration,omitempty"`
+	RitualSkillName   string              `json:"base_skill,omitempty"`
+	RitualPrereqCount int                 `json:"prereq_count,omitempty"`
+	Points            fixed.F64d4         `json:"points,omitempty"`
+	Prereq            *PrereqList         `json:"prereqs,omitempty"`
+	Weapons           []*Weapon           `json:"weapons,omitempty"`
 }
 
 // SpellContainer holds the Spell data that only exists in containers.

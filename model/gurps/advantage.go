@@ -46,7 +46,6 @@ type AdvantageItem struct {
 	Social         bool             `json:"social,omitempty"`
 	Exotic         bool             `json:"exotic,omitempty"`
 	Supernatural   bool             `json:"supernatural,omitempty"`
-	Disabled       bool             `json:"disabled,omitempty"`
 	RoundCostDown  bool             `json:"round_down,omitempty"`
 }
 
@@ -66,6 +65,7 @@ type AdvantageData struct {
 	PageRef             string                    `json:"reference,omitempty"`
 	LocalNotes          string                    `json:"notes,omitempty"`
 	VTTNotes            string                    `json:"vtt_notes,omitempty"`
+	Disabled            bool                      `json:"disabled,omitempty"`
 	CR                  advantage.SelfControlRoll `json:"cr,omitempty"`
 	CRAdj               SelfControlRollAdj        `json:"cr_adj,omitempty"`
 	Modifiers           []*AdvantageModifier      `json:"modifiers,omitempty"`

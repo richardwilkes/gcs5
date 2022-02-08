@@ -51,7 +51,7 @@ type EntityData struct {
 	TotalPoints      fixed.F64d4            `json:"total_points"`
 	Profile          *Profile               `json:"profile,omitempty"`
 	SheetSettings    *SheetSettings         `json:"settings,omitempty"`
-	Attributes       map[string]*Attribute  `json:"attributes,omitempty"`
+	Attributes       *Attributes            `json:"attributes,omitempty"`
 	Advantages       []*Advantage           `json:"advantages,omitempty"`
 	Skills           []*Skill               `json:"skills,omitempty"`
 	Spells           []*Spell               `json:"spells,omitempty"`
@@ -85,11 +85,6 @@ func NewEntityFromFile(fileSystem fs.FS, filePath string) (*Entity, error) {
 	return &entity, nil
 }
 
-// SaveEntity writes the Entity to the file as JSON.
-func SaveEntity(entity *Entity, filePath string) error {
-	return jio.SaveToFile(context.Background(), filePath, entity)
-}
-
 // NewEntity creates a new Entity.
 func NewEntity(entityType datafile.Type) *Entity {
 	entity := &Entity{
@@ -98,21 +93,23 @@ func NewEntity(entityType datafile.Type) *Entity {
 			ID:          id.NewUUID(),
 			TotalPoints: fixed.F64d4FromInt(SettingsProvider.GeneralSettings().InitialPoints),
 			Profile:     &Profile{},
-			Attributes:  make(map[string]*Attribute),
 			Advantages:  nil,
 			CreatedOn:   jio.Now(),
 		},
 	}
 	entity.SheetSettings = SettingsProvider.SheetSettings().Clone(entity)
-	for attrID := range entity.SheetSettings.Attributes.Set {
-		entity.Attributes[attrID] = NewAttribute(entity, attrID)
-	}
+	entity.Attributes = NewAttributes(entity)
 	if SettingsProvider.GeneralSettings().AutoFillProfile {
 		entity.Profile.AutoFill(entity)
 	}
 	entity.ModifiedOn = entity.CreatedOn
 	entity.Recalculate()
 	return entity
+}
+
+// Save the Entity to a file as JSON.
+func (e *Entity) Save(filePath string) error {
+	return jio.SaveToFile(context.Background(), filePath, e)
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -314,7 +311,7 @@ func (e *Entity) UpdateSpells() bool {
 // AttributePoints returns the number of points spent on attributes.
 func (e *Entity) AttributePoints() fixed.F64d4 {
 	var total fixed.F64d4
-	for _, attr := range e.Attributes {
+	for _, attr := range e.Attributes.Set {
 		total += attr.PointCost()
 	}
 	return total
@@ -737,7 +734,7 @@ func (e *Entity) ResolveVariable(variableName string) string {
 		return e.Profile.AdjustedSizeModifier().String()
 	}
 	parts := strings.SplitN(variableName, ".", 2)
-	attr := e.Attributes[parts[0]]
+	attr := e.Attributes.Set[parts[0]]
 	if attr == nil {
 		jot.Warn("no such variable: $" + variableName)
 		return ""
@@ -764,7 +761,7 @@ func (e *Entity) ResolveVariable(variableName string) string {
 // ResolveAttributeDef resolves the given attribute ID to its AttributeDef, or nil.
 func (e *Entity) ResolveAttributeDef(attrID string) *AttributeDef {
 	if e != nil && e.Type == datafile.PC {
-		if a, ok := e.Attributes[attrID]; ok {
+		if a, ok := e.Attributes.Set[attrID]; ok {
 			return a.AttributeDef()
 		}
 	}
@@ -782,7 +779,7 @@ func (e *Entity) ResolveAttributeName(attrID string) string {
 // ResolveAttribute resolves the given attribute ID to its Attribute, or nil.
 func (e *Entity) ResolveAttribute(attrID string) *Attribute {
 	if e != nil && e.Type == datafile.PC {
-		if a, ok := e.Attributes[attrID]; ok {
+		if a, ok := e.Attributes.Set[attrID]; ok {
 			return a
 		}
 	}

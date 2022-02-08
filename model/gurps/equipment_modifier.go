@@ -34,13 +34,13 @@ const equipmentModifierTypeKey = "modifier"
 
 // EquipmentModifierItem holds the EquipmentModifier data that only exists in non-containers.
 type EquipmentModifierItem struct {
+	CostType     equipment.ModifierCostType   `json:"cost_type"`
+	WeightType   equipment.ModifierWeightType `json:"weight_type"`
+	Disabled     bool                         `json:"disabled,omitempty"`
 	TechLevel    string                       `json:"tech_level,omitempty"`
 	CostAmount   string                       `json:"cost,omitempty"`
 	WeightAmount string                       `json:"weight,omitempty"`
 	Features     feature.Features             `json:"features,omitempty"`
-	CostType     equipment.ModifierCostType   `json:"cost_type,omitempty"`
-	WeightType   equipment.ModifierWeightType `json:"weight_type,omitempty"`
-	Disabled     bool                         `json:"disabled,omitempty"`
 }
 
 // EquipmentModifierContainer holds the EquipmentModifier data that only exists in containers.

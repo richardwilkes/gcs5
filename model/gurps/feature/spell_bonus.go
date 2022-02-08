@@ -38,7 +38,7 @@ var _ Bonus = &SpellBonus{}
 type SpellBonus struct {
 	Parent           fmt.Stringer    `json:"-"`
 	Type             Type            `json:"type"`
-	SpellMatchType   spell.MatchType `json:"match,omitempty"`
+	SpellMatchType   spell.MatchType `json:"match"`
 	NameCriteria     criteria.String `json:"name,omitempty"`
 	CategoryCriteria criteria.String `json:"category,omitempty"`
 	LeveledAmount

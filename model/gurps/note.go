@@ -12,11 +12,15 @@
 package gurps
 
 import (
+	"context"
+	"io/fs"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/id"
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/errs"
 )
 
 const noteTypeKey = "note"
@@ -42,6 +46,30 @@ type Note struct {
 	Parent *Note
 }
 
+type noteListData struct {
+	Current []*Note `json:"notes"`
+}
+
+// NewNotesFromFile loads an Note list from a file.
+func NewNotesFromFile(fileSystem fs.FS, filePath string) ([]*Note, error) {
+	var data struct {
+		noteListData
+		OldKey []*Note `json:"rows"`
+	}
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
+		return nil, errs.NewWithCause("invalid notes file: "+filePath, err)
+	}
+	if len(data.Current) != 0 {
+		return data.Current, nil
+	}
+	return data.OldKey, nil
+}
+
+// SaveNotes writes the Note list to the file as JSON.
+func SaveNotes(notes []*Note, filePath string) error {
+	return jio.SaveToFile(context.Background(), filePath, &noteListData{Current: notes})
+}
+
 // NewNote creates a new Note.
 func NewNote(parent *Note, container bool) *Note {
 	n := Note{
@@ -56,6 +84,14 @@ func NewNote(parent *Note, container bool) *Note {
 		n.NoteContainer = &NoteContainer{Open: true}
 	}
 	return &n
+}
+
+// MarshalJSON implements json.Marshaler.
+func (n *Note) MarshalJSON() ([]byte, error) {
+	if !n.Container() {
+		n.NoteContainer = nil
+	}
+	return json.Marshal(&n.NoteData)
 }
 
 // UnmarshalJSON implements json.Unmarshaler.

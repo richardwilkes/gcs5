@@ -27,14 +27,22 @@ type AttributeDifficulty struct {
 
 func (a *AttributeDifficulty) String() string {
 	if a.Attribute == "" {
-		return string(a.Difficulty)
+		return a.Difficulty.String()
 	}
-	return a.Attribute + "/" + string(a.Difficulty)
+	return a.Attribute + "/" + a.Difficulty.String()
+}
+
+// Key returns the value that will be serialized.
+func (a *AttributeDifficulty) Key() string {
+	if a.Attribute == "" {
+		return a.Difficulty.Key()
+	}
+	return a.Attribute + "/" + a.Difficulty.Key()
 }
 
 // MarshalJSON implements json.Marshaler.
 func (a *AttributeDifficulty) MarshalJSON() ([]byte, error) {
-	return json.Marshal(a.String())
+	return json.Marshal(a.Key())
 }
 
 // UnmarshalJSON implements json.Unmarshaler.

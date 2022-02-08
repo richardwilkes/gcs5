@@ -15,11 +15,12 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
+	"path/filepath"
 	"time"
 
 	"github.com/richardwilkes/gcs/internal/ui"
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/ancestry"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/toolbox/atexit"
@@ -42,25 +43,87 @@ func main() {
 	fileList := jotrotate.ParseAndSetup(cl)
 
 	settings.Global() // Here to force early initialization
-
-	entries, err := os.ReadDir("../gcs_master_library/Library/Settings")
-	jot.FatalIfErr(err)
-	for _, entry := range entries {
-		name := entry.Name()
-		if strings.HasSuffix(name, ".ghl") {
-			data, err := gurps.NewBodyTypeFromFile(os.DirFS("../gcs_master_library/Library/Settings"), name)
-			jot.FatalIfErr(err)
-			jot.FatalIfErr(data.Save("samples_converted/" + name))
-
-			var m map[string]interface{}
-			jot.FatalIfErr(jio.LoadFromFile(context.Background(), "../gcs_master_library/Library/Settings/"+name, &m))
-			jot.FatalIfErr(jio.SaveToFile(context.Background(), "samples_converted/orig-sorted-"+name, m))
-			m = make(map[string]interface{})
-			jot.FatalIfErr(jio.LoadFromFile(context.Background(), "samples_converted/"+name, &m))
-			jot.FatalIfErr(jio.SaveToFile(context.Background(), "samples_converted/sorted-"+name, m))
-		}
-	}
+	processDir("../gcs_master_library/Library/Home Brew/Characters")
 	atexit.Exit(0)
 
 	ui.Start(fileList) // Never returns
+}
+
+func processDir(dir string) {
+	const convertedDir = "converted/"
+	entries, err := os.ReadDir(dir)
+	jot.FatalIfErr(err)
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		switch filepath.Ext(name) {
+		case ".adq":
+			var adq []*gurps.Advantage
+			adq, err = gurps.NewAdvantagesFromFile(os.DirFS(dir), name)
+			jot.FatalIfErr(err)
+			jot.FatalIfErr(gurps.SaveAdvantages(adq, convertedDir+name))
+		case ".adm":
+			var adm []*gurps.AdvantageModifier
+			adm, err = gurps.NewAdvantageModifiersFromFile(os.DirFS(dir), name)
+			jot.FatalIfErr(err)
+			jot.FatalIfErr(gurps.SaveAdvantageModifiers(adm, convertedDir+name))
+		case ".eqm":
+			var eqm []*gurps.EquipmentModifier
+			eqm, err = gurps.NewEquipmentModifiersFromFile(os.DirFS(dir), name)
+			jot.FatalIfErr(err)
+			jot.FatalIfErr(gurps.SaveEquipmentModifiers(eqm, convertedDir+name))
+		case ".eqp":
+			var eqp []*gurps.Equipment
+			eqp, err = gurps.NewEquipmentFromFile(os.DirFS(dir), name)
+			jot.FatalIfErr(err)
+			jot.FatalIfErr(gurps.SaveEquipment(eqp, convertedDir+name))
+		case ".not":
+			var not []*gurps.Note
+			not, err = gurps.NewNotesFromFile(os.DirFS(dir), name)
+			jot.FatalIfErr(err)
+			jot.FatalIfErr(gurps.SaveNotes(not, convertedDir+name))
+		case ".skl":
+			var skl []*gurps.Skill
+			skl, err = gurps.NewSkillsFromFile(os.DirFS(dir), name)
+			jot.FatalIfErr(err)
+			jot.FatalIfErr(gurps.SaveSkills(skl, convertedDir+name))
+		case ".spl":
+			var spl []*gurps.Spell
+			spl, err = gurps.NewSpellsFromFile(os.DirFS(dir), name)
+			jot.FatalIfErr(err)
+			jot.FatalIfErr(gurps.SaveSpells(spl, convertedDir+name))
+		case ".ghl":
+			var ghl *gurps.BodyType
+			ghl, err = gurps.NewBodyTypeFromFile(os.DirFS(dir), name)
+			jot.FatalIfErr(err)
+			jot.FatalIfErr(ghl.Save(convertedDir + name))
+		case ".gas":
+			var gas *gurps.AttributeDefs
+			gas, err = gurps.NewAttributeDefsFromFile(os.DirFS(dir), name)
+			jot.FatalIfErr(err)
+			jot.FatalIfErr(gas.Save(convertedDir + name))
+		case ".ancestry":
+			var anc *ancestry.Ancestry
+			anc, err = ancestry.NewAncestoryFromFile(os.DirFS(dir), name)
+			jot.FatalIfErr(err)
+			jot.FatalIfErr(anc.Save(convertedDir + name))
+		case ".gcs":
+			var entity *gurps.Entity
+			entity, err = gurps.NewEntityFromFile(os.DirFS(dir), name)
+			jot.FatalIfErr(err)
+			jot.FatalIfErr(entity.Save(convertedDir + name))
+		//case ".gct":
+		default:
+			fmt.Println("skipping " + name)
+			continue
+		}
+		var m map[string]interface{}
+		jot.FatalIfErr(jio.LoadFromFile(context.Background(), dir+"/"+name, &m))
+		jot.FatalIfErr(jio.SaveToFile(context.Background(), convertedDir+"orig-sorted-"+name, m))
+		m = make(map[string]interface{})
+		jot.FatalIfErr(jio.LoadFromFile(context.Background(), convertedDir+name, &m))
+		jot.FatalIfErr(jio.SaveToFile(context.Background(), convertedDir+"/sorted-"+name, m))
+	}
 }

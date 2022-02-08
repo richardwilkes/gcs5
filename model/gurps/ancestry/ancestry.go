@@ -41,7 +41,7 @@ func Lookup(name string, libraries library.Libraries) *Ancestry {
 	for _, lib := range AvailableAncestries(libraries) {
 		for _, one := range lib.List {
 			if one.Name == name {
-				if a, err := NewAncestoryFromFS(one.FileSystem, one.FilePath); err != nil {
+				if a, err := NewAncestoryFromFile(one.FileSystem, one.FilePath); err != nil {
 					jot.Warn(err)
 				} else {
 					return a
@@ -52,8 +52,8 @@ func Lookup(name string, libraries library.Libraries) *Ancestry {
 	return nil
 }
 
-// NewAncestoryFromFS creates a new Ancestry from a file.
-func NewAncestoryFromFS(fileSystem fs.FS, filePath string) (*Ancestry, error) {
+// NewAncestoryFromFile creates a new Ancestry from a file.
+func NewAncestoryFromFile(fileSystem fs.FS, filePath string) (*Ancestry, error) {
 	var ancestry Ancestry
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &ancestry); err != nil {
 		return nil, err
@@ -62,6 +62,11 @@ func NewAncestoryFromFS(fileSystem fs.FS, filePath string) (*Ancestry, error) {
 		ancestry.Name = xfs.BaseName(filePath)
 	}
 	return &ancestry, nil
+}
+
+// Save writes the Ancestry to the file as JSON.
+func (a *Ancestry) Save(filePath string) error {
+	return jio.SaveToFile(context.Background(), filePath, a)
 }
 
 // RandomGender returns a randomized gender.
