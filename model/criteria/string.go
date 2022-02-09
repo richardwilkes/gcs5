@@ -45,7 +45,7 @@ func (s String) Matches(value ...string) bool {
 			return true
 		}
 	}
-	return false
+	return s.Compare.Matches(s.Qualifier, "")
 }
 
 func (s String) String() string {
