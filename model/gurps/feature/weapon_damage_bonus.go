@@ -79,11 +79,11 @@ func NewWeaponDamageBonus() *WeaponDamageBonus {
 func (w *WeaponDamageBonus) FeatureMapKey() string {
 	switch w.SelectionType {
 	case weapon.WithRequiredSkill:
-		return w.buildKey(WeaponNamedIDPrefix)
+		return w.buildKey(SkillNameID)
 	case weapon.ThisWeapon:
 		return ThisWeaponID
 	case weapon.WithName:
-		return w.buildKey(SkillNameID)
+		return w.buildKey(WeaponNamedIDPrefix)
 	default:
 		jot.Fatal(1, "invalid selection type: ", w.SelectionType)
 		return ""
