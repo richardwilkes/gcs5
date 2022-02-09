@@ -600,6 +600,14 @@ func (e *Entity) BestSkillNamed(name, specialization string, requirePoints bool,
 	return best
 }
 
+// BaseSkill returns the best skill for the given default, or nil.
+func (e *Entity) BaseSkill(def *SkillDefault, requirePoints bool) *Skill {
+	if e == nil || def == nil || !def.SkillBased() {
+		return nil
+	}
+	return e.BestSkillNamed(def.Name, def.Specialization, requirePoints, nil)
+}
+
 // SkillNamed returns a list of skills that match.
 func (e *Entity) SkillNamed(name, specialization string, requirePoints bool, excludes map[string]bool) []*Skill {
 	var list []*Skill
@@ -648,12 +656,34 @@ func (e *Entity) SkillPointComparedBonusFor(featureID, name, specialization stri
 	return total
 }
 
+// SpellPointBonusesFor returns the total point bonus for the matching spell.
+func (e *Entity) SpellPointBonusesFor(featureID, qualifier string, categories []string, tooltip *xio.ByteBuffer) fixed.F64d4 {
+	level := e.BonusFor(featureID, tooltip)
+	level += e.BonusFor(featureID+"/"+strings.ToLower(qualifier), tooltip)
+	level += e.SpellPointComparedBonusFor(featureID+"*", qualifier, categories, tooltip)
+	return level
+}
+
 // SpellComparedBonusFor returns the total bonus for the matching spell bonuses.
 func (e *Entity) SpellComparedBonusFor(featureID, name string, categories []string, tooltip *xio.ByteBuffer) fixed.F64d4 {
 	var total fixed.F64d4
 	for _, f := range e.featureMap[strings.ToLower(featureID)] {
 		if bonus, ok := f.(*feature.SpellBonus); ok &&
 			bonus.NameCriteria.Matches(name) &&
+			bonus.CategoryCriteria.Matches(categories...) {
+			total += bonus.AdjustedAmount()
+			bonus.AddToTooltip(tooltip)
+		}
+	}
+	return total
+}
+
+// SpellPointComparedBonusFor returns the total bonus for the matching spell point bonuses.
+func (e *Entity) SpellPointComparedBonusFor(featureID, qualifier string, categories []string, tooltip *xio.ByteBuffer) fixed.F64d4 {
+	var total fixed.F64d4
+	for _, f := range e.featureMap[strings.ToLower(featureID)] {
+		if bonus, ok := f.(*feature.SpellPointBonus); ok &&
+			bonus.NameCriteria.Matches(qualifier) &&
 			bonus.CategoryCriteria.Matches(categories...) {
 			total += bonus.AdjustedAmount()
 			bonus.AddToTooltip(tooltip)

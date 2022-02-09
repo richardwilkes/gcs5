@@ -284,9 +284,7 @@ func (s *Skill) AdjustedPoints() fixed.F64d4 {
 	if s.Entity != nil && s.Entity.Type == datafile.PC {
 		points += s.Entity.SkillPointComparedBonusFor(feature.SkillPointsID+"*", s.Name, s.Specialization, s.Categories, nil)
 		points += s.Entity.BonusFor(feature.SkillPointsID+"/"+strings.ToLower(s.Name), nil)
-		if points < 0 {
-			points = 0
-		}
+		points = points.Max(0)
 	}
 	return points
 }
@@ -347,36 +345,36 @@ func (s *Skill) calculateLevel() skill.Level {
 	}
 }
 
-func (s *Skill) calculateTechniqueLevel(requirePoints bool) skill.Level {
+// CalculateTechniqueLevel returns the calculated level for a technique.
+func CalculateTechniqueLevel(entity *Entity, name, specialization string, categories []string, def *SkillDefault, difficulty skill.Difficulty, points fixed.F64d4, requirePoints bool, limitModifier *fixed.F64d4) skill.Level {
 	var tooltip xio.ByteBuffer
 	var relativeLevel fixed.F64d4
 	level := fixed.F64d4Min
-	if s.Entity != nil {
-		if s.TechniqueDefault.DefaultType == gid.Skill {
-			if sk := s.baseSkill(s.TechniqueDefault, requirePoints); sk != nil {
+	if entity != nil {
+		if def.DefaultType == gid.Skill {
+			if sk := entity.BaseSkill(def, requirePoints); sk != nil {
 				level = sk.Level(nil)
 			}
 		} else {
 			// Take the modifier back out, as we wanted the base, not the final value.
-			level = s.TechniqueDefault.SkillLevelFast(s.Entity, true, nil, false) - s.TechniqueDefault.Modifier
+			level = def.SkillLevelFast(entity, true, nil, false) - def.Modifier
 		}
 		if level != fixed.F64d4Min {
 			baseLevel := level
-			level += s.TechniqueDefault.Modifier
-			pts := s.AdjustedPoints()
-			if s.Difficulty.Difficulty == skill.Hard {
-				pts--
+			level += def.Modifier
+			if difficulty == skill.Hard {
+				points -= fxp.One
 			}
-			if pts > 0 {
-				relativeLevel = pts
+			if points > 0 {
+				relativeLevel = points
 			}
 			if level != fixed.F64d4Min {
-				relativeLevel += s.Entity.BonusFor(feature.SkillNameID+"/"+strings.ToLower(s.Name), &tooltip)
-				relativeLevel += s.Entity.SkillComparedBonusFor(feature.SkillNameID+"*", s.Name, s.Specialization, s.Categories, &tooltip)
+				relativeLevel += entity.BonusFor(feature.SkillNameID+"/"+strings.ToLower(name), &tooltip)
+				relativeLevel += entity.SkillComparedBonusFor(feature.SkillNameID+"*", name, specialization, categories, &tooltip)
 				level += relativeLevel
 			}
-			if s.TechniqueLimitModifier != nil {
-				if max := baseLevel + *s.TechniqueLimitModifier; level > max {
+			if limitModifier != nil {
+				if max := baseLevel + *limitModifier; level > max {
 					relativeLevel -= level - max
 					level = max
 				}
@@ -398,7 +396,7 @@ func (s *Skill) UpdateLevel() bool {
 		s.LevelData = s.calculateLevel()
 	} else {
 		s.DefaultedFrom = nil
-		s.LevelData = s.calculateTechniqueLevel(true)
+		s.LevelData = CalculateTechniqueLevel(s.Entity, s.Name, s.Specialization, s.Categories, s.TechniqueDefault, s.Difficulty.Difficulty, s.AdjustedPoints(), true, s.TechniqueLimitModifier)
 	}
 	return saved != s.LevelData
 }
@@ -470,13 +468,6 @@ func (s *Skill) inDefaultChain(def *SkillDefault, lookedAt map[*Skill]bool) bool
 		hadOne = true
 	}
 	return !hadOne
-}
-
-func (s *Skill) baseSkill(def *SkillDefault, requirePoints bool) *Skill {
-	if s.Entity == nil || def == nil || !def.SkillBased() {
-		return nil
-	}
-	return s.Entity.BestSkillNamed(def.Name, def.Specialization, requirePoints, nil)
 }
 
 // TechniqueSatisfied returns true if the Technique is satisfied.

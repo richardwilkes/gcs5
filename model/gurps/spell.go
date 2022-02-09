@@ -19,6 +19,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/fxp"
+	"github.com/richardwilkes/gcs/model/gurps/datafile"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
@@ -132,7 +133,18 @@ func NewSpell(entity *Entity, parent *Spell, container bool) *Spell {
 			Prereq:      NewPrereqList(),
 		}
 	}
+	s.UpdateLevel()
 	return &s
+}
+
+// NewRitualMagicSpell creates a new Ritual Magic Spell.
+func NewRitualMagicSpell(entity *Entity, parent *Spell) *Spell {
+	s := NewSpell(entity, parent, false)
+	s.Type = gid.RitualMagicSpell
+	s.RitualSkillName = "Ritual Magic"
+	s.Points = 0
+	s.UpdateLevel()
+	return s
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -206,40 +218,48 @@ func (s *Spell) AdjustedRelativeLevel() fixed.F64d4 {
 // UpdateLevel updates the level of the spell, returning true if it has changed.
 func (s *Spell) UpdateLevel() bool {
 	saved := s.LevelData
-	s.LevelData = s.CalculateLevel(s.Points, s.Difficulty, s.College, s.Categories, s.PowerSource, s.Name)
+	if s.Type == gid.RitualMagicSpell {
+		s.LevelData = s.calculateRitualMagicLevel()
+	} else {
+		s.LevelData = s.calculateLevel()
+	}
 	return saved != s.LevelData
 }
 
-// Level returns the computed level.
+// Level returns the computed level without updating it.
 func (s *Spell) Level() fixed.F64d4 {
-	return s.CalculateLevel(s.Points, s.Difficulty, s.College, s.Categories, s.PowerSource, s.Name).Level
+	if s.Type == gid.RitualMagicSpell {
+		return s.calculateRitualMagicLevel().Level
+	}
+	return s.calculateLevel().Level
 }
 
-// CalculateLevel computes the level.
-func (s *Spell) CalculateLevel(points fixed.F64d4, attrDiff AttributeDifficulty, colleges, categories []string, powerSource, name string) skill.Level {
+func (s *Spell) calculateLevel() skill.Level {
 	var tooltip xio.ByteBuffer
-	relativeLevel := attrDiff.Difficulty.BaseRelativeLevel()
+	relativeLevel := s.Difficulty.Difficulty.BaseRelativeLevel()
 	level := fxp.NegOne
 	if s.Entity != nil {
-		level = s.Entity.ResolveAttributeCurrent(attrDiff.Attribute)
-		if attrDiff.Difficulty == skill.Wildcard {
-			points = points.Div(fxp.Three).Trunc()
+		pts := s.Points
+		level = s.Entity.ResolveAttributeCurrent(s.Difficulty.Attribute)
+		if s.Difficulty.Difficulty == skill.Wildcard {
+			pts = pts.Div(fxp.Three).Trunc()
 		}
 		switch {
-		case points < fxp.One:
+		case pts < fxp.One:
 			level = fxp.NegOne
 			relativeLevel = 0
-		case points == fxp.One:
+		case pts == fxp.One:
 		// relativeLevel is preset to this point value
-		case points < fxp.Four:
+		case pts < fxp.Four:
 			relativeLevel += fxp.One
 		default:
-			relativeLevel += fxp.One + points.Div(fxp.Four).Trunc()
+			relativeLevel += fxp.One + pts.Div(fxp.Four).Trunc()
 		}
 		if level != fxp.One {
-			relativeLevel += s.BestCollegeSpellBonus(categories, colleges, &tooltip)
-			relativeLevel += s.SpellBonusesFor(feature.SpellPowerSourceID, powerSource, categories, &tooltip)
-			relativeLevel += s.SpellBonusesFor(feature.SpellNameID, name, categories, &tooltip)
+			relativeLevel += s.BestCollegeSpellBonus(s.Categories, s.College, &tooltip)
+			relativeLevel += s.SpellBonusesFor(feature.SpellPowerSourceID, s.PowerSource, s.Categories, &tooltip)
+			relativeLevel += s.SpellBonusesFor(feature.SpellNameID, s.Name, s.Categories, &tooltip)
+			relativeLevel = relativeLevel.Trunc()
 			level += relativeLevel
 		}
 	}
@@ -248,6 +268,56 @@ func (s *Spell) CalculateLevel(points fixed.F64d4, attrDiff AttributeDifficulty,
 		RelativeLevel: relativeLevel,
 		Tooltip:       tooltip.String(),
 	}
+}
+
+func (s *Spell) calculateRitualMagicLevel() skill.Level {
+	var skillLevel skill.Level
+	if len(s.College) == 0 {
+		skillLevel = s.determineSkillLevelForCollege("")
+	} else {
+		for _, college := range s.College {
+			possible := s.determineSkillLevelForCollege(college)
+			if skillLevel.Level < possible.Level {
+				skillLevel = possible
+			}
+		}
+	}
+	if s.Entity != nil {
+		tooltip := &xio.ByteBuffer{}
+		tooltip.WriteString(skillLevel.Tooltip)
+		levels := s.BestCollegeSpellBonus(s.Categories, s.College, tooltip)
+		levels += s.SpellBonusesFor(feature.SpellPowerSourceID, s.PowerSource, s.Categories, tooltip)
+		levels += s.SpellBonusesFor(feature.SpellNameID, s.Name, s.Categories, tooltip)
+		levels = levels.Trunc()
+		skillLevel.Level += levels
+		skillLevel.RelativeLevel += levels
+		skillLevel.Tooltip = tooltip.String()
+	}
+	return skillLevel
+}
+
+func (s *Spell) determineSkillLevelForCollege(college string) skill.Level {
+	def := &SkillDefault{
+		DefaultType:    gid.Skill,
+		Name:           s.RitualSkillName,
+		Specialization: college,
+		Modifier:       fixed.F64d4FromInt(-s.RitualPrereqCount),
+	}
+	if college == "" {
+		def.Name = ""
+	}
+	var limit fixed.F64d4
+	skillLevel := CalculateTechniqueLevel(s.Entity, s.Name, college, s.Categories, def, s.Difficulty.Difficulty, s.AdjustedPoints(), false, &limit)
+	// CalculateTechniqueLevel() does not add the default skill modifier to the relative level, only to the final level
+	skillLevel.RelativeLevel += def.Modifier
+	def.Specialization = ""
+	def.Modifier -= fxp.Six
+	fallback := CalculateTechniqueLevel(s.Entity, s.Name, college, s.Categories, def, s.Difficulty.Difficulty, s.AdjustedPoints(), false, &limit)
+	fallback.RelativeLevel += def.Modifier
+	if skillLevel.Level >= fallback.Level {
+		return skillLevel
+	}
+	return fallback
 }
 
 // BestCollegeSpellBonus returns the best college spell bonus for this spell.
@@ -370,4 +440,48 @@ func (s *Spell) String() string {
 		}
 	}
 	return buffer.String()
+}
+
+// AdjustedPoints returns the points, adjusted for any bonuses.
+func (s *Spell) AdjustedPoints() fixed.F64d4 {
+	if s.Container() {
+		var total fixed.F64d4
+		for _, one := range s.Children {
+			total += one.AdjustedPoints()
+		}
+		return total
+	}
+	points := s.Points
+	if s.Entity != nil && s.Entity.Type == datafile.PC {
+		points += s.bestCollegeSpellPointBonus(nil)
+		points += s.Entity.SpellPointBonusesFor(feature.SpellPowerSourcePointsID, s.PowerSource, s.Categories, nil)
+		points += s.Entity.SpellPointBonusesFor(feature.SpellPointsID, s.Name, s.Categories, nil)
+		points = points.Max(0)
+	}
+	return points
+}
+
+func (s *Spell) bestCollegeSpellPointBonus(tooltip *xio.ByteBuffer) fixed.F64d4 {
+	best := fixed.F64d4Min
+	bestTooltip := ""
+	for _, college := range s.College {
+		var buffer *xio.ByteBuffer
+		if tooltip != nil {
+			buffer = &xio.ByteBuffer{}
+		}
+		points := s.Entity.SpellPointBonusesFor(feature.SpellCollegePointsID, college, s.Categories, buffer)
+		if best < points {
+			best = points
+			if buffer != nil {
+				bestTooltip = buffer.String()
+			}
+		}
+	}
+	if tooltip != nil {
+		tooltip.WriteString(bestTooltip)
+	}
+	if best == fixed.F64d4Min {
+		best = 0
+	}
+	return best
 }
