@@ -371,7 +371,7 @@ func (s *Skill) bestDefaultWithPoints(excluded *SkillDefault) *SkillDefault {
 		case level > baseLine+fxp.One:
 			best.Points = fxp.Four.Mul(level - (baseLine + fxp.One))
 		default:
-			best.Points = -level.Min(0)
+			best.Points = -level.Max(0)
 		}
 	}
 	return best

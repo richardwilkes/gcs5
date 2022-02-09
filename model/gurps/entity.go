@@ -566,7 +566,7 @@ func (e *Entity) CostReductionFor(featureID string) fixed.F64d4 {
 	if total > fxp.Eighty {
 		total = fxp.Eighty
 	}
-	return total.Min(0)
+	return total.Max(0)
 }
 
 // AddDRBonusesFor locates any active DR bonuses and adds them to the map. If 'drMap' is nil, it will be created. The

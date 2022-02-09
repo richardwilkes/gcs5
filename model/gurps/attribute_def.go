@@ -96,7 +96,7 @@ func (a *AttributeDef) ComputeCost(entity *Entity, value, sizeModifier, costRedu
 		if costReduction > fxp.Eighty {
 			costReduction = fxp.Eighty
 		}
-		cost = cost.Mul(fxp.Hundred - costReduction)
+		cost = cost.Mul(fxp.Hundred - costReduction).Div(fxp.Hundred)
 	}
 	return fxp.Round(cost)
 }
