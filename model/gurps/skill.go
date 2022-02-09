@@ -169,9 +169,9 @@ func (s *Skill) MarshalJSON() ([]byte, error) {
 			case rsl == math.MinInt:
 				data.Calc.RelativeSkillLevel = "-"
 			case s.Type != gid.Technique:
-				s.Type = ResolveAttributeName(s.Entity, s.Difficulty.Attribute) + rsl.StringWithSign()
+				data.Calc.RelativeSkillLevel = ResolveAttributeName(s.Entity, s.Difficulty.Attribute) + rsl.StringWithSign()
 			default:
-				s.Type = rsl.StringWithSign()
+				data.Calc.RelativeSkillLevel = rsl.StringWithSign()
 			}
 			return json.Marshal(&data)
 		}
