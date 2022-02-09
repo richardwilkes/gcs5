@@ -65,9 +65,9 @@ type AdvantageData struct {
 	PageRef             string                    `json:"reference,omitempty"`
 	LocalNotes          string                    `json:"notes,omitempty"`
 	VTTNotes            string                    `json:"vtt_notes,omitempty"`
-	Disabled            bool                      `json:"disabled,omitempty"`
 	CR                  advantage.SelfControlRoll `json:"cr,omitempty"`
 	CRAdj               SelfControlRollAdj        `json:"cr_adj,omitempty"`
+	Disabled            bool                      `json:"disabled,omitempty"`
 	Modifiers           []*AdvantageModifier      `json:"modifiers,omitempty"`
 	UserDesc            string                    `json:"userdesc,omitempty"`
 	Categories          []string                  `json:"categories,omitempty"`

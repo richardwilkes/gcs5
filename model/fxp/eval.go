@@ -37,5 +37,4 @@ func EvaluateToNumber(expression string, resolver eval.VariableResolver) fixed.F
 	}
 	jot.Warn(errs.Newf("unable to resolve '%s' to a number", expression))
 	return 0
-
 }

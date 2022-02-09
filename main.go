@@ -114,7 +114,7 @@ func processDir(dir string) {
 			entity, err = gurps.NewEntityFromFile(os.DirFS(dir), name)
 			jot.FatalIfErr(err)
 			jot.FatalIfErr(entity.Save(convertedDir + name))
-		//case ".gct":
+		// case ".gct":
 		default:
 			fmt.Println("skipping " + name)
 			continue

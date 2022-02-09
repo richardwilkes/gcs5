@@ -49,7 +49,7 @@ var (
 		string string
 	}{
 		{
-			key:    "ftin",
+			key:    "ft_in",
 			string: i18n.Text("Feet & Inches"),
 		},
 		{
