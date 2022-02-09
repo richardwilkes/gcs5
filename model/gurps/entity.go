@@ -737,7 +737,7 @@ func (e *Entity) Move(enc datafile.Encumbrance) int {
 
 // Dodge returns the current Dodge value for the given Encumbrance.
 func (e *Entity) Dodge(enc datafile.Encumbrance) int {
-	dodge := e.ResolveAttributeCurrent(gid.BasicSpeed).Max(0)
+	dodge := fxp.Three + e.DodgeBonus + e.ResolveAttributeCurrent(gid.BasicSpeed).Max(0)
 	divisor := 2 * xmath.MinInt(CountThresholdOpMet(attribute.HalveDodge, e.Attributes), 2)
 	if divisor > 0 {
 		dodge = fxp.Ceil(dodge.Div(fixed.F64d4FromInt(divisor)))
