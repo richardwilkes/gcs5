@@ -265,8 +265,8 @@ func (w *Weapon) ResolvedRange() string {
 	var savedRange string
 	calcRange := w.Range
 	for calcRange != savedRange {
-		calcRange = w.resolveRange(calcRange, st)
 		savedRange = calcRange
+		calcRange = w.resolveRange(calcRange, st)
 	}
 	return calcRange
 }
@@ -425,7 +425,7 @@ func (w *Weapon) resolveRange(inRange string, st fixed.F64d4) string {
 	if last < max {
 		buffer.WriteString(inRange[last:])
 	}
-	return inRange
+	return buffer.String()
 }
 
 // ResolvedMinimumStrength returns the resolved minimum strength required to use this weapon, or 0 if there is none.

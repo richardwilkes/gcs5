@@ -179,10 +179,11 @@ func (h *HitLocation) SetSubTable(bodyType *BodyType) {
 	}
 }
 
-func (h *HitLocation) populateMap(m map[string]*HitLocation) {
+func (h *HitLocation) populateMap(entity *Entity, m map[string]*HitLocation) {
+	h.Entity = entity
 	m[h.LocID] = h
 	if h.SubTable != nil {
-		h.SubTable.populateMap(m)
+		h.SubTable.populateMap(entity, m)
 	}
 }
 

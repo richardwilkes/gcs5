@@ -142,3 +142,9 @@ func (s *SheetSettings) Clone(entity *Entity) *SheetSettings {
 	clone.HitLocations = s.HitLocations.Clone(entity, nil)
 	return &clone
 }
+
+// SetOwningEntity sets the owning entity and configures any sub-components as needed.
+func (s *SheetSettings) SetOwningEntity(entity *Entity) {
+	s.Entity = entity
+	s.HitLocations.Update(entity)
+}

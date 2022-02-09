@@ -80,7 +80,7 @@ func NewBodyTypeFromFile(fileSystem fs.FS, filePath string) (*BodyType, error) {
 	} else {
 		b = data.HitLocations
 	}
-	b.Update()
+	b.Update(nil)
 	return b, nil
 }
 
@@ -95,7 +95,7 @@ func (b *BodyType) Clone(entity *Entity, owningLocation *HitLocation) *BodyType 
 	for i, one := range b.Locations {
 		clone.Locations[i] = one.Clone(entity, clone)
 	}
-	clone.Update()
+	clone.Update(entity)
 	return clone
 }
 
@@ -105,10 +105,10 @@ func (b *BodyType) Save(filePath string) error {
 }
 
 // Update the role ranges and populate the lookup map.
-func (b *BodyType) Update() {
+func (b *BodyType) Update(entity *Entity) {
 	b.updateRollRanges()
 	b.locationLookup = make(map[string]*HitLocation)
-	b.populateMap(b.locationLookup)
+	b.populateMap(entity, b.locationLookup)
 }
 
 // SetOwningLocation sets the owning HitLocation.
@@ -126,9 +126,9 @@ func (b *BodyType) updateRollRanges() {
 	}
 }
 
-func (b *BodyType) populateMap(m map[string]*HitLocation) {
+func (b *BodyType) populateMap(entity *Entity, m map[string]*HitLocation) {
 	for _, location := range b.Locations {
-		location.populateMap(m)
+		location.populateMap(entity, m)
 	}
 }
 
@@ -151,9 +151,9 @@ func (b *BodyType) RemoveLocation(loc *HitLocation) {
 }
 
 // UniqueHitLocations returns the list of unique hit locations.
-func (b *BodyType) UniqueHitLocations() []*HitLocation {
+func (b *BodyType) UniqueHitLocations(entity *Entity) []*HitLocation {
 	if len(b.locationLookup) == 0 {
-		b.Update()
+		b.Update(entity)
 	}
 	locations := make([]*HitLocation, 0, len(b.locationLookup))
 	for _, v := range b.locationLookup {
@@ -172,9 +172,9 @@ func (b *BodyType) UniqueHitLocations() []*HitLocation {
 }
 
 // LookupLocationByID returns the HitLocation that matches the given ID.
-func (b *BodyType) LookupLocationByID(idStr string) *HitLocation {
+func (b *BodyType) LookupLocationByID(entity *Entity, idStr string) *HitLocation {
 	if len(b.locationLookup) == 0 {
-		b.Update()
+		b.Update(entity)
 	}
 	return b.locationLookup[idStr]
 }

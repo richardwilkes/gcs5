@@ -183,7 +183,7 @@ func (e *Entity) Recalculate() {
 }
 
 func (e *Entity) ensureAttachments() {
-	e.SheetSettings.Entity = e
+	e.SheetSettings.SetOwningEntity(e)
 	for _, attr := range e.Attributes.Set {
 		attr.Entity = e
 	}
