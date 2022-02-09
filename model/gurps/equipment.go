@@ -259,7 +259,7 @@ func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits)
 	if e.Container() {
 		var contained fixed.F64d4
 		for _, one := range e.Children {
-			contained += fixed.F64d4(one.AdjustedWeight(forSkills, defUnits))
+			contained += fixed.F64d4(one.ExtendedWeight(forSkills, defUnits))
 		}
 		var percentage, reduction fixed.F64d4
 		for _, one := range e.Features {
