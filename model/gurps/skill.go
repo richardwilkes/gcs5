@@ -398,7 +398,7 @@ func (s *Skill) bestDefault(excluded *SkillDefault) *SkillDefault {
 			}
 		}
 		if best < level {
-			best = s.LevelData.Level
+			best = level
 			bestDef = def.CloneWithoutLevelOrPoints()
 			bestDef.Level = level
 		}
