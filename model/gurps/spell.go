@@ -13,6 +13,7 @@ package gurps
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"math"
 	"strings"
@@ -158,25 +159,16 @@ func (s *Spell) MarshalJSON() ([]byte, error) {
 				Level              fixed.F64d4 `json:"level"`
 				RelativeSkillLevel string      `json:"rsl"`
 			}
-			data := struct {
+			return json.Marshal(&struct {
 				SpellData
 				Calc calc `json:"calc"`
 			}{
 				SpellData: s.SpellData,
 				Calc: calc{
-					Level: s.LevelData.Level,
+					Level:              s.LevelData.Level,
+					RelativeSkillLevel: s.RelativeLevel(),
 				},
-			}
-			rsl := s.AdjustedRelativeLevel()
-			switch {
-			case rsl == math.MinInt:
-				data.Calc.RelativeSkillLevel = "-"
-			case s.Type != gid.RitualMagicSpell:
-				data.Calc.RelativeSkillLevel = ResolveAttributeName(s.Entity, s.Difficulty.Attribute) + rsl.StringWithSign()
-			default:
-				data.Calc.RelativeSkillLevel = rsl.StringWithSign()
-			}
-			return json.Marshal(&data)
+			})
 		}
 	}
 	return json.Marshal(&s.SpellData)
@@ -203,6 +195,33 @@ func (s *Spell) Container() bool {
 	return strings.HasSuffix(s.Type, commonContainerKeyPostfix)
 }
 
+// Depth returns the number of parents this node has.
+func (s *Spell) Depth() int {
+	count := 0
+	p := s.Parent
+	for p != nil {
+		count++
+		p = p.Parent
+	}
+	return count
+}
+
+// RelativeLevel returns the adjusted relative level as a string.
+func (s *Spell) RelativeLevel() string {
+	if s.Container() || s.LevelData.Level <= 0 {
+		return ""
+	}
+	rsl := s.AdjustedRelativeLevel()
+	switch {
+	case rsl == math.MinInt:
+		return "-"
+	case s.Type != gid.RitualMagicSpell:
+		return ResolveAttributeName(s.Entity, s.Difficulty.Attribute) + rsl.StringWithSign()
+	default:
+		return rsl.StringWithSign()
+	}
+}
+
 // AdjustedRelativeLevel returns the relative skill level.
 func (s *Spell) AdjustedRelativeLevel() fixed.F64d4 {
 	if s.Container() {
@@ -224,6 +243,18 @@ func (s *Spell) UpdateLevel() bool {
 		s.LevelData = s.calculateLevel()
 	}
 	return saved != s.LevelData
+}
+
+// LevelAsString returns the level as a string.
+func (s *Spell) LevelAsString() string {
+	if s.Container() {
+		return ""
+	}
+	level := s.Level().Trunc()
+	if level <= 0 {
+		return "-"
+	}
+	return level.String()
 }
 
 // Level returns the computed level without updating it.
@@ -413,6 +444,38 @@ func (s *Spell) SetOwningEntity(entity *Entity) {
 // Notes implements WeaponOwner.
 func (s *Spell) Notes() string {
 	return s.LocalNotes
+}
+
+// Rituals returns the rituals required to cast the spell.
+func (s *Spell) Rituals() string {
+	if s.Container() || !(s.Entity != nil && s.Entity.Type == datafile.PC && s.Entity.SheetSettings.ShowSpellAdj) {
+		return ""
+	}
+	level := s.Level()
+	switch {
+	case level < fxp.Ten:
+		return i18n.Text("Ritual: need both hands and feet free and must speak; Time: 2x")
+	case level < fxp.Fifteen:
+		return i18n.Text("Ritual: speak quietly and make a gesture")
+	case level < fxp.Twenty:
+		ritual := i18n.Text("Ritual: speak a word or two OR make a small gesture")
+		if strings.Contains(strings.ToLower(s.Class), "blocking") {
+			return ritual
+		}
+		return ritual + i18n.Text("; Cost: -1")
+	default:
+		adj := (level - fxp.Fifteen).Div(fxp.Five).AsInt()
+		class := strings.ToLower(s.Class)
+		time := ""
+		if !strings.Contains(class, "missile") {
+			time = fmt.Sprintf(i18n.Text("; Time: x1/%d, rounded up, min 1 sec"), 1<<adj)
+		}
+		cost := ""
+		if !strings.Contains(class, "blocking") {
+			cost = fmt.Sprintf(i18n.Text("; Cost: -%d"), adj+1)
+		}
+		return i18n.Text("Ritual: none") + time + cost
+	}
 }
 
 // FeatureList returns the list of Features.

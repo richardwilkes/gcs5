@@ -140,7 +140,7 @@ func (s *SkillDefault) best(entity *Entity, requirePoints bool, excludes map[str
 	best := fixed.F64d4Min
 	for _, sk := range entity.SkillNamed(s.Name, s.Specialization, requirePoints, excludes) {
 		if best < sk.LevelData.Level {
-			level := sk.Level(excludes)
+			level := sk.Level()
 			if best < level {
 				best = level
 			}

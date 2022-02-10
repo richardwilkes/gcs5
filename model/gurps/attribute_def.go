@@ -62,17 +62,23 @@ func (a *AttributeDef) SetID(value string) {
 	a.DefID = id.Sanitize(value, false, ReservedIDs...)
 }
 
+// ResolveFullName returns the full name, using the short name if full name is empty.
+func (a *AttributeDef) ResolveFullName() string {
+	if a.FullName == "" {
+		return a.Name
+	}
+	return a.FullName
+}
+
 // CombinedName returns the combined FullName and Name, as appropriate.
 func (a *AttributeDef) CombinedName() string {
-	full := strings.TrimSpace(a.FullName)
-	name := strings.TrimSpace(a.Name)
-	if full == "" {
-		return name
+	if a.FullName == "" {
+		return a.Name
 	}
-	if name == "" || name == full {
-		return full
+	if a.Name == "" || a.Name == a.FullName {
+		return a.FullName
 	}
-	return full + " (" + name + ")"
+	return a.FullName + " (" + a.Name + ")"
 }
 
 // Primary returns true if the base value is a non-derived value.

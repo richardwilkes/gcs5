@@ -155,25 +155,16 @@ func (s *Skill) MarshalJSON() ([]byte, error) {
 				Level              fixed.F64d4 `json:"level"`
 				RelativeSkillLevel string      `json:"rsl"`
 			}
-			data := struct {
+			return json.Marshal(&struct {
 				SkillData
 				Calc calc `json:"calc"`
 			}{
 				SkillData: s.SkillData,
 				Calc: calc{
-					Level: s.LevelData.Level,
+					Level:              s.LevelData.Level,
+					RelativeSkillLevel: s.RelativeLevel(),
 				},
-			}
-			rsl := s.AdjustedRelativeLevel()
-			switch {
-			case rsl == math.MinInt:
-				data.Calc.RelativeSkillLevel = "-"
-			case s.Type != gid.Technique:
-				data.Calc.RelativeSkillLevel = ResolveAttributeName(s.Entity, s.Difficulty.Attribute) + rsl.StringWithSign()
-			default:
-				data.Calc.RelativeSkillLevel = rsl.StringWithSign()
-			}
-			return json.Marshal(&data)
+			})
 		}
 	}
 	return json.Marshal(&s.SkillData)
@@ -200,6 +191,17 @@ func (s *Skill) Container() bool {
 	return strings.HasSuffix(s.Type, commonContainerKeyPostfix)
 }
 
+// Depth returns the number of parents this node has.
+func (s *Skill) Depth() int {
+	count := 0
+	p := s.Parent
+	for p != nil {
+		count++
+		p = p.Parent
+	}
+	return count
+}
+
 // OwningEntity returns the owning Entity.
 func (s *Skill) OwningEntity() *Entity {
 	return s.Entity
@@ -219,9 +221,29 @@ func (s *Skill) SetOwningEntity(entity *Entity) {
 	}
 }
 
+// DefaultSkill returns the skill currently defaulted to, or nil.
+func (s *Skill) DefaultSkill() *Skill {
+	if s.Type == gid.Technique {
+		return s.Entity.BaseSkill(s.TechniqueDefault, true)
+	}
+	return s.Entity.BaseSkill(s.DefaultedFrom, true)
+}
+
 // Notes implements WeaponOwner.
 func (s *Skill) Notes() string {
 	return s.LocalNotes
+}
+
+// ModifierNotes returns the notes due to modifiers.
+func (s *Skill) ModifierNotes() string {
+	if s.Type == gid.Technique {
+		return i18n.Text("Default: ") + s.TechniqueDefault.FullName(s.Entity) + s.TechniqueDefault.ModifierAsString()
+	}
+	defSkill := s.DefaultSkill()
+	if defSkill != nil && s.DefaultedFrom != nil {
+		return i18n.Text("Default: ") + defSkill.String() + s.DefaultedFrom.ModifierAsString()
+	}
+	return ""
 }
 
 // FeatureList returns the list of Features.
@@ -254,6 +276,22 @@ func (s *Skill) String() string {
 		}
 	}
 	return buffer.String()
+}
+
+// RelativeLevel returns the adjusted relative level as a string.
+func (s *Skill) RelativeLevel() string {
+	if s.Container() || s.LevelData.Level <= 0 {
+		return ""
+	}
+	rsl := s.AdjustedRelativeLevel()
+	switch {
+	case rsl == math.MinInt:
+		return "-"
+	case s.Type != gid.Technique:
+		return ResolveAttributeName(s.Entity, s.Difficulty.Attribute) + rsl.StringWithSign()
+	default:
+		return rsl.StringWithSign()
+	}
 }
 
 // AdjustedRelativeLevel returns the relative skill level.
@@ -289,8 +327,20 @@ func (s *Skill) AdjustedPoints() fixed.F64d4 {
 	return points
 }
 
+// LevelAsString returns the level as a string.
+func (s *Skill) LevelAsString() string {
+	if s.Container() {
+		return ""
+	}
+	level := s.Level().Trunc()
+	if level <= 0 {
+		return "-"
+	}
+	return level.String()
+}
+
 // Level returns the computed level.
-func (s *Skill) Level(excludes map[string]bool) fixed.F64d4 {
+func (s *Skill) Level() fixed.F64d4 {
 	return s.calculateLevel().Level
 }
 
@@ -353,7 +403,7 @@ func CalculateTechniqueLevel(entity *Entity, name, specialization string, catego
 	if entity != nil {
 		if def.DefaultType == gid.Skill {
 			if sk := entity.BaseSkill(def, requirePoints); sk != nil {
-				level = sk.Level(nil)
+				level = sk.Level()
 			}
 		} else {
 			// Take the modifier back out, as we wanted the base, not the final value.

@@ -174,6 +174,17 @@ func (a *Advantage) Container() bool {
 	return strings.HasSuffix(a.Type, commonContainerKeyPostfix)
 }
 
+// Depth returns the number of parents this node has.
+func (a *Advantage) Depth() int {
+	count := 0
+	p := a.Parent
+	for p != nil {
+		count++
+		p = p.Parent
+	}
+	return count
+}
+
 // OwningEntity returns the owning Entity.
 func (a *Advantage) OwningEntity() *Entity {
 	return a.Entity
@@ -362,7 +373,7 @@ func (a *Advantage) ActiveModifierFor(name string) *AdvantageModifier {
 	return nil
 }
 
-// ModifierNotes returns the notes due to modifiers. 'entity' may be nil.
+// ModifierNotes returns the notes due to modifiers.
 func (a *Advantage) ModifierNotes() string {
 	var buffer strings.Builder
 	if a.CR != advantage.None {
