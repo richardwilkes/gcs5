@@ -14,6 +14,7 @@ package gurps
 import (
 	"bytes"
 	"sort"
+	"strings"
 
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -105,6 +106,20 @@ func (a *Attributes) Maximum(attrID string) fixed.F64d4 {
 	}
 	if v, err := fixed.F64d4FromString(attrID); err == nil {
 		return v
+	}
+	return fixed.F64d4Min
+}
+
+// PoolThreshold resolves the given attribute ID and state to the value for its pool threshold, or fixed.F64d4Min.
+func (a *Attributes) PoolThreshold(attrID, state string) fixed.F64d4 {
+	if attr, ok := a.Set[attrID]; ok {
+		if def := attr.AttributeDef(); def != nil {
+			for _, one := range def.Thresholds {
+				if strings.EqualFold(one.State, state) {
+					return one.Threshold(attr.Maximum())
+				}
+			}
+		}
 	}
 	return fixed.F64d4Min
 }

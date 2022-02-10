@@ -812,6 +812,36 @@ func (e *Entity) MaximumCarry(encumbrance datafile.Encumbrance) measure.Weight {
 	return measure.Weight(fixed.F64d4(e.BasicLift()).Mul(encumbrance.WeightMultiplier()))
 }
 
+// OneHandedLift returns the one-handed lift value.
+func (e *Entity) OneHandedLift() measure.Weight {
+	return measure.Weight(fixed.F64d4(e.BasicLift()).Mul(fxp.Two))
+}
+
+// TwoHandedLift returns the two-handed lift value.
+func (e *Entity) TwoHandedLift() measure.Weight {
+	return measure.Weight(fixed.F64d4(e.BasicLift()).Mul(fxp.Eight))
+}
+
+// ShoveAndKnockOver returns the shove & knock over value.
+func (e *Entity) ShoveAndKnockOver() measure.Weight {
+	return measure.Weight(fixed.F64d4(e.BasicLift()).Mul(fxp.Twelve))
+}
+
+// RunningShoveAndKnockOver returns the running shove & knock over value.
+func (e *Entity) RunningShoveAndKnockOver() measure.Weight {
+	return measure.Weight(fixed.F64d4(e.BasicLift()).Mul(fxp.TwentyFour))
+}
+
+// CarryOnBack returns the carry on back value.
+func (e *Entity) CarryOnBack() measure.Weight {
+	return measure.Weight(fixed.F64d4(e.BasicLift()).Mul(fxp.Fifteen))
+}
+
+// ShiftSlightly returns the shift slightly value.
+func (e *Entity) ShiftSlightly() measure.Weight {
+	return measure.Weight(fixed.F64d4(e.BasicLift()).Mul(fxp.Fifty))
+}
+
 // BasicLift returns the entity's Basic Lift.
 func (e *Entity) BasicLift() measure.Weight {
 	st := (e.StrengthOrZero() + e.LiftingStrengthBonus).Trunc()
@@ -996,4 +1026,109 @@ func (e *Entity) EquippedWeapons(weaponType weapon.Type) []*Weapon {
 	}
 	sort.Slice(list, func(i, j int) bool { return list[i].Less(list[j]) })
 	return list
+}
+
+// Reactions returns the current set of reactions.
+func (e *Entity) Reactions() []*ConditionalModifier {
+	m := make(map[string]*ConditionalModifier)
+	TraverseAdvantages(func(a *Advantage) bool {
+		source := i18n.Text("from advantage ") + a.String()
+		if !a.Container() {
+			e.reactionsFromFeatureList(source, a.Features, m)
+		}
+		for _, mod := range a.Modifiers {
+			if !mod.Disabled {
+				e.reactionsFromFeatureList(source, mod.Features, m)
+			}
+		}
+		if a.CR != advantage.None && a.CRAdj == ReactionPenalty {
+			amt := fixed.F64d4FromInt(ReactionPenalty.Adjustment(a.CR))
+			situation := fmt.Sprintf(i18n.Text("from others when %s is triggered"), a.String())
+			if r, exists := m[situation]; exists {
+				r.Add(source, amt)
+			} else {
+				m[situation] = NewReaction(source, situation, amt)
+			}
+		}
+		return false
+	}, true, e.Advantages...)
+	TraverseEquipment(func(eqp *Equipment) bool {
+		if eqp.Equipped && eqp.Quantity > 0 {
+			source := i18n.Text("from equipment ") + eqp.Name
+			e.reactionsFromFeatureList(source, eqp.Features, m)
+			for _, mod := range eqp.Modifiers {
+				if !mod.Disabled {
+					e.reactionsFromFeatureList(source, mod.Features, m)
+				}
+			}
+		}
+		return false
+	}, e.CarriedEquipment...)
+	list := make([]*ConditionalModifier, 0, len(m))
+	for _, v := range m {
+		list = append(list, v)
+	}
+	sort.Slice(list, func(i, j int) bool { return list[i].Less(list[j]) })
+	return list
+}
+
+func (e *Entity) reactionsFromFeatureList(source string, features feature.Features, m map[string]*ConditionalModifier) {
+	for _, f := range features {
+		if bonus, ok := f.(*feature.ReactionBonus); ok {
+			amt := bonus.AdjustedAmount()
+			if r, exists := m[bonus.Situation]; exists {
+				r.Add(source, amt)
+			} else {
+				m[bonus.Situation] = NewReaction(source, bonus.Situation, amt)
+			}
+		}
+	}
+}
+
+// ConditionalModifiers returns the current set of conditional modifiers.
+func (e *Entity) ConditionalModifiers() []*ConditionalModifier {
+	m := make(map[string]*ConditionalModifier)
+	TraverseAdvantages(func(a *Advantage) bool {
+		source := i18n.Text("from advantage ") + a.String()
+		if !a.Container() {
+			e.conditionalModifiersFromFeatureList(source, a.Features, m)
+		}
+		for _, mod := range a.Modifiers {
+			if !mod.Disabled {
+				e.conditionalModifiersFromFeatureList(source, mod.Features, m)
+			}
+		}
+		return false
+	}, true, e.Advantages...)
+	TraverseEquipment(func(eqp *Equipment) bool {
+		if eqp.Equipped && eqp.Quantity > 0 {
+			source := i18n.Text("from equipment ") + eqp.Name
+			e.conditionalModifiersFromFeatureList(source, eqp.Features, m)
+			for _, mod := range eqp.Modifiers {
+				if !mod.Disabled {
+					e.conditionalModifiersFromFeatureList(source, mod.Features, m)
+				}
+			}
+		}
+		return false
+	}, e.CarriedEquipment...)
+	list := make([]*ConditionalModifier, 0, len(m))
+	for _, v := range m {
+		list = append(list, v)
+	}
+	sort.Slice(list, func(i, j int) bool { return list[i].Less(list[j]) })
+	return list
+}
+
+func (e *Entity) conditionalModifiersFromFeatureList(source string, features feature.Features, m map[string]*ConditionalModifier) {
+	for _, f := range features {
+		if bonus, ok := f.(*feature.ConditionalModifier); ok {
+			amt := bonus.AdjustedAmount()
+			if r, exists := m[bonus.Situation]; exists {
+				r.Add(source, amt)
+			} else {
+				m[bonus.Situation] = NewReaction(source, bonus.Situation, amt)
+			}
+		}
+	}
 }

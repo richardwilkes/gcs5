@@ -24,6 +24,8 @@ import (
 	"github.com/richardwilkes/gcs/images"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/attribute"
+	"github.com/richardwilkes/gcs/model/gurps/datafile"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/model/settings"
@@ -36,7 +38,6 @@ type legacyExporter struct {
 	entity             *gurps.Entity
 	template           []byte
 	pos                int
-	mark               int
 	exportPath         string
 	onlyCategories     map[string]bool
 	excludedCategories map[string]bool
@@ -50,7 +51,6 @@ type legacyExporter struct {
 func LegacyExport(entity *gurps.Entity, templatePath, exportPath string) (err error) {
 	ex := &legacyExporter{
 		entity:             entity,
-		mark:               -1,
 		exportPath:         exportPath,
 		onlyCategories:     make(map[string]bool),
 		excludedCategories: make(map[string]bool),
@@ -80,16 +80,14 @@ func LegacyExport(entity *gurps.Entity, templatePath, exportPath string) (err er
 		case lookForKeyMarker:
 			if ch == '@' {
 				lookForKeyMarker = false
-				ex.mark = ex.pos
 			} else {
 				ex.out.WriteByte(ch)
 			}
 		case ch == '_' || (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'):
 			ex.keyBuffer.WriteByte(ch)
-			ex.mark = ex.pos
 		default:
 			if !ex.enhancedKeyParsing || ch != '@' {
-				ex.pos = ex.mark
+				ex.pos--
 			}
 			if err = ex.emitKey(); err != nil {
 				return err
@@ -107,7 +105,8 @@ func LegacyExport(entity *gurps.Entity, templatePath, exportPath string) (err er
 }
 
 func (ex *legacyExporter) emitKey() error {
-	switch ex.keyBuffer.String() {
+	key := ex.keyBuffer.String()
+	switch key {
 	case "GRID_TEMPLATE":
 		ex.out.WriteString(ex.entity.SheetSettings.BlockLayout.HTMLGridTemplate())
 	case "ENCODING_OFF":
@@ -265,107 +264,237 @@ func (ex *legacyExporter) emitKey() error {
 		ex.writeEncodedText(ex.bestWeaponDefense(func(w *gurps.Weapon) string { return w.ResolvedParry(nil) }))
 	case "BEST_CURRENT_BLOCK":
 		ex.writeEncodedText(ex.bestWeaponDefense(func(w *gurps.Weapon) string { return w.ResolvedBlock(nil) }))
-		/*
-		       case KEY_TIRED_DEPRECATED:
-		           deprecatedWritePointPoolThreshold(out, gurpsCharacter, "fp", I18n.text("Tired"));
-		           break;
-		       case KEY_FP_COLLAPSE_DEPRECATED:
-		           deprecatedWritePointPoolThreshold(out, gurpsCharacter, "fp", I18n.text("Collapse"));
-		           break;
-		       case KEY_UNCONSCIOUS_DEPRECATED:
-		           deprecatedWritePointPoolThreshold(out, gurpsCharacter, "fp", I18n.text("Unconscious"));
-		           break;
-		       case KEY_REELING_DEPRECATED:
-		           deprecatedWritePointPoolThreshold(out, gurpsCharacter, "hp", I18n.text("Reeling"));
-		           break;
-		       case KEY_HP_COLLAPSE_DEPRECATED:
-		           deprecatedWritePointPoolThreshold(out, gurpsCharacter, "hp", I18n.text("Collapse"));
-		           break;
-		       case KEY_DEATH_CHECK_1_DEPRECATED:
-		           deprecatedWritePointPoolThreshold(out, gurpsCharacter, "hp", String.format(I18n.text("Dying #%d"), Integer.valueOf(1)));
-		           break;
-		       case KEY_DEATH_CHECK_2_DEPRECATED:
-		           deprecatedWritePointPoolThreshold(out, gurpsCharacter, "hp", String.format(I18n.text("Dying #%d"), Integer.valueOf(2)));
-		           break;
-		       case KEY_DEATH_CHECK_3_DEPRECATED:
-		           deprecatedWritePointPoolThreshold(out, gurpsCharacter, "hp", String.format(I18n.text("Dying #%d"), Integer.valueOf(3)));
-		           break;
-		       case KEY_DEATH_CHECK_4_DEPRECATED:
-		           deprecatedWritePointPoolThreshold(out, gurpsCharacter, "hp", String.format(I18n.text("Dying #%d"), Integer.valueOf(4)));
-		           break;
-		       case KEY_DEAD_DEPRECATED:
-		           deprecatedWritePointPoolThreshold(out, gurpsCharacter, "hp", I18n.text("Dead"));
-		           break;
-		       case KEY_BASIC_LIFT:
-		           writeEncodedText(out, gurpsCharacter.getBasicLift().toString());
-		           break;
-		       case KEY_ONE_HANDED_LIFT:
-		           writeEncodedText(out, gurpsCharacter.getOneHandedLift().toString());
-		           break;
-		       case KEY_TWO_HANDED_LIFT:
-		           writeEncodedText(out, gurpsCharacter.getTwoHandedLift().toString());
-		           break;
-		       case KEY_SHOVE:
-		           writeEncodedText(out, gurpsCharacter.getShoveAndKnockOver().toString());
-		           break;
-		       case KEY_RUNNING_SHOVE:
-		           writeEncodedText(out, gurpsCharacter.getRunningShoveAndKnockOver().toString());
-		           break;
-		       case KEY_CARRY_ON_BACK:
-		           writeEncodedText(out, gurpsCharacter.getCarryOnBack().toString());
-		           break;
-		       case KEY_SHIFT_SLIGHTLY:
-		           writeEncodedText(out, gurpsCharacter.getShiftSlightly().toString());
-		           break;
-		       case KEY_CARRIED_WEIGHT:
-		           writeEncodedText(out, EquipmentColumn.getDisplayWeight(gurpsCharacter, gurpsCharacter.getWeightCarried(false)));
-		           break;
-		       case KEY_CARRIED_VALUE:
-		           writeEncodedText(out, "$" + gurpsCharacter.getWealthCarried().toLocalizedString());
-		           break;
-		       case KEY_OTHER_VALUE:
-		           writeEncodedText(out, "$" + gurpsCharacter.getWealthNotCarried().toLocalizedString());
-		           break;
-		       case KEY_ALL_NOTES_COMBINED:
-		           StringBuilder buffer = new StringBuilder();
-		           for (Note note : gurpsCharacter.getNotesIterator()) {
-		               if (!buffer.isEmpty()) {
-		                   buffer.append("\n\n");
-		               }
-		               buffer.append(note.getDescription());
-		           }
-		           writeEncodedText(out, buffer.toString());
-		           break;
-		       case KEY_RACE_DEPRECATED:
-		           // Use ancestry instead
-		           break;
-		       case KEY_BODY_TYPE:
-		           writeEncodedText(out, gurpsCharacter.getSheetSettings().getHitLocations().getName());
-		           break;
-		       default:
-		           if (!checkForLoopKeys(in, out, key)) {
-		               if (key.startsWith(KEY_ONLY_CATEGORIES)) {
-		                   setOnlyCategories(key);
-		               } else if (key.startsWith(KEY_EXCLUDE_CATEGORIES)) {
-		                   setExcludeCategories(key);
-		               } else if (key.startsWith(KEY_COLOR_PREFIX)) {
-		                   String colorKey = key.substring(KEY_COLOR_PREFIX.length()).toLowerCase();
-		                   for (ThemeColor one : Colors.ALL) {
-		                       if (colorKey.equals(one.getKey())) {
-		                           out.write(Colors.encodeToHex(one));
-		                       }
-		                   }
-		               } else if (!processAttributeKeys(out, gurpsCharacter, key)) {
-		                   writeEncodedText(out, String.format(UNIDENTIFIED_KEY, key));
-		               }
-		           }
-		           break;
-		   }
-		*/
+	case "TIRED":
+		ex.writeEncodedText(ex.entity.Attributes.PoolThreshold(gid.FatiguePoints, "tired").String())
+	case "FP_COLLAPSE":
+		ex.writeEncodedText(ex.entity.Attributes.PoolThreshold(gid.FatiguePoints, "collapse").String())
+	case "UNCONSCIOUS":
+		ex.writeEncodedText(ex.entity.Attributes.PoolThreshold(gid.FatiguePoints, "unconscious").String())
+	case "REELING":
+		ex.writeEncodedText(ex.entity.Attributes.PoolThreshold(gid.HitPoints, "reeling").String())
+	case "HP_COLLAPSE":
+		ex.writeEncodedText(ex.entity.Attributes.PoolThreshold(gid.HitPoints, "collapse").String())
+	case "DEATH_CHECK_1":
+		ex.writeEncodedText(ex.entity.Attributes.PoolThreshold(gid.HitPoints, "dying #1").String())
+	case "DEATH_CHECK_2":
+		ex.writeEncodedText(ex.entity.Attributes.PoolThreshold(gid.HitPoints, "dying #2").String())
+	case "DEATH_CHECK_3":
+		ex.writeEncodedText(ex.entity.Attributes.PoolThreshold(gid.HitPoints, "dying #3").String())
+	case "DEATH_CHECK_4":
+		ex.writeEncodedText(ex.entity.Attributes.PoolThreshold(gid.HitPoints, "dying #4").String())
+	case "DEAD":
+		ex.writeEncodedText(ex.entity.Attributes.PoolThreshold(gid.HitPoints, "dead").String())
+	case "BASIC_LIFT":
+		ex.writeEncodedText(ex.entity.SheetSettings.DefaultWeightUnits.Format(ex.entity.BasicLift()))
+	case "ONE_HANDED_LIFT":
+		ex.writeEncodedText(ex.entity.SheetSettings.DefaultWeightUnits.Format(ex.entity.OneHandedLift()))
+	case "TWO_HANDED_LIFT":
+		ex.writeEncodedText(ex.entity.SheetSettings.DefaultWeightUnits.Format(ex.entity.TwoHandedLift()))
+	case "SHOVE":
+		ex.writeEncodedText(ex.entity.SheetSettings.DefaultWeightUnits.Format(ex.entity.ShoveAndKnockOver()))
+	case "RUNNING_SHOVE":
+		ex.writeEncodedText(ex.entity.SheetSettings.DefaultWeightUnits.Format(ex.entity.RunningShoveAndKnockOver()))
+	case "CARRY_ON_BACK":
+		ex.writeEncodedText(ex.entity.SheetSettings.DefaultWeightUnits.Format(ex.entity.CarryOnBack()))
+	case "SHIFT_SLIGHTLY":
+		ex.writeEncodedText(ex.entity.SheetSettings.DefaultWeightUnits.Format(ex.entity.ShiftSlightly()))
+	case "CARRIED_WEIGHT":
+		ex.writeEncodedText(ex.entity.SheetSettings.DefaultWeightUnits.Format(ex.entity.WeightCarried(false)))
+	case "CARRIED_VALUE":
+		ex.writeEncodedText("$" + ex.entity.WealthCarried().String())
+	case "OTHER_EQUIPMENT_VALUE":
+		ex.writeEncodedText("$" + ex.entity.WealthNotCarried().String())
+	case "NOTES":
+		needBlanks := false
+		gurps.TraverseNotes(func(n *gurps.Note) bool {
+			if needBlanks {
+				ex.out.WriteString("\n\n")
+			} else {
+				needBlanks = true
+			}
+			ex.writeEncodedText(n.Text)
+			return false
+		}, ex.entity.Notes...)
+	case "RACE":
+		ex.writeEncodedText(ex.entity.Ancestry().Name)
+	case "BODY_TYPE":
+		ex.writeEncodedText(ex.entity.SheetSettings.HitLocations.Name)
+	case "ENCUMBRANCE_LOOP_COUNT":
+		ex.writeEncodedText(strconv.Itoa(len(datafile.AllEncumbrance)))
+	case "HIT_LOCATION_LOOP_COUNT":
+		ex.writeEncodedText(strconv.Itoa(len(ex.entity.SheetSettings.HitLocations.Locations)))
+	case "ADVANTAGES_LOOP_COUNT":
+		ex.writeAdvantageLoopCount(ex.includeByAdvantageCategories)
+	case "ADVANTAGES_ALL_LOOP_COUNT":
+		ex.writeAdvantageLoopCount(ex.includeAdvantagesAndPerks)
+	case "ADVANTAGES_ONLY_LOOP_COUNT":
+		ex.writeAdvantageLoopCount(ex.includeAdvantages)
+	case "DISADVANTAGES_LOOP_COUNT":
+		ex.writeAdvantageLoopCount(ex.includeDisadvantages)
+	case "DISADVANTAGES_ALL_LOOP_COUNT":
+		ex.writeAdvantageLoopCount(ex.includeDisadvantagesAndQuirks)
+	case "QUIRKS_LOOP_COUNT":
+		ex.writeAdvantageLoopCount(ex.includeQuirks)
+	case "PERKS_LOOP_COUNT":
+		ex.writeAdvantageLoopCount(ex.includePerks)
+	case "LANGUAGES_LOOP_COUNT":
+		ex.writeAdvantageLoopCount(ex.includeLanguages)
+	case "CULTURAL_FAMILIARITIES_LOOP_COUNT":
+		ex.writeAdvantageLoopCount(ex.includeCulturalFamiliarities)
+	case "SKILLS_LOOP_COUNT":
+		count := 0
+		gurps.TraverseSkills(func(_ *gurps.Skill) bool {
+			count++
+			return false
+		}, ex.entity.Skills...)
+		ex.writeEncodedText(strconv.Itoa(count))
+	case "SPELLS_LOOP_COUNT":
+		count := 0
+		gurps.TraverseSpells(func(_ *gurps.Spell) bool {
+			count++
+			return false
+		}, ex.entity.Spells...)
+		ex.writeEncodedText(strconv.Itoa(count))
+	case "MELEE_LOOP_COUNT", "HIERARCHICAL_MELEE_LOOP_COUNT":
+		// TODO: Is the hierarchical one right? It is what the old code did... but doesn't seem right
+		ex.writeEncodedText(strconv.Itoa(len(ex.entity.EquippedWeapons(weapon.Melee))))
+	case "RANGED_LOOP_COUNT", "HIERARCHICAL_RANGED_LOOP_COUNT":
+		// TODO: Is the hierarchical one right? It is what the old code did... but doesn't seem right
+		ex.writeEncodedText(strconv.Itoa(len(ex.entity.EquippedWeapons(weapon.Ranged))))
+	case "EQUIPMENT_LOOP_COUNT":
+		count := 0
+		gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
+			if ex.includeByCategories(eqp.Categories) {
+				count++
+			}
+			return false
+		}, ex.entity.CarriedEquipment...)
+		ex.writeEncodedText(strconv.Itoa(count))
+	case "OTHER_EQUIPMENT_LOOP_COUNT":
+		count := 0
+		gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
+			if ex.includeByCategories(eqp.Categories) {
+				count++
+			}
+			return false
+		}, ex.entity.OtherEquipment...)
+		ex.writeEncodedText(strconv.Itoa(count))
+	case "NOTES_LOOP_COUNT":
+		count := 0
+		gurps.TraverseNotes(func(_ *gurps.Note) bool {
+			count++
+			return false
+		}, ex.entity.Notes...)
+		ex.writeEncodedText(strconv.Itoa(count))
+	case "REACTION_LOOP_COUNT":
+		ex.writeEncodedText(strconv.Itoa(len(ex.entity.Reactions())))
+	case "CONDITIONAL_MODIFIERS_LOOP_COUNT":
+		ex.writeEncodedText(strconv.Itoa(len(ex.entity.ConditionalModifiers())))
+	case "PRIMARY_ATTRIBUTE_LOOP_COUNT":
+		count := 0
+		for _, def := range ex.entity.SheetSettings.Attributes.List() {
+			if def.Type != attribute.Pool && def.Primary() {
+				if _, exists := ex.entity.Attributes.Set[def.DefID]; exists {
+					count++
+				}
+			}
+		}
+		ex.writeEncodedText(strconv.Itoa(count))
+	case "SECONDARY_ATTRIBUTE_LOOP_COUNT":
+		count := 0
+		for _, def := range ex.entity.SheetSettings.Attributes.List() {
+			if def.Type != attribute.Pool && !def.Primary() {
+				if _, exists := ex.entity.Attributes.Set[def.DefID]; exists {
+					count++
+				}
+			}
+		}
+		ex.writeEncodedText(strconv.Itoa(count))
+	case "POINT_POOL_LOOP_COUNT":
+		count := 0
+		for _, def := range ex.entity.SheetSettings.Attributes.List() {
+			if def.Type == attribute.Pool {
+				if _, exists := ex.entity.Attributes.Set[def.DefID]; exists {
+					count++
+				}
+			}
+		}
+		ex.writeEncodedText(strconv.Itoa(count))
+	case "ENCUMBRANCE_LOOP_START":
+		ex.processEncumbranceLoop(ex.extractUpToMarker("ENCUMBRANCE_LOOP_END"))
+	case "HIT_LOCATION_LOOP_START":
+	case "ADVANTAGES_LOOP_START":
+	case "ADVANTAGES_ALL_LOOP_START":
+	case "ADVANTAGES_ONLY_LOOP_START":
+	case "DISADVANTAGES_LOOP_START":
+	case "DISADVANTAGES_ALL_LOOP_START":
+	case "QUIRKS_LOOP_START":
+	case "PERKS_LOOP_START":
+	case "LANGUAGES_LOOP_START":
+	case "CULTURAL_FAMILIARITIES_LOOP_START":
+	case "SKILLS_LOOP_START":
+	case "SPELLS_LOOP_START":
+	case "MELEE_LOOP_START":
+	case "HIERARCHICAL_MELEE_LOOP_START":
+	case "RANGED_LOOP_START":
+	case "HIERARCHICAL_RANGED_LOOP_START":
+	case "EQUIPMENT_LOOP_START":
+	case "OTHER_EQUIPMENT_LOOP_START":
+	case "NOTES_LOOP_START":
+	case "REACTION_LOOP_START":
+	case "CONDITIONAL_MODIFIERS_LOOP_START":
+	case "PRIMARY_ATTRIBUTE_LOOP_START":
+	case "SECONDARY_ATTRIBUTE_LOOP_START":
+	case "POINT_POOL_LOOP_START":
 	case "CONTINUE_ID", "CAMPAIGN", "OPTIONS_CODE":
 		// No-op
+	default:
+		switch {
+		case strings.HasPrefix(key, "ONLY_CATEGORIES_"):
+		case strings.HasPrefix(key, "EXCLUDE_CATEGORIES_"):
+		case strings.HasPrefix(key, "COLOR_"):
+		default:
+			/*
+				if (!processAttributeKeys(out, gurpsCharacter, key)) {
+					writeEncodedText(out, String.format(UNIDENTIFIED_KEY, key));
+				}
+			*/
+		}
+		/*
+		   if (!checkForLoopKeys(in, out, key)) {
+		       if (key.startsWith(KEY_ONLY_CATEGORIES)) {
+		           setOnlyCategories(key);
+		       } else if (key.startsWith(KEY_EXCLUDE_CATEGORIES)) {
+		           setExcludeCategories(key);
+		       } else if (key.startsWith(KEY_COLOR_PREFIX)) {
+		           String colorKey = key.substring(KEY_COLOR_PREFIX.length()).toLowerCase();
+		           for (ThemeColor one : Colors.ALL) {
+		               if (colorKey.equals(one.getKey())) {
+		                   out.write(Colors.encodeToHex(one));
+		               }
+		           }
+		       } else if (!processAttributeKeys(out, gurpsCharacter, key)) {
+		           writeEncodedText(out, String.format(UNIDENTIFIED_KEY, key));
+		       }
+		   }
+		*/
 	}
 	return nil
+}
+
+func (ex *legacyExporter) extractUpToMarker(marker string) []byte {
+	remaining := ex.template[ex.pos:]
+	i := bytes.Index(remaining, []byte(marker))
+	if i == -1 {
+		ex.pos = len(ex.template)
+		return remaining
+	}
+	buffer := ex.template[ex.pos : ex.pos+i]
+	ex.pos += i + len(marker)
+	if ex.enhancedKeyParsing && ex.pos < len(ex.template) && ex.template[ex.pos] == '@' {
+		ex.pos++
+	}
+	return buffer
 }
 
 func (ex *legacyExporter) writeEncodedText(text string) {
@@ -413,4 +542,72 @@ func (ex *legacyExporter) bestWeaponDefense(f func(weapon *gurps.Weapon) string)
 		}
 	}
 	return best
+}
+
+func (ex *legacyExporter) writeAdvantageLoopCount(f func(*gurps.Advantage) bool) {
+	count := 0
+	gurps.TraverseAdvantages(func(adq *gurps.Advantage) bool {
+		if f(adq) {
+			count++
+		}
+		return false
+	}, true, ex.entity.Advantages...)
+	ex.writeEncodedText(strconv.Itoa(count))
+}
+
+func (ex *legacyExporter) includeByCategories(categories []string) bool {
+	for cat := range ex.onlyCategories {
+		if gurps.HasCategory(cat, categories) {
+			return true
+		}
+	}
+	if len(ex.onlyCategories) != 0 {
+		return false
+	}
+	for cat := range ex.excludedCategories {
+		if gurps.HasCategory(cat, categories) {
+			return false
+		}
+	}
+	return true
+}
+
+func (ex *legacyExporter) includeByAdvantageCategories(adq *gurps.Advantage) bool {
+	return ex.includeByCategories(adq.Categories)
+}
+
+func (ex *legacyExporter) includeAdvantages(adq *gurps.Advantage) bool {
+	return adq.AdjustedPoints() > fxp.One && ex.includeByAdvantageCategories(adq)
+}
+
+func (ex *legacyExporter) includePerks(adq *gurps.Advantage) bool {
+	return adq.AdjustedPoints() == fxp.One && ex.includeByAdvantageCategories(adq)
+}
+
+func (ex *legacyExporter) includeAdvantagesAndPerks(adq *gurps.Advantage) bool {
+	return adq.AdjustedPoints() > 0 && ex.includeByAdvantageCategories(adq)
+}
+
+func (ex *legacyExporter) includeDisadvantages(adq *gurps.Advantage) bool {
+	return adq.AdjustedPoints() < fxp.NegOne && ex.includeByAdvantageCategories(adq)
+}
+
+func (ex *legacyExporter) includeQuirks(adq *gurps.Advantage) bool {
+	return adq.AdjustedPoints() == fxp.NegOne && ex.includeByAdvantageCategories(adq)
+}
+
+func (ex *legacyExporter) includeDisadvantagesAndQuirks(adq *gurps.Advantage) bool {
+	return adq.AdjustedPoints() < 0 && ex.includeByAdvantageCategories(adq)
+}
+
+func (ex *legacyExporter) includeLanguages(adq *gurps.Advantage) bool {
+	return gurps.HasCategory("Language", adq.Categories) && ex.includeByAdvantageCategories(adq)
+}
+
+func (ex *legacyExporter) includeCulturalFamiliarities(adq *gurps.Advantage) bool {
+	return strings.HasPrefix(strings.ToLower(adq.Name), "cultural familiarity (") && ex.includeByAdvantageCategories(adq)
+}
+
+func (ex *legacyExporter) processEncumbranceLoop(buffer []byte) {
+	// TODO: Implement
 }

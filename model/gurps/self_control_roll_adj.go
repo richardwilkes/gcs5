@@ -19,28 +19,40 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-// Description returns a formatted description.
-func (enum SelfControlRollAdj) Description(cr advantage.SelfControlRoll) string {
+// Adjustment returns the adjustment amount.
+func (enum SelfControlRollAdj) Adjustment(cr advantage.SelfControlRoll) int {
 	if cr == advantage.None {
-		return ""
+		return 0
 	}
 	switch enum {
 	case NoCRAdj:
-		return enum.AltString()
+		return 0
 	case ActionPenalty:
-		return fmt.Sprintf(enum.AltString(), cr.Index()-len(advantage.AllSelfControlRolls))
+		return cr.Index() - len(advantage.AllSelfControlRolls)
 	case ReactionPenalty:
-		return fmt.Sprintf(enum.AltString(), cr.Index()-len(advantage.AllSelfControlRolls))
+		return cr.Index() - len(advantage.AllSelfControlRolls)
 	case FrightCheckPenalty:
-		return fmt.Sprintf(enum.AltString(), cr.Index()-len(advantage.AllSelfControlRolls))
+		return cr.Index() - len(advantage.AllSelfControlRolls)
 	case FrightCheckBonus:
-		return fmt.Sprintf(enum.AltString(), len(advantage.AllSelfControlRolls)-cr.Index())
+		return len(advantage.AllSelfControlRolls) - cr.Index()
 	case MinorCostOfLivingIncrease:
-		return fmt.Sprintf(enum.AltString(), 5*(len(advantage.AllSelfControlRolls)-cr.Index()))
+		return 5 * (len(advantage.AllSelfControlRolls) - cr.Index())
 	case MajorCostOfLivingIncrease:
-		return fmt.Sprintf(enum.AltString(), 10*(1<<((cr.Index()-len(advantage.AllSelfControlRolls))-1)))
+		return 10 * (1 << ((cr.Index() - len(advantage.AllSelfControlRolls)) - 1))
 	default:
-		return NoCRAdj.Description(cr)
+		return NoCRAdj.Adjustment(cr)
+	}
+}
+
+// Description returns a formatted description.
+func (enum SelfControlRollAdj) Description(cr advantage.SelfControlRoll) string {
+	switch {
+	case cr == advantage.None:
+		return ""
+	case enum == NoCRAdj:
+		return enum.AltString()
+	default:
+		return fmt.Sprintf(enum.AltString(), enum.Adjustment(cr))
 	}
 }
 
