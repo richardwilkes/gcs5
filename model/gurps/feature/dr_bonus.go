@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/fxp"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
@@ -24,9 +25,6 @@ import (
 
 // HitLocationPrefix is the prefix used on all hit locations for DR bonuses.
 const HitLocationPrefix = "hit_location."
-
-// All is the DR specialization key for DR that affects everything.
-const All = "all"
 
 var _ Bonus = &DRBonus{}
 
@@ -50,7 +48,7 @@ func NewDRBonus() *DRBonus {
 		DRBonusData: DRBonusData{
 			Type:           DRBonusType,
 			Location:       "torso",
-			Specialization: All,
+			Specialization: gid.All,
 			LeveledAmount:  LeveledAmount{Amount: fxp.One},
 		},
 	}
@@ -59,8 +57,8 @@ func NewDRBonus() *DRBonus {
 // Normalize adjusts the data to it preferred representation.
 func (d *DRBonus) Normalize() {
 	s := strings.TrimSpace(d.Specialization)
-	if s == "" || strings.EqualFold(s, All) {
-		s = All
+	if s == "" || strings.EqualFold(s, gid.All) {
+		s = gid.All
 	}
 	d.Specialization = s
 }
@@ -105,7 +103,7 @@ func (d *DRBonus) AddToTooltip(buffer *xio.ByteBuffer) {
 // MarshalJSON implements json.Marshaler.
 func (d *DRBonus) MarshalJSON() ([]byte, error) {
 	d.Normalize()
-	if d.Specialization == All {
+	if d.Specialization == gid.All {
 		d.Specialization = ""
 	}
 	data, err := json.Marshal(&d.DRBonusData)

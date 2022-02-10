@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"io/fs"
 	"math"
+	"sort"
 	"strings"
 
 	"github.com/google/uuid"
@@ -380,6 +381,21 @@ func (e *Entity) UpdateSpells() bool {
 	return changed
 }
 
+// SpentPoints returns the number of spent points.
+func (e *Entity) SpentPoints() fixed.F64d4 {
+	total := e.AttributePoints()
+	ad, disad, race, quirk := e.AdvantagePoints()
+	total += ad + disad + race + quirk
+	total += e.SkillPoints()
+	total += e.SpellPoints()
+	return total
+}
+
+// UnspentPoints returns the number of unspent points.
+func (e *Entity) UnspentPoints() fixed.F64d4 {
+	return e.TotalPoints - e.SpentPoints()
+}
+
 // AttributePoints returns the number of points spent on attributes.
 func (e *Entity) AttributePoints() fixed.F64d4 {
 	var total fixed.F64d4
@@ -390,39 +406,35 @@ func (e *Entity) AttributePoints() fixed.F64d4 {
 }
 
 // AdvantagePoints returns the number of points spent on advantages.
-func (e *Entity) AdvantagePoints() (ad, disad, race, perk, quirk fixed.F64d4) {
+func (e *Entity) AdvantagePoints() (ad, disad, race, quirk fixed.F64d4) {
 	for _, one := range e.Advantages {
-		a, d, r, p, q := calculateSingleAdvantagePoints(one)
+		a, d, r, q := calculateSingleAdvantagePoints(one)
 		ad += a
 		disad += d
 		race += r
-		perk += p
 		quirk += q
 	}
 	return
 }
 
-func calculateSingleAdvantagePoints(adq *Advantage) (ad, disad, race, perk, quirk fixed.F64d4) {
+func calculateSingleAdvantagePoints(adq *Advantage) (ad, disad, race, quirk fixed.F64d4) {
 	if adq.Container() {
 		switch adq.ContainerType {
 		case advantage.Group:
 			for _, child := range adq.Children {
-				a, d, r, p, q := calculateSingleAdvantagePoints(child)
+				a, d, r, q := calculateSingleAdvantagePoints(child)
 				ad += a
 				disad += d
 				race += r
-				perk += p
 				quirk += q
 			}
 			return
 		case advantage.Race:
-			return 0, 0, adq.AdjustedPoints(), 0, 0
+			return 0, 0, adq.AdjustedPoints(), 0
 		}
 	}
 	pts := adq.AdjustedPoints()
 	switch {
-	case pts == fxp.One:
-		perk += pts
 	case pts == fxp.NegOne:
 		quirk += pts
 	case pts > 0:
@@ -904,11 +916,8 @@ func (e *Entity) ResolveAttribute(attrID string) *Attribute {
 
 // ResolveAttributeCurrent resolves the given attribute ID to its current value, or fixed.F64d4Min.
 func (e *Entity) ResolveAttributeCurrent(attrID string) fixed.F64d4 {
-	if a := e.ResolveAttribute(attrID); a != nil {
-		return a.Current()
-	}
-	if v, err := fixed.F64d4FromString(attrID); err == nil {
-		return v
+	if e != nil && e.Type == datafile.PC {
+		return e.Attributes.Current(attrID)
 	}
 	return fixed.F64d4Min
 }
@@ -936,4 +945,55 @@ func (e *Entity) Ancestry() *ancestry.Ancestry {
 		}
 	}
 	return anc
+}
+
+// EquippedWeapons returns a sorted list of equipped weapons.
+func (e *Entity) EquippedWeapons(weaponType weapon.Type) []*Weapon {
+	m := make(map[uint32]*Weapon)
+	TraverseAdvantages(func(a *Advantage) bool {
+		if !a.Container() {
+			for _, w := range a.Weapons {
+				if w.Type == weaponType {
+					m[w.HashCode()] = w
+				}
+			}
+		}
+		return false
+	}, true, e.Advantages...)
+	TraverseEquipment(func(eqp *Equipment) bool {
+		if eqp.Equipped {
+			for _, w := range eqp.Weapons {
+				if w.Type == weaponType {
+					m[w.HashCode()] = w
+				}
+			}
+		}
+		return false
+	}, e.CarriedEquipment...)
+	TraverseSkills(func(s *Skill) bool {
+		if !s.Container() {
+			for _, w := range s.Weapons {
+				if w.Type == weaponType {
+					m[w.HashCode()] = w
+				}
+			}
+		}
+		return false
+	}, e.Skills...)
+	TraverseSpells(func(s *Spell) bool {
+		if !s.Container() {
+			for _, w := range s.Weapons {
+				if w.Type == weaponType {
+					m[w.HashCode()] = w
+				}
+			}
+		}
+		return false
+	}, e.Spells...)
+	list := make([]*Weapon, 0, len(m))
+	for _, v := range m {
+		list = append(list, v)
+	}
+	sort.Slice(list, func(i, j int) bool { return list[i].Less(list[j]) })
+	return list
 }

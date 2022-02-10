@@ -16,6 +16,7 @@ import (
 	"sort"
 
 	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 // Attributes holds a set of Attribute objects.
@@ -76,4 +77,34 @@ func (a *Attributes) List() []*Attribute {
 		return list[i].Order < list[j].Order
 	})
 	return list
+}
+
+// Cost returns the points spent for the specified Attribute.
+func (a *Attributes) Cost(attrID string) fixed.F64d4 {
+	if attr, ok := a.Set[attrID]; ok {
+		return attr.PointCost()
+	}
+	return 0
+}
+
+// Current resolves the given attribute ID to its current value, or fixed.F64d4Min.
+func (a *Attributes) Current(attrID string) fixed.F64d4 {
+	if attr, ok := a.Set[attrID]; ok {
+		return attr.Current()
+	}
+	if v, err := fixed.F64d4FromString(attrID); err == nil {
+		return v
+	}
+	return fixed.F64d4Min
+}
+
+// Maximum resolves the given attribute ID to its maximum value, or fixed.F64d4Min.
+func (a *Attributes) Maximum(attrID string) fixed.F64d4 {
+	if attr, ok := a.Set[attrID]; ok {
+		return attr.Maximum()
+	}
+	if v, err := fixed.F64d4FromString(attrID); err == nil {
+		return v
+	}
+	return fixed.F64d4Min
 }

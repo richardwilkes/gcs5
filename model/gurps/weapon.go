@@ -14,8 +14,10 @@ package gurps
 import (
 	"bufio"
 	"fmt"
+	"hash/fnv"
 	"strconv"
 	"strings"
+	"unsafe"
 
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/datafile"
@@ -26,6 +28,7 @@ import (
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
+	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -63,6 +66,53 @@ type WeaponData struct {
 type Weapon struct {
 	WeaponData
 	Owner WeaponOwner
+}
+
+// Less returns true if this weapon should be sorted above the other weapon.
+func (w *Weapon) Less(other *Weapon) bool {
+	s1 := w.String()
+	s2 := other.String()
+	if txt.NaturalLess(s1, s2, true) {
+		return true
+	}
+	if s1 != s2 {
+		return false
+	}
+	if txt.NaturalLess(w.Usage, other.Usage, true) {
+		return true
+	}
+	if w.Usage != other.Usage {
+		return false
+	}
+	if txt.NaturalLess(w.UsageNotes, other.UsageNotes, true) {
+		return true
+	}
+	if w.UsageNotes != other.UsageNotes {
+		return false
+	}
+	return uintptr(unsafe.Pointer(w)) < uintptr(unsafe.Pointer(other)) //nolint:gosec // Just need a tie-breaker
+}
+
+// HashCode returns a hash value for this weapon's resolved state.
+func (w *Weapon) HashCode() uint32 {
+	h := fnv.New32()
+	h.Write([]byte{byte(w.Type)})
+	h.Write([]byte(w.String()))
+	h.Write([]byte(w.UsageNotes))
+	h.Write([]byte(w.Usage))
+	h.Write([]byte(w.SkillLevel(nil).String()))
+	h.Write([]byte(w.Accuracy))
+	h.Write([]byte(w.Parry))
+	h.Write([]byte(w.Block))
+	h.Write([]byte(w.Damage.ResolvedDamage(nil)))
+	h.Write([]byte(w.Reach))
+	h.Write([]byte(w.Range))
+	h.Write([]byte(w.RateOfFire))
+	h.Write([]byte(w.Shots))
+	h.Write([]byte(w.Bulk))
+	h.Write([]byte(w.Recoil))
+	h.Write([]byte(w.MinimumStrength))
+	return h.Sum32()
 }
 
 // MarshalJSON implements json.Marshaler.

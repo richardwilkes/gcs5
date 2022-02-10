@@ -30,23 +30,10 @@ var SettingsProvider interface {
 	Libraries() library.Libraries
 }
 
-const (
-	blockLayoutReactionsKey            = "reactions"
-	blockLayoutConditionalModifiersKey = "conditional_modifiers"
-	blockLayoutMeleeKey                = "melee"
-	blockLayoutRangedKey               = "ranged"
-	blockLayoutAdvantagesKey           = "advantages"
-	blockLayoutSkillsKey               = "skills"
-	blockLayoutSpellsKey               = "spells"
-	blockLayoutEquipmentKey            = "equipment"
-	blockLayoutOtherEquipmentKey       = "other_equipment"
-	blockLayoutNotesKey                = "notes"
-)
-
 // SheetSettingsData holds the SheetSettings data that is written to disk.
 type SheetSettingsData struct {
 	Page                       *settings.Page              `json:"page,omitempty"`
-	BlockLayout                []string                    `json:"block_layout,omitempty"`
+	BlockLayout                *BlockLayout                `json:"block_layout,omitempty"`
 	Attributes                 *AttributeDefs              `json:"attributes,omitempty"`
 	HitLocations               *BodyType                   `json:"hit_locations,omitempty"`
 	DamageProgression          attribute.DamageProgression `json:"damage_progression"`
@@ -88,7 +75,7 @@ func FactorySheetSettings(entity *Entity) *SheetSettings {
 	return &SheetSettings{
 		SheetSettingsData: SheetSettingsData{
 			Page:                   settings.NewPage(),
-			BlockLayout:            FactoryBlockLayout(),
+			BlockLayout:            NewBlockLayout(),
 			Attributes:             FactoryAttributeDefs(),
 			HitLocations:           FactoryBodyType(),
 			DamageProgression:      attribute.BasicSet,
@@ -104,20 +91,6 @@ func FactorySheetSettings(entity *Entity) *SheetSettings {
 	}
 }
 
-// FactoryBlockLayout returns the factory block layout setting.
-func FactoryBlockLayout() []string {
-	return []string{
-		blockLayoutReactionsKey + " " + blockLayoutConditionalModifiersKey,
-		blockLayoutMeleeKey,
-		blockLayoutRangedKey,
-		blockLayoutAdvantagesKey + " " + blockLayoutSkillsKey,
-		blockLayoutSpellsKey,
-		blockLayoutEquipmentKey,
-		blockLayoutOtherEquipmentKey,
-		blockLayoutNotesKey,
-	}
-}
-
 // MarshalJSON implements json.Marshaler.
 func (s *SheetSettings) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&s.SheetSettingsData)
@@ -129,6 +102,18 @@ func (s *SheetSettings) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &s.SheetSettingsData); err != nil {
 		return err
 	}
+	if s.Page == nil {
+		s.Page = settings.NewPage()
+	}
+	if s.BlockLayout == nil {
+		s.BlockLayout = NewBlockLayout()
+	}
+	if s.Attributes == nil {
+		s.Attributes = FactoryAttributeDefs()
+	}
+	if s.HitLocations == nil {
+		s.HitLocations = FactoryBodyType()
+	}
 	return nil
 }
 
@@ -136,8 +121,7 @@ func (s *SheetSettings) UnmarshalJSON(data []byte) error {
 func (s *SheetSettings) Clone(entity *Entity) *SheetSettings {
 	clone := *s
 	clone.Page = s.Page.Clone()
-	clone.BlockLayout = make([]string, len(s.BlockLayout))
-	copy(clone.BlockLayout, s.BlockLayout)
+	clone.BlockLayout = s.BlockLayout.Clone()
 	clone.Attributes = s.Attributes.Clone()
 	clone.HitLocations = s.HitLocations.Clone(entity, nil)
 	return &clone
