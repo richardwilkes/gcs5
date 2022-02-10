@@ -19,6 +19,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -31,21 +32,27 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/model/settings"
+	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio"
-	xfs "github.com/richardwilkes/toolbox/xio/fs"
+	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/unison"
 )
 
 const (
 	descriptionKey        = "DESCRIPTION"
 	descriptionPrimaryKey = "DESCRIPTION_PRIMARY"
+	idKey                 = "ID"
+	nameKey               = "NAME"
 	parentIDKey           = "PARENT_ID"
 	pointsKey             = "POINTS"
 	refKey                = "REF"
 	satisfiedKey          = "SATISFIED"
 	styleIndentWarningKey = "STYLE_INDENT_WARNING"
+	techLevelKey          = "TL"
 	typeKey               = "TYPE"
+	weightKey             = "WEIGHT"
 )
 
 type legacyExporter struct {
@@ -131,7 +138,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 		if len(portraitData) == 0 {
 			portraitData = images.DefaultPortraitData
 		}
-		filePath := filepath.Join(filepath.Dir(ex.exportPath), xfs.TrimExtension(filepath.Base(ex.exportPath))+".png")
+		filePath := filepath.Join(filepath.Dir(ex.exportPath), fs.TrimExtension(filepath.Base(ex.exportPath))+".png")
 		if err := os.WriteFile(filePath, portraitData, 0o640); err != nil {
 			return errs.Wrap(err)
 		}
@@ -143,7 +150,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 		}
 		ex.out.WriteString("data:image/png;base64,")
 		ex.out.WriteString(base64.URLEncoding.EncodeToString(portraitData))
-	case "NAME":
+	case nameKey:
 		ex.writeEncodedText(ex.entity.Profile.Name)
 	case "TITLE":
 		ex.writeEncodedText(ex.entity.Profile.Title)
@@ -205,7 +212,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 		ex.writeEncodedText(ex.entity.UnspentPoints().String())
 	case "HEIGHT":
 		ex.writeEncodedText(ex.entity.SheetSettings.DefaultLengthUnits.Format(ex.entity.Profile.Height))
-	case "WEIGHT":
+	case weightKey:
 		ex.writeEncodedText(ex.entity.SheetSettings.DefaultWeightUnits.Format(ex.entity.Profile.Weight))
 	case "GENDER":
 		ex.writeEncodedText(ex.entity.Profile.Gender)
@@ -221,7 +228,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 		ex.writeEncodedText(ex.entity.Profile.Skin)
 	case "BIRTHDAY":
 		ex.writeEncodedText(ex.entity.Profile.Birthday)
-	case "TL":
+	case techLevelKey:
 		ex.writeEncodedText(ex.entity.Profile.TechLevel)
 	case "HAND":
 		ex.writeEncodedText(ex.entity.Profile.Handedness)
@@ -395,19 +402,17 @@ func (ex *legacyExporter) emitKey(key string) error {
 	case "SPELLS_LOOP_START":
 		ex.processSpellsLoop(ex.extractUpToMarker("SPELLS_LOOP_END"))
 	case "MELEE_LOOP_COUNT", "HIERARCHICAL_MELEE_LOOP_COUNT":
-		// TODO: Is the hierarchical one right? It is what the old code did... but doesn't seem right
 		ex.writeEncodedText(strconv.Itoa(len(ex.entity.EquippedWeapons(weapon.Melee))))
 	case "MELEE_LOOP_START":
-		// TODO: Implement
+		ex.processMeleeLoop(ex.extractUpToMarker("MELEE_LOOP_END"))
 	case "HIERARCHICAL_MELEE_LOOP_START":
-		// TODO: Implement
+		ex.processHierarchicalMeleeLoop(ex.extractUpToMarker("HIERARCHICAL_MELEE_LOOP_END"))
 	case "RANGED_LOOP_COUNT", "HIERARCHICAL_RANGED_LOOP_COUNT":
-		// TODO: Is the hierarchical one right? It is what the old code did... but doesn't seem right
 		ex.writeEncodedText(strconv.Itoa(len(ex.entity.EquippedWeapons(weapon.Ranged))))
 	case "RANGED_LOOP_START":
-		// TODO: Implement
+		ex.processRangedLoop(ex.extractUpToMarker("RANGED_LOOP_END"))
 	case "HIERARCHICAL_RANGED_LOOP_START":
-		// TODO: Implement
+		ex.processHierarchicalRangedLoop(ex.extractUpToMarker("HIERARCHICAL_RANGED_LOOP_END"))
 	case "EQUIPMENT_LOOP_COUNT":
 		count := 0
 		gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
@@ -418,7 +423,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 		}, ex.entity.CarriedEquipment...)
 		ex.writeEncodedText(strconv.Itoa(count))
 	case "EQUIPMENT_LOOP_START":
-		// TODO: Implement
+		ex.processEquipmentLoop(ex.extractUpToMarker("EQUIPMENT_LOOP_END"), true)
 	case "OTHER_EQUIPMENT_LOOP_COUNT":
 		count := 0
 		gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
@@ -429,7 +434,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 		}, ex.entity.OtherEquipment...)
 		ex.writeEncodedText(strconv.Itoa(count))
 	case "OTHER_EQUIPMENT_LOOP_START":
-		// TODO: Implement
+		ex.processEquipmentLoop(ex.extractUpToMarker("EQUIPMENT_LOOP_END"), false)
 	case "NOTES_LOOP_COUNT":
 		count := 0
 		gurps.TraverseNotes(func(_ *gurps.Note) bool {
@@ -438,15 +443,15 @@ func (ex *legacyExporter) emitKey(key string) error {
 		}, ex.entity.Notes...)
 		ex.writeEncodedText(strconv.Itoa(count))
 	case "NOTES_LOOP_START":
-		// TODO: Implement
+		ex.processNotesLoop(ex.extractUpToMarker("NOTES_LOOP_END"))
 	case "REACTION_LOOP_COUNT":
 		ex.writeEncodedText(strconv.Itoa(len(ex.entity.Reactions())))
 	case "REACTION_LOOP_START":
-		// TODO: Implement
+		ex.processConditionalModifiersLoop(ex.entity.Reactions(), ex.extractUpToMarker("REACTION_LOOP_END"))
 	case "CONDITIONAL_MODIFIERS_LOOP_COUNT":
 		ex.writeEncodedText(strconv.Itoa(len(ex.entity.ConditionalModifiers())))
 	case "CONDITIONAL_MODIFIERS_LOOP_START":
-		// TODO: Implement
+		ex.processConditionalModifiersLoop(ex.entity.ConditionalModifiers(), ex.extractUpToMarker("CONDITIONAL_MODIFIERS_LOOP_END"))
 	case "PRIMARY_ATTRIBUTE_LOOP_COUNT":
 		count := 0
 		for _, def := range ex.entity.SheetSettings.Attributes.List() {
@@ -458,7 +463,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 		}
 		ex.writeEncodedText(strconv.Itoa(count))
 	case "PRIMARY_ATTRIBUTE_LOOP_START":
-		// TODO: Implement
+		ex.processAttributesLoop(ex.extractUpToMarker("PRIMARY_ATTRIBUTE_LOOP_END"), true)
 	case "SECONDARY_ATTRIBUTE_LOOP_COUNT":
 		count := 0
 		for _, def := range ex.entity.SheetSettings.Attributes.List() {
@@ -470,7 +475,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 		}
 		ex.writeEncodedText(strconv.Itoa(count))
 	case "SECONDARY_ATTRIBUTE_LOOP_START":
-		// TODO: Implement
+		ex.processAttributesLoop(ex.extractUpToMarker("SECONDARY_ATTRIBUTE_LOOP_END"), false)
 	case "POINT_POOL_LOOP_COUNT":
 		count := 0
 		for _, def := range ex.entity.SheetSettings.Attributes.List() {
@@ -482,7 +487,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 		}
 		ex.writeEncodedText(strconv.Itoa(count))
 	case "POINT_POOL_LOOP_START":
-		// TODO: Implement
+		ex.processPointPoolLoop(ex.extractUpToMarker("POINT_POOL_LOOP_START"))
 	case "CONTINUE_ID", "CAMPAIGN", "OPTIONS_CODE":
 		// No-op
 	default:
@@ -492,15 +497,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 		case strings.HasPrefix(key, "EXCLUDE_CATEGORIES_"):
 			splitIntoMap(key, "EXCLUDE_CATEGORIES_", ex.excludedCategories)
 		case strings.HasPrefix(key, "COLOR_"):
-			// TODO: Implement
-			/*
-				String colorKey = key.substring(KEY_COLOR_PREFIX.length()).toLowerCase();
-				for (ThemeColor one : Colors.ALL) {
-					if (colorKey.equals(one.getKey())) {
-						out.write(Colors.encodeToHex(one));
-					}
-				}
-			*/
+			ex.handleColor(key)
 		default:
 			attrKey := strings.ToLower(key)
 			if attr, ok := ex.entity.Attributes.Set[attrKey]; ok {
@@ -692,7 +689,7 @@ func (ex *legacyExporter) includeCulturalFamiliarities(adq *gurps.Advantage) boo
 
 func (ex *legacyExporter) processEncumbranceLoop(buffer []byte) {
 	for _, enc := range datafile.AllEncumbrance {
-		ex.processBuffer(buffer, func(key string) {
+		ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
 			switch key {
 			case "CURRENT_MARKER":
 				if enc == ex.entity.EncumbranceLevel(false) {
@@ -724,15 +721,16 @@ func (ex *legacyExporter) processEncumbranceLoop(buffer []byte) {
 			default:
 				ex.unidentifiedKey(key)
 			}
+			return index
 		})
 	}
 }
 
 func (ex *legacyExporter) processHitLocationLoop(buffer []byte) {
 	for i, location := range ex.entity.SheetSettings.HitLocations.Locations {
-		ex.processBuffer(buffer, func(key string) {
+		ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
 			switch key {
-			case "ID":
+			case idKey:
 				ex.writeEncodedText(strconv.Itoa(i))
 			case "ROLL":
 				ex.writeEncodedText(location.RollRange)
@@ -757,6 +755,7 @@ func (ex *legacyExporter) processHitLocationLoop(buffer []byte) {
 			default:
 				ex.unidentifiedKey(key)
 			}
+			return index
 		})
 	}
 }
@@ -781,9 +780,9 @@ func (ex *legacyExporter) hitLocationEquipment(location *gurps.HitLocation) []st
 func (ex *legacyExporter) processAdvantagesLoop(buffer []byte, f func(*gurps.Advantage) bool) {
 	gurps.TraverseAdvantages(func(adq *gurps.Advantage) bool {
 		if f(adq) {
-			ex.processBuffer(buffer, func(key string) {
+			ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
 				switch key {
-				case "ID":
+				case idKey:
 					ex.writeEncodedText(adq.ID.String())
 				case parentIDKey:
 					if adq.Parent != nil {
@@ -835,17 +834,20 @@ func (ex *legacyExporter) processAdvantagesLoop(buffer []byte, f func(*gurps.Adv
 						ex.unidentifiedKey(key)
 					}
 				}
+				return index
 			})
 		}
 		return false
 	}, true, ex.entity.Advantages...)
+	ex.onlyCategories = make(map[string]bool)
+	ex.excludedCategories = make(map[string]bool)
 }
 
 func (ex *legacyExporter) processSkillsLoop(buffer []byte) {
 	gurps.TraverseSkills(func(s *gurps.Skill) bool {
-		ex.processBuffer(buffer, func(key string) {
+		ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
 			switch key {
-			case "ID":
+			case idKey:
 				ex.writeEncodedText(s.ID.String())
 			case parentIDKey:
 				if s.Parent != nil {
@@ -891,6 +893,7 @@ func (ex *legacyExporter) processSkillsLoop(buffer []byte) {
 					ex.unidentifiedKey(key)
 				}
 			}
+			return index
 		})
 		return false
 	}, ex.entity.Skills...)
@@ -898,9 +901,9 @@ func (ex *legacyExporter) processSkillsLoop(buffer []byte) {
 
 func (ex *legacyExporter) processSpellsLoop(buffer []byte) {
 	gurps.TraverseSpells(func(s *gurps.Spell) bool {
-		ex.processBuffer(buffer, func(key string) {
+		ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
 			switch key {
-			case "ID":
+			case idKey:
 				ex.writeEncodedText(s.ID.String())
 			case parentIDKey:
 				if s.Parent != nil {
@@ -966,9 +969,440 @@ func (ex *legacyExporter) processSpellsLoop(buffer []byte) {
 					ex.unidentifiedKey(key)
 				}
 			}
+			return index
 		})
 		return false
 	}, ex.entity.Spells...)
+}
+
+func (ex *legacyExporter) processEquipmentLoop(buffer []byte, carried bool) {
+	var eqpList []*gurps.Equipment
+	if carried {
+		eqpList = ex.entity.CarriedEquipment
+	} else {
+		eqpList = ex.entity.OtherEquipment
+	}
+	gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
+		if ex.includeByCategories(eqp.Categories) {
+			ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
+				switch key {
+				case idKey:
+					ex.writeEncodedText(eqp.ID.String())
+				case parentIDKey:
+					if eqp.Parent != nil {
+						ex.writeEncodedText(eqp.Parent.ID.String())
+					}
+				case typeKey:
+					if eqp.Container() {
+						ex.writeEncodedText("GROUP")
+					} else {
+						ex.writeEncodedText("ITEM")
+					}
+				case descriptionKey:
+					ex.writeEncodedText(eqp.String())
+					ex.writeNote(eqp.ModifierNotes())
+					ex.writeNote(eqp.Notes())
+				case descriptionPrimaryKey:
+					ex.writeEncodedText(eqp.String())
+				case refKey:
+					ex.writeEncodedText(eqp.PageRef)
+				case styleIndentWarningKey:
+					ex.handleStyleIndentWarning(eqp.Depth(), eqp.Satisfied)
+				case satisfiedKey:
+					ex.handleSatisfied(eqp.Satisfied)
+				case "STATE":
+					switch {
+					case !carried:
+						ex.writeEncodedText("-")
+					case eqp.Equipped:
+						ex.writeEncodedText("E")
+					default:
+						ex.writeEncodedText("C")
+					}
+				case "EQUIPPED":
+					if carried && eqp.Equipped {
+						ex.writeEncodedText("✓")
+					}
+				case "EQUIPPED_FA":
+					if carried && eqp.Equipped {
+						ex.writeEncodedText(`<i class="fas fa-check-circle"></i>`)
+					}
+				case "EQUIPPED_NUM":
+					if carried && eqp.Equipped {
+						ex.writeEncodedText("1")
+					} else {
+						ex.writeEncodedText("0")
+					}
+				case "CARRIED_STATUS":
+					switch {
+					case !carried:
+						ex.writeEncodedText("0")
+					case eqp.Equipped:
+						ex.writeEncodedText("2")
+					default:
+						ex.writeEncodedText("1")
+					}
+				case "QTY":
+					ex.writeEncodedText(eqp.Quantity.String())
+				case "COST":
+					ex.writeEncodedText(eqp.AdjustedValue().String())
+				case weightKey:
+					ex.writeEncodedText(ex.entity.SheetSettings.DefaultWeightUnits.Format(eqp.AdjustedWeight(false, ex.entity.SheetSettings.DefaultWeightUnits)))
+				case "COST_SUMMARY":
+					ex.writeEncodedText(eqp.ExtendedValue().String())
+				case "WEIGHT_SUMMARY":
+					ex.writeEncodedText(ex.entity.SheetSettings.DefaultWeightUnits.Format(eqp.ExtendedWeight(false, ex.entity.SheetSettings.DefaultWeightUnits)))
+				case "WEIGHT_RAW":
+					ex.writeEncodedText(fixed.F64d4(eqp.AdjustedWeight(false, ex.entity.SheetSettings.DefaultWeightUnits)).String())
+				case techLevelKey:
+					ex.writeEncodedText(eqp.TechLevel)
+				case "LEGALITY_CLASS", "LC":
+					ex.writeEncodedText(eqp.LegalityClass)
+				case "CATEGORIES":
+					ex.writeEncodedText(strings.Join(eqp.Categories, ", "))
+				case "LOCATION":
+					if eqp.Parent != nil {
+						ex.writeEncodedText(eqp.Parent.Name)
+					}
+				case "USES":
+					ex.writeEncodedText(strconv.Itoa(eqp.Uses))
+				case "MAX_USES":
+					ex.writeEncodedText(strconv.Itoa(eqp.MaxUses))
+				default:
+					switch {
+					case strings.HasPrefix(key, "DESCRIPTION_MODIFIER_NOTES"):
+						ex.writeWithOptionalParens(key, eqp.ModifierNotes())
+					case strings.HasPrefix(key, "DESCRIPTION_NOTES"):
+						ex.writeWithOptionalParens(key, eqp.Notes())
+					case strings.HasPrefix(key, "MODIFIER_NOTES_FOR_"):
+						if mod := eqp.ActiveModifierFor(key[len("MODIFIER_NOTES_FOR_"):]); mod != nil {
+							ex.writeEncodedText(mod.Notes)
+						}
+					case strings.HasPrefix(key, "PREFIX_DEPTHx"):
+						ex.handlePrefixDepth(key, eqp.Depth())
+					default:
+						ex.unidentifiedKey(key)
+					}
+				}
+				return index
+			})
+		}
+		return false
+	}, eqpList...)
+	ex.onlyCategories = make(map[string]bool)
+	ex.excludedCategories = make(map[string]bool)
+}
+
+func (ex *legacyExporter) processNotesLoop(buffer []byte) {
+	gurps.TraverseNotes(func(n *gurps.Note) bool {
+		ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
+			switch key {
+			case idKey:
+				ex.writeEncodedText(n.ID.String())
+			case parentIDKey:
+				if n.Parent != nil {
+					ex.writeEncodedText(n.Parent.ID.String())
+				}
+			case typeKey:
+				if n.Container() {
+					ex.writeEncodedText("GROUP")
+				} else {
+					ex.writeEncodedText("ITEM")
+				}
+			case refKey:
+				ex.writeEncodedText(n.PageRef)
+			case "NOTE":
+				ex.writeEncodedText(n.Text)
+			case "NOTE_FORMATTED":
+				if strings.TrimSpace(n.Text) != "" {
+					for _, one := range strings.Split(n.Text, "\n") {
+						ex.out.WriteString("<p>")
+						ex.writeEncodedText(one)
+						ex.out.WriteString("</p>\n")
+					}
+				}
+			case styleIndentWarningKey:
+				ex.handleStyleIndentWarning(n.Depth(), true)
+			default:
+				switch {
+				case strings.HasPrefix(key, "PREFIX_DEPTHx"):
+					ex.handlePrefixDepth(key, n.Depth())
+				default:
+					ex.unidentifiedKey(key)
+				}
+			}
+			return index
+		})
+		return false
+	}, ex.entity.Notes...)
+}
+
+func (ex *legacyExporter) processConditionalModifiersLoop(list []*gurps.ConditionalModifier, buffer []byte) {
+	for i, one := range list {
+		ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
+			switch key {
+			case idKey:
+				ex.writeEncodedText(strconv.Itoa(i))
+			case "MODIFIER":
+				ex.writeEncodedText(one.Total().StringWithSign())
+			case "SITUATION":
+				ex.writeEncodedText(one.From)
+			default:
+				ex.unidentifiedKey(key)
+			}
+			return index
+		})
+	}
+}
+
+func (ex *legacyExporter) processAttributesLoop(buffer []byte, primary bool) {
+	for _, def := range ex.entity.SheetSettings.Attributes.List() {
+		if def.Type != attribute.Pool && def.Primary() == primary {
+			if attr, ok := ex.entity.Attributes.Set[def.DefID]; ok {
+				ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
+					switch key {
+					case idKey:
+						ex.writeEncodedText(def.DefID)
+					case nameKey:
+						ex.writeEncodedText(def.Name)
+					case "FULL_NAME":
+						ex.writeEncodedText(def.ResolveFullName())
+					case "COMBINED_NAME":
+						ex.writeEncodedText(def.CombinedName())
+					case "VALUE":
+						ex.writeEncodedText(attr.Maximum().String())
+					case "POINTS":
+						ex.writeEncodedText(attr.PointCost().String())
+					default:
+						ex.unidentifiedKey(key)
+					}
+					return index
+				})
+			}
+		}
+	}
+}
+
+func (ex *legacyExporter) processPointPoolLoop(buffer []byte) {
+	for _, def := range ex.entity.SheetSettings.Attributes.List() {
+		if def.Type != attribute.Pool {
+			if attr, ok := ex.entity.Attributes.Set[def.DefID]; ok {
+				ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
+					switch key {
+					case idKey:
+						ex.writeEncodedText(def.DefID)
+					case nameKey:
+						ex.writeEncodedText(def.Name)
+					case "FULL_NAME":
+						ex.writeEncodedText(def.ResolveFullName())
+					case "COMBINED_NAME":
+						ex.writeEncodedText(def.CombinedName())
+					case "CURRENT":
+						ex.writeEncodedText(attr.Current().String())
+					case "MAXIMUM":
+						ex.writeEncodedText(attr.Maximum().String())
+					case "POINTS":
+						ex.writeEncodedText(attr.PointCost().String())
+					default:
+						ex.unidentifiedKey(key)
+					}
+					return index
+				})
+			}
+		}
+	}
+}
+
+func (ex *legacyExporter) processMeleeLoop(buffer []byte) {
+	for i, w := range ex.entity.EquippedWeapons(weapon.Melee) {
+		ex.processBuffer(buffer, func(key string, buf []byte, index int) int {
+			return ex.processMeleeKeys(key, i, w, nil, buf, index)
+		})
+	}
+}
+
+func (ex *legacyExporter) processHierarchicalMeleeLoop(buffer []byte) {
+	m := make(map[string][]*gurps.Weapon)
+	for _, w := range ex.entity.EquippedWeapons(weapon.Melee) {
+		key := w.String()
+		m[key] = append(m[key], w)
+	}
+	list := make([]*gurps.Weapon, 0, len(m))
+	for _, v := range m {
+		list = append(list, v[0])
+	}
+	sort.Slice(list, func(i, j int) bool { return list[i].Less(list[j]) })
+	for i, w := range list {
+		ex.processBuffer(buffer, func(key string, buf []byte, index int) int {
+			return ex.processMeleeKeys(key, i, w, m[w.String()], buf, index)
+		})
+	}
+}
+
+func (ex *legacyExporter) processRangedLoop(buffer []byte) {
+	for i, w := range ex.entity.EquippedWeapons(weapon.Ranged) {
+		ex.processBuffer(buffer, func(key string, buf []byte, index int) int {
+			return ex.processRangedKeys(key, i, w, nil, buf, index)
+		})
+	}
+}
+
+func (ex *legacyExporter) processHierarchicalRangedLoop(buffer []byte) {
+	m := make(map[string][]*gurps.Weapon)
+	for _, w := range ex.entity.EquippedWeapons(weapon.Ranged) {
+		key := w.String()
+		m[key] = append(m[key], w)
+	}
+	list := make([]*gurps.Weapon, 0, len(m))
+	for _, v := range m {
+		list = append(list, v[0])
+	}
+	sort.Slice(list, func(i, j int) bool { return list[i].Less(list[j]) })
+	for i, w := range list {
+		ex.processBuffer(buffer, func(key string, buf []byte, index int) int {
+			return ex.processRangedKeys(key, i, w, m[w.String()], buf, index)
+		})
+	}
+}
+
+func (ex *legacyExporter) processMeleeKeys(key string, currentID int, w *gurps.Weapon, attackModes []*gurps.Weapon, buf []byte, index int) int {
+	switch key {
+	case "PARRY":
+		ex.writeEncodedText(w.ResolvedParry(nil))
+	case "BLOCK":
+		ex.writeEncodedText(w.ResolvedBlock(nil))
+	case "REACH":
+		ex.writeEncodedText(w.Reach)
+	case "ATTACK_MODES_LOOP_COUNT":
+		ex.writeEncodedText(strconv.Itoa(len(attackModes)))
+	case "ATTACK_MODES_LOOP_START":
+		if len(attackModes) != 0 {
+			buf, index = ex.subBufferExtractUpToMarker("ATTACK_MODES_LOOP_END", buf, index)
+			for i, mode := range attackModes {
+				ex.processBuffer(buf, func(key string, innerBuf []byte, innerIndex int) int {
+					return ex.processMeleeKeys(key, i, mode, nil, innerBuf, innerIndex)
+				})
+			}
+		} else {
+			ex.unidentifiedKey(key)
+		}
+	default:
+		ex.processWeaponKeys(key, currentID, w)
+	}
+	return index
+}
+
+func (ex *legacyExporter) processRangedKeys(key string, currentID int, w *gurps.Weapon, attackModes []*gurps.Weapon, buf []byte, index int) int {
+	switch key {
+	case "BULK":
+		ex.writeEncodedText(w.Bulk)
+	case "ACCURACY":
+		ex.writeEncodedText(w.Accuracy)
+	case "RANGE":
+		ex.writeEncodedText(w.ResolvedRange())
+	case "ROF":
+		ex.writeEncodedText(w.RateOfFire)
+	case "SHOTS":
+		ex.writeEncodedText(w.Shots)
+	case "RECOIL":
+		ex.writeEncodedText(w.Recoil)
+	case "ATTACK_MODES_LOOP_COUNT":
+		ex.writeEncodedText(strconv.Itoa(len(attackModes)))
+	case "ATTACK_MODES_LOOP_START":
+		if len(attackModes) != 0 {
+			buf, index = ex.subBufferExtractUpToMarker("ATTACK_MODES_LOOP_END", buf, index)
+			for i, mode := range attackModes {
+				ex.processBuffer(buf, func(key string, innerBuf []byte, innerIndex int) int {
+					return ex.processRangedKeys(key, i, mode, nil, innerBuf, innerIndex)
+				})
+			}
+		} else {
+			ex.unidentifiedKey(key)
+		}
+	default:
+		ex.processWeaponKeys(key, currentID, w)
+	}
+	return index
+}
+
+func (ex *legacyExporter) processWeaponKeys(key string, currentID int, w *gurps.Weapon) {
+	switch key {
+	case idKey:
+		ex.writeEncodedText(strconv.Itoa(currentID))
+	case descriptionKey:
+		ex.writeEncodedText(w.String())
+		ex.writeNote(w.Notes())
+	case descriptionPrimaryKey:
+		ex.writeEncodedText(w.String())
+	case "USAGE":
+		ex.writeEncodedText(w.Usage)
+	case "LEVEL":
+		ex.writeEncodedText(w.SkillLevel(nil).String())
+	case "DAMAGE":
+		ex.writeEncodedText(w.Damage.ResolvedDamage(nil))
+	case "UNMODIFIED_DAMAGE":
+		ex.writeEncodedText(w.Damage.String())
+	case "STRENGTH":
+		ex.writeEncodedText(w.MinimumStrength)
+	case "WEAPON_STRENGTH":
+		v, _ := fxp.Extract(w.MinimumStrength)
+		ex.writeEncodedText(v.String())
+	case "COST":
+		if eqp, ok := w.Owner.(*gurps.Equipment); ok {
+			ex.writeEncodedText(eqp.AdjustedValue().String())
+		}
+	case "LEGALITY_CLASS", "LC":
+		if eqp, ok := w.Owner.(*gurps.Equipment); ok {
+			ex.writeEncodedText(eqp.LegalityClass)
+		}
+	case techLevelKey:
+		if eqp, ok := w.Owner.(*gurps.Equipment); ok {
+			ex.writeEncodedText(eqp.TechLevel)
+		}
+	case weightKey:
+		if eqp, ok := w.Owner.(*gurps.Equipment); ok {
+			ex.writeEncodedText(ex.entity.SheetSettings.DefaultWeightUnits.Format(eqp.AdjustedWeight(false, ex.entity.SheetSettings.DefaultWeightUnits)))
+		}
+	case "AMMO":
+		if eqp, ok := w.Owner.(*gurps.Equipment); ok {
+			ex.writeEncodedText(ex.ammoFor(eqp).String())
+		}
+	default:
+		switch {
+		case strings.HasPrefix(key, "DESCRIPTION_NOTES"):
+			ex.writeWithOptionalParens(key, w.Notes())
+		default:
+			ex.unidentifiedKey(key)
+		}
+	}
+}
+
+func (ex *legacyExporter) ammoFor(weaponEqp *gurps.Equipment) fixed.F64d4 {
+	uses := ""
+	for _, cat := range weaponEqp.CategoryList() {
+		if strings.HasPrefix(strings.ToLower(cat), "usesammotype:") {
+			uses = strings.ReplaceAll(cat[len("usesammotype:"):], " ", "")
+			break
+		}
+	}
+	if uses == "" {
+		return 0
+	}
+	var total fixed.F64d4
+	gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
+		if eqp.Equipped && eqp.Quantity > 0 {
+			for _, cat := range eqp.Categories {
+				if strings.HasPrefix(strings.ToLower(cat), "ammotype:") {
+					if uses == strings.ReplaceAll(cat[len("ammotype:"):], " ", "") {
+						total += eqp.Quantity
+						break
+					}
+				}
+			}
+		}
+		return false
+	}, ex.entity.CarriedEquipment...)
+	return total
 }
 
 func (ex *legacyExporter) handleStyleIndentWarning(depth int, satisfied bool) {
@@ -1030,7 +1464,7 @@ func (ex *legacyExporter) writeWithOptionalParens(key, text string) {
 	}
 }
 
-func (ex *legacyExporter) processBuffer(buffer []byte, f func(key string)) {
+func (ex *legacyExporter) processBuffer(buffer []byte, f func(key string, buf []byte, index int) int) {
 	var keyBuffer bytes.Buffer
 	lookForKeyMarker := true
 	i := 0
@@ -1050,9 +1484,132 @@ func (ex *legacyExporter) processBuffer(buffer []byte, f func(key string)) {
 			if !ex.enhancedKeyParsing || ch != '@' {
 				i--
 			}
-			f(keyBuffer.String())
+			i = f(keyBuffer.String(), buffer, i)
 			keyBuffer.Reset()
 			lookForKeyMarker = true
 		}
+	}
+}
+
+func (ex *legacyExporter) subBufferExtractUpToMarker(marker string, buf []byte, start int) (buffer []byte, newStart int) {
+	remaining := buf[start:]
+	i := bytes.Index(remaining, []byte(marker))
+	if i == -1 {
+		return remaining, len(buf)
+	}
+	buffer = buf[start : start+i]
+	start += i + len(marker)
+	if ex.enhancedKeyParsing && start < len(buf) && buf[start] == '@' {
+		start++
+	}
+	return buffer, start
+}
+
+func (ex *legacyExporter) handleColor(key string) {
+	var c *unison.ThemeColor
+	switch strings.ToLower(key[len("COLOR_"):]) {
+	case "background":
+		c = unison.BackgroundColor
+	case "on_background":
+		c = unison.OnBackgroundColor
+	case "content":
+		c = unison.ContentColor
+	case "on_content":
+		c = unison.OnContentColor
+	case "banding":
+		c = unison.BandingColor
+	case "divider":
+		c = unison.DividerColor
+	case "header":
+		c = theme.HeaderColor
+	case "on_header":
+		c = theme.OnHeaderColor
+	case "tab_focused":
+		c = unison.TabFocusedColor
+	case "on_tab_focused":
+		c = unison.OnTabFocusedColor
+	case "tab_current":
+		c = unison.TabCurrentColor
+	case "on_tab_current":
+		c = unison.OnTabCurrentColor
+	case "drop_area":
+		c = unison.DropAreaColor
+	case "editable":
+		c = unison.EditableColor
+	case "on_editable":
+		c = unison.OnEditableColor
+	case "editable_border":
+		c = theme.EditableBorderColor
+	case "editable_border_focused":
+		c = theme.EditableBorderFocusedColor
+	case "selection":
+		c = unison.SelectionColor
+	case "on_selection":
+		c = unison.OnSelectionColor
+	case "inactive_selection":
+		c = unison.InactiveSelectionColor
+	case "on_inactive_selection":
+		c = unison.OnInactiveSelectionColor
+	case "scroll":
+		c = unison.ScrollColor
+	case "scroll_rollover":
+		c = unison.ScrollRolloverColor
+	case "scroll_edge":
+		c = unison.ScrollEdgeColor
+	case "accent":
+		c = theme.AccentColor
+	case "control":
+		c = unison.ControlColor
+	case "on_control":
+		c = unison.OnControlColor
+	case "control_pressed":
+		c = unison.ControlPressedColor
+	case "on_control_pressed":
+		c = unison.OnControlPressedColor
+	case "control_edge":
+		c = unison.ControlEdgeColor
+	case "icon_button":
+		c = unison.IconButtonColor
+	case "icon_button_rollover":
+		c = unison.IconButtonRolloverColor
+	case "icon_button_pressed":
+		c = unison.IconButtonPressedColor
+	case "tooltip":
+		c = unison.TooltipColor
+	case "on_tooltip":
+		c = unison.OnTooltipColor
+	case "search_list":
+		c = theme.SearchListColor
+	case "on_search_list":
+		c = theme.OnSearchListColor
+	case "page":
+		c = theme.PageColor
+	case "on_page":
+		c = theme.OnPageColor
+	case "page_void":
+		c = theme.PageVoidColor
+	case "marker":
+		c = theme.MarkerColor
+	case "on_marker":
+		c = theme.OnMarkerColor
+	case "error":
+		c = unison.ErrorColor
+	case "on_error":
+		c = unison.OnErrorColor
+	case "warning":
+		c = unison.WarningColor
+	case "on_warning":
+		c = unison.OnWarningColor
+	case "overloaded":
+		c = theme.OverloadedColor
+	case "on_overloaded":
+		c = theme.OnOverloadedColor
+	case "hint":
+		c = theme.HintColor
+	default:
+		ex.unidentifiedKey(key)
+	}
+	if c != nil {
+		ex.out.WriteString(c.GetColor().String())
 	}
 }

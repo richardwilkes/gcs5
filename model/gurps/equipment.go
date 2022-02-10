@@ -180,6 +180,17 @@ func (e *Equipment) Container() bool {
 	return strings.HasSuffix(e.Type, commonContainerKeyPostfix)
 }
 
+// Depth returns the number of parents this node has.
+func (e *Equipment) Depth() int {
+	count := 0
+	p := e.Parent
+	for p != nil {
+		count++
+		p = p.Parent
+	}
+	return count
+}
+
 // OwningEntity returns the owning Entity.
 func (e *Equipment) OwningEntity() *Entity {
 	return e.Entity

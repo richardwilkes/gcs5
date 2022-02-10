@@ -150,6 +150,21 @@ func (w *Weapon) String() string {
 	return w.Owner.Description()
 }
 
+// Notes returns the notes for this weapon.
+func (w *Weapon) Notes() string {
+	var buffer strings.Builder
+	if w.Owner != nil {
+		buffer.WriteString(w.Owner.Notes())
+	}
+	if strings.TrimSpace(w.UsageNotes) != "" {
+		if buffer.Len() != 0 {
+			buffer.WriteByte('\n')
+		}
+		buffer.WriteString(w.UsageNotes)
+	}
+	return buffer.String()
+}
+
 // SetOwner sets the owner and ensures sub-components have their owners set.
 func (w *Weapon) SetOwner(owner WeaponOwner) {
 	w.Owner = owner

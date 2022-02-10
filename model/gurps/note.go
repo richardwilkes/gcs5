@@ -112,3 +112,14 @@ func (n *Note) UnmarshalJSON(data []byte) error {
 func (n *Note) Container() bool {
 	return strings.HasSuffix(n.Type, commonContainerKeyPostfix)
 }
+
+// Depth returns the number of parents this node has.
+func (n *Note) Depth() int {
+	count := 0
+	p := n.Parent
+	for p != nil {
+		count++
+		p = p.Parent
+	}
+	return count
+}
