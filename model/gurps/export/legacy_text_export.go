@@ -99,7 +99,11 @@ func LegacyExport(entity *gurps.Entity, templatePath, exportPath string) (err er
 		ex.pos++
 		switch {
 		case lookForKeyMarker:
-			if ch == '@' {
+			var next byte
+			if ex.pos < len(ex.template) {
+				next = ex.template[ex.pos]
+			}
+			if ch == '@' && !(next >= '0' && next <= '9') {
 				lookForKeyMarker = false
 			} else {
 				ex.out.WriteByte(ch)
@@ -487,7 +491,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 		}
 		ex.writeEncodedText(strconv.Itoa(count))
 	case "POINT_POOL_LOOP_START":
-		ex.processPointPoolLoop(ex.extractUpToMarker("POINT_POOL_LOOP_START"))
+		ex.processPointPoolLoop(ex.extractUpToMarker("POINT_POOL_LOOP_END"))
 	case "CONTINUE_ID", "CAMPAIGN", "OPTIONS_CODE":
 		// No-op
 	default:
@@ -828,7 +832,7 @@ func (ex *legacyExporter) processAdvantagesLoop(buffer []byte, f func(*gurps.Adv
 						if mod := adq.ActiveModifierFor(key[len("MODIFIER_NOTES_FOR_"):]); mod != nil {
 							ex.writeEncodedText(mod.Notes)
 						}
-					case strings.HasPrefix(key, "PREFIX_DEPTHx"):
+					case strings.HasPrefix(key, "DEPTHx"):
 						ex.handlePrefixDepth(key, adq.Depth())
 					default:
 						ex.unidentifiedKey(key)
@@ -887,7 +891,7 @@ func (ex *legacyExporter) processSkillsLoop(buffer []byte) {
 					ex.writeWithOptionalParens(key, s.ModifierNotes())
 				case strings.HasPrefix(key, "DESCRIPTION_NOTES"):
 					ex.writeWithOptionalParens(key, s.Notes())
-				case strings.HasPrefix(key, "PREFIX_DEPTHx"):
+				case strings.HasPrefix(key, "DEPTHx"):
 					ex.handlePrefixDepth(key, s.Depth())
 				default:
 					ex.unidentifiedKey(key)
@@ -953,6 +957,8 @@ func (ex *legacyExporter) processSpellsLoop(buffer []byte) {
 				ex.handleSatisfied(s.Satisfied)
 			default:
 				switch {
+				case strings.HasPrefix(key, "DESCRIPTION_MODIFIER_NOTES"):
+					// Here for legacy reasons. Spells have never had these notes.
 				case strings.HasPrefix(key, "DESCRIPTION_NOTES"):
 					notes := s.Notes()
 					rituals := s.Rituals()
@@ -963,7 +969,7 @@ func (ex *legacyExporter) processSpellsLoop(buffer []byte) {
 						notes += rituals
 					}
 					ex.writeWithOptionalParens(key, notes)
-				case strings.HasPrefix(key, "PREFIX_DEPTHx"):
+				case strings.HasPrefix(key, "DEPTHx"):
 					ex.handlePrefixDepth(key, s.Depth())
 				default:
 					ex.unidentifiedKey(key)
@@ -1025,7 +1031,7 @@ func (ex *legacyExporter) processEquipmentLoop(buffer []byte, carried bool) {
 					}
 				case "EQUIPPED_FA":
 					if carried && eqp.Equipped {
-						ex.writeEncodedText(`<i class="fas fa-check-circle"></i>`)
+						ex.out.WriteString(`<i class="fas fa-check-circle"></i>`)
 					}
 				case "EQUIPPED_NUM":
 					if carried && eqp.Equipped {
@@ -1078,7 +1084,7 @@ func (ex *legacyExporter) processEquipmentLoop(buffer []byte, carried bool) {
 						if mod := eqp.ActiveModifierFor(key[len("MODIFIER_NOTES_FOR_"):]); mod != nil {
 							ex.writeEncodedText(mod.Notes)
 						}
-					case strings.HasPrefix(key, "PREFIX_DEPTHx"):
+					case strings.HasPrefix(key, "DEPTHx"):
 						ex.handlePrefixDepth(key, eqp.Depth())
 					default:
 						ex.unidentifiedKey(key)
@@ -1125,7 +1131,7 @@ func (ex *legacyExporter) processNotesLoop(buffer []byte) {
 				ex.handleStyleIndentWarning(n.Depth(), true)
 			default:
 				switch {
-				case strings.HasPrefix(key, "PREFIX_DEPTHx"):
+				case strings.HasPrefix(key, "DEPTHx"):
 					ex.handlePrefixDepth(key, n.Depth())
 				default:
 					ex.unidentifiedKey(key)
@@ -1185,7 +1191,7 @@ func (ex *legacyExporter) processAttributesLoop(buffer []byte, primary bool) {
 
 func (ex *legacyExporter) processPointPoolLoop(buffer []byte) {
 	for _, def := range ex.entity.SheetSettings.Attributes.List() {
-		if def.Type != attribute.Pool {
+		if def.Type == attribute.Pool {
 			if attr, ok := ex.entity.Attributes.Set[def.DefID]; ok {
 				ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
 					switch key {
@@ -1429,7 +1435,7 @@ func (ex *legacyExporter) handleSatisfied(satisfied bool) {
 }
 
 func (ex *legacyExporter) handlePrefixDepth(key string, depth int) {
-	if amt, err := strconv.Atoi(key[len("PREFIX_DEPTHx"):]); err != nil {
+	if amt, err := strconv.Atoi(key[len("DEPTHx"):]); err != nil {
 		ex.unidentifiedKey(key)
 	} else {
 		ex.writeEncodedText(strconv.Itoa(amt * depth))
@@ -1473,7 +1479,11 @@ func (ex *legacyExporter) processBuffer(buffer []byte, f func(key string, buf []
 		i++
 		switch {
 		case lookForKeyMarker:
-			if ch == '@' {
+			var next byte
+			if ex.pos < len(ex.template) {
+				next = ex.template[ex.pos]
+			}
+			if ch == '@' && !(next >= '0' && next <= '9') {
 				lookForKeyMarker = false
 			} else {
 				ex.out.WriteByte(ch)

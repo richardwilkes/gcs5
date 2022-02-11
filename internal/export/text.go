@@ -12,12 +12,32 @@
 package export
 
 import (
-	"github.com/richardwilkes/gcs/model/gurps/settings"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/export"
 	"github.com/richardwilkes/toolbox/log/jot"
+	"github.com/richardwilkes/toolbox/xio/fs"
 )
 
 // ToText exports the files to a text representation.
-func ToText(tmplPath string, pageOverrides *settings.PageOverrides, fileList []string) {
-	// TODO: Implement me
-	jot.Fatal(1, "ExportToText needs implementation")
+func ToText(tmplPath string, fileList []string) {
+	for _, one := range fileList {
+		switch strings.ToLower(filepath.Ext(one)) {
+		case ".gcs":
+			entity, err := gurps.NewEntityFromFile(os.DirFS(filepath.Dir(one)), filepath.Base(one))
+			if err != nil {
+				jot.Fatal(1, err)
+			}
+			entity.Recalculate()
+			// TODO: Really should provide a way to specify the output file
+			if err = export.LegacyExport(entity, tmplPath, fs.TrimExtension(one)+filepath.Ext(tmplPath)); err != nil {
+				jot.Fatal(1, err)
+			}
+		default:
+			jot.Warn("ignoring: " + one)
+		}
+	}
 }
