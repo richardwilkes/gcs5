@@ -12,19 +12,19 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/richardwilkes/gcs/internal/export"
 	"github.com/richardwilkes/gcs/internal/ui"
-	"github.com/richardwilkes/gcs/model/gurps"
-	"github.com/richardwilkes/gcs/model/gurps/ancestry"
-	"github.com/richardwilkes/gcs/model/jio"
+	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
+	"github.com/richardwilkes/gcs/model/paper"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/cmdline"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/log/jotrotate"
 )
@@ -40,90 +40,70 @@ func main() {
 		cmdline.AppVersion = "0.0"
 	}
 	cl := cmdline.New(true)
+	var textTmplPath, paperSize, topMargin, bottomMargin, leftMargin, rightMargin, orientation string
+	var png, webp bool
+	marginUsage := i18n.Text("Sets the %s margin to use, rather than the one embedded in the file when exporting from the command line. May be specified in inches (in), centimeters (cm), or millimeters (mm). No suffix will imply inches.")
+	cl.NewStringOption(&topMargin).SetName("top").SetUsage(fmt.Sprintf(marginUsage, i18n.Text("top")))
+	cl.NewStringOption(&bottomMargin).SetName("bottom").SetUsage(fmt.Sprintf(marginUsage, i18n.Text("bottom")))
+	cl.NewStringOption(&leftMargin).SetName("left").SetUsage(fmt.Sprintf(marginUsage, i18n.Text("left")))
+	cl.NewStringOption(&rightMargin).SetName("right").SetUsage(fmt.Sprintf(marginUsage, i18n.Text("right")))
+	orientations := make([]string, len(paper.AllOrientation))
+	for i, one := range paper.AllOrientation {
+		orientations[i] = one.String()
+	}
+	cl.NewStringOption(&orientation).SetName("orientation").SetUsage(i18n.Text("Sets the page orientation. Valid choices are: ") + strings.Join(orientations, ", "))
+	sizes := make([]string, len(paper.AllSize))
+	for i, one := range paper.AllSize {
+		sizes[i] = one.String()
+	}
+	cl.NewStringOption(&paperSize).SetName("paper").SetSingle('p').SetArg("size").SetUsage(i18n.Text("Sets the paper size to use, rather than the one embedded in the file when exporting from the command line. Valid choices are: ") + strings.Join(sizes, ", "))
+	cl.NewStringOption(&textTmplPath).SetName("text").SetSingle('x').SetArg("file").SetUsage(i18n.Text("Export sheets using the specified template file"))
+	cl.NewBoolOption(&png).SetName("png").SetUsage(i18n.Text("Export sheets to PNG"))
+	cl.NewBoolOption(&webp).SetName("webp").SetUsage(i18n.Text("Export sheets to WebP"))
 	fileList := jotrotate.ParseAndSetup(cl)
 
-	settings.Global() // Here to force early initialization
-	processDir("../gcs_master_library/Library/Home Brew/Characters")
-	atexit.Exit(0)
-
-	ui.Start(fileList) // Never returns
-}
-
-func processDir(dir string) {
-	const convertedDir = "converted/"
-	entries, err := os.ReadDir(dir)
-	jot.FatalIfErr(err)
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-		name := entry.Name()
-		switch filepath.Ext(name) {
-		case ".adq":
-			var adq []*gurps.Advantage
-			adq, err = gurps.NewAdvantagesFromFile(os.DirFS(dir), name)
-			jot.FatalIfErr(err)
-			jot.FatalIfErr(gurps.SaveAdvantages(adq, convertedDir+name))
-		case ".adm":
-			var adm []*gurps.AdvantageModifier
-			adm, err = gurps.NewAdvantageModifiersFromFile(os.DirFS(dir), name)
-			jot.FatalIfErr(err)
-			jot.FatalIfErr(gurps.SaveAdvantageModifiers(adm, convertedDir+name))
-		case ".eqm":
-			var eqm []*gurps.EquipmentModifier
-			eqm, err = gurps.NewEquipmentModifiersFromFile(os.DirFS(dir), name)
-			jot.FatalIfErr(err)
-			jot.FatalIfErr(gurps.SaveEquipmentModifiers(eqm, convertedDir+name))
-		case ".eqp":
-			var eqp []*gurps.Equipment
-			eqp, err = gurps.NewEquipmentFromFile(os.DirFS(dir), name)
-			jot.FatalIfErr(err)
-			jot.FatalIfErr(gurps.SaveEquipment(eqp, convertedDir+name))
-		case ".not":
-			var not []*gurps.Note
-			not, err = gurps.NewNotesFromFile(os.DirFS(dir), name)
-			jot.FatalIfErr(err)
-			jot.FatalIfErr(gurps.SaveNotes(not, convertedDir+name))
-		case ".skl":
-			var skl []*gurps.Skill
-			skl, err = gurps.NewSkillsFromFile(os.DirFS(dir), name)
-			jot.FatalIfErr(err)
-			jot.FatalIfErr(gurps.SaveSkills(skl, convertedDir+name))
-		case ".spl":
-			var spl []*gurps.Spell
-			spl, err = gurps.NewSpellsFromFile(os.DirFS(dir), name)
-			jot.FatalIfErr(err)
-			jot.FatalIfErr(gurps.SaveSpells(spl, convertedDir+name))
-		case ".ghl":
-			var ghl *gurps.BodyType
-			ghl, err = gurps.NewBodyTypeFromFile(os.DirFS(dir), name)
-			jot.FatalIfErr(err)
-			jot.FatalIfErr(ghl.Save(convertedDir + name))
-		case ".gas":
-			var gas *gurps.AttributeDefs
-			gas, err = gurps.NewAttributeDefsFromFile(os.DirFS(dir), name)
-			jot.FatalIfErr(err)
-			jot.FatalIfErr(gas.Save(convertedDir + name))
-		case ".ancestry":
-			var anc *ancestry.Ancestry
-			anc, err = ancestry.NewAncestoryFromFile(os.DirFS(dir), name)
-			jot.FatalIfErr(err)
-			jot.FatalIfErr(anc.Save(convertedDir + name))
-		case ".gcs":
-			var entity *gurps.Entity
-			entity, err = gurps.NewEntityFromFile(os.DirFS(dir), name)
-			jot.FatalIfErr(err)
-			jot.FatalIfErr(entity.Save(convertedDir + name))
-		// case ".gct":
-		default:
-			fmt.Println("skipping " + name)
-			continue
-		}
-		var m map[string]interface{}
-		jot.FatalIfErr(jio.LoadFromFile(context.Background(), dir+"/"+name, &m))
-		jot.FatalIfErr(jio.SaveToFile(context.Background(), convertedDir+"orig-sorted-"+name, m))
-		m = make(map[string]interface{})
-		jot.FatalIfErr(jio.LoadFromFile(context.Background(), convertedDir+name, &m))
-		jot.FatalIfErr(jio.SaveToFile(context.Background(), convertedDir+"/sorted-"+name, m))
+	exportRequests := 0
+	if png {
+		exportRequests++
 	}
+	if webp {
+		exportRequests++
+	}
+	if textTmplPath != "" {
+		exportRequests++
+	}
+	settings.Global() // Here to force early initialization
+	switch {
+	case exportRequests == 0:
+		ui.Start(fileList) // Never returns
+	case exportRequests > 1:
+		cl.FatalMsg(i18n.Text("Only one of --text, --png, or --webp may be specified."))
+	default:
+		if len(fileList) == 0 {
+			cl.FatalMsg(i18n.Text("No files to process."))
+		}
+		for _, one := range fileList {
+			if strings.ToLower(filepath.Ext(one)) != ".gcs" {
+				cl.FatalMsg(i18n.Text("Only .gcs files may be exported."))
+			}
+		}
+		pageOverrides := &gsettings.PageOverrides{}
+		pageOverrides.ParseSize(paperSize)
+		pageOverrides.ParseOrientation(orientation)
+		pageOverrides.ParseTopMargin(topMargin)
+		pageOverrides.ParseLeftMargin(leftMargin)
+		pageOverrides.ParseBottomMargin(bottomMargin)
+		pageOverrides.ParseRightMargin(rightMargin)
+		switch {
+		case textTmplPath != "":
+			export.ToText(textTmplPath, pageOverrides, fileList)
+		case webp:
+			export.ToWebP(pageOverrides, fileList)
+		case png:
+			export.ToPNG(pageOverrides, fileList)
+		default:
+			jot.Fatal(1, "unexpected case")
+		}
+	}
+	atexit.Exit(0)
 }
