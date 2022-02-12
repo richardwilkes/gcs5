@@ -27,7 +27,7 @@ func Now() Time {
 }
 
 func (e Time) String() string {
-	return time.Time(e).In(time.Local).Format("Jan _2, 2006, 15:04 PM")
+	return time.Time(e).In(time.Local).Format("Jan _2, 2006, 3:04 PM")
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -44,7 +44,7 @@ func (e *Time) UnmarshalJSON(data []byte) error {
 	t, err := time.Parse(time.RFC3339, s)
 	if err != nil {
 		// Try older format
-		t, err = time.ParseInLocation("Jan _2, 2006, 15:04 PM", s, time.Now().Location())
+		t, err = time.ParseInLocation("Jan _2, 2006, 3:04 PM", s, time.Now().Location())
 		if err != nil {
 			return errs.New("invalid time/date format: " + s)
 		}
