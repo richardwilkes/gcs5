@@ -138,9 +138,9 @@ func (w *WeaponDamage) DamageTooltip() string {
 	var tooltip xio.ByteBuffer
 	w.ResolvedDamage(&tooltip)
 	if tooltip.Len() == 0 {
-		return i18n.Text("No additional modifiers")
+		return NoAdditionalModifiers
 	}
-	return i18n.Text("Includes modifiers from") + tooltip.String()
+	return IncludesModifiersFrom + tooltip.String()
 }
 
 // ResolvedDamage returns the damage, fully resolved for the user's sw or thr, if possible.

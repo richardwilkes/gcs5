@@ -210,23 +210,29 @@ func OpenFile(wnd *unison.Window, filePath string) {
 		return false
 	})
 	if !found {
+		var err error
 		var d unison.Dockable
-		switch {
-		case unison.EncodedImageFormatForPath(filePath).CanRead():
-			var err error
+		if unison.EncodedImageFormatForPath(filePath).CanRead() {
 			if d, err = NewImageDockable(filePath); err != nil {
 				unison.ErrorDialogWithMessage(i18n.Text("Unable to open image file"), err.Error())
 				return
 			}
-		case strings.ToLower(path.Ext(filePath)) == ".pdf":
-			var err error
-			if d, err = NewPDFDockable(filePath); err != nil {
-				unison.ErrorDialogWithMessage(i18n.Text("Unable to open PDF"), err.Error())
+		} else {
+			switch strings.ToLower(path.Ext(filePath)) {
+			case ".pdf":
+				if d, err = NewPDFDockable(filePath); err != nil {
+					unison.ErrorDialogWithMessage(i18n.Text("Unable to open PDF"), err.Error())
+					return
+				}
+			case ".skl":
+				if d, err = NewSkillListDockable(filePath); err != nil {
+					unison.ErrorDialogWithMessage(i18n.Text("Unable to open skills list"), err.Error())
+					return
+				}
+			default:
+				unison.ErrorDialogWithMessage(i18n.Text("Unable to open file"), filePath)
 				return
 			}
-		default:
-			unison.ErrorDialogWithMessage(i18n.Text("Unable to open file"), filePath)
-			return
 		}
 		if defaultDockContainer != nil {
 			defaultDockContainer.Stack(d, -1)

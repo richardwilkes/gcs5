@@ -261,6 +261,40 @@ func (s *Skill) Description() string {
 	return s.String()
 }
 
+// SecondaryText returns the less important information that should be displayed with the description.
+func (s *Skill) SecondaryText() string {
+	var buffer strings.Builder
+	prefs := SheetSettingsFor(s.Entity)
+	if prefs.ModifiersDisplay.Inline() {
+		text := s.ModifierNotes()
+		if strings.TrimSpace(text) != "" {
+			buffer.WriteString(text)
+		}
+	}
+	if prefs.NotesDisplay.Inline() {
+		text := s.Notes()
+		if strings.TrimSpace(text) != "" {
+			if buffer.Len() != 0 {
+				buffer.WriteByte('\n')
+			}
+			buffer.WriteString(text)
+		}
+	}
+	if prefs.SkillLevelAdjDisplay.Inline() {
+		if s.LevelData.Tooltip != "" && s.LevelData.Tooltip != NoAdditionalModifiers {
+			if buffer.Len() != 0 {
+				buffer.WriteByte('\n')
+			}
+			levelTooltip := strings.ReplaceAll(s.LevelData.Tooltip, "\n", ", ")
+			if strings.HasPrefix(levelTooltip, IncludesModifiersFrom+",") {
+				levelTooltip = IncludesModifiersFrom + ":" + levelTooltip[len(IncludesModifiersFrom)+1:]
+			}
+			buffer.WriteString(levelTooltip)
+		}
+	}
+	return buffer.String()
+}
+
 func (s *Skill) String() string {
 	var buffer strings.Builder
 	buffer.WriteString(s.Name)

@@ -29,7 +29,7 @@ func (a *AttributeDifficulty) String() string {
 	if a.Attribute == "" {
 		return a.Difficulty.String()
 	}
-	return a.Attribute + "/" + a.Difficulty.String()
+	return strings.ToUpper(a.Attribute) + "/" + a.Difficulty.String()
 }
 
 // Key returns the value that will be serialized.
