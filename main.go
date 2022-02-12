@@ -15,10 +15,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/richardwilkes/gcs/internal/export"
-	"github.com/richardwilkes/gcs/internal/ui"
+	"github.com/richardwilkes/gcs/model/export"
 	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/gcs/model/settings"
+	"github.com/richardwilkes/gcs/ui"
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/i18n"

@@ -12,10 +12,10 @@
 package ui
 
 import (
-	"github.com/richardwilkes/gcs/internal/ui/menus"
-	"github.com/richardwilkes/gcs/internal/ui/trampolines"
-	"github.com/richardwilkes/gcs/internal/ui/workspace"
 	"github.com/richardwilkes/gcs/model/settings"
+	"github.com/richardwilkes/gcs/ui/menus"
+	"github.com/richardwilkes/gcs/ui/trampolines"
+	workspace2 "github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
@@ -30,12 +30,12 @@ func Start(files []string) {
 			wnd, err := unison.NewWindow("GCS")
 			jot.FatalIfErr(err)
 			menus.Setup(wnd)
-			workspace.NewWorkspace(wnd)
+			workspace2.NewWorkspace(wnd)
 			wnd.SetFrameRect(unison.PrimaryDisplay().Usable)
 			wnd.ToFront()
-			workspace.OpenFiles(files)
+			workspace2.OpenFiles(files)
 		}),
-		unison.OpenFilesCallback(workspace.OpenFiles),
+		unison.OpenFilesCallback(workspace2.OpenFiles),
 		unison.AllowQuitCallback(func() bool {
 			for _, wnd := range unison.Windows() {
 				wnd.AttemptClose()

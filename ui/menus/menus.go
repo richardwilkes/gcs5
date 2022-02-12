@@ -12,7 +12,7 @@
 package menus
 
 import (
-	"github.com/richardwilkes/gcs/internal/ui/about"
+	"github.com/richardwilkes/gcs/ui/about"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )

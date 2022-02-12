@@ -16,10 +16,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/gcs/internal/pdf"
-	"github.com/richardwilkes/gcs/internal/ui/icons"
-	"github.com/richardwilkes/gcs/internal/ui/search"
 	"github.com/richardwilkes/gcs/model/gurps/library"
+	"github.com/richardwilkes/gcs/pdf"
+	icons2 "github.com/richardwilkes/gcs/ui/icons"
+	"github.com/richardwilkes/gcs/ui/search"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
@@ -95,16 +95,16 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	})
 	d.scroll.SetContent(d.docPanel, unison.FillBehavior)
 
-	d.firstPageButton = icons.NewIconButton(icons.FirstSVG(), 16)
+	d.firstPageButton = icons2.NewIconButton(icons2.FirstSVG(), 16)
 	d.firstPageButton.ClickCallback = func() { d.loadPage(0) }
 
-	d.previousPageButton = icons.NewIconButton(icons.PreviousSVG(), 16)
+	d.previousPageButton = icons2.NewIconButton(icons2.PreviousSVG(), 16)
 	d.previousPageButton.ClickCallback = func() { d.loadPage(d.pdf.MostRecentPageNumber() - 1) }
 
-	d.nextPageButton = icons.NewIconButton(icons.NextSVG(), 16)
+	d.nextPageButton = icons2.NewIconButton(icons2.NextSVG(), 16)
 	d.nextPageButton.ClickCallback = func() { d.loadPage(d.pdf.MostRecentPageNumber() + 1) }
 
-	d.lastPageButton = icons.NewIconButton(icons.LastSVG(), 16)
+	d.lastPageButton = icons2.NewIconButton(icons2.LastSVG(), 16)
 	d.lastPageButton.ClickCallback = func() { d.loadPage(d.pdf.PageCount() - 1) }
 
 	pageLabel := unison.NewLabel()

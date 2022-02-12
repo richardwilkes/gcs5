@@ -15,7 +15,7 @@ import (
 	_ "embed"
 	"runtime"
 
-	"github.com/richardwilkes/gcs/internal/ui/trampolines"
+	"github.com/richardwilkes/gcs/ui/trampolines"
 	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/errs"

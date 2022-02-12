@@ -12,7 +12,7 @@
 package search
 
 import (
-	"github.com/richardwilkes/gcs/internal/ui/icons"
+	"github.com/richardwilkes/gcs/ui/icons"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
