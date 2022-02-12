@@ -61,12 +61,12 @@ func NewGeneral() *General {
 }
 
 // NewGeneralFromFile loads new settings from a file.
-func NewGeneralFromFile(fsys fs.FS, filePath string) (*General, error) {
+func NewGeneralFromFile(fileSystem fs.FS, filePath string) (*General, error) {
 	var data struct {
 		General     `json:",inline"`
 		OldLocation *General `json:"general"`
 	}
-	if err := jio.LoadFromFS(context.Background(), fsys, filePath, &data); err != nil {
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
 		return nil, err
 	}
 	if data.OldLocation != nil {

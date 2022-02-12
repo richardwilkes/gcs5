@@ -55,15 +55,15 @@ func (a *AttributePrereq) Clone(parent *PrereqList) Prereq {
 }
 
 // FillWithNameableKeys implements Prereq.
-func (a *AttributePrereq) FillWithNameableKeys(m map[string]string) {
+func (a *AttributePrereq) FillWithNameableKeys(_ map[string]string) {
 }
 
 // ApplyNameableKeys implements Prereq.
-func (a *AttributePrereq) ApplyNameableKeys(m map[string]string) {
+func (a *AttributePrereq) ApplyNameableKeys(_ map[string]string) {
 }
 
 // Satisfied implements Prereq.
-func (a *AttributePrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xio.ByteBuffer, prefix string) bool {
+func (a *AttributePrereq) Satisfied(entity *Entity, _ interface{}, tooltip *xio.ByteBuffer, prefix string) bool {
 	value := entity.ResolveAttributeCurrent(a.Which)
 	if a.CombinedWith != "" {
 		value += entity.ResolveAttributeCurrent(a.CombinedWith)

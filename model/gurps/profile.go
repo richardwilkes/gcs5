@@ -46,11 +46,11 @@ type Profile struct {
 	Gender            string         `json:"gender,omitempty"`
 	TechLevel         string         `json:"tech_level,omitempty"`
 	PortraitData      []byte         `json:"portrait,omitempty"`
-	portrait          *unison.Image  `json:"-"`
 	Height            measure.Length `json:"height,omitempty"`
 	Weight            measure.Weight `json:"weight,omitempty"`
 	SizeModifier      fixed.F64d4    `json:"SM,omitempty"`
 	SizeModifierBonus fixed.F64d4    `json:"-"`
+	portrait          *unison.Image
 }
 
 // Update any derived values.

@@ -41,7 +41,7 @@ func Lookup(name string, libraries library.Libraries) *Ancestry {
 	for _, lib := range AvailableAncestries(libraries) {
 		for _, one := range lib.List {
 			if one.Name == name {
-				if a, err := NewAncestoryFromFile(one.FileSystem, one.FilePath); err != nil {
+				if a, err := NewAncestryFromFile(one.FileSystem, one.FilePath); err != nil {
 					jot.Warn(err)
 				} else {
 					return a
@@ -52,8 +52,8 @@ func Lookup(name string, libraries library.Libraries) *Ancestry {
 	return nil
 }
 
-// NewAncestoryFromFile creates a new Ancestry from a file.
-func NewAncestoryFromFile(fileSystem fs.FS, filePath string) (*Ancestry, error) {
+// NewAncestryFromFile creates a new Ancestry from a file.
+func NewAncestryFromFile(fileSystem fs.FS, filePath string) (*Ancestry, error) {
 	var ancestry Ancestry
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &ancestry); err != nil {
 		return nil, err

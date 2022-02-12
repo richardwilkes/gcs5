@@ -69,11 +69,11 @@ func (d *DRBonus) FeatureMapKey() string {
 }
 
 // FillWithNameableKeys implements Feature.
-func (d *DRBonus) FillWithNameableKeys(m map[string]string) {
+func (d *DRBonus) FillWithNameableKeys(_ map[string]string) {
 }
 
 // ApplyNameableKeys implements Feature.
-func (d *DRBonus) ApplyNameableKeys(m map[string]string) {
+func (d *DRBonus) ApplyNameableKeys(_ map[string]string) {
 }
 
 // SetParent implements Bonus.
