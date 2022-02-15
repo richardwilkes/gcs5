@@ -52,7 +52,7 @@ func (n *SkillNode) CanHaveChildRows() bool {
 // ChildRows returns the children of this node.
 func (n *SkillNode) ChildRows() []unison.TableRowData {
 	if n.skill.Container() && n.children == nil {
-		n.children = make([]unison.TableRowData, len(n.children))
+		n.children = make([]unison.TableRowData, len(n.skill.Children))
 		for i, one := range n.skill.Children {
 			n.children[i] = NewSkillNode(n.dockable, one)
 		}
