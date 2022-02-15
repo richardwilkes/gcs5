@@ -99,14 +99,10 @@ func (s *SkillDefault) ApplyNameableKeys(m map[string]string) {
 
 // ModifierAsString returns the modifier as a string suitable for appending.
 func (s *SkillDefault) ModifierAsString() string {
-	switch {
-	case s.Modifier > 0:
-		return " + " + s.Modifier.String()
-	case s.Modifier < 0:
-		return " - " + s.Modifier.String()
-	default:
-		return ""
+	if s.Modifier != 0 {
+		return s.Modifier.StringWithSign()
 	}
+	return ""
 }
 
 // SkillBased returns true if the Type() is Skill-based.

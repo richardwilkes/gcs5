@@ -30,16 +30,24 @@ var _ unison.TableRowData = &SkillNode{}
 
 // SkillNode holds a skill in the skill list.
 type SkillNode struct {
-	dockable *SkillListDockable
-	skill    *gurps.Skill
-	children []unison.TableRowData
+	dockable  *SkillListDockable
+	skill     *gurps.Skill
+	children  []unison.TableRowData
+	cellCache []*cellCache
+}
+
+type cellCache struct {
+	width float32
+	data  string
+	panel *unison.Panel
 }
 
 // NewSkillNode creates a new SkillNode.
 func NewSkillNode(dockable *SkillListDockable, skill *gurps.Skill) *SkillNode {
 	n := &SkillNode{
-		dockable: dockable,
-		skill:    skill,
+		dockable:  dockable,
+		skill:     skill,
+		cellCache: make([]*cellCache, skillColumnCount),
 	}
 	return n
 }
@@ -74,7 +82,7 @@ func (n *SkillNode) CellDataForSort(index int) string {
 		if n.skill.Container() {
 			return ""
 		}
-		return n.skill.Difficulty.String()
+		return n.skill.Difficulty.Description(n.skill.Entity)
 	case skillCategoryColumn:
 		return strings.Join(n.skill.Categories, ", ")
 	case skillReferenceColumn:
@@ -85,31 +93,50 @@ func (n *SkillNode) CellDataForSort(index int) string {
 }
 
 // ColumnCell returns the cell for the given column index.
-func (n *SkillNode) ColumnCell(index int, selected bool) unison.Paneler {
-	if index == skillDescriptionColumn {
-		p := &unison.Panel{}
-		p.Self = p
-		p.SetLayout(&unison.FlexLayout{Columns: 1})
-		p.AddChild(createCellLabel(n.skill.Description(), selected).AsPanel())
-		if text := n.skill.SecondaryText(); strings.TrimSpace(text) != "" {
-			secondary := createCellLabel(text, selected)
-			desc := secondary.Font.Descriptor()
-			desc.Size--
-			secondary.Font = desc.Font()
-			p.AddChild(secondary.AsPanel())
+func (n *SkillNode) ColumnCell(row, col int, selected bool) unison.Paneler {
+	width := n.dockable.table.CellWidth(row, col)
+	data := n.CellDataForSort(col)
+	if n.cellCache[col] != nil && n.cellCache[col].panel != nil && n.cellCache[col].width == width && n.cellCache[col].data == data {
+		color := unison.DefaultLabelTheme.OnBackgroundInk
+		if selected {
+			color = unison.OnSelectionColor
 		}
-		return p
+		for _, child := range n.cellCache[col].panel.Children() {
+			child.Self.(*unison.Label).LabelTheme.OnBackgroundInk = color
+		}
+		return n.cellCache[col].panel
 	}
-	return createCellLabel(n.CellDataForSort(index), selected).AsPanel()
+	p := &unison.Panel{}
+	p.Self = p
+	p.SetLayout(&unison.FlexLayout{Columns: 1})
+	if col == skillDescriptionColumn {
+		createAndAddCellLabel(p, width, n.skill.Description(), unison.DefaultLabelTheme.Font, selected)
+		if text := n.skill.SecondaryText(); strings.TrimSpace(text) != "" {
+			desc := unison.DefaultLabelTheme.Font.Descriptor()
+			desc.Size--
+			createAndAddCellLabel(p, width, text, desc.Font(), selected)
+		}
+	} else {
+		createAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
+	}
+	n.cellCache[col] = &cellCache{
+		width: width,
+		data:  data,
+		panel: p,
+	}
+	return p
 }
 
-func createCellLabel(text string, selected bool) *unison.Label {
-	label := unison.NewLabel()
-	label.Text = text
-	if selected {
-		label.LabelTheme.OnBackgroundInk = unison.OnSelectionColor
+func createAndAddCellLabel(parent *unison.Panel, width float32, text string, f unison.Font, selected bool) {
+	for _, line := range f.WrapText(text, width) {
+		label := unison.NewLabel()
+		label.Text = line
+		label.Font = f
+		if selected {
+			label.LabelTheme.OnBackgroundInk = unison.OnSelectionColor
+		}
+		parent.AddChild(label)
 	}
-	return label
 }
 
 // IsOpen returns true if this node should display its children.

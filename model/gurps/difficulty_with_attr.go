@@ -25,11 +25,12 @@ type AttributeDifficulty struct {
 	Difficulty skill.Difficulty
 }
 
-func (a *AttributeDifficulty) String() string {
+// Description returns a formatted description.
+func (a *AttributeDifficulty) Description(entity *Entity) string {
 	if a.Attribute == "" {
 		return a.Difficulty.String()
 	}
-	return strings.ToUpper(a.Attribute) + "/" + a.Difficulty.String()
+	return ResolveAttributeName(entity, a.Attribute) + "/" + a.Difficulty.String()
 }
 
 // Key returns the value that will be serialized.

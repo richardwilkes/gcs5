@@ -57,13 +57,13 @@ func (n *FileNode) CellDataForSort(index int) string {
 }
 
 // ColumnCell returns the cell for the given column index.
-func (n *FileNode) ColumnCell(index int, selected bool) unison.Paneler {
-	switch index {
+func (n *FileNode) ColumnCell(row, col int, selected bool) unison.Paneler {
+	switch col {
 	case 0:
 		name := path.Base(n.path)
 		return createNodeCell(strings.ToLower(path.Ext(name)), name, selected)
 	default:
-		jot.Errorf("column index out of range (0-0): %d", index)
+		jot.Errorf("column index out of range (0-0): %d", col)
 		return unison.NewLabel()
 	}
 }

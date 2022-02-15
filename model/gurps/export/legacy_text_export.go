@@ -877,7 +877,7 @@ func (ex *legacyExporter) processSkillsLoop(buffer []byte) {
 				ex.writeEncodedText(s.RelativeLevel())
 			case "DIFFICULTY":
 				if !s.Container() {
-					ex.writeEncodedText(s.Difficulty.String())
+					ex.writeEncodedText(s.Difficulty.Description(s.Entity))
 				}
 			case refKey:
 				ex.writeEncodedText(s.PageRef)
@@ -933,7 +933,7 @@ func (ex *legacyExporter) processSpellsLoop(buffer []byte) {
 				ex.writeEncodedText(s.RelativeLevel())
 			case "DIFFICULTY":
 				if !s.Container() {
-					ex.writeEncodedText(s.Difficulty.String())
+					ex.writeEncodedText(s.Difficulty.Description(s.Entity))
 				}
 			case "CLASS":
 				ex.writeEncodedText(s.Class)
