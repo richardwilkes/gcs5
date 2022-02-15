@@ -223,6 +223,9 @@ func (s *Skill) SetOwningEntity(entity *Entity) {
 
 // DefaultSkill returns the skill currently defaulted to, or nil.
 func (s *Skill) DefaultSkill() *Skill {
+	if s.Entity == nil {
+		return nil
+	}
 	if s.Type == gid.Technique {
 		return s.Entity.BaseSkill(s.TechniqueDefault, true)
 	}
