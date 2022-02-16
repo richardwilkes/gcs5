@@ -86,8 +86,8 @@ func NewImageDockable(filePath string) (*ImageDockable, error) {
 	d.scaleField.SetText(strconv.Itoa(d.scale) + "%")
 	d.scaleField.ModifiedCallback = func() {
 		if s, e := strconv.Atoi(strings.TrimRight(d.scaleField.Text(), "%")); e == nil && s >= minImageDockableScale && s <= maxImageDockableScale {
-			viewRect := d.scroll.View().ContentRect(false)
-			center := d.imgPanel.PointFromRoot(d.scroll.View().PointToRoot(viewRect.Center()))
+			viewRect := d.scroll.ContentView().ContentRect(false)
+			center := d.imgPanel.PointFromRoot(d.scroll.ContentView().PointToRoot(viewRect.Center()))
 			center.X /= float32(d.scale) / 100
 			center.X *= float32(s) / 100
 			center.Y /= float32(d.scale) / 100

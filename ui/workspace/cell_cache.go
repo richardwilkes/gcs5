@@ -14,6 +14,9 @@ package workspace
 import (
 	"strings"
 
+	"github.com/richardwilkes/gcs/ui/icons"
+	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
@@ -43,4 +46,14 @@ func createAndAddCellLabel(parent *unison.Panel, width float32, text string, f u
 		}
 		parent.AddChild(label)
 	}
+}
+
+func newPageReferenceHeader() unison.TableColumnHeader {
+	header := unison.NewTableColumnHeader("", i18n.Text(`A reference to the book and page the item appears on (e.g. B22 would refer to "Basic Set", page 22)`))
+	baseline := header.Font.Baseline()
+	header.Drawable = &unison.DrawableSVG{
+		SVG:  icons.BookmarkSVG(),
+		Size: geom32.NewSize(baseline, baseline),
+	}
+	return header
 }

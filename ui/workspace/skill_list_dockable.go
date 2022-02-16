@@ -17,6 +17,7 @@ import (
 
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/library"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -52,6 +53,12 @@ func NewSkillListDockable(filePath string) (*SkillListDockable, error) {
 	d.table.SizeColumnsToFit(true)
 
 	d.scroll.MouseWheelMultiplier = 4
+	d.scroll.SetColumnHeader(unison.NewTableHeader(d.table,
+		unison.NewTableColumnHeader(i18n.Text("Skill / Technique"), ""),
+		unison.NewTableColumnHeader(i18n.Text("Diff"), i18n.Text("Difficulty")),
+		unison.NewTableColumnHeader(i18n.Text("Category"), ""),
+		newPageReferenceHeader(),
+	))
 	d.scroll.SetContent(d.table, unison.FillBehavior)
 	d.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,

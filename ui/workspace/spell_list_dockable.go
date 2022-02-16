@@ -17,6 +17,7 @@ import (
 
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/library"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -52,6 +53,19 @@ func NewSpellListDockable(filePath string) (*SpellListDockable, error) {
 	d.table.SizeColumnsToFit(true)
 
 	d.scroll.MouseWheelMultiplier = 4
+	d.scroll.SetColumnHeader(unison.NewTableHeader(d.table,
+		unison.NewTableColumnHeader(i18n.Text("Spell"), ""),
+		unison.NewTableColumnHeader(i18n.Text("Resist"), i18n.Text("Resistance")),
+		unison.NewTableColumnHeader(i18n.Text("Class"), ""),
+		unison.NewTableColumnHeader(i18n.Text("College"), ""),
+		unison.NewTableColumnHeader(i18n.Text("Cost"), i18n.Text("The mana cost to cast the spell")),
+		unison.NewTableColumnHeader(i18n.Text("Maintain"), i18n.Text("The mana cost to maintain the spell")),
+		unison.NewTableColumnHeader(i18n.Text("Time"), i18n.Text("The time required to cast the spell")),
+		unison.NewTableColumnHeader(i18n.Text("Duration"), ""),
+		unison.NewTableColumnHeader(i18n.Text("Diff"), i18n.Text("Difficulty")),
+		unison.NewTableColumnHeader(i18n.Text("Category"), ""),
+		newPageReferenceHeader(),
+	))
 	d.scroll.SetContent(d.table, unison.FillBehavior)
 	d.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,

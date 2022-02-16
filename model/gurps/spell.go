@@ -506,8 +506,7 @@ func (s *Spell) SecondaryText() string {
 			buffer.WriteString(text)
 		}
 	}
-	rituals := s.Rituals()
-	if rituals != "" {
+	if rituals := s.Rituals(); rituals != "" {
 		if buffer.Len() != 0 {
 			buffer.WriteByte('\n')
 		}
