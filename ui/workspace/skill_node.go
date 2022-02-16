@@ -128,7 +128,13 @@ func (n *SkillNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 }
 
 func createAndAddCellLabel(parent *unison.Panel, width float32, text string, f unison.Font, selected bool) {
-	for _, line := range f.WrapText(text, width) {
+	var lines []string
+	if width > 0 {
+		lines = f.WrapText(text, width)
+	} else {
+		lines = strings.Split(text, "\n")
+	}
+	for _, line := range lines {
 		label := unison.NewLabel()
 		label.Text = line
 		label.Font = f
