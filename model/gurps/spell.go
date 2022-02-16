@@ -493,6 +493,41 @@ func (s *Spell) Description() string {
 	return s.String()
 }
 
+// SecondaryText returns the less important information that should be displayed with the description.
+func (s *Spell) SecondaryText() string {
+	var buffer strings.Builder
+	prefs := SheetSettingsFor(s.Entity)
+	if prefs.NotesDisplay.Inline() {
+		text := s.Notes()
+		if strings.TrimSpace(text) != "" {
+			if buffer.Len() != 0 {
+				buffer.WriteByte('\n')
+			}
+			buffer.WriteString(text)
+		}
+	}
+	rituals := s.Rituals()
+	if rituals != "" {
+		if buffer.Len() != 0 {
+			buffer.WriteByte('\n')
+		}
+		buffer.WriteString(rituals)
+	}
+	if prefs.SkillLevelAdjDisplay.Inline() {
+		if s.LevelData.Tooltip != "" && s.LevelData.Tooltip != NoAdditionalModifiers {
+			if buffer.Len() != 0 {
+				buffer.WriteByte('\n')
+			}
+			levelTooltip := strings.ReplaceAll(s.LevelData.Tooltip, "\n", ", ")
+			if strings.HasPrefix(levelTooltip, IncludesModifiersFrom+",") {
+				levelTooltip = IncludesModifiersFrom + ":" + levelTooltip[len(IncludesModifiersFrom)+1:]
+			}
+			buffer.WriteString(levelTooltip)
+		}
+	}
+	return buffer.String()
+}
+
 func (s *Spell) String() string {
 	var buffer strings.Builder
 	buffer.WriteString(s.Name)

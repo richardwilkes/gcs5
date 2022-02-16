@@ -36,12 +36,6 @@ type SkillNode struct {
 	cellCache []*cellCache
 }
 
-type cellCache struct {
-	width float32
-	data  string
-	panel *unison.Panel
-}
-
 // NewSkillNode creates a new SkillNode.
 func NewSkillNode(dockable *SkillListDockable, skill *gurps.Skill) *SkillNode {
 	n := &SkillNode{
@@ -96,7 +90,7 @@ func (n *SkillNode) CellDataForSort(index int) string {
 func (n *SkillNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 	width := n.dockable.table.CellWidth(row, col)
 	data := n.CellDataForSort(col)
-	if n.cellCache[col] != nil && n.cellCache[col].panel != nil && n.cellCache[col].width == width && n.cellCache[col].data == data {
+	if n.cellCache[col].matches(width, data) {
 		color := unison.DefaultLabelTheme.OnBackgroundInk
 		if selected {
 			color = unison.OnSelectionColor
@@ -125,24 +119,6 @@ func (n *SkillNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 		panel: p,
 	}
 	return p
-}
-
-func createAndAddCellLabel(parent *unison.Panel, width float32, text string, f unison.Font, selected bool) {
-	var lines []string
-	if width > 0 {
-		lines = f.WrapText(text, width)
-	} else {
-		lines = strings.Split(text, "\n")
-	}
-	for _, line := range lines {
-		label := unison.NewLabel()
-		label.Text = line
-		label.Font = f
-		if selected {
-			label.LabelTheme.OnBackgroundInk = unison.OnSelectionColor
-		}
-		parent.AddChild(label)
-	}
 }
 
 // IsOpen returns true if this node should display its children.

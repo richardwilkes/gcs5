@@ -229,6 +229,11 @@ func OpenFile(wnd *unison.Window, filePath string) {
 					unison.ErrorDialogWithMessage(i18n.Text("Unable to open skills list"), err.Error())
 					return
 				}
+			case ".spl":
+				if d, err = NewSpellListDockable(filePath); err != nil {
+					unison.ErrorDialogWithMessage(i18n.Text("Unable to open spells list"), err.Error())
+					return
+				}
 			default:
 				unison.ErrorDialogWithMessage(i18n.Text("Unable to open file"), filePath)
 				return
