@@ -12,9 +12,12 @@
 package workspace
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
 
@@ -37,16 +40,43 @@ var _ unison.TableRowData = &SpellNode{}
 
 // SpellNode holds a spell in the spell list.
 type SpellNode struct {
-	dockable  *SpellListDockable
+	table     *unison.Table
 	spell     *gurps.Spell
 	children  []unison.TableRowData
 	cellCache []*cellCache
 }
 
+// NewSpellListDockable creates a new ListFileDockable for spell list files.
+func NewSpellListDockable(filePath string) (*ListFileDockable, error) {
+	spells, err := gurps.NewSpellsFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
+	if err != nil {
+		return nil, err
+	}
+	return NewListFileDockable(filePath, []unison.TableColumnHeader{
+		unison.NewTableColumnHeader(i18n.Text("Spell"), ""),
+		unison.NewTableColumnHeader(i18n.Text("Resist"), i18n.Text("Resistance")),
+		unison.NewTableColumnHeader(i18n.Text("Class"), ""),
+		unison.NewTableColumnHeader(i18n.Text("College"), ""),
+		unison.NewTableColumnHeader(i18n.Text("Cost"), i18n.Text("The mana cost to cast the spell")),
+		unison.NewTableColumnHeader(i18n.Text("Maintain"), i18n.Text("The mana cost to maintain the spell")),
+		unison.NewTableColumnHeader(i18n.Text("Time"), i18n.Text("The time required to cast the spell")),
+		unison.NewTableColumnHeader(i18n.Text("Duration"), ""),
+		unison.NewTableColumnHeader(i18n.Text("Diff"), i18n.Text("Difficulty")),
+		unison.NewTableColumnHeader(i18n.Text("Category"), ""),
+		newPageReferenceHeader(),
+	}, func(table *unison.Table) []unison.TableRowData {
+		rows := make([]unison.TableRowData, 0, len(spells))
+		for _, one := range spells {
+			rows = append(rows, NewSpellNode(table, one))
+		}
+		return rows
+	}), nil
+}
+
 // NewSpellNode creates a new SpellNode.
-func NewSpellNode(dockable *SpellListDockable, spell *gurps.Spell) *SpellNode {
+func NewSpellNode(table *unison.Table, spell *gurps.Spell) *SpellNode {
 	n := &SpellNode{
-		dockable:  dockable,
+		table:     table,
 		spell:     spell,
 		cellCache: make([]*cellCache, spellColumnCount),
 	}
@@ -63,7 +93,7 @@ func (n *SpellNode) ChildRows() []unison.TableRowData {
 	if n.spell.Container() && n.children == nil {
 		n.children = make([]unison.TableRowData, len(n.spell.Children))
 		for i, one := range n.spell.Children {
-			n.children[i] = NewSpellNode(n.dockable, one)
+			n.children[i] = NewSpellNode(n.table, one)
 		}
 	}
 	return n.children
@@ -130,7 +160,7 @@ func (n *SpellNode) CellDataForSort(index int) string {
 
 // ColumnCell returns the cell for the given column index.
 func (n *SpellNode) ColumnCell(row, col int, selected bool) unison.Paneler {
-	width := n.dockable.table.CellWidth(row, col)
+	width := n.table.CellWidth(row, col)
 	data := n.CellDataForSort(col)
 	if n.cellCache[col].matches(width, data) {
 		color := unison.DefaultLabelTheme.OnBackgroundInk
@@ -172,7 +202,7 @@ func (n *SpellNode) IsOpen() bool {
 func (n *SpellNode) SetOpen(open bool) {
 	if n.spell.Container() && open != n.spell.Open {
 		n.spell.Open = open
-		n.dockable.table.SyncToModel()
-		n.dockable.table.SizeColumnsToFit(true)
+		n.table.SyncToModel()
+		n.table.SizeColumnsToFit(true)
 	}
 }

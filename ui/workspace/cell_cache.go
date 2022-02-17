@@ -14,10 +14,16 @@ package workspace
 import (
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/icons"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
+)
+
+const (
+	savedInkKey   = "saved_ink"
+	currentInkKey = "current_ink"
 )
 
 type cellCache struct {
@@ -56,4 +62,40 @@ func newPageReferenceHeader() unison.TableColumnHeader {
 		Size: geom32.NewSize(baseline, baseline),
 	}
 	return header
+}
+
+func createAndAddPageRefCellLabel(parent *unison.Panel, text string, f unison.Font, selected bool) {
+	label := unison.NewLabel()
+	label.Font = f
+	if selected {
+		label.LabelTheme.OnBackgroundInk = unison.OnSelectionColor
+	}
+	parts := strings.FieldsFunc(text, func(ch rune) bool { return ch == ',' || ch == ';' || ch == ' ' })
+	label.Text = parts[0]
+	if len(parts) > 1 {
+		label.Text += "+"
+	}
+	if label.Text != "" {
+		label.MouseEnterCallback = func(where geom32.Point, mod unison.Modifiers) bool {
+			clientData := label.ClientData()
+			clientData[savedInkKey] = label.LabelTheme.OnBackgroundInk
+			label.LabelTheme.OnBackgroundInk = theme.AccentColor
+			clientData[currentInkKey] = label.LabelTheme.OnBackgroundInk
+			label.MarkForRedraw()
+			return false
+		}
+		label.MouseExitCallback = func() bool {
+			clientData := label.ClientData()
+			ink, ok := clientData[savedInkKey].(unison.Ink)
+			if !ok {
+				ink = label.LabelTheme.OnBackgroundInk
+			}
+			label.LabelTheme.OnBackgroundInk = ink
+			delete(clientData, savedInkKey)
+			delete(clientData, currentInkKey)
+			label.MarkForRedraw()
+			return false
+		}
+	}
+	parent.AddChild(label)
 }

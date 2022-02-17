@@ -38,7 +38,7 @@ func (enum SelfControlRollAdj) Adjustment(cr advantage.SelfControlRoll) int {
 	case MinorCostOfLivingIncrease:
 		return 5 * (len(advantage.AllSelfControlRolls) - cr.Index())
 	case MajorCostOfLivingIncrease:
-		return 10 * (1 << ((cr.Index() - len(advantage.AllSelfControlRolls)) - 1))
+		return 10 * (1 << (len(advantage.AllSelfControlRolls) - (cr.Index() + 1)))
 	default:
 		return NoCRAdj.Adjustment(cr)
 	}

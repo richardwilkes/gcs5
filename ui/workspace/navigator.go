@@ -219,6 +219,11 @@ func OpenFile(wnd *unison.Window, filePath string) {
 			}
 		} else {
 			switch strings.ToLower(path.Ext(filePath)) {
+			case ".adq":
+				if d, err = NewAdvantageListDockable(filePath); err != nil {
+					unison.ErrorDialogWithMessage(i18n.Text("Unable to open advantages list"), err.Error())
+					return
+				}
 			case ".pdf":
 				if d, err = NewPDFDockable(filePath); err != nil {
 					unison.ErrorDialogWithMessage(i18n.Text("Unable to open PDF"), err.Error())

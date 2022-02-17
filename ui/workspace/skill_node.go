@@ -12,9 +12,12 @@
 package workspace
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
 
@@ -30,16 +33,36 @@ var _ unison.TableRowData = &SkillNode{}
 
 // SkillNode holds a skill in the skill list.
 type SkillNode struct {
-	dockable  *SkillListDockable
+	table     *unison.Table
 	skill     *gurps.Skill
 	children  []unison.TableRowData
 	cellCache []*cellCache
 }
 
+// NewSkillListDockable creates a new ListFileDockable for skill list files.
+func NewSkillListDockable(filePath string) (*ListFileDockable, error) {
+	skills, err := gurps.NewSkillsFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
+	if err != nil {
+		return nil, err
+	}
+	return NewListFileDockable(filePath, []unison.TableColumnHeader{
+		unison.NewTableColumnHeader(i18n.Text("Skill / Technique"), ""),
+		unison.NewTableColumnHeader(i18n.Text("Diff"), i18n.Text("Difficulty")),
+		unison.NewTableColumnHeader(i18n.Text("Category"), ""),
+		newPageReferenceHeader(),
+	}, func(table *unison.Table) []unison.TableRowData {
+		rows := make([]unison.TableRowData, 0, len(skills))
+		for _, one := range skills {
+			rows = append(rows, NewSkillNode(table, one))
+		}
+		return rows
+	}), nil
+}
+
 // NewSkillNode creates a new SkillNode.
-func NewSkillNode(dockable *SkillListDockable, skill *gurps.Skill) *SkillNode {
+func NewSkillNode(table *unison.Table, skill *gurps.Skill) *SkillNode {
 	n := &SkillNode{
-		dockable:  dockable,
+		table:     table,
 		skill:     skill,
 		cellCache: make([]*cellCache, skillColumnCount),
 	}
@@ -56,7 +79,7 @@ func (n *SkillNode) ChildRows() []unison.TableRowData {
 	if n.skill.Container() && n.children == nil {
 		n.children = make([]unison.TableRowData, len(n.skill.Children))
 		for i, one := range n.skill.Children {
-			n.children[i] = NewSkillNode(n.dockable, one)
+			n.children[i] = NewSkillNode(n.table, one)
 		}
 	}
 	return n.children
@@ -88,7 +111,7 @@ func (n *SkillNode) CellDataForSort(index int) string {
 
 // ColumnCell returns the cell for the given column index.
 func (n *SkillNode) ColumnCell(row, col int, selected bool) unison.Paneler {
-	width := n.dockable.table.CellWidth(row, col)
+	width := n.table.CellWidth(row, col)
 	data := n.CellDataForSort(col)
 	if n.cellCache[col].matches(width, data) {
 		color := unison.DefaultLabelTheme.OnBackgroundInk
@@ -130,7 +153,7 @@ func (n *SkillNode) IsOpen() bool {
 func (n *SkillNode) SetOpen(open bool) {
 	if n.skill.Container() && open != n.skill.Open {
 		n.skill.Open = open
-		n.dockable.table.SyncToModel()
-		n.dockable.table.SizeColumnsToFit(true)
+		n.table.SyncToModel()
+		n.table.SizeColumnsToFit(true)
 	}
 }
