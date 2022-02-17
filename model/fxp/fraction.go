@@ -29,7 +29,7 @@ func NewFractionFromString(s string) Fraction {
 	parts := strings.SplitN(s, "/", 2)
 	f := Fraction{
 		Numerator:   fixed.F64d4FromStringForced(strings.TrimSpace(parts[0])),
-		Denominator: One,
+		Denominator: fixed.F64d4One,
 	}
 	if len(parts) > 1 {
 		f.Denominator = fixed.F64d4FromStringForced(strings.TrimSpace(parts[1]))
@@ -41,7 +41,7 @@ func NewFractionFromString(s string) Fraction {
 func (f *Fraction) Normalize() {
 	if f.Denominator == 0 {
 		f.Numerator = 0
-		f.Denominator = One
+		f.Denominator = fixed.F64d4One
 	} else if f.Denominator < 0 {
 		f.Numerator = f.Numerator.Mul(NegOne)
 		f.Denominator = f.Denominator.Mul(NegOne)
@@ -56,7 +56,7 @@ func (f Fraction) Value() fixed.F64d4 {
 // StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive
 func (f Fraction) StringWithSign() string {
 	s := f.Numerator.StringWithSign()
-	if f.Denominator == One {
+	if f.Denominator == fixed.F64d4One {
 		return s
 	}
 	return s + "/" + f.Denominator.String()
@@ -64,7 +64,7 @@ func (f Fraction) StringWithSign() string {
 
 func (f Fraction) String() string {
 	s := f.Numerator.String()
-	if f.Denominator == One {
+	if f.Denominator == fixed.F64d4One {
 		return s
 	}
 	return s + "/" + f.Denominator.String()

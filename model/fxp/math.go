@@ -15,40 +15,13 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-// Ceil returns the value rounded up to the nearest whole number.
-func Ceil(value fixed.F64d4) fixed.F64d4 {
-	v := value.Trunc()
-	if value != v {
-		v += One
-	}
-	return v
-}
-
-// Round the given value.
-func Round(value fixed.F64d4) fixed.F64d4 {
-	rem := value
-	value = value.Trunc()
-	rem -= value
-	if rem >= Half {
-		value += One
-	} else if rem < NegHalf {
-		value -= One
-	}
-	return value
-}
-
 // ApplyRounding truncates if 'roundDown' is true and performs a ceil() if false.
 func ApplyRounding(value fixed.F64d4, roundDown bool) fixed.F64d4 {
 	if roundDown {
 		return value.Trunc()
 	}
 	if value.Trunc() != value {
-		return value.Trunc() + One
+		return value.Trunc() + fixed.F64d4One
 	}
 	return value
-}
-
-// Mod returns the remainder of x/y.
-func Mod(x, y fixed.F64d4) fixed.F64d4 {
-	return x - (y.Mul(x.Div(y).Trunc()))
 }

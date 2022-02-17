@@ -104,5 +104,5 @@ func (a *AttributeDef) ComputeCost(entity *Entity, value, sizeModifier, costRedu
 		}
 		cost = cost.Mul(fxp.Hundred - costReduction).Div(fxp.Hundred)
 	}
-	return fxp.Round(cost)
+	return cost.Round()
 }

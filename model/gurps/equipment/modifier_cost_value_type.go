@@ -14,7 +14,6 @@ package equipment
 import (
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
@@ -27,7 +26,7 @@ func (enum ModifierCostValueType) Format(value fixed.F64d4) string {
 		return value.StringWithSign() + enum.String()
 	case Multiplier:
 		if value <= 0 {
-			value = fxp.One
+			value = fixed.F64d4One
 		}
 		return enum.String() + value.String()
 	case CostFactor:
@@ -41,7 +40,7 @@ func (enum ModifierCostValueType) Format(value fixed.F64d4) string {
 func (enum ModifierCostValueType) ExtractValue(s string) fixed.F64d4 {
 	v := fixed.F64d4FromStringForced(s)
 	if enum.EnsureValid() == Multiplier && v <= 0 {
-		v = fxp.One
+		v = fixed.F64d4One
 	}
 	return v
 }

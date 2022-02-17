@@ -89,15 +89,15 @@ func (s SelfControlRoll) DescriptionWithCost() string {
 func (s SelfControlRoll) Multiplier() fixed.F64d4 {
 	switch s {
 	case None:
-		return fxp.One
+		return fixed.F64d4One
 	case CR6:
 		return fxp.Two
 	case CR9:
 		return fxp.OneAndAHalf
 	case CR12:
-		return fxp.One
+		return fixed.F64d4One
 	case CR15:
-		return fxp.Half
+		return fixed.F64d4Half
 	default:
 		return None.Multiplier()
 	}

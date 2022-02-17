@@ -122,7 +122,7 @@ func NewSkill(entity *Entity, parent *Skill, container bool) *Skill {
 				Attribute:  AttributeIDFor(entity, gid.Dexterity),
 				Difficulty: skill.Average,
 			},
-			Points: fxp.One,
+			Points: fixed.F64d4One,
 			Prereq: NewPrereqList(),
 		}
 	}
@@ -393,12 +393,12 @@ func (s *Skill) calculateLevel() skill.Level {
 			pts += s.DefaultedFrom.Points
 		}
 		switch {
-		case pts == fxp.One:
+		case pts == fixed.F64d4One:
 		// relativeLevel is preset to this point value
 		case pts > 0 && pts < fxp.Four:
-			relativeLevel += fxp.One
+			relativeLevel += fixed.F64d4One
 		case pts > 0:
-			relativeLevel += fxp.One + pts.Div(fxp.Four).Trunc()
+			relativeLevel += fixed.F64d4One + pts.Div(fxp.Four).Trunc()
 		case s.DefaultedFrom != nil && s.DefaultedFrom.Points < 0:
 			relativeLevel = s.DefaultedFrom.AdjLevel - level
 		default:
@@ -450,7 +450,7 @@ func CalculateTechniqueLevel(entity *Entity, name, specialization string, catego
 			baseLevel := level
 			level += def.Modifier
 			if difficulty == skill.Hard {
-				points -= fxp.One
+				points -= fixed.F64d4One
 			}
 			if points > 0 {
 				relativeLevel = points
@@ -496,11 +496,11 @@ func (s *Skill) bestDefaultWithPoints(excluded *SkillDefault) *SkillDefault {
 		best.AdjLevel = level
 		switch {
 		case level == baseLine:
-			best.Points = fxp.One
-		case level == baseLine+fxp.One:
+			best.Points = fixed.F64d4One
+		case level == baseLine+fixed.F64d4One:
 			best.Points = fxp.Two
-		case level > baseLine+fxp.One:
-			best.Points = fxp.Four.Mul(level - (baseLine + fxp.One))
+		case level > baseLine+fixed.F64d4One:
+			best.Points = fxp.Four.Mul(level - (baseLine + fixed.F64d4One))
 		default:
 			best.Points = -level.Max(0)
 		}

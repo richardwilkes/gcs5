@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -49,7 +48,7 @@ func NewDRBonus() *DRBonus {
 			Type:           DRBonusType,
 			Location:       "torso",
 			Specialization: gid.All,
-			LeveledAmount:  LeveledAmount{Amount: fxp.One},
+			LeveledAmount:  LeveledAmount{Amount: fixed.F64d4One},
 		},
 	}
 }

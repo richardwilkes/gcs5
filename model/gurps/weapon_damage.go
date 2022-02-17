@@ -52,10 +52,10 @@ func (w *WeaponDamage) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if w.ArmorDivisor == 0 {
-		w.ArmorDivisor = fxp.One
+		w.ArmorDivisor = fixed.F64d4One
 	}
 	if w.Fragmentation != nil && w.FragmentationArmorDivisor == 0 {
-		w.FragmentationArmorDivisor = fxp.One
+		w.FragmentationArmorDivisor = fixed.F64d4One
 	}
 	return nil
 }
@@ -64,14 +64,14 @@ func (w *WeaponDamage) UnmarshalJSON(data []byte) error {
 func (w *WeaponDamage) MarshalJSON() ([]byte, error) {
 	// An armor divisor of 0 is not valid and 1 is very common, so suppress its output when 1.
 	armorDivisor := w.ArmorDivisor
-	if armorDivisor == fxp.One {
+	if armorDivisor == fixed.F64d4One {
 		w.ArmorDivisor = 0
 	}
 	fragArmorDivisor := w.FragmentationArmorDivisor
 	if w.Fragmentation == nil {
 		w.FragmentationArmorDivisor = 0
 		w.FragmentationType = ""
-	} else if w.FragmentationArmorDivisor == fxp.One {
+	} else if w.FragmentationArmorDivisor == fixed.F64d4One {
 		w.FragmentationArmorDivisor = 0
 	}
 	data, err := json.Marshal(&w.WeaponDamageData)
@@ -99,7 +99,7 @@ func (w *WeaponDamage) String() string {
 			buffer.WriteString(base)
 		}
 	}
-	if w.ArmorDivisor != fxp.One {
+	if w.ArmorDivisor != fixed.F64d4One {
 		buffer.WriteByte('(')
 		buffer.WriteString(w.ArmorDivisor.String())
 		buffer.WriteByte(')')
@@ -120,7 +120,7 @@ func (w *WeaponDamage) String() string {
 		if frag := w.Fragmentation.StringExtra(convertMods); frag != "0" {
 			buffer.WriteString(" [")
 			buffer.WriteString(frag)
-			if w.FragmentationArmorDivisor != fxp.One {
+			if w.FragmentationArmorDivisor != fixed.F64d4One {
 				buffer.WriteByte('(')
 				buffer.WriteString(w.FragmentationArmorDivisor.String())
 				buffer.WriteByte(')')
@@ -261,7 +261,7 @@ func (w *WeaponDamage) ResolvedDamage(tooltip *xio.ByteBuffer) string {
 	if base.Count != 0 || base.Modifier != 0 {
 		buffer.WriteString(base.StringExtra(pc.SheetSettings.UseModifyingDicePlusAdds))
 	}
-	if w.ArmorDivisor != fxp.One {
+	if w.ArmorDivisor != fixed.F64d4One {
 		buffer.WriteByte('(')
 		buffer.WriteString(w.ArmorDivisor.String())
 		buffer.WriteByte(')')
@@ -338,7 +338,7 @@ func addDice(left, right *dice.Dice) *dice.Dice {
 		return &dice.Dice{
 			Count:      averageBoth.Div(average).AsInt(),
 			Sides:      sides,
-			Modifier:   (fxp.Round(fxp.Mod(averageBoth, average))).AsInt() + left.Modifier + right.Modifier,
+			Modifier:   averageBoth.Mod(average).Round().AsInt() + left.Modifier + right.Modifier,
 			Multiplier: 1,
 		}
 	}
@@ -361,7 +361,7 @@ func adjustDiceForPercentBonus(d *dice.Dice, percent fixed.F64d4) *dice.Dice {
 	} else {
 		average = average.Mul(fxp.Hundred+percent).Div(fxp.Hundred) - modifier
 		count = average.Div(averagePerDie).Trunc().Max(0)
-		modifier += fxp.Round(average - count.Mul(averagePerDie))
+		modifier += (average - count.Mul(averagePerDie)).Round()
 	}
 	return &dice.Dice{
 		Count:      count.AsInt(),

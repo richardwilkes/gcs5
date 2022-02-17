@@ -15,7 +15,6 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/gcs/model/criteria"
-	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -71,7 +70,7 @@ func NewWeaponDamageBonus() *WeaponDamageBonus {
 				Compare: criteria.Any,
 			},
 		},
-		LeveledAmount: LeveledAmount{Amount: fxp.One},
+		LeveledAmount: LeveledAmount{Amount: fixed.F64d4One},
 	}
 }
 

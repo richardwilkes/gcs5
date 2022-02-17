@@ -15,7 +15,6 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/gcs/model/criteria"
-	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -61,7 +60,7 @@ func NewSkillBonus() *SkillBonus {
 				Compare: criteria.Any,
 			},
 		},
-		LeveledAmount: LeveledAmount{Amount: fxp.One},
+		LeveledAmount: LeveledAmount{Amount: fixed.F64d4One},
 	}
 }
 

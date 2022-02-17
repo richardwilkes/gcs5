@@ -14,7 +14,6 @@ package feature
 import (
 	"fmt"
 
-	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
@@ -36,7 +35,7 @@ func NewConditionalModifierBonus() *ConditionalModifier {
 	return &ConditionalModifier{
 		Type:          ConditionalModifierType,
 		Situation:     i18n.Text("triggering condition"),
-		LeveledAmount: LeveledAmount{Amount: fxp.One},
+		LeveledAmount: LeveledAmount{Amount: fixed.F64d4One},
 	}
 }
 

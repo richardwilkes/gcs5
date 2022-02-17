@@ -12,7 +12,6 @@
 package gurps
 
 import (
-	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
@@ -40,12 +39,12 @@ func (p *PoolThreshold) Clone() *PoolThreshold {
 
 // Threshold returns the threshold value for the given maximum.
 func (p *PoolThreshold) Threshold(max fixed.F64d4) fixed.F64d4 {
-	divisor := p.Divisor
+	divisor := p.Divisor //nolint:ifshort // bad recommendation
 	if divisor == 0 {
-		divisor = fxp.One
+		divisor = fixed.F64d4One
 	}
 	// TODO: Check that rounding here is correct for our purposes
-	return fxp.Round(max.Mul(p.Multiplier).Div(divisor) + p.Addition)
+	return (max.Mul(p.Multiplier).Div(divisor) + p.Addition).Round()
 }
 
 // ContainsOp returns true if this PoolThreshold contains the specified ThresholdOp.

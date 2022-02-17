@@ -209,13 +209,13 @@ func ValueAdjustedForModifiers(value fixed.F64d4, modifiers []*EquipmentModifier
 			t := equipment.BaseCost.DetermineModifierCostValueTypeFromString(one.CostAmount)
 			cf += t.ExtractValue(one.CostAmount)
 			if t == equipment.Multiplier {
-				cf -= fxp.One
+				cf -= fixed.F64d4One
 			}
 		}
 	}
 	if cf != 0 {
 		cf = cf.Max(fxp.NegPointEight)
-		cost = cost.Mul(cf.Max(fxp.NegPointEight) + fxp.One)
+		cost = cost.Mul(cf.Max(fxp.NegPointEight) + fixed.F64d4One)
 	}
 
 	// Apply all equipment.FinalBaseCost

@@ -14,7 +14,6 @@ package feature
 import (
 	"fmt"
 
-	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -37,7 +36,7 @@ func NewAttributeBonus(attrID string) *AttributeBonus {
 		Type:          AttributeBonusType,
 		Attribute:     attrID,
 		Limitation:    attribute.None,
-		LeveledAmount: LeveledAmount{Amount: fxp.One},
+		LeveledAmount: LeveledAmount{Amount: fixed.F64d4One},
 	}
 }
 

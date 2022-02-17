@@ -765,10 +765,10 @@ func (e *Entity) Move(enc datafile.Encumbrance) int {
 	initialMove := e.ResolveAttributeCurrent(gid.BasicMove).Max(0)
 	divisor := 2 * xmath.MinInt(CountThresholdOpMet(attribute.HalveMove, e.Attributes), 2)
 	if divisor > 0 {
-		initialMove = fxp.Ceil(initialMove.Div(fixed.F64d4FromInt(divisor)))
+		initialMove = initialMove.Div(fixed.F64d4FromInt(divisor)).Ceil()
 	}
 	move := initialMove.Mul(fxp.Ten + fxp.Two.Mul(enc.Penalty())).Div(fxp.Ten).Trunc()
-	if move < fxp.One {
+	if move < fixed.F64d4One {
 		if initialMove > 0 {
 			return 1
 		}
@@ -782,9 +782,9 @@ func (e *Entity) Dodge(enc datafile.Encumbrance) int {
 	dodge := fxp.Three + e.DodgeBonus + e.ResolveAttributeCurrent(gid.BasicSpeed).Max(0)
 	divisor := 2 * xmath.MinInt(CountThresholdOpMet(attribute.HalveDodge, e.Attributes), 2)
 	if divisor > 0 {
-		dodge = fxp.Ceil(dodge.Div(fixed.F64d4FromInt(divisor)))
+		dodge = dodge.Div(fixed.F64d4FromInt(divisor)).Ceil()
 	}
-	return (dodge + enc.Penalty()).Max(fxp.One).AsInt()
+	return (dodge + enc.Penalty()).Max(fixed.F64d4One).AsInt()
 }
 
 // EncumbranceLevel returns the current Encumbrance level.
@@ -848,31 +848,31 @@ func (e *Entity) BasicLift() measure.Weight {
 	if IsThresholdOpMet(attribute.HalveST, e.Attributes) {
 		st = st.Div(fxp.Two)
 		if st != st.Trunc() {
-			st = st.Trunc() + fxp.One
+			st = st.Trunc() + fixed.F64d4One
 		}
 	}
-	if st < fxp.One {
+	if st < fixed.F64d4One {
 		return 0
 	}
 	var v fixed.F64d4
 	if e.SheetSettings.DamageProgression == attribute.KnowingYourOwnStrength {
 		var diff fixed.F64d4
 		if st > fxp.Nineteen {
-			diff = st.Div(fxp.Ten).Trunc() - fxp.One
+			diff = st.Div(fxp.Ten).Trunc() - fixed.F64d4One
 			st -= diff.Mul(fxp.Ten)
 		}
 		v = fixed.F64d4FromFloat64(math.Pow(10, st.AsFloat64()/10)).Mul(fxp.Two)
 		if st <= fxp.Six {
-			v = fxp.Round(v.Mul(fxp.Ten)).Div(fxp.Ten)
+			v = v.Mul(fxp.Ten).Round().Div(fxp.Ten)
 		} else {
-			v = fxp.Round(v)
+			v = v.Round()
 		}
 		v = v.Mul(fixed.F64d4FromFloat64(math.Pow(10, diff.AsFloat64())))
 	} else {
 		v = st.Mul(st).Div(fxp.Five)
 	}
 	if v >= fxp.Ten {
-		v = fxp.Round(v)
+		v = v.Round()
 	}
 	return measure.Weight(v.Mul(fxp.Ten).Trunc().Div(fxp.Ten))
 }

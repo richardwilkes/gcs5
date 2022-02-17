@@ -20,7 +20,7 @@ import (
 func (enum Encumbrance) WeightMultiplier() fixed.F64d4 {
 	switch enum {
 	case None:
-		return fxp.One
+		return fixed.F64d4One
 	case Light:
 		return fxp.Two
 	case Medium:

@@ -13,7 +13,6 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/criteria"
-	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
@@ -37,7 +36,7 @@ func NewContainedQuantityPrereq() *ContainedQuantityPrereq {
 		QualifierCriteria: criteria.Numeric{
 			NumericData: criteria.NumericData{
 				Compare:   criteria.AtMost,
-				Qualifier: fxp.One,
+				Qualifier: fixed.F64d4One,
 			},
 		},
 		Has: true,

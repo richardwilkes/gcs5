@@ -7,7 +7,7 @@ require (
 	github.com/richardwilkes/json v0.0.0-20220202023945-ac9125b86187
 	github.com/richardwilkes/pdf v0.0.0-20220115194011-2380c98780aa
 	github.com/richardwilkes/rpgtools v1.4.1
-	github.com/richardwilkes/toolbox v1.61.0
+	github.com/richardwilkes/toolbox v1.62.0
 	github.com/richardwilkes/unison v0.6.0
 	github.com/stretchr/testify v1.7.0
 )

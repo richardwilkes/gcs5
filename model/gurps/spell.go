@@ -130,7 +130,7 @@ func NewSpell(entity *Entity, parent *Spell, container bool) *Spell {
 			CastingCost: "1",
 			CastingTime: "1 sec",
 			Duration:    "Instant",
-			Points:      fxp.One,
+			Points:      fixed.F64d4One,
 			Prereq:      NewPrereqList(),
 		}
 	}
@@ -276,17 +276,17 @@ func (s *Spell) calculateLevel() skill.Level {
 			pts = pts.Div(fxp.Three).Trunc()
 		}
 		switch {
-		case pts < fxp.One:
+		case pts < fixed.F64d4One:
 			level = fxp.NegOne
 			relativeLevel = 0
-		case pts == fxp.One:
+		case pts == fixed.F64d4One:
 		// relativeLevel is preset to this point value
 		case pts < fxp.Four:
-			relativeLevel += fxp.One
+			relativeLevel += fixed.F64d4One
 		default:
-			relativeLevel += fxp.One + pts.Div(fxp.Four).Trunc()
+			relativeLevel += fixed.F64d4One + pts.Div(fxp.Four).Trunc()
 		}
-		if level != fxp.One {
+		if level != fixed.F64d4One {
 			relativeLevel += s.BestCollegeSpellBonus(s.Categories, s.College, &tooltip)
 			relativeLevel += s.SpellBonusesFor(feature.SpellPowerSourceID, s.PowerSource, s.Categories, &tooltip)
 			relativeLevel += s.SpellBonusesFor(feature.SpellNameID, s.Name, s.Categories, &tooltip)

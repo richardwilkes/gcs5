@@ -106,7 +106,7 @@ func NewEquipment(entity *Entity, parent *Equipment, container bool) *Equipment 
 			Name:          i18n.Text("Equipment"),
 			LegalityClass: "4",
 			Prereq:        NewPrereqList(),
-			Quantity:      fxp.One,
+			Quantity:      fixed.F64d4One,
 			Equipped:      true,
 		},
 		Entity: entity,
@@ -164,7 +164,7 @@ func (e *Equipment) UnmarshalJSON(data []byte) error {
 			m := make(map[string]interface{})
 			if err := json.Unmarshal(data, &m); err == nil {
 				if _, exists := m["quantity"]; !exists {
-					e.Quantity = fxp.One
+					e.Quantity = fixed.F64d4One
 				}
 			}
 		}

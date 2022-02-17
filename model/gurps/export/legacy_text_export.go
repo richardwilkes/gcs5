@@ -660,11 +660,11 @@ func (ex *legacyExporter) includeByAdvantageCategories(adq *gurps.Advantage) boo
 }
 
 func (ex *legacyExporter) includeAdvantages(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() > fxp.One && ex.includeByAdvantageCategories(adq)
+	return adq.AdjustedPoints() > fixed.F64d4One && ex.includeByAdvantageCategories(adq)
 }
 
 func (ex *legacyExporter) includePerks(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() == fxp.One && ex.includeByAdvantageCategories(adq)
+	return adq.AdjustedPoints() == fixed.F64d4One && ex.includeByAdvantageCategories(adq)
 }
 
 func (ex *legacyExporter) includeAdvantagesAndPerks(adq *gurps.Advantage) bool {

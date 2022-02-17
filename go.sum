@@ -31,8 +31,8 @@ github.com/richardwilkes/pdf v0.0.0-20220115194011-2380c98780aa/go.mod h1:aN1tva
 github.com/richardwilkes/rpgtools v1.4.1 h1:uoQKvM64owkU5gKYAlqZuWDvIfKcs8OCVRsXRPu1i2o=
 github.com/richardwilkes/rpgtools v1.4.1/go.mod h1:w4bCZ1a0YGKPzSA/Yr3XinTMVLlYOKEnrormltb1r9s=
 github.com/richardwilkes/toolbox v1.60.0/go.mod h1:kP6cWRrfXgv7laMDlJj+MJnvrukwLC62FNm4WJkSi58=
-github.com/richardwilkes/toolbox v1.61.0 h1:J0LBj88jUU2unc2VB8WhzmtL5IWGL2bZcE3uTlzwozU=
-github.com/richardwilkes/toolbox v1.61.0/go.mod h1:kP6cWRrfXgv7laMDlJj+MJnvrukwLC62FNm4WJkSi58=
+github.com/richardwilkes/toolbox v1.62.0 h1:0I9WSPzTL/WtAzHjbQtIY21SUbedRU/RvaP6QAZJ5Mo=
+github.com/richardwilkes/toolbox v1.62.0/go.mod h1:O2ZWzewgRuKusafA6EpItUDqvKEfk19f6zhq0e6mxqk=
 github.com/rogpeppe/go-internal v1.6.1/go.mod h1:xXDCJY+GAPziupqXw64V24skbSoqbTEfhy4qGm1nDQc=
 github.com/rogpeppe/go-internal v1.8.0 h1:FCbCCtXNOY3UtUuHUYaghJg4y7Fd14rXifAYUAtL9R8=
 github.com/rogpeppe/go-internal v1.8.0/go.mod h1:WmiCO8CzOY8rg0OYDC4/i/2WRWAB6poM+XZ2dLUbcbE=

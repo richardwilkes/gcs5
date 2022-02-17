@@ -13,7 +13,6 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/criteria"
-	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/gcs/model/gurps/spell"
@@ -46,7 +45,7 @@ func NewSpellPrereq() *SpellPrereq {
 		QuantityCriteria: criteria.Numeric{
 			NumericData: criteria.NumericData{
 				Compare:   criteria.AtLeast,
-				Qualifier: fxp.One,
+				Qualifier: fixed.F64d4One,
 			},
 		},
 		Has: true,
@@ -134,7 +133,7 @@ func (s *SpellPrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xi
 		} else {
 			tooltip.WriteByte(' ')
 			tooltip.WriteString(s.QuantityCriteria.String())
-			if s.QuantityCriteria.Qualifier == fxp.One {
+			if s.QuantityCriteria.Qualifier == fixed.F64d4One {
 				tooltip.WriteString(" spell ")
 			} else {
 				tooltip.WriteString(" spells ")
