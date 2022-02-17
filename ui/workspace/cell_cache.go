@@ -50,7 +50,9 @@ func createAndAddCellLabel(parent *unison.Panel, width float32, text string, f u
 }
 
 func newPageReferenceHeader() unison.TableColumnHeader {
-	header := unison.NewTableColumnHeader("", i18n.Text(`A reference to the book and page the item appears on (e.g. B22 would refer to "Basic Set", page 22)`))
+	header := unison.NewTableColumnHeader("")
+	header.Tooltip = unison.NewTooltipWithText(i18n.Text(`A reference to the book and page the item appears on
+e.g. B22 would refer to "Basic Set", page 22`))
 	baseline := header.Font.Baseline()
 	header.Drawable = &unison.DrawableSVG{
 		SVG:  icons.BookmarkSVG(),
@@ -69,6 +71,7 @@ func createAndAddPageRefCellLabel(parent *unison.Panel, text, highlight string, 
 	label.Text = parts[0]
 	if len(parts) > 1 {
 		label.Text += "+"
+		parent.Tooltip = unison.NewTooltipWithText(strings.Join(parts, "\n"))
 	}
 	if label.Text != "" {
 		const isLinkKey = "is_link"

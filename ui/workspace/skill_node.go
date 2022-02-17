@@ -45,10 +45,12 @@ func NewSkillListDockable(filePath string) (*ListFileDockable, error) {
 	if err != nil {
 		return nil, err
 	}
+	diffHdr := unison.NewTableColumnHeader(i18n.Text("Diff"))
+	diffHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("Difficulty"))
 	return NewListFileDockable(filePath, []unison.TableColumnHeader{
-		unison.NewTableColumnHeader(i18n.Text("Skill / Technique"), ""),
-		unison.NewTableColumnHeader(i18n.Text("Diff"), i18n.Text("Difficulty")),
-		unison.NewTableColumnHeader(i18n.Text("Category"), ""),
+		unison.NewTableColumnHeader(i18n.Text("Skill / Technique")),
+		diffHdr,
+		unison.NewTableColumnHeader(i18n.Text("Category")),
 		newPageReferenceHeader(),
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(skills))

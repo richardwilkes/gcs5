@@ -46,11 +46,13 @@ func NewAdvantageListDockable(filePath string) (*ListFileDockable, error) {
 	if err != nil {
 		return nil, err
 	}
+	ptsHdr := unison.NewTableColumnHeader(i18n.Text("Pts"))
+	ptsHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("Points"))
 	return NewListFileDockable(filePath, []unison.TableColumnHeader{
-		unison.NewTableColumnHeader(i18n.Text("Advantage / Disadvantage"), ""),
-		unison.NewTableColumnHeader(i18n.Text("Pts"), i18n.Text("Points")),
-		unison.NewTableColumnHeader(i18n.Text("Type"), ""),
-		unison.NewTableColumnHeader(i18n.Text("Category"), ""),
+		unison.NewTableColumnHeader(i18n.Text("Advantage / Disadvantage")),
+		ptsHdr,
+		unison.NewTableColumnHeader(i18n.Text("Type")),
+		unison.NewTableColumnHeader(i18n.Text("Category")),
 		newPageReferenceHeader(),
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(advantages))

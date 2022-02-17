@@ -52,17 +52,27 @@ func NewSpellListDockable(filePath string) (*ListFileDockable, error) {
 	if err != nil {
 		return nil, err
 	}
+	resistHdr := unison.NewTableColumnHeader(i18n.Text("Resist"))
+	resistHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("Resistance"))
+	diffHdr := unison.NewTableColumnHeader(i18n.Text("Diff"))
+	diffHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("Difficulty"))
+	costHdr := unison.NewTableColumnHeader(i18n.Text("Cost"))
+	costHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("The mana cost to cast the spell"))
+	maintainHdr := unison.NewTableColumnHeader(i18n.Text("Maintain"))
+	maintainHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("The mana cost to maintain the spell"))
+	timeHdr := unison.NewTableColumnHeader(i18n.Text("Time"))
+	timeHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("The time required to cast the spell"))
 	return NewListFileDockable(filePath, []unison.TableColumnHeader{
-		unison.NewTableColumnHeader(i18n.Text("Spell"), ""),
-		unison.NewTableColumnHeader(i18n.Text("Resist"), i18n.Text("Resistance")),
-		unison.NewTableColumnHeader(i18n.Text("Class"), ""),
-		unison.NewTableColumnHeader(i18n.Text("College"), ""),
-		unison.NewTableColumnHeader(i18n.Text("Cost"), i18n.Text("The mana cost to cast the spell")),
-		unison.NewTableColumnHeader(i18n.Text("Maintain"), i18n.Text("The mana cost to maintain the spell")),
-		unison.NewTableColumnHeader(i18n.Text("Time"), i18n.Text("The time required to cast the spell")),
-		unison.NewTableColumnHeader(i18n.Text("Duration"), ""),
-		unison.NewTableColumnHeader(i18n.Text("Diff"), i18n.Text("Difficulty")),
-		unison.NewTableColumnHeader(i18n.Text("Category"), ""),
+		unison.NewTableColumnHeader(i18n.Text("Spell")),
+		resistHdr,
+		unison.NewTableColumnHeader(i18n.Text("Class")),
+		unison.NewTableColumnHeader(i18n.Text("College")),
+		costHdr,
+		maintainHdr,
+		timeHdr,
+		unison.NewTableColumnHeader(i18n.Text("Duration")),
+		diffHdr,
+		unison.NewTableColumnHeader(i18n.Text("Category")),
 		newPageReferenceHeader(),
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(spells))
