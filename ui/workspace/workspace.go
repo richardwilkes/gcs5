@@ -12,6 +12,8 @@
 package workspace
 
 import (
+	"time"
+
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -49,12 +51,15 @@ func NewWorkspace(wnd *unison.Window) *Workspace {
 	}
 	wnd.SetContent(w.TopDock)
 	w.TopDock.DockTo(w.Navigator, nil, unison.LeftSide)
-	w.TopDock.RootDockLayout().SetDividerPosition(300)
 	dc := unison.DockContainerFor(w.Navigator)
 	w.TopDock.DockTo(w.DocumentDock, dc, unison.RightSide)
 	dc.SetCurrentDockable(w.Navigator)
 	wnd.ClientData()[workspaceClientDataKey] = w
 	wnd.WillCloseCallback = w.willClose
+	// Without the delay, the position doesn't always "take"
+	unison.InvokeTaskAfter(func() {
+		w.TopDock.RootDockLayout().SetDividerPosition(settings.Global().LibraryExplorer.DividerPosition)
+	}, time.Millisecond)
 	return w
 }
 

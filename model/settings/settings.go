@@ -50,7 +50,7 @@ type WindowPosition struct {
 
 // NavigatorSettings holds settings for the navigator view.
 type NavigatorSettings struct {
-	DividerPosition int      `json:"divider_position"`
+	DividerPosition float32  `json:"divider_position"`
 	OpenRowKeys     []string `json:"open_row_keys,omitempty"`
 }
 
