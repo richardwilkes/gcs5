@@ -44,7 +44,6 @@ func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHead
 	d.table.SetTopLevelRows(topLevelRows(d.table))
 	d.table.SizeColumnsToFit(true)
 
-	d.scroll.MouseWheelMultiplier = 4
 	header := unison.NewTableHeader(d.table, columnHeaders...)
 	header.Less = func(s1, s2 string) bool {
 		if n1, err := fixed.F64d4FromString(s1); err == nil {

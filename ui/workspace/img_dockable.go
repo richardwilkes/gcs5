@@ -72,7 +72,6 @@ func NewImageDockable(filePath string) (*ImageDockable, error) {
 	d.imgPanel.MouseWheelCallback = d.mouseWheel
 
 	d.scroll = unison.NewScrollPanel()
-	d.scroll.MouseWheelMultiplier = 4
 	d.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,

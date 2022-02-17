@@ -86,7 +86,6 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	d.docPanel.SetFocusable(true)
 
 	d.scroll = unison.NewScrollPanel()
-	d.scroll.MouseWheelMultiplier = 4
 	d.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
