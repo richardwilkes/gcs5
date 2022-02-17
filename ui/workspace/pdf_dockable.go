@@ -96,16 +96,16 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	d.scroll.SetContent(d.docPanel, unison.FillBehavior)
 
 	d.firstPageButton = icons2.NewIconButton(icons2.FirstSVG(), 16)
-	d.firstPageButton.ClickCallback = func() { d.loadPage(0) }
+	d.firstPageButton.ClickCallback = func() { d.LoadPage(0) }
 
 	d.previousPageButton = icons2.NewIconButton(icons2.PreviousSVG(), 16)
-	d.previousPageButton.ClickCallback = func() { d.loadPage(d.pdf.MostRecentPageNumber() - 1) }
+	d.previousPageButton.ClickCallback = func() { d.LoadPage(d.pdf.MostRecentPageNumber() - 1) }
 
 	d.nextPageButton = icons2.NewIconButton(icons2.NextSVG(), 16)
-	d.nextPageButton.ClickCallback = func() { d.loadPage(d.pdf.MostRecentPageNumber() + 1) }
+	d.nextPageButton.ClickCallback = func() { d.LoadPage(d.pdf.MostRecentPageNumber() + 1) }
 
 	d.lastPageButton = icons2.NewIconButton(icons2.LastSVG(), 16)
-	d.lastPageButton.ClickCallback = func() { d.loadPage(d.pdf.PageCount() - 1) }
+	d.lastPageButton.ClickCallback = func() { d.LoadPage(d.pdf.PageCount() - 1) }
 
 	pageLabel := unison.NewLabel()
 	pageLabel.Font = unison.DefaultFieldTheme.Font
@@ -115,7 +115,7 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	d.pageNumberField.MinimumTextWidth = d.pageNumberField.Font.Width(strconv.Itoa(d.pdf.PageCount() * 10))
 	d.pageNumberField.ModifiedCallback = func() {
 		if pageNum, e := strconv.Atoi(d.pageNumberField.Text()); e == nil && pageNum > 0 && pageNum <= d.pdf.PageCount() {
-			d.loadPage(pageNum - 1)
+			d.LoadPage(pageNum - 1)
 		}
 	}
 	d.pageNumberField.ValidateCallback = func() bool {
@@ -136,7 +136,7 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	d.scaleField.ModifiedCallback = func() {
 		if s, e := strconv.Atoi(strings.TrimRight(d.scaleField.Text(), "%")); e == nil && s >= minPDFDockableScale && s <= maxPDFDockableScale {
 			d.scale = s
-			d.loadPage(d.pdf.MostRecentPageNumber())
+			d.LoadPage(d.pdf.MostRecentPageNumber())
 		}
 	}
 	d.scaleField.ValidateCallback = func() bool {
@@ -154,7 +154,7 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	})
 	existingCallback := d.searchField.ModifiedCallback
 	d.searchField.ModifiedCallback = func() {
-		d.loadPage(d.pdf.MostRecentPageNumber())
+		d.LoadPage(d.pdf.MostRecentPageNumber())
 		existingCallback()
 	}
 
@@ -195,12 +195,18 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	d.AddChild(toolbar)
 	d.AddChild(d.scroll)
 
-	d.loadPage(0)
+	d.LoadPage(0)
 
 	return d, nil
 }
 
-func (d *PDFDockable) loadPage(pageNumber int) {
+// SetSearchText sets the search text and updates the display.
+func (d *PDFDockable) SetSearchText(text string) {
+	d.searchField.SetText(text)
+}
+
+// LoadPage loads the specified page.
+func (d *PDFDockable) LoadPage(pageNumber int) {
 	d.pdf.LoadPage(pageNumber, float32(d.scale)/100, d.searchField.Text())
 	pageNumber = d.pdf.MostRecentPageNumber()
 	lastPageNumber := d.pdf.PageCount() - 1
@@ -276,7 +282,7 @@ func (d *PDFDockable) mouseUp(where geom32.Point, button int, _ unison.Modifiers
 	d.checkForLinkAt(where)
 	if button == unison.ButtonLeft && d.link != nil {
 		if d.link.PageNumber >= 0 {
-			d.loadPage(d.link.PageNumber)
+			d.LoadPage(d.link.PageNumber)
 			// TODO: Use d.link.PageX & PageY to ensure location is scrolled into place
 		} else if err := desktop.OpenBrowser(d.link.URI); err != nil {
 			unison.ErrorDialogWithError(i18n.Text("Unable to open link"), err)
@@ -311,13 +317,13 @@ func (d *PDFDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bool
 			scale = maxPDFDockableScale
 		}
 	case unison.KeyHome:
-		d.loadPage(0)
+		d.LoadPage(0)
 	case unison.KeyEnd:
-		d.loadPage(d.pdf.PageCount() - 1)
+		d.LoadPage(d.pdf.PageCount() - 1)
 	case unison.KeyLeft, unison.KeyUp:
-		d.loadPage(d.pdf.MostRecentPageNumber() - 1)
+		d.LoadPage(d.pdf.MostRecentPageNumber() - 1)
 	case unison.KeyRight, unison.KeyDown:
-		d.loadPage(d.pdf.MostRecentPageNumber() + 1)
+		d.LoadPage(d.pdf.MostRecentPageNumber() + 1)
 	default:
 		return false
 	}
@@ -327,7 +333,7 @@ func (d *PDFDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bool
 		d.scaleField.ModifiedCallback = nil
 		d.scaleField.SetText(strconv.Itoa(d.scale) + "%")
 		d.scaleField.ModifiedCallback = f
-		d.loadPage(d.pdf.MostRecentPageNumber())
+		d.LoadPage(d.pdf.MostRecentPageNumber())
 	}
 	return true
 }

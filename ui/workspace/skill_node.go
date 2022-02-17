@@ -126,14 +126,17 @@ func (n *SkillNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 	p := &unison.Panel{}
 	p.Self = p
 	p.SetLayout(&unison.FlexLayout{Columns: 1})
-	if col == skillDescriptionColumn {
+	switch col {
+	case skillDescriptionColumn:
 		createAndAddCellLabel(p, width, n.skill.Description(), unison.DefaultLabelTheme.Font, selected)
 		if text := n.skill.SecondaryText(); strings.TrimSpace(text) != "" {
 			desc := unison.DefaultLabelTheme.Font.Descriptor()
 			desc.Size--
 			createAndAddCellLabel(p, width, text, desc.Font(), selected)
 		}
-	} else {
+	case skillReferenceColumn:
+		createAndAddPageRefCellLabel(p, n.CellDataForSort(col), n.skill.Name, unison.DefaultLabelTheme.Font, selected)
+	default:
 		createAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
 	}
 	n.cellCache[col] = &cellCache{

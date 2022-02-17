@@ -21,11 +21,6 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-const (
-	savedInkKey   = "saved_ink"
-	currentInkKey = "current_ink"
-)
-
 type cellCache struct {
 	width float32
 	data  string
@@ -64,7 +59,7 @@ func newPageReferenceHeader() unison.TableColumnHeader {
 	return header
 }
 
-func createAndAddPageRefCellLabel(parent *unison.Panel, text string, f unison.Font, selected bool) {
+func createAndAddPageRefCellLabel(parent *unison.Panel, text, highlight string, f unison.Font, selected bool) {
 	label := unison.NewLabel()
 	label.Font = f
 	if selected {
@@ -76,25 +71,37 @@ func createAndAddPageRefCellLabel(parent *unison.Panel, text string, f unison.Fo
 		label.Text += "+"
 	}
 	if label.Text != "" {
-		label.MouseEnterCallback = func(where geom32.Point, mod unison.Modifiers) bool {
-			clientData := label.ClientData()
-			clientData[savedInkKey] = label.LabelTheme.OnBackgroundInk
-			label.LabelTheme.OnBackgroundInk = theme.AccentColor
-			clientData[currentInkKey] = label.LabelTheme.OnBackgroundInk
-			label.MarkForRedraw()
-			return false
-		}
-		label.MouseExitCallback = func() bool {
-			clientData := label.ClientData()
-			ink, ok := clientData[savedInkKey].(unison.Ink)
-			if !ok {
-				ink = label.LabelTheme.OnBackgroundInk
+		const isLinkKey = "is_link"
+		label.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
+			c := label.OnBackgroundInk
+			if _, exists := label.ClientData()[isLinkKey]; exists {
+				c = theme.OnLinkColor
+				gc.DrawRect(rect, theme.LinkColor.Paint(gc, rect, unison.Fill))
 			}
-			label.LabelTheme.OnBackgroundInk = ink
-			delete(clientData, savedInkKey)
-			delete(clientData, currentInkKey)
+			unison.DrawLabel(gc, label.ContentRect(false), label.HAlign, label.VAlign, label.Text, label.Font, c,
+				label.Drawable, label.Side, label.Gap, !label.Enabled())
+		}
+		parent.MouseEnterCallback = func(where geom32.Point, mod unison.Modifiers) bool {
+			label.ClientData()[isLinkKey] = true
 			label.MarkForRedraw()
-			return false
+			return true
+		}
+		parent.MouseExitCallback = func() bool {
+			delete(label.ClientData(), isLinkKey)
+			label.MarkForRedraw()
+			return true
+		}
+		parent.MouseDownCallback = func(where geom32.Point, button, clickCount int, mod unison.Modifiers) bool {
+			var list []string
+			for _, one := range strings.FieldsFunc(text, func(ch rune) bool { return ch == ',' || ch == ';' || ch == ' ' }) {
+				if one = strings.TrimSpace(one); one != "" {
+					list = append(list, one)
+				}
+			}
+			if len(list) != 0 {
+				OpenReference(parent.Window(), list[0], highlight)
+			}
+			return true
 		}
 	}
 	parent.AddChild(label)

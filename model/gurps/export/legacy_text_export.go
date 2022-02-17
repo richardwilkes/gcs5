@@ -1616,6 +1616,10 @@ func (ex *legacyExporter) handleColor(key string) {
 		c = theme.OnOverloadedColor
 	case "hint":
 		c = theme.HintColor
+	case "link":
+		c = theme.LinkColor
+	case "on_link":
+		c = theme.OnLinkColor
 	default:
 		ex.unidentifiedKey(key)
 	}

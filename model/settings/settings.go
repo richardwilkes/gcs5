@@ -79,7 +79,6 @@ func Default(entity *gurps.Entity) *Settings {
 		LibrarySet:         library.NewLibraries(),
 		LibraryExplorer:    NavigatorSettings{DividerPosition: 300},
 		LastDirs:           make(map[string]string),
-		PageRefs:           make(map[string]*PageRef),
 		KeyBindings:        make(map[string]string),
 		WindowPositions:    make(map[string]*WindowPosition),
 		Colors:             make(map[string]unison.Color),
@@ -113,6 +112,14 @@ func (s *Settings) LookupPageRef(id string) *PageRef {
 		return ref
 	}
 	return nil
+}
+
+// SetPageRef sets the PageRef for the ID.
+func (s *Settings) SetPageRef(id string, pageRef *PageRef) {
+	if s.PageRefs == nil {
+		s.PageRefs = make(map[string]*PageRef)
+	}
+	s.PageRefs[id] = pageRef
 }
 
 // ListRecentFiles returns the current list of recently opened files. Files that are no longer readable for any reason

@@ -120,11 +120,7 @@ func (n *AdvantageNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 			color = unison.OnSelectionColor
 		}
 		for _, child := range n.cellCache[col].panel.Children() {
-			if ink, ok := child.ClientData()[currentInkKey].(unison.Ink); ok {
-				child.Self.(*unison.Label).LabelTheme.OnBackgroundInk = ink
-			} else {
-				child.Self.(*unison.Label).LabelTheme.OnBackgroundInk = color
-			}
+			child.Self.(*unison.Label).LabelTheme.OnBackgroundInk = color
 		}
 		return n.cellCache[col].panel
 	}
@@ -144,7 +140,7 @@ func (n *AdvantageNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 		createAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
 		layout.HAlign = unison.EndAlignment
 	case advantageReferenceColumn:
-		createAndAddPageRefCellLabel(p, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
+		createAndAddPageRefCellLabel(p, n.CellDataForSort(col), n.advantage.Name, unison.DefaultLabelTheme.Font, selected)
 	default:
 		createAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
 	}

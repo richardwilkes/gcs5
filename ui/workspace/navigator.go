@@ -180,10 +180,10 @@ func OpenFiles(filePaths []string) {
 }
 
 // OpenFile attempts to open the given file path in the given window.
-func OpenFile(wnd *unison.Window, filePath string) {
+func OpenFile(wnd *unison.Window, filePath string) unison.Dockable {
 	workspace := FromWindow(wnd)
 	if workspace == nil {
-		return
+		return nil
 	}
 	var defaultDockContainer *unison.DockContainer
 	if focus := wnd.Focus(); focus != nil {
@@ -191,14 +191,14 @@ func OpenFile(wnd *unison.Window, filePath string) {
 			defaultDockContainer = dc
 		}
 	}
-	found := false
+	var d unison.Dockable
 	filePath = path.Clean(filePath)
 	workspace.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
-		for _, d := range dc.Dockables() {
-			if f, ok := d.(FileBackedDockable); ok {
+		for _, one := range dc.Dockables() {
+			if f, ok := one.(FileBackedDockable); ok {
 				if filePath == f.BackingFilePath() {
-					found = true
-					dc.SetCurrentDockable(d)
+					d = one
+					dc.SetCurrentDockable(one)
 					dc.AcquireFocus()
 					return true
 				}
@@ -209,39 +209,38 @@ func OpenFile(wnd *unison.Window, filePath string) {
 		}
 		return false
 	})
-	if !found {
+	if d == nil {
 		var err error
-		var d unison.Dockable
 		if unison.EncodedImageFormatForPath(filePath).CanRead() {
 			if d, err = NewImageDockable(filePath); err != nil {
 				unison.ErrorDialogWithMessage(i18n.Text("Unable to open image file"), err.Error())
-				return
+				return nil
 			}
 		} else {
 			switch strings.ToLower(path.Ext(filePath)) {
 			case ".adq":
 				if d, err = NewAdvantageListDockable(filePath); err != nil {
 					unison.ErrorDialogWithMessage(i18n.Text("Unable to open advantages list"), err.Error())
-					return
+					return nil
 				}
 			case ".pdf":
 				if d, err = NewPDFDockable(filePath); err != nil {
 					unison.ErrorDialogWithMessage(i18n.Text("Unable to open PDF"), err.Error())
-					return
+					return nil
 				}
 			case ".skl":
 				if d, err = NewSkillListDockable(filePath); err != nil {
 					unison.ErrorDialogWithMessage(i18n.Text("Unable to open skills list"), err.Error())
-					return
+					return nil
 				}
 			case ".spl":
 				if d, err = NewSpellListDockable(filePath); err != nil {
 					unison.ErrorDialogWithMessage(i18n.Text("Unable to open spells list"), err.Error())
-					return
+					return nil
 				}
 			default:
 				unison.ErrorDialogWithMessage(i18n.Text("Unable to open file"), filePath)
-				return
+				return nil
 			}
 		}
 		if defaultDockContainer != nil {
@@ -251,6 +250,7 @@ func OpenFile(wnd *unison.Window, filePath string) {
 			d.AsPanel().RequestFocus()
 		}
 	}
+	return d
 }
 
 func createNodeCell(ext, title string, selected bool) *unison.Panel {

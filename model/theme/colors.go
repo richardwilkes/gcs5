@@ -30,4 +30,6 @@ var (
 	OverloadedColor            = &unison.ThemeColor{Light: unison.RGB(192, 64, 64), Dark: unison.RGB(115, 37, 37)}
 	OnOverloadedColor          = &unison.ThemeColor{Light: unison.RGB(255, 255, 255), Dark: unison.RGB(221, 221, 221)}
 	HintColor                  = &unison.ThemeColor{Light: unison.RGB(128, 128, 128), Dark: unison.RGB(64, 64, 64)}
+	LinkColor                  = &unison.ThemeColor{Light: unison.RGB(0, 255, 127), Dark: unison.RGB(0, 255, 127)}
+	OnLinkColor                = &unison.ThemeColor{Light: unison.RGB(0, 0, 0), Dark: unison.RGB(0, 0, 0)}
 )

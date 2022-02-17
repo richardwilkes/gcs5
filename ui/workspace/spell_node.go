@@ -175,14 +175,17 @@ func (n *SpellNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 	p := &unison.Panel{}
 	p.Self = p
 	p.SetLayout(&unison.FlexLayout{Columns: 1})
-	if col == spellDescriptionColumn {
+	switch col {
+	case spellDescriptionColumn:
 		createAndAddCellLabel(p, width, n.spell.Description(), unison.DefaultLabelTheme.Font, selected)
 		if text := n.spell.SecondaryText(); strings.TrimSpace(text) != "" {
 			desc := unison.DefaultLabelTheme.Font.Descriptor()
 			desc.Size--
 			createAndAddCellLabel(p, width, text, desc.Font(), selected)
 		}
-	} else {
+	case spellReferenceColumn:
+		createAndAddPageRefCellLabel(p, n.CellDataForSort(col), n.spell.Name, unison.DefaultLabelTheme.Font, selected)
+	default:
 		createAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
 	}
 	n.cellCache[col] = &cellCache{
