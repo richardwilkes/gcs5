@@ -19,9 +19,24 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
+// The evaluator operators and functions that will be used when calling NewEvaluator().
+var (
+	EvalOperators = f64d4eval.Operators(true)
+	EvalFuncs     = f64d4eval.Functions()
+)
+
+// NewEvaluator creates a new evaluator whose number type is fixed.F64d4.
+func NewEvaluator(resolver eval.VariableResolver) *eval.Evaluator {
+	return &eval.Evaluator{
+		Resolver:  resolver,
+		Operators: EvalOperators,
+		Functions: EvalFuncs,
+	}
+}
+
 // EvaluateToNumber evaluates the provided expression and returns a number.
 func EvaluateToNumber(expression string, resolver eval.VariableResolver) fixed.F64d4 {
-	result, err := f64d4eval.NewEvaluator(resolver, true).Evaluate(expression)
+	result, err := NewEvaluator(resolver).Evaluate(expression)
 	if err != nil {
 		jot.Warn(errs.NewWithCausef(err, "unable to resolve '%s'", expression))
 		return 0

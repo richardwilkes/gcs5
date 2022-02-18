@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/gcs/model/gurps/settings"
@@ -96,6 +97,7 @@ func Global() *Settings {
 			global = Default(nil)
 		}
 		gurps.SettingsProvider = global
+		gurps.InstallEvaluatorFunctions(fxp.EvalFuncs)
 	}
 	return global
 }
