@@ -214,6 +214,27 @@ func (e *Equipment) Description() string {
 	return e.Name
 }
 
+// SecondaryText returns the "secondary" text: the text display below the description.
+func (e *Equipment) SecondaryText() string {
+	var buffer strings.Builder
+	settings := SheetSettingsFor(e.Entity)
+	if settings.ModifiersDisplay.Inline() {
+		if notes := e.ModifierNotes(); notes != "" {
+			if buffer.Len() != 0 {
+				buffer.WriteByte('\n')
+			}
+			buffer.WriteString(notes)
+		}
+	}
+	if e.LocalNotes != "" && settings.NotesDisplay.Inline() {
+		if buffer.Len() != 0 {
+			buffer.WriteByte('\n')
+		}
+		buffer.WriteString(e.LocalNotes)
+	}
+	return buffer.String()
+}
+
 // String implements fmt.Stringer.
 func (e *Equipment) String() string {
 	return e.Name

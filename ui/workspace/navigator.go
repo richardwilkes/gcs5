@@ -222,6 +222,11 @@ func OpenFile(wnd *unison.Window, filePath string) unison.Dockable {
 					unison.ErrorDialogWithMessage(i18n.Text("Unable to open advantages list"), err.Error())
 					return nil
 				}
+			case ".eqp":
+				if d, err = NewEquipmentListDockable(filePath); err != nil {
+					unison.ErrorDialogWithMessage(i18n.Text("Unable to open equipment list"), err.Error())
+					return nil
+				}
 			case ".not":
 				if d, err = NewNoteListDockable(filePath); err != nil {
 					unison.ErrorDialogWithMessage(i18n.Text("Unable to open notes list"), err.Error())
