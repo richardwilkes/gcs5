@@ -397,7 +397,7 @@ func (e *Equipment) ModifierNotes() string {
 			if buffer.Len() != 0 {
 				buffer.WriteString("; ")
 			}
-			buffer.WriteString(one.FullDescription(e.Entity))
+			buffer.WriteString(one.FullDescription())
 		}
 	}
 	return buffer.String()

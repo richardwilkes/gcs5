@@ -202,6 +202,9 @@ func (a *Advantage) SetOwningEntity(entity *Entity) {
 			w.SetOwner(a)
 		}
 	}
+	for _, w := range a.Modifiers {
+		w.SetOwningEntity(entity)
+	}
 }
 
 // Notes returns the local notes.
@@ -214,7 +217,7 @@ func (a *Advantage) IsLeveled() bool {
 	return !a.Container() && a.Levels != nil
 }
 
-// AdjustedPoints returns the total points, taking levels and modifiers into account. 'entity' may be nil.
+// AdjustedPoints returns the total points, taking levels and modifiers into account.
 func (a *Advantage) AdjustedPoints() fixed.F64d4 {
 	if a.Disabled {
 		return 0
@@ -388,7 +391,7 @@ func (a *Advantage) ModifierNotes() string {
 			if buffer.Len() != 0 {
 				buffer.WriteString("; ")
 			}
-			buffer.WriteString(one.FullDescription(a.Entity))
+			buffer.WriteString(one.FullDescription())
 		}
 	}
 	return buffer.String()

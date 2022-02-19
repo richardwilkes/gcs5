@@ -217,9 +217,19 @@ func OpenFile(wnd *unison.Window, filePath string) unison.Dockable {
 			}
 		} else {
 			switch strings.ToLower(path.Ext(filePath)) {
+			case ".adm":
+				if d, err = NewAdvantageModifierListDockable(filePath); err != nil {
+					unison.ErrorDialogWithMessage(i18n.Text("Unable to open advantage modifiers list"), err.Error())
+					return nil
+				}
 			case ".adq":
 				if d, err = NewAdvantageListDockable(filePath); err != nil {
 					unison.ErrorDialogWithMessage(i18n.Text("Unable to open advantages list"), err.Error())
+					return nil
+				}
+			case ".eqm":
+				if d, err = NewEquipmentModifierListDockable(filePath); err != nil {
+					unison.ErrorDialogWithMessage(i18n.Text("Unable to open equipment modifiers list"), err.Error())
 					return nil
 				}
 			case ".eqp":

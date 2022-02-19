@@ -61,6 +61,7 @@ type AdvantageModifierData struct {
 // AdvantageModifier holds a modifier to an Advantage.
 type AdvantageModifier struct {
 	AdvantageModifierData
+	Entity *Entity
 }
 
 type advantageModifierListData struct {
@@ -88,13 +89,14 @@ func SaveAdvantageModifiers(modifiers []*AdvantageModifier, filePath string) err
 }
 
 // NewAdvantageModifier creates an AdvantageModifier.
-func NewAdvantageModifier(container bool) *AdvantageModifier {
+func NewAdvantageModifier(entity *Entity, container bool) *AdvantageModifier {
 	a := AdvantageModifier{
 		AdvantageModifierData: AdvantageModifierData{
 			Type: advantageModifierTypeKey,
 			ID:   id.NewUUID(),
 			Name: i18n.Text("Advantage Modifier"),
 		},
+		Entity: entity,
 	}
 	if container {
 		a.Type += commonContainerKeyPostfix
@@ -118,9 +120,30 @@ func (a *AdvantageModifier) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&a.AdvantageModifierData)
 }
 
+// UnmarshalJSON implements json.Unmarshaler.
+func (a *AdvantageModifier) UnmarshalJSON(data []byte) error {
+	a.AdvantageModifierData = AdvantageModifierData{}
+	return json.Unmarshal(data, &a.AdvantageModifierData)
+}
+
 // Container returns true if this is a container.
 func (a *AdvantageModifier) Container() bool {
 	return strings.HasSuffix(a.Type, commonContainerKeyPostfix)
+}
+
+// OwningEntity returns the owning Entity.
+func (a *AdvantageModifier) OwningEntity() *Entity {
+	return a.Entity
+}
+
+// SetOwningEntity sets the owning entity and configures any sub-components as needed.
+func (a *AdvantageModifier) SetOwningEntity(entity *Entity) {
+	a.Entity = entity
+	if a.Container() {
+		for _, child := range a.Children {
+			child.SetOwningEntity(entity)
+		}
+	}
 }
 
 // CostModifier returns the total cost modifier.
@@ -146,8 +169,21 @@ func (a *AdvantageModifier) String() string {
 	return buffer.String()
 }
 
-// FullDescription returns a full description. 'entity' may be nil.
-func (a *AdvantageModifier) FullDescription(entity *Entity) string {
+// SecondaryText returns the "secondary" text: the text display below an Advantage.
+func (a *AdvantageModifier) SecondaryText() string {
+	var buffer strings.Builder
+	settings := SheetSettingsFor(a.Entity)
+	if a.Notes != "" && settings.NotesDisplay.Inline() {
+		if buffer.Len() != 0 {
+			buffer.WriteByte('\n')
+		}
+		buffer.WriteString(a.Notes)
+	}
+	return buffer.String()
+}
+
+// FullDescription returns a full description.
+func (a *AdvantageModifier) FullDescription() string {
 	var buffer strings.Builder
 	buffer.WriteString(a.String())
 	if a.Notes != "" {
@@ -155,7 +191,7 @@ func (a *AdvantageModifier) FullDescription(entity *Entity) string {
 		buffer.WriteString(a.Notes)
 		buffer.WriteByte(')')
 	}
-	if entity != nil && SheetSettingsFor(entity).ShowAdvantageModifierAdj {
+	if SheetSettingsFor(a.Entity).ShowAdvantageModifierAdj {
 		buffer.WriteString(" [")
 		buffer.WriteString(a.CostDescription())
 		buffer.WriteByte(']')

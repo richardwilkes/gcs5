@@ -32,7 +32,7 @@ const (
 
 var _ unison.TableRowData = &AdvantageNode{}
 
-// AdvantageNode holds a advantage in the advantage list.
+// AdvantageNode holds an advantage in the advantage list.
 type AdvantageNode struct {
 	table     *unison.Table
 	advantage *gurps.Advantage

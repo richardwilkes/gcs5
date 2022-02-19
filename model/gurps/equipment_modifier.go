@@ -64,6 +64,7 @@ type EquipmentModifierData struct {
 // EquipmentModifier holds a modifier to a piece of Equipment.
 type EquipmentModifier struct {
 	EquipmentModifierData
+	Entity *Entity
 }
 
 type equipmentModifierListData struct {
@@ -91,13 +92,14 @@ func SaveEquipmentModifiers(modifiers []*EquipmentModifier, filePath string) err
 }
 
 // NewEquipmentModifier creates an EquipmentModifier.
-func NewEquipmentModifier(container bool) *EquipmentModifier {
+func NewEquipmentModifier(entity *Entity, container bool) *EquipmentModifier {
 	a := EquipmentModifier{
 		EquipmentModifierData: EquipmentModifierData{
 			Type: equipmentModifierTypeKey,
 			ID:   id.NewUUID(),
 			Name: i18n.Text("Advantage Modifier"),
 		},
+		Entity: entity,
 	}
 	if container {
 		a.Type += commonContainerKeyPostfix
@@ -121,17 +123,63 @@ func (e *EquipmentModifier) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&e.EquipmentModifierData)
 }
 
+// UnmarshalJSON implements json.Unmarshaler.
+func (e *EquipmentModifier) UnmarshalJSON(data []byte) error {
+	e.EquipmentModifierData = EquipmentModifierData{}
+	if err := json.Unmarshal(data, &e.EquipmentModifierData); err != nil {
+		return err
+	}
+	if e.Container() {
+		if e.EquipmentModifierContainer == nil {
+			e.EquipmentModifierContainer = &EquipmentModifierContainer{}
+		}
+	} else {
+		if e.EquipmentModifierItem == nil {
+			e.EquipmentModifierItem = &EquipmentModifierItem{}
+		}
+	}
+	return nil
+}
+
 // Container returns true if this is a container.
 func (e *EquipmentModifier) Container() bool {
 	return strings.HasSuffix(e.Type, commonContainerKeyPostfix)
+}
+
+// OwningEntity returns the owning Entity.
+func (e *EquipmentModifier) OwningEntity() *Entity {
+	return e.Entity
+}
+
+// SetOwningEntity sets the owning entity and configures any sub-components as needed.
+func (e *EquipmentModifier) SetOwningEntity(entity *Entity) {
+	e.Entity = entity
+	if e.Container() {
+		for _, child := range e.Children {
+			child.SetOwningEntity(entity)
+		}
+	}
 }
 
 func (e *EquipmentModifier) String() string {
 	return e.Name
 }
 
-// FullDescription returns a full description. 'entity' may be nil.
-func (e *EquipmentModifier) FullDescription(entity *Entity) string {
+// SecondaryText returns the "secondary" text: the text display below an Advantage.
+func (e *EquipmentModifier) SecondaryText() string {
+	var buffer strings.Builder
+	settings := SheetSettingsFor(e.Entity)
+	if e.Notes != "" && settings.NotesDisplay.Inline() {
+		if buffer.Len() != 0 {
+			buffer.WriteByte('\n')
+		}
+		buffer.WriteString(e.Notes)
+	}
+	return buffer.String()
+}
+
+// FullDescription returns a full description.
+func (e *EquipmentModifier) FullDescription() string {
 	var buffer strings.Builder
 	buffer.WriteString(e.String())
 	if e.Notes != "" {
@@ -139,9 +187,9 @@ func (e *EquipmentModifier) FullDescription(entity *Entity) string {
 		buffer.WriteString(e.Notes)
 		buffer.WriteByte(')')
 	}
-	if entity != nil && SheetSettingsFor(entity).ShowEquipmentModifierAdj {
+	if SheetSettingsFor(e.Entity).ShowEquipmentModifierAdj {
 		costDesc := e.CostDescription()
-		weightDesc := e.WeightDescription(entity)
+		weightDesc := e.WeightDescription()
 		if costDesc != "" || weightDesc != "" {
 			buffer.WriteString(" [")
 			buffer.WriteString(costDesc)
@@ -159,18 +207,18 @@ func (e *EquipmentModifier) FullDescription(entity *Entity) string {
 
 // CostDescription returns the formatted cost.
 func (e *EquipmentModifier) CostDescription() string {
-	if e.Container() || (e.CostType == equipment.OriginalCost && e.CostAmount == "+0") {
+	if e.Container() || (e.CostType == equipment.OriginalCost && (e.CostAmount == "" || e.CostAmount == "+0")) {
 		return ""
 	}
 	return e.CostType.Format(e.CostAmount) + " " + e.CostType.String()
 }
 
 // WeightDescription returns the formatted weight.
-func (e *EquipmentModifier) WeightDescription(entity *Entity) string {
-	if e.Container() || (e.WeightType == equipment.OriginalWeight && (e.WeightAmount == "+0" || strings.HasPrefix(e.WeightAmount, "+0 "))) {
+func (e *EquipmentModifier) WeightDescription() string {
+	if e.Container() || (e.WeightType == equipment.OriginalWeight && (e.WeightAmount == "" || strings.HasPrefix(e.WeightAmount, "+0 "))) {
 		return ""
 	}
-	return e.WeightType.Format(e.WeightAmount, SheetSettingsFor(entity).DefaultWeightUnits) + " " + e.WeightType.AltString()
+	return e.WeightType.Format(e.WeightAmount, SheetSettingsFor(e.Entity).DefaultWeightUnits) + " " + e.WeightType.String()
 }
 
 // FillWithNameableKeys adds any nameable keys found in this EquipmentModifier to the provided map.
