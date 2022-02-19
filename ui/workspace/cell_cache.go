@@ -68,9 +68,12 @@ func createAndAddPageRefCellLabel(parent *unison.Panel, text, highlight string, 
 		label.LabelTheme.OnBackgroundInk = unison.OnSelectionColor
 	}
 	parts := strings.FieldsFunc(text, func(ch rune) bool { return ch == ',' || ch == ';' || ch == ' ' })
-	label.Text = parts[0]
-	if len(parts) > 1 {
-		label.Text += "+"
+	switch len(parts) {
+	case 0:
+	case 1:
+		label.Text = parts[0]
+	default:
+		label.Text = parts[0] + "+"
 		parent.Tooltip = unison.NewTooltipWithText(strings.Join(parts, "\n"))
 	}
 	if label.Text != "" {
