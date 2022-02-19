@@ -21,6 +21,8 @@ import (
 func Setup(wnd *unison.Window) {
 	unison.DefaultMenuFactory().BarForWindow(wnd, func(bar unison.Menu) {
 		unison.InsertStdMenus(bar, about.Show, nil, nil)
+		stdPrefs := bar.Item(unison.PreferencesItemID)
+		stdPrefs.Menu().RemoveItem(stdPrefs.Index())
 		setupFileMenu(bar)
 		setupEditMenu(bar)
 		i := bar.Item(unison.EditMenuID).Index() + 1
