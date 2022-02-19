@@ -9,18 +9,16 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package search
+package widget
 
 import (
-	"github.com/richardwilkes/gcs/ui/icons"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
-// NewField creates a new search field. Note that this sets the ModifiedCallback, so if your code sets it, make sure to
-// preserve the existing one and call it as well.
-func NewField() *unison.Field {
+// NewSearchField creates a new search widget.
+func NewSearchField() *unison.Field {
 	f := unison.NewField()
 	f.Watermark = i18n.Text("Search")
 	f.SetLayout(&unison.FlexLayout{
@@ -28,8 +26,7 @@ func NewField() *unison.Field {
 		HAlign:  unison.EndAlignment,
 		VAlign:  unison.MiddleAlignment,
 	})
-	b := icons.NewIconButton(unison.CircledXSVG(), 12)
-	b.HideBase = true
+	b := unison.NewSVGButton(unison.CircledXSVG())
 	b.OnSelectionInk = f.OnEditableInk
 	b.SetEnabled(false)
 	b.UpdateCursorCallback = func(_ geom32.Point) *unison.Cursor { return unison.ArrowCursor() }

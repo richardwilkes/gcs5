@@ -18,8 +18,8 @@ import (
 
 	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/gcs/pdf"
-	icons2 "github.com/richardwilkes/gcs/ui/icons"
-	"github.com/richardwilkes/gcs/ui/search"
+	"github.com/richardwilkes/gcs/ui/icons"
+	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
@@ -94,16 +94,16 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	})
 	d.scroll.SetContent(d.docPanel, unison.FillBehavior)
 
-	d.firstPageButton = icons2.NewIconButton(icons2.FirstSVG(), 16)
+	d.firstPageButton = unison.NewSVGButton(icons.FirstSVG())
 	d.firstPageButton.ClickCallback = func() { d.LoadPage(0) }
 
-	d.previousPageButton = icons2.NewIconButton(icons2.PreviousSVG(), 16)
+	d.previousPageButton = unison.NewSVGButton(icons.PreviousSVG())
 	d.previousPageButton.ClickCallback = func() { d.LoadPage(d.pdf.MostRecentPageNumber() - 1) }
 
-	d.nextPageButton = icons2.NewIconButton(icons2.NextSVG(), 16)
+	d.nextPageButton = unison.NewSVGButton(icons.NextSVG())
 	d.nextPageButton.ClickCallback = func() { d.LoadPage(d.pdf.MostRecentPageNumber() + 1) }
 
-	d.lastPageButton = icons2.NewIconButton(icons2.LastSVG(), 16)
+	d.lastPageButton = unison.NewSVGButton(icons.LastSVG())
 	d.lastPageButton.ClickCallback = func() { d.LoadPage(d.pdf.PageCount() - 1) }
 
 	pageLabel := unison.NewLabel()
@@ -145,7 +145,7 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 		return true
 	}
 
-	d.searchField = search.NewField()
+	d.searchField = widget.NewSearchField()
 	d.searchField.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,

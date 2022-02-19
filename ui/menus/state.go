@@ -36,7 +36,7 @@ func createStateMenu(f unison.MenuFactory) unison.Menu {
 	return m
 }
 
-// ToggleState switches the focus to the search field.
+// ToggleState switches the focus to the search widget.
 var ToggleState = &unison.Action{
 	ID:              ToggleStateItemID,
 	Title:           i18n.Text("Toggle State"),

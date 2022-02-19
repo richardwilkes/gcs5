@@ -18,25 +18,27 @@ import (
 	"os/user"
 	"time"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/toolbox/log/jot"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/richardwilkes/unison"
 )
 
 // General holds settings for a sheet.
 type General struct {
-	DefaultPlayerName           string `json:"default_player_name,omitempty"`
-	DefaultTechLevel            string `json:"default_tech_level,omitempty"`
-	CalendarName                string `json:"calendar_ref,omitempty"`
-	GCalcKey                    string `json:"gurps_calculator_key,omitempty"`
-	InitialPoints               int    `json:"initial_points,omitempty"`
-	ToolTipDelayMillis          int    `json:"tooltip_initial_delay_milliseconds,omitempty"`
-	ToolTipDismissalSeconds     int    `json:"tooltip_dismiss_delay_seconds,omitempty"`
-	ImageResolution             int    `json:"image_resolution,omitempty"`
-	InitialUIScale              int    `json:"initial_ui_scale,omitempty"`
-	AutoFillProfile             bool   `json:"auto_fill_profile,omitempty"`
-	IncludeUnspentPointsInTotal bool   `json:"include_unspent_points_in_total,omitempty"`
+	DefaultPlayerName           string      `json:"default_player_name,omitempty"`
+	DefaultTechLevel            string      `json:"default_tech_level,omitempty"`
+	CalendarName                string      `json:"calendar_ref,omitempty"`
+	GCalcKey                    string      `json:"gurps_calculator_key,omitempty"`
+	InitialPoints               fixed.F64d4 `json:"initial_points,omitempty"`
+	ToolTipDelay                fixed.F64d4 `json:"tooltip_delay,omitempty"`
+	ToolTipDismissal            fixed.F64d4 `json:"tooltip_dismissal,omitempty"`
+	InitialUIScale              fixed.F64d4 `json:"initial_ui_scale,omitempty"`
+	ImageResolution             int         `json:"image_resolution,omitempty"`
+	AutoFillProfile             bool        `json:"auto_fill_profile,omitempty"`
+	IncludeUnspentPointsInTotal bool        `json:"include_unspent_points_in_total,omitempty"`
 }
 
 // NewGeneral creates settings with factory defaults.
@@ -50,11 +52,11 @@ func NewGeneral() *General {
 	return &General{
 		DefaultPlayerName:           name,
 		DefaultTechLevel:            "3",
-		InitialPoints:               250,
-		ToolTipDelayMillis:          750,
-		ToolTipDismissalSeconds:     60,
+		InitialPoints:               fixed.F64d4FromInt(150),
+		ToolTipDelay:                fixed.F64d4FromStringForced("0.75"),
+		ToolTipDismissal:            fixed.F64d4FromInt(60),
+		InitialUIScale:              fixed.F64d4FromInt(125),
 		ImageResolution:             200,
-		InitialUIScale:              125,
 		AutoFillProfile:             true,
 		IncludeUnspentPointsInTotal: true,
 	}
@@ -83,8 +85,8 @@ func (s *General) Save(filePath string) error {
 
 // UpdateToolTipTiming updates the default tooltip theme to use the timing values from this object.
 func (s *General) UpdateToolTipTiming() {
-	unison.DefaultTooltipTheme.Delay = time.Duration(s.ToolTipDelayMillis) * time.Millisecond
-	unison.DefaultTooltipTheme.Dismissal = time.Duration(s.ToolTipDismissalSeconds) * time.Second
+	unison.DefaultTooltipTheme.Delay = time.Duration(s.ToolTipDelay.Mul(fxp.Thousand).AsInt64()) * time.Millisecond
+	unison.DefaultTooltipTheme.Dismissal = time.Duration(s.ToolTipDismissal.Mul(fxp.Thousand).AsInt64()) * time.Millisecond
 }
 
 // CalendarRef returns the CalendarRef these settings refer to.

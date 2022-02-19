@@ -71,7 +71,7 @@ var ConvertToContainer = &unison.Action{
 	ExecuteCallback: unimplemented,
 }
 
-// JumpToSearch switches the focus to the search field..
+// JumpToSearch switches the focus to the search widget..
 var JumpToSearch = &unison.Action{
 	ID:              JumpToSearchItemID,
 	Title:           i18n.Text("Jump to Search"),

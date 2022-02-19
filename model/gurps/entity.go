@@ -92,7 +92,7 @@ func NewEntity(entityType datafile.Type) *Entity {
 		EntityData: EntityData{
 			Type:        entityType,
 			ID:          id.NewUUID(),
-			TotalPoints: fixed.F64d4FromInt(SettingsProvider.GeneralSettings().InitialPoints),
+			TotalPoints: SettingsProvider.GeneralSettings().InitialPoints,
 			Profile:     &Profile{},
 			Advantages:  nil,
 			CreatedOn:   jio.Now(),
@@ -952,7 +952,7 @@ func (e *Entity) ResolveAttributeCurrent(attrID string) fixed.F64d4 {
 	return fixed.F64d4Min
 }
 
-// PreservesUserDesc returns true if the user description field should be preserved when written to disk. Normally, only
+// PreservesUserDesc returns true if the user description widget should be preserved when written to disk. Normally, only
 // character sheets should return true for this.
 func (e *Entity) PreservesUserDesc() bool {
 	return e.Type == datafile.PC

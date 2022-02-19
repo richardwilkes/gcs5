@@ -33,7 +33,7 @@ type Ancestry struct {
 
 // AvailableAncestries scans the libraries and returns the available ancestries.
 func AvailableAncestries(libraries library.Libraries) []*library.NamedFileSet {
-	return library.ScanForNamedFileSets(embeddedFS, "data", ".ancestry", libraries)
+	return library.ScanForNamedFileSets(embeddedFS, "data", ".ancestry", true, libraries)
 }
 
 // Lookup an Ancestry by name.

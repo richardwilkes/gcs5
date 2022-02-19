@@ -24,7 +24,7 @@ type PoolThreshold struct {
 	Divisor     fixed.F64d4             `json:"divisor"`
 	Addition    fixed.F64d4             `json:"addition,omitempty"`
 	Ops         []attribute.ThresholdOp `json:"ops,omitempty"`
-	// TODO: Turn the Multiplier, Divisor & Addition fields into an expression field instead
+	// TODO: Turn the Multiplier, Divisor & Addition fields into an expression widget instead
 }
 
 // Clone a copy of this.

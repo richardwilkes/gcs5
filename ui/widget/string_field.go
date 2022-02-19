@@ -9,19 +9,20 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package icons
+package widget
 
 import (
-	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
-// NewIconButton creates a standard icon button.
-func NewIconButton(svg *unison.SVG, size float32) *unison.Button {
-	b := unison.NewButton()
-	b.Drawable = &unison.DrawableSVG{
-		SVG:  svg,
-		Size: geom32.NewSize(size, size),
-	}
-	return b
+// NewStringField creates a new string field.
+func NewStringField(value string, applier func(string)) *unison.Field {
+	f := unison.NewField()
+	f.SetText(value)
+	f.ModifiedCallback = func() { applier(f.Text()) }
+	f.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		HGrab:  true,
+	})
+	return f
 }

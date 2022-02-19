@@ -42,4 +42,5 @@ var (
 	Seventy       = fixed.F64d4FromInt(70)
 	Eighty        = fixed.F64d4FromInt(80)
 	Hundred       = fixed.F64d4FromInt(100)
+	Thousand      = fixed.F64d4FromInt(1000)
 )
