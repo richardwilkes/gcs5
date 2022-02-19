@@ -16,11 +16,13 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
+	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/unison"
 )
 
@@ -66,6 +68,9 @@ func refreshChildren(nav *Navigator, lib *library.Library, dirPath string) []uni
 		jot.Error(errs.NewWithCausef(err, "unable to read the directory: %s", dirPath))
 		return nil
 	}
+	sort.Slice(entries, func(i, j int) bool {
+		return txt.NaturalLess(entries[i].Name(), entries[j].Name(), true)
+	})
 	children := make([]unison.TableRowData, 0, len(entries))
 	for _, entry := range entries {
 		name := entry.Name()
