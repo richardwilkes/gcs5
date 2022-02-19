@@ -39,7 +39,11 @@ func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHead
 
 	d.table.ColumnSizes = make([]unison.ColumnSize, len(columnHeaders))
 	for i := range d.table.ColumnSizes {
+		_, pref, _ := columnHeaders[i].AsPanel().Sizes(geom32.Size{})
+		d.table.ColumnSizes[i].AutoMinimum = pref.Width
 		d.table.ColumnSizes[i].AutoMaximum = 800
+		d.table.ColumnSizes[i].Minimum = pref.Width
+		d.table.ColumnSizes[i].Maximum = 10000
 	}
 	d.table.SetTopLevelRows(topLevelRows(d.table))
 	d.table.SizeColumnsToFit(true)
