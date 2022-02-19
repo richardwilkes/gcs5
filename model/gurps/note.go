@@ -36,6 +36,7 @@ type NoteData struct {
 	Type           string    `json:"type"`
 	ID             uuid.UUID `json:"id"`
 	Text           string    `json:"text,omitempty"`
+	When           string    `json:"when,omitempty"`
 	PageRef        string    `json:"reference,omitempty"`
 	*NoteContainer `json:",omitempty"`
 }
