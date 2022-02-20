@@ -12,8 +12,8 @@
 package menus
 
 import (
-	"github.com/richardwilkes/gcs/ui/settings/general"
-	"github.com/richardwilkes/gcs/ui/settings/pageref"
+	"github.com/richardwilkes/gcs/ui/workspace/dsettings/general"
+	"github.com/richardwilkes/gcs/ui/workspace/dsettings/pageref"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )

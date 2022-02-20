@@ -41,6 +41,20 @@ func FromWindow(wnd *unison.Window) *Workspace {
 	return nil
 }
 
+// Any first tries to return the workspace for the active window. If that fails, then it looks for any available
+// workspace and returns that.
+func Any() *Workspace {
+	if ws := FromWindow(unison.ActiveWindow()); ws != nil {
+		return ws
+	}
+	for _, wnd := range unison.Windows() {
+		if ws := FromWindow(wnd); ws != nil {
+			return ws
+		}
+	}
+	return nil
+}
+
 // NewWorkspace creates a new Workspace for the given Window.
 func NewWorkspace(wnd *unison.Window) *Workspace {
 	w := &Workspace{
