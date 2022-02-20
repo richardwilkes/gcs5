@@ -37,7 +37,7 @@ func OpenReference(wnd *unison.Window, ref, highlight string) {
 		}
 		key := ref[:i]
 		s := settings.Global()
-		pageRef := s.LookupPageRef(key)
+		pageRef := s.PageRefs.Lookup(key)
 		if pageRef == nil {
 			// TODO: Need to let the user know *what* the dialog is for!
 			dialog := unison.NewOpenDialog()
@@ -45,8 +45,11 @@ func OpenReference(wnd *unison.Window, ref, highlight string) {
 			dialog.SetResolvesAliases(true)
 			dialog.SetAllowedExtensions("pdf")
 			if dialog.RunModal() {
-				pageRef = &settings.PageRef{Path: dialog.Paths()[0]}
-				s.SetPageRef(key, pageRef)
+				pageRef = &settings.PageRef{
+					ID:   key,
+					Path: dialog.Paths()[0],
+				}
+				s.PageRefs.Set(pageRef)
 				// TODO: once the settings window for page references is working, need to rebuild it when a ref changes
 				// PageRefSettingsWindow.rebuild()
 			}

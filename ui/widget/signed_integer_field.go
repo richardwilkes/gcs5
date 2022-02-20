@@ -21,35 +21,35 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-// IntegerField holds the data for an integer field.
-type IntegerField struct {
+// SignedIntegerField holds the data for a signed integer field.
+type SignedIntegerField struct {
 	*unison.Field
 	applier func(v int)
 	minimum int
 	maximum int
 }
 
-// NewIntegerField creates a new field that holds an integer.
-func NewIntegerField(value, min, max int, applier func(int)) *IntegerField {
-	f := &IntegerField{
+// NewSignedIntegerField creates a new field that holds an integer and always displays its sign.
+func NewSignedIntegerField(value, min, max int, applier func(int)) *SignedIntegerField {
+	f := &SignedIntegerField{
 		Field:   unison.NewField(),
 		applier: applier,
 		minimum: min,
 		maximum: max,
 	}
 	f.Self = f
-	f.SetText(strconv.Itoa(value))
+	f.SetText(fmt.Sprintf("%+d", value))
 	f.ModifiedCallback = f.modified
 	f.ValidateCallback = f.validate
 	f.MinimumTextWidth = mathf32.Max(f.Font.Extents(strconv.Itoa(min)).Width, f.Font.Extents(strconv.Itoa(max)).Width)
 	return f
 }
 
-func (f *IntegerField) trimmed() string {
-	return strings.TrimSpace(f.Text())
+func (f *SignedIntegerField) trimmed() string {
+	return strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(f.Text()), "+"))
 }
 
-func (f *IntegerField) validate() bool {
+func (f *SignedIntegerField) validate() bool {
 	v, err := strconv.Atoi(f.trimmed())
 	if err != nil {
 		f.Tooltip = unison.NewTooltipWithText(i18n.Text("Invalid integer"))
@@ -67,7 +67,7 @@ func (f *IntegerField) validate() bool {
 	return true
 }
 
-func (f *IntegerField) modified() {
+func (f *SignedIntegerField) modified() {
 	if v, err := strconv.Atoi(f.trimmed()); err == nil && v >= f.minimum && v <= f.maximum {
 		f.applier(v)
 	}

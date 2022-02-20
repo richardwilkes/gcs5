@@ -37,12 +37,6 @@ const maxRecentFiles = 20
 
 var global *Settings
 
-// PageRef holds a path to a file and an offset for all page references within that file.
-type PageRef struct {
-	Path   string `json:"path,omitempty"`
-	Offset int    `json:"offset,omitempty"`
-}
-
 // WindowPosition holds a window's last known frame and when the frame's size or position was last altered.
 type WindowPosition struct {
 	Frame       geom32.Rect `json:"frame"`
@@ -63,7 +57,7 @@ type Settings struct {
 	LibraryExplorer    NavigatorSettings                `json:"library_explorer"`
 	RecentFiles        []string                         `json:"recent_files,omitempty"`
 	LastDirs           map[string]string                `json:"last_dirs,omitempty"`
-	PageRefs           map[string]*PageRef              `json:"page_refs,omitempty"`
+	PageRefs           PageRefs                         `json:"page_refs,omitempty"`
 	KeyBindings        map[string]string                `json:"key_bindings,omitempty"`
 	WindowPositions    map[string]*WindowPosition       `json:"window_positions,omitempty"`
 	Colors             map[string]unison.Color          `json:"colors,omitempty"`
@@ -105,23 +99,6 @@ func Global() *Settings {
 // Save to the standard path.
 func (s *Settings) Save() error {
 	return jio.SaveToFile(context.Background(), Path(), s)
-}
-
-// LookupPageRef the PageRef for the given ID. If not found or if the path it points to isn't a readable file, returns
-// nil.
-func (s *Settings) LookupPageRef(id string) *PageRef {
-	if ref, ok := s.PageRefs[id]; ok && fs.FileIsReadable(ref.Path) {
-		return ref
-	}
-	return nil
-}
-
-// SetPageRef sets the PageRef for the ID.
-func (s *Settings) SetPageRef(id string, pageRef *PageRef) {
-	if s.PageRefs == nil {
-		s.PageRefs = make(map[string]*PageRef)
-	}
-	s.PageRefs[id] = pageRef
 }
 
 // ListRecentFiles returns the current list of recently opened files. Files that are no longer readable for any reason

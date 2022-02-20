@@ -12,6 +12,7 @@
 package general
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -28,6 +29,8 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
+
+const extension = ".general"
 
 type wndData struct {
 	wnd                                 *unison.Window
@@ -267,7 +270,7 @@ func (d *wndData) showMenu() {
 	m.InsertItem(-1, f.NewItem(id, i18n.Text("Export…"), 0, 0, nil, d.handleExport))
 	id++
 	libraries := settings.Global().Libraries()
-	sets := library.ScanForNamedFileSets(nil, "", ".general", false, libraries)
+	sets := library.ScanForNamedFileSets(nil, "", extension, false, libraries)
 	if len(sets) != 0 {
 		m.InsertSeparator(-1, false)
 		for _, lib := range sets {
@@ -284,38 +287,36 @@ func (d *wndData) showMenu() {
 
 func (d *wndData) insertFileToLoad(m unison.Menu, id int, ref *library.NamedFileRef) {
 	m.InsertItem(-1, m.Factory().NewItem(id, ref.Name, 0, 0, nil, func(_ unison.MenuItem) {
-		s, err := gsettings.NewGeneralFromFile(ref.FileSystem, ref.FilePath)
-		if err != nil {
-			unison.ErrorDialogWithMessage(i18n.Text("Unable to load general settings"), err.Error())
-			return
-		}
-		*settings.Global().General = *s
-		d.sync()
+		d.load(ref.FileSystem, ref.FilePath)
 	}))
+}
+
+func (d *wndData) load(fileSystem fs.FS, filePath string) {
+	s, err := gsettings.NewGeneralFromFile(fileSystem, filePath)
+	if err != nil {
+		unison.ErrorDialogWithMessage(i18n.Text("Unable to load general settings"), err.Error())
+		return
+	}
+	*settings.Global().General = *s
+	d.sync()
 }
 
 func (d *wndData) handleImport(_ unison.MenuItem) {
 	dialog := unison.NewOpenDialog()
 	dialog.SetResolvesAliases(true)
-	dialog.SetAllowedExtensions(".general")
+	dialog.SetAllowedExtensions(extension)
 	dialog.SetAllowsMultipleSelection(false)
 	dialog.SetCanChooseDirectories(false)
 	dialog.SetCanChooseFiles(true)
 	if dialog.RunModal() {
 		p := dialog.Path()
-		s, err := gsettings.NewGeneralFromFile(os.DirFS(filepath.Dir(p)), filepath.Base(p))
-		if err != nil {
-			unison.ErrorDialogWithMessage(i18n.Text("Unable to load general settings"), err.Error())
-			return
-		}
-		*settings.Global().General = *s
-		d.sync()
+		d.load(os.DirFS(filepath.Dir(p)), filepath.Base(p))
 	}
 }
 
 func (d *wndData) handleExport(_ unison.MenuItem) {
 	dialog := unison.NewSaveDialog()
-	dialog.SetAllowedExtensions(".general")
+	dialog.SetAllowedExtensions(extension)
 	if dialog.RunModal() {
 		if err := settings.Global().General.Save(dialog.Path()); err != nil {
 			unison.ErrorDialogWithMessage(i18n.Text("Unable to save general settings"), err.Error())

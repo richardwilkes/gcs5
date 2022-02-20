@@ -13,6 +13,7 @@ package menus
 
 import (
 	"github.com/richardwilkes/gcs/ui/settings/general"
+	"github.com/richardwilkes/gcs/ui/settings/pageref"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -92,7 +93,7 @@ var GeneralSettings = &unison.Action{
 var PageRefMappings = &unison.Action{
 	ID:              PageRefMappingsItemID,
 	Title:           i18n.Text("Page Reference Mappings…"),
-	ExecuteCallback: unimplemented,
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) { pageref.Show() },
 }
 
 // ColorSettings opens the color settings.

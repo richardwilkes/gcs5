@@ -41,7 +41,7 @@ func NewLibraries() Libraries {
 	return libs
 }
 
-// NewLibrariesFromFS creates a new Ancestry from a file.
+// NewLibrariesFromFS creates a new set of libraries from a file.
 func NewLibrariesFromFS(fileSystem fs.FS, filePath string) (Libraries, error) {
 	var libs Libraries
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &libs); err != nil {
