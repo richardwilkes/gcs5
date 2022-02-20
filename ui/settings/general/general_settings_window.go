@@ -12,15 +12,18 @@
 package general
 
 import (
+	"os"
+	"path/filepath"
 	"strconv"
 
-	"github.com/richardwilkes/gcs/model/fxp"
+	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/library"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/icons"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -28,6 +31,8 @@ import (
 
 type wndData struct {
 	wnd                                 *unison.Window
+	resetButton                         *unison.Button
+	menuButton                          *unison.Button
 	nameField                           *unison.Field
 	autoFillProfileCheckbox             *unison.CheckBox
 	pointsField                         *widget.NumericField
@@ -81,11 +86,12 @@ func (d *wndData) createToolbar() *unison.Panel {
 	spacer := unison.NewPanel()
 	spacer.SetLayoutData(&unison.FlexLayoutData{HGrab: true})
 	toolbar.AddChild(spacer)
-	resetButton := unison.NewSVGButton(icons.ResetSVG())
-	resetButton.ClickCallback = d.reset
-	toolbar.AddChild(resetButton)
-	menuButton := unison.NewSVGButton(icons.MenuSVG())
-	toolbar.AddChild(menuButton)
+	d.resetButton = unison.NewSVGButton(icons.ResetSVG())
+	d.resetButton.ClickCallback = d.reset
+	toolbar.AddChild(d.resetButton)
+	d.menuButton = unison.NewSVGButton(icons.MenuSVG())
+	d.menuButton.ClickCallback = d.showMenu
+	toolbar.AddChild(d.menuButton)
 	toolbar.SetLayout(&unison.FlexLayout{
 		Columns:  len(toolbar.Children()),
 		HSpacing: unison.StdHSpacing,
@@ -132,8 +138,8 @@ func (d *wndData) createPlayerAndDescFields(content *unison.Panel) {
 
 func (d *wndData) createInitialPointsFields(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Initial Points")))
-	d.pointsField = widget.NewNumericField(settings.Global().General.InitialPoints, 0, fixed.F64d4FromInt(9999999),
-		func(v fixed.F64d4) { settings.Global().General.InitialPoints = v })
+	d.pointsField = widget.NewNumericField(settings.Global().General.InitialPoints, gsettings.InitialPointsMin,
+		gsettings.InitialPointsMax, func(v fixed.F64d4) { settings.Global().General.InitialPoints = v })
 	content.AddChild(d.pointsField)
 	d.includeUnspentPointsInTotalCheckbox = widget.NewCheckBox(i18n.Text("Include unspent points in total"),
 		settings.Global().General.IncludeUnspentPointsInTotal,
@@ -145,6 +151,7 @@ func (d *wndData) createTechLevelField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Default Tech Level")))
 	d.techLevelField = widget.NewStringField(settings.Global().General.DefaultTechLevel,
 		func(s string) { settings.Global().General.DefaultTechLevel = s })
+	d.techLevelField.Tooltip = unison.NewTooltipWithText(gurps.TechLevelInfo)
 	content.AddChild(d.techLevelField)
 	content.AddChild(unison.NewPanel())
 }
@@ -171,24 +178,26 @@ func (d *wndData) createCalendarPopup(content *unison.Panel) {
 
 func (d *wndData) createScaleField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Initial Scale")))
-	d.initialScaleField = widget.NewPercentageField(settings.Global().General.InitialUIScale, 10, 999,
+	d.initialScaleField = widget.NewPercentageField(settings.Global().General.InitialUIScale,
+		gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax,
 		func(v fixed.F64d4) { settings.Global().General.InitialUIScale = v })
 	content.AddChild(widget.WrapWithSpan(2, d.initialScaleField))
 }
 
 func (d *wndData) createImageResolutionField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Image Export Resolution")))
-	d.exportResolutionField = widget.NewIntegerField(settings.Global().General.ImageResolution, 50, 300,
+	d.exportResolutionField = widget.NewIntegerField(settings.Global().General.ImageResolution,
+		gsettings.ImageResolutionMin, gsettings.ImageResolutionMax,
 		func(v int) { settings.Global().General.ImageResolution = v })
 	content.AddChild(widget.WrapWithSpan(2, d.exportResolutionField, widget.NewFieldTrailingLabel(i18n.Text("ppi"))))
 }
 
 func (d *wndData) createTooltipDelayField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Tooltip Delay")))
-	d.tooltipDelayField = widget.NewNumericField(settings.Global().General.ToolTipDelay, 0, fxp.Thirty,
-		func(v fixed.F64d4) {
+	d.tooltipDelayField = widget.NewNumericField(settings.Global().General.TooltipDelay, gsettings.TooltipDelayMin,
+		gsettings.TooltipDelayMax, func(v fixed.F64d4) {
 			s := settings.Global().General
-			s.ToolTipDelay = v
+			s.TooltipDelay = v
 			s.UpdateToolTipTiming()
 		})
 	content.AddChild(widget.WrapWithSpan(2, d.tooltipDelayField, widget.NewFieldTrailingLabel(i18n.Text("seconds"))))
@@ -196,10 +205,10 @@ func (d *wndData) createTooltipDelayField(content *unison.Panel) {
 
 func (d *wndData) createTooltipDismissalField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Tooltip Dismissal")))
-	d.tooltipDismissalField = widget.NewNumericField(settings.Global().General.ToolTipDismissal, 0,
-		fixed.F64d4FromInt(3600), func(v fixed.F64d4) {
+	d.tooltipDismissalField = widget.NewNumericField(settings.Global().General.TooltipDismissal,
+		gsettings.TooltipDismissalMin, gsettings.TooltipDismissalMax, func(v fixed.F64d4) {
 			s := settings.Global().General
-			s.ToolTipDismissal = v
+			s.TooltipDismissal = v
 			s.UpdateToolTipTiming()
 		})
 	content.AddChild(widget.WrapWithSpan(2, d.tooltipDismissalField, widget.NewFieldTrailingLabel(i18n.Text("seconds"))))
@@ -214,19 +223,26 @@ func (d *wndData) createGCalcKeyField(content *unison.Panel) {
 		SVG:  icons.SearchSVG(),
 		Size: geom32.NewSize(baseline, baseline),
 	}
-	button.ClickCallback = func() {
-		// TODO: Implement
-		jot.Info("handle click callback for GURPS Calculator Key lookup")
-	}
+	button.ClickCallback = d.findGCalcKey
 	d.gCalcKeyField = widget.NewStringField(settings.Global().General.GCalcKey, func(s string) {
 		settings.Global().General.GCalcKey = s
 	})
 	content.AddChild(widget.WrapWithSpan(2, d.gCalcKeyField, button))
 }
 
+func (d *wndData) findGCalcKey() {
+	if err := desktop.OpenBrowser("http://www.gurpscalculator.com/Character/ImportGCS"); err != nil {
+		unison.ErrorDialogWithMessage(i18n.Text("Unable to open browser to determine GURPS Calculator Key"), err.Error())
+	}
+}
+
 func (d *wndData) reset() {
+	*settings.Global().General = *gsettings.NewGeneral()
+	d.sync()
+}
+
+func (d *wndData) sync() {
 	s := settings.Global().General
-	*s = *gsettings.NewGeneral()
 	d.nameField.SetText(s.DefaultPlayerName)
 	widget.SetCheckBoxState(d.autoFillProfileCheckbox, s.AutoFillProfile)
 	d.pointsField.SetText(s.InitialPoints.String())
@@ -235,8 +251,74 @@ func (d *wndData) reset() {
 	d.calendarPopup.Select(s.CalendarRef(settings.Global().Libraries()).Name)
 	d.initialScaleField.SetText(s.InitialUIScale.String() + "%")
 	d.exportResolutionField.SetText(strconv.Itoa(s.ImageResolution))
-	d.tooltipDelayField.SetText(s.ToolTipDelay.String())
-	d.tooltipDismissalField.SetText(s.ToolTipDismissal.String())
+	d.tooltipDelayField.SetText(s.TooltipDelay.String())
+	d.tooltipDismissalField.SetText(s.TooltipDismissal.String())
 	d.gCalcKeyField.SetText(s.GCalcKey)
 	d.wnd.MarkForRedraw()
+}
+
+func (d *wndData) showMenu() {
+	f := unison.DefaultMenuFactory()
+	id := unison.ContextMenuIDFlag
+	m := f.NewMenu(id, "", nil)
+	id++
+	m.InsertItem(-1, f.NewItem(id, i18n.Text("Import…"), 0, 0, nil, d.handleImport))
+	id++
+	m.InsertItem(-1, f.NewItem(id, i18n.Text("Export…"), 0, 0, nil, d.handleExport))
+	id++
+	libraries := settings.Global().Libraries()
+	sets := library.ScanForNamedFileSets(nil, "", ".general", false, libraries)
+	if len(sets) != 0 {
+		m.InsertSeparator(-1, false)
+		for _, lib := range sets {
+			m.InsertItem(-1, f.NewItem(id, lib.Name, 0, 0, func(_ unison.MenuItem) bool { return false }, nil))
+			id++
+			for _, one := range lib.List {
+				d.insertFileToLoad(m, id, one)
+				id++
+			}
+		}
+	}
+	m.Popup(d.menuButton.RectToRoot(d.menuButton.ContentRect(true)), 0)
+}
+
+func (d *wndData) insertFileToLoad(m unison.Menu, id int, ref *library.NamedFileRef) {
+	m.InsertItem(-1, m.Factory().NewItem(id, ref.Name, 0, 0, nil, func(_ unison.MenuItem) {
+		s, err := gsettings.NewGeneralFromFile(ref.FileSystem, ref.FilePath)
+		if err != nil {
+			unison.ErrorDialogWithMessage(i18n.Text("Unable to load general settings"), err.Error())
+			return
+		}
+		*settings.Global().General = *s
+		d.sync()
+	}))
+}
+
+func (d *wndData) handleImport(_ unison.MenuItem) {
+	dialog := unison.NewOpenDialog()
+	dialog.SetResolvesAliases(true)
+	dialog.SetAllowedExtensions(".general")
+	dialog.SetAllowsMultipleSelection(false)
+	dialog.SetCanChooseDirectories(false)
+	dialog.SetCanChooseFiles(true)
+	if dialog.RunModal() {
+		p := dialog.Path()
+		s, err := gsettings.NewGeneralFromFile(os.DirFS(filepath.Dir(p)), filepath.Base(p))
+		if err != nil {
+			unison.ErrorDialogWithMessage(i18n.Text("Unable to load general settings"), err.Error())
+			return
+		}
+		*settings.Global().General = *s
+		d.sync()
+	}
+}
+
+func (d *wndData) handleExport(_ unison.MenuItem) {
+	dialog := unison.NewSaveDialog()
+	dialog.SetAllowedExtensions(".general")
+	if dialog.RunModal() {
+		if err := settings.Global().General.Save(dialog.Path()); err != nil {
+			unison.ErrorDialogWithMessage(i18n.Text("Unable to save general settings"), err.Error())
+		}
+	}
 }
