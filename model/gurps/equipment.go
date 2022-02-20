@@ -29,7 +29,23 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-var _ WeaponOwner = &Equipment{}
+var (
+	_ WeaponOwner = &Equipment{}
+	// TechLevelInfo holds the general TL age list
+	TechLevelInfo = i18n.Text(`TL0: Stone Age (Prehistory)
+TL1: Bronze Age (3500 B.C.+)
+TL2: Iron Age (1200 B.C.+)
+TL3: Medieval (600 A.D.+)
+TL4: Age of Sail (1450+)
+TL5: Industrial Revolution (1730+)
+TL6: Mechanized Age (1880+)
+TL7: Nuclear Age (1940+)
+TL8: Digital Age (1980+)
+TL9: Microtech Age (2025+?)
+TL10: Robotic Age (2070+?)
+TL11: Age of Exotic Matter
+TL12: Anything Goes`)
+)
 
 const equipmentTypeKey = "equipment"
 
