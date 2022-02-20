@@ -141,14 +141,17 @@ var Open = &unison.Action{
 	},
 }
 
-// CloseTab closes a workspace tab.
+// CloseTab closes a workspace tab if the workspace is foremost, or the current window if not.
 var CloseTab = &unison.Action{
 	ID:         CloseTabID,
-	Title:      i18n.Text("Close Tab"),
+	Title:      i18n.Text("Close"),
 	HotKey:     unison.KeyW,
 	HotKeyMods: unison.OSMenuCmdModifier(),
 	EnabledCallback: func(_ *unison.Action, _ interface{}) bool {
 		if wnd := unison.ActiveWindow(); wnd != nil {
+			if workspace.FromWindow(wnd) == nil {
+				return true // not the workspace, so allow regular window close
+			}
 			if dc := unison.FocusedDockContainerFor(wnd); dc != nil {
 				if current := dc.CurrentDockable(); current != nil {
 					if _, ok := current.(unison.TabCloser); ok {
@@ -161,7 +164,10 @@ var CloseTab = &unison.Action{
 	},
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
 		if wnd := unison.ActiveWindow(); wnd != nil {
-			if dc := unison.FocusedDockContainerFor(wnd); dc != nil {
+			if workspace.FromWindow(wnd) == nil {
+				// not the workspace, so allow regular window close
+				wnd.AttemptClose()
+			} else if dc := unison.FocusedDockContainerFor(wnd); dc != nil {
 				if current := dc.CurrentDockable(); current != nil {
 					if closer, ok := current.(unison.TabCloser); ok {
 						closer.AttemptClose()
