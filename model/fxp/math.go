@@ -25,3 +25,21 @@ func ApplyRounding(value fixed.F64d4, roundDown bool) fixed.F64d4 {
 	}
 	return value
 }
+
+// ResetIfOutOfRange checks the value and if it is lower than min or greater than max, returns def, otherwise returns
+// value.
+func ResetIfOutOfRange(value, min, max, def fixed.F64d4) fixed.F64d4 {
+	if value < min || value > max {
+		return def
+	}
+	return value
+}
+
+// ResetIfOutOfRangeInt checks the value and if it is lower than min or greater than max, returns def, otherwise returns
+// value.
+func ResetIfOutOfRangeInt(value, min, max, def int) int {
+	if value < min || value > max {
+		return def
+	}
+	return value
+}
