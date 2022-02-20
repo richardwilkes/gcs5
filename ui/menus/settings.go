@@ -12,7 +12,7 @@
 package menus
 
 import (
-	"github.com/richardwilkes/gcs/ui/settings"
+	"github.com/richardwilkes/gcs/ui/settings/general"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -85,7 +85,7 @@ var DefaultBodyTypeSettings = &unison.Action{
 var GeneralSettings = &unison.Action{
 	ID:              GeneralSettingsItemID,
 	Title:           i18n.Text("General Settings…"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { settings.ShowGeneralSettings() },
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) { general.Show() },
 }
 
 // PageRefMappings opens the page reference mappings.
