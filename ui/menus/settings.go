@@ -12,6 +12,7 @@
 package menus
 
 import (
+	"github.com/richardwilkes/gcs/ui/workspace/dsettings/colors"
 	"github.com/richardwilkes/gcs/ui/workspace/dsettings/general"
 	"github.com/richardwilkes/gcs/ui/workspace/dsettings/pageref"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -100,7 +101,7 @@ var PageRefMappings = &unison.Action{
 var ColorSettings = &unison.Action{
 	ID:              ColorSettingsItemID,
 	Title:           i18n.Text("Colors…"),
-	ExecuteCallback: unimplemented,
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) { colors.Show() },
 }
 
 // FontSettings opens the font settings.

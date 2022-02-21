@@ -217,7 +217,7 @@ func (d *Dockable) insertFileToLoad(m unison.Menu, id int, ref *library.NamedFil
 
 func (d *Dockable) doLoad(fileSystem fs.FS, filePath string) {
 	if err := d.Loader(fileSystem, filePath); err != nil {
-		unison.ErrorDialogWithMessage(i18n.Text("Unable to load ")+d.TabTitle, err.Error())
+		unison.ErrorDialogWithError(i18n.Text("Unable to load ")+d.TabTitle, err)
 	}
 }
 
@@ -239,7 +239,7 @@ func (d *Dockable) handleExport(_ unison.MenuItem) {
 	dialog.SetAllowedExtensions(d.Extension)
 	if dialog.RunModal() {
 		if err := d.Saver(dialog.Path()); err != nil {
-			unison.ErrorDialogWithMessage(i18n.Text("Unable to save ")+d.TabTitle, err.Error())
+			unison.ErrorDialogWithError(i18n.Text("Unable to save ")+d.TabTitle, err)
 		}
 	}
 }

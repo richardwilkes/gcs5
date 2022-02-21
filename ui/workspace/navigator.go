@@ -212,49 +212,49 @@ func OpenFile(wnd *unison.Window, filePath string) unison.Dockable {
 		var err error
 		if unison.EncodedImageFormatForPath(filePath).CanRead() {
 			if d, err = NewImageDockable(filePath); err != nil {
-				unison.ErrorDialogWithMessage(i18n.Text("Unable to open image file"), err.Error())
+				unison.ErrorDialogWithError(i18n.Text("Unable to open image file"), err)
 				return nil
 			}
 		} else {
 			switch strings.ToLower(path.Ext(filePath)) {
 			case ".adm":
 				if d, err = NewAdvantageModifierListDockable(filePath); err != nil {
-					unison.ErrorDialogWithMessage(i18n.Text("Unable to open advantage modifiers list"), err.Error())
+					unison.ErrorDialogWithError(i18n.Text("Unable to open advantage modifiers list"), err)
 					return nil
 				}
 			case ".adq":
 				if d, err = NewAdvantageListDockable(filePath); err != nil {
-					unison.ErrorDialogWithMessage(i18n.Text("Unable to open advantages list"), err.Error())
+					unison.ErrorDialogWithError(i18n.Text("Unable to open advantages list"), err)
 					return nil
 				}
 			case ".eqm":
 				if d, err = NewEquipmentModifierListDockable(filePath); err != nil {
-					unison.ErrorDialogWithMessage(i18n.Text("Unable to open equipment modifiers list"), err.Error())
+					unison.ErrorDialogWithError(i18n.Text("Unable to open equipment modifiers list"), err)
 					return nil
 				}
 			case ".eqp":
 				if d, err = NewEquipmentListDockable(filePath); err != nil {
-					unison.ErrorDialogWithMessage(i18n.Text("Unable to open equipment list"), err.Error())
+					unison.ErrorDialogWithError(i18n.Text("Unable to open equipment list"), err)
 					return nil
 				}
 			case ".not":
 				if d, err = NewNoteListDockable(filePath); err != nil {
-					unison.ErrorDialogWithMessage(i18n.Text("Unable to open notes list"), err.Error())
+					unison.ErrorDialogWithError(i18n.Text("Unable to open notes list"), err)
 					return nil
 				}
 			case ".pdf":
 				if d, err = NewPDFDockable(filePath); err != nil {
-					unison.ErrorDialogWithMessage(i18n.Text("Unable to open PDF"), err.Error())
+					unison.ErrorDialogWithError(i18n.Text("Unable to open PDF"), err)
 					return nil
 				}
 			case ".skl":
 				if d, err = NewSkillListDockable(filePath); err != nil {
-					unison.ErrorDialogWithMessage(i18n.Text("Unable to open skills list"), err.Error())
+					unison.ErrorDialogWithError(i18n.Text("Unable to open skills list"), err)
 					return nil
 				}
 			case ".spl":
 				if d, err = NewSpellListDockable(filePath); err != nil {
-					unison.ErrorDialogWithMessage(i18n.Text("Unable to open spells list"), err.Error())
+					unison.ErrorDialogWithError(i18n.Text("Unable to open spells list"), err)
 					return nil
 				}
 			default:

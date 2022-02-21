@@ -24,6 +24,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/cmdline"
@@ -60,7 +61,7 @@ type Settings struct {
 	PageRefs           PageRefs                         `json:"page_refs,omitempty"`
 	KeyBindings        map[string]string                `json:"key_bindings,omitempty"`
 	WindowPositions    map[string]*WindowPosition       `json:"window_positions,omitempty"`
-	Colors             map[string]unison.Color          `json:"colors,omitempty"`
+	Colors             theme.Colors                     `json:"colors"`
 	Fonts              map[string]unison.FontDescriptor `json:"fonts,omitempty"`
 	QuickExports       *gurps.QuickExports              `json:"quick_exports,omitempty"`
 	Sheet              *gurps.SheetSettings             `json:"sheet_settings,omitempty"`
@@ -76,7 +77,6 @@ func Default(entity *gurps.Entity) *Settings {
 		LastDirs:           make(map[string]string),
 		KeyBindings:        make(map[string]string),
 		WindowPositions:    make(map[string]*WindowPosition),
-		Colors:             make(map[string]unison.Color),
 		Fonts:              make(map[string]unison.FontDescriptor),
 		QuickExports:       gurps.NewQuickExports(),
 		Sheet:              gurps.FactorySheetSettings(entity),
@@ -92,6 +92,7 @@ func Global() *Settings {
 		}
 		gurps.SettingsProvider = global
 		gurps.InstallEvaluatorFunctions(fxp.EvalFuncs)
+		global.Colors.MakeCurrent()
 	}
 	return global
 }

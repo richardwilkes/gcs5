@@ -39,7 +39,7 @@ type PageRef struct {
 	Offset int    `json:"offset,omitempty"`
 }
 
-// NewPageRefsFromFS creates a new
+// NewPageRefsFromFS creates a new set of page references from a file.
 func NewPageRefsFromFS(fileSystem fs.FS, filePath string) (*PageRefs, error) {
 	var p PageRefs
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &p); err != nil {
