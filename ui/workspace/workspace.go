@@ -70,7 +70,9 @@ func NewWorkspace(wnd *unison.Window) *Workspace {
 	dc.SetCurrentDockable(w.Navigator)
 	wnd.ClientData()[workspaceClientDataKey] = w
 	wnd.WillCloseCallback = w.willClose
-	// Without the delay, the position doesn't always "take"
+	// On some platforms, this needs to be done after a delay... but we do it without the delay, too, so that
+	// well-behaved platforms don't flash
+	w.TopDock.RootDockLayout().SetDividerPosition(settings.Global().LibraryExplorer.DividerPosition)
 	unison.InvokeTaskAfter(func() {
 		w.TopDock.RootDockLayout().SetDividerPosition(settings.Global().LibraryExplorer.DividerPosition)
 	}, time.Millisecond)
