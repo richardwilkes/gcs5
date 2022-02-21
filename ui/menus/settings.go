@@ -13,6 +13,7 @@ package menus
 
 import (
 	"github.com/richardwilkes/gcs/ui/workspace/dsettings/colors"
+	"github.com/richardwilkes/gcs/ui/workspace/dsettings/fonts"
 	"github.com/richardwilkes/gcs/ui/workspace/dsettings/general"
 	"github.com/richardwilkes/gcs/ui/workspace/dsettings/pageref"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -108,7 +109,7 @@ var ColorSettings = &unison.Action{
 var FontSettings = &unison.Action{
 	ID:              FontSettingsItemID,
 	Title:           i18n.Text("Fonts…"),
-	ExecuteCallback: unimplemented,
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) { fonts.Show() },
 }
 
 // MenuKeySettings opens the menu key settings.

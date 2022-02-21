@@ -66,21 +66,12 @@ func (d *dockable) reset() {
 
 func (d *dockable) sync() {
 	d.content.RemoveAllChildren()
-	for i, one := range theme.Current {
-		if i%2 == 0 {
-			d.content.AddChild(widget.NewFieldLeadingLabel(one.Title))
-		} else {
-			d.content.AddChild(widget.NewFieldInteriorLeadingLabel(one.Title))
-		}
-		d.createColorWellField(one, true)
-		d.createColorWellField(one, false)
-		d.createResetField(one)
-	}
+	d.fill()
 	d.MarkForRedraw()
 }
 
 func (d *dockable) fill() {
-	for i, one := range theme.Current {
+	for i, one := range theme.CurrentColors {
 		if i%2 == 0 {
 			d.content.AddChild(widget.NewFieldLeadingLabel(one.Title))
 		} else {
@@ -122,7 +113,7 @@ func (d *dockable) createResetField(c *theme.ThemedColor) {
 	b.Tooltip = unison.NewTooltipWithText("Reset this color")
 	b.ClickCallback = func() {
 		if unison.QuestionDialog(fmt.Sprintf(i18n.Text("Are you sure you want to reset %s?"), c.Title), "") == unison.ModalResponseOK {
-			for _, v := range theme.Factory {
+			for _, v := range theme.FactoryColors {
 				if v.ID != c.ID {
 					continue
 				}

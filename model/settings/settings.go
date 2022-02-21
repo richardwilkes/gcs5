@@ -31,7 +31,6 @@ import (
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xio/fs/paths"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
-	"github.com/richardwilkes/unison"
 )
 
 const maxRecentFiles = 20
@@ -52,19 +51,19 @@ type NavigatorSettings struct {
 
 // Settings holds the application settings.
 type Settings struct {
-	LastSeenGCSVersion string                           `json:"last_seen_gcs_version,omitempty"`
-	General            *settings.General                `json:"general,omitempty"`
-	LibrarySet         library.Libraries                `json:"libraries,omitempty"`
-	LibraryExplorer    NavigatorSettings                `json:"library_explorer"`
-	RecentFiles        []string                         `json:"recent_files,omitempty"`
-	LastDirs           map[string]string                `json:"last_dirs,omitempty"`
-	PageRefs           PageRefs                         `json:"page_refs,omitempty"`
-	KeyBindings        map[string]string                `json:"key_bindings,omitempty"`
-	WindowPositions    map[string]*WindowPosition       `json:"window_positions,omitempty"`
-	Colors             theme.Colors                     `json:"colors"`
-	Fonts              map[string]unison.FontDescriptor `json:"fonts,omitempty"`
-	QuickExports       *gurps.QuickExports              `json:"quick_exports,omitempty"`
-	Sheet              *gurps.SheetSettings             `json:"sheet_settings,omitempty"`
+	LastSeenGCSVersion string                     `json:"last_seen_gcs_version,omitempty"`
+	General            *settings.General          `json:"general,omitempty"`
+	LibrarySet         library.Libraries          `json:"libraries,omitempty"`
+	LibraryExplorer    NavigatorSettings          `json:"library_explorer"`
+	RecentFiles        []string                   `json:"recent_files,omitempty"`
+	LastDirs           map[string]string          `json:"last_dirs,omitempty"`
+	PageRefs           PageRefs                   `json:"page_refs,omitempty"`
+	KeyBindings        map[string]string          `json:"key_bindings,omitempty"`
+	WindowPositions    map[string]*WindowPosition `json:"window_positions,omitempty"`
+	Colors             theme.Colors               `json:"colors"`
+	Fonts              theme.Fonts                `json:"fonts"`
+	QuickExports       *gurps.QuickExports        `json:"quick_exports,omitempty"`
+	Sheet              *gurps.SheetSettings       `json:"sheet_settings,omitempty"`
 }
 
 // Default returns new default settings.
@@ -77,7 +76,6 @@ func Default(entity *gurps.Entity) *Settings {
 		LastDirs:           make(map[string]string),
 		KeyBindings:        make(map[string]string),
 		WindowPositions:    make(map[string]*WindowPosition),
-		Fonts:              make(map[string]unison.FontDescriptor),
 		QuickExports:       gurps.NewQuickExports(),
 		Sheet:              gurps.FactorySheetSettings(entity),
 	}
@@ -93,6 +91,7 @@ func Global() *Settings {
 		gurps.SettingsProvider = global
 		gurps.InstallEvaluatorFunctions(fxp.EvalFuncs)
 		global.Colors.MakeCurrent()
+		global.Fonts.MakeCurrent()
 	}
 	return global
 }

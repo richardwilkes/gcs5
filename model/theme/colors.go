@@ -43,8 +43,8 @@ var (
 )
 
 var (
-	// Current holds the current theme.
-	Current = []*ThemedColor{
+	// CurrentColors holds the current theme.
+	CurrentColors = []*ThemedColor{
 		{ID: "background", Title: i18n.Text("Background"), Color: unison.BackgroundColor},
 		{ID: "on_background", Title: i18n.Text("On Background"), Color: unison.OnBackgroundColor},
 		{ID: "content", Title: i18n.Text("Content"), Color: unison.ContentColor},
@@ -98,14 +98,14 @@ var (
 		{ID: "link", Title: i18n.Text("Link"), Color: LinkColor},
 		{ID: "on_link", Title: i18n.Text("On Link"), Color: OnLinkColor},
 	}
-	// Factory holds the original theme before any modifications.
-	Factory []*ThemedColor
+	// FactoryColors holds the original theme before any modifications.
+	FactoryColors []*ThemedColor
 )
 
 func init() {
-	Factory = make([]*ThemedColor, len(Current))
-	for i, c := range Current {
-		Factory[i] = &ThemedColor{
+	FactoryColors = make([]*ThemedColor, len(CurrentColors))
+	for i, c := range CurrentColors {
+		FactoryColors[i] = &ThemedColor{
 			ID:    c.ID,
 			Title: c.Title,
 			Color: &unison.ThemeColor{
@@ -144,8 +144,8 @@ func (c *Colors) Save(filePath string) error {
 
 // MarshalJSON implements json.Marshaler.
 func (c *Colors) MarshalJSON() ([]byte, error) {
-	c.data = make(map[string]*unison.ThemeColor, len(Current))
-	for _, one := range Current {
+	c.data = make(map[string]*unison.ThemeColor, len(CurrentColors))
+	for _, one := range CurrentColors {
 		c.data[one.ID] = one.Color
 	}
 	return json.Marshal(&c.data)
@@ -153,11 +153,11 @@ func (c *Colors) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (c *Colors) UnmarshalJSON(data []byte) error {
-	c.data = make(map[string]*unison.ThemeColor, len(Current))
+	c.data = make(map[string]*unison.ThemeColor, len(CurrentColors))
 	if err := json.Unmarshal(data, &c.data); err != nil {
 		return err
 	}
-	for _, one := range Factory {
+	for _, one := range FactoryColors {
 		if _, ok := c.data[one.ID]; !ok {
 			c.data[one.ID] = one.Color
 		}
@@ -167,7 +167,7 @@ func (c *Colors) UnmarshalJSON(data []byte) error {
 
 // MakeCurrent applies these colors to the current theme color set and updates all windows.
 func (c *Colors) MakeCurrent() {
-	for _, one := range Current {
+	for _, one := range CurrentColors {
 		if v, ok := c.data[one.ID]; ok {
 			*one.Color = *v
 		}
@@ -177,15 +177,15 @@ func (c *Colors) MakeCurrent() {
 
 // Reset to factory defaults.
 func (c *Colors) Reset() {
-	c.data = make(map[string]*unison.ThemeColor, len(Current))
-	for _, one := range Factory {
+	c.data = make(map[string]*unison.ThemeColor, len(CurrentColors))
+	for _, one := range FactoryColors {
 		c.data[one.ID] = one.Color
 	}
 }
 
 // ResetOne resets one color by ID to factory defaults.
 func (c *Colors) ResetOne(id string) {
-	for _, v := range Factory {
+	for _, v := range FactoryColors {
 		if v.ID == id {
 			c.data[id] = v.Color
 			break
