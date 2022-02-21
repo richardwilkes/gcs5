@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package fonts
+package settings
 
 import (
 	"fmt"
@@ -19,27 +19,26 @@ import (
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/icons"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/dsettings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
-type dockable struct {
-	dsettings.Dockable
+type fontSettingsDockable struct {
+	Dockable
 	content  *unison.Panel
 	noUpdate bool
 }
 
-// Show the Font settings.
-func Show() {
-	ws, dc, found := dsettings.Activate(func(d unison.Dockable) bool {
-		_, ok := d.(*dockable)
+// ShowFontSettings shows the Font settings.
+func ShowFontSettings() {
+	ws, dc, found := Activate(func(d unison.Dockable) bool {
+		_, ok := d.(*fontSettingsDockable)
 		return ok
 	})
 	if !found && ws != nil {
-		d := &dockable{}
+		d := &fontSettingsDockable{}
 		d.Self = d
 		d.TabTitle = i18n.Text("Fonts")
 		d.Extension = ".fonts"
@@ -50,7 +49,7 @@ func Show() {
 	}
 }
 
-func (d *dockable) initContent(content *unison.Panel) {
+func (d *fontSettingsDockable) initContent(content *unison.Panel) {
 	d.content = content
 	d.content.SetLayout(&unison.FlexLayout{
 		Columns:  7,
@@ -60,20 +59,20 @@ func (d *dockable) initContent(content *unison.Panel) {
 	d.fill()
 }
 
-func (d *dockable) reset() {
+func (d *fontSettingsDockable) reset() {
 	g := settings.Global()
 	g.Fonts.Reset()
 	g.Fonts.MakeCurrent()
 	d.sync()
 }
 
-func (d *dockable) sync() {
+func (d *fontSettingsDockable) sync() {
 	d.content.RemoveAllChildren()
 	d.fill()
 	d.MarkForRedraw()
 }
 
-func (d *dockable) fill() {
+func (d *fontSettingsDockable) fill() {
 	for i, one := range theme.CurrentFonts {
 		if i%2 == 0 {
 			d.content.AddChild(widget.NewFieldLeadingLabel(one.Title))
@@ -100,7 +99,7 @@ func (d *dockable) fill() {
 	d.content.AddChild(notice)
 }
 
-func (d *dockable) createFamilyField(index int) {
+func (d *fontSettingsDockable) createFamilyField(index int) {
 	p := unison.NewPopupMenu()
 	for _, fam := range unison.FontFamilies() {
 		p.AddItem(fam)
@@ -119,7 +118,7 @@ func (d *dockable) createFamilyField(index int) {
 	d.content.AddChild(p)
 }
 
-func (d *dockable) createSizeField(index int) {
+func (d *fontSettingsDockable) createSizeField(index int) {
 	field := widget.NewNumericField(fixed.F64d4FromFloat32(theme.CurrentFonts[index].Font.Size()), fixed.F64d4One,
 		fixed.F64d4FromInt(999), func(v fixed.F64d4) {
 			if d.noUpdate {
@@ -136,7 +135,7 @@ func (d *dockable) createSizeField(index int) {
 	d.content.AddChild(field)
 }
 
-func (d *dockable) createWeightField(index int) {
+func (d *fontSettingsDockable) createWeightField(index int) {
 	p := unison.NewPopupMenu()
 	for _, s := range unison.FontWeights {
 		p.AddItem(s)
@@ -155,7 +154,7 @@ func (d *dockable) createWeightField(index int) {
 	d.content.AddChild(p)
 }
 
-func (d *dockable) createSpacingField(index int) {
+func (d *fontSettingsDockable) createSpacingField(index int) {
 	p := unison.NewPopupMenu()
 	for _, s := range unison.Spacings {
 		p.AddItem(s)
@@ -174,7 +173,7 @@ func (d *dockable) createSpacingField(index int) {
 	d.content.AddChild(p)
 }
 
-func (d *dockable) createSlantField(index int) {
+func (d *fontSettingsDockable) createSlantField(index int) {
 	p := unison.NewPopupMenu()
 	for _, s := range unison.Slants {
 		p.AddItem(s)
@@ -193,7 +192,7 @@ func (d *dockable) createSlantField(index int) {
 	d.content.AddChild(p)
 }
 
-func (d *dockable) createResetField(index int) {
+func (d *fontSettingsDockable) createResetField(index int) {
 	b := unison.NewSVGButton(icons.ResetSVG())
 	b.Tooltip = unison.NewTooltipWithText("Reset this font")
 	b.ClickCallback = func() {
@@ -215,7 +214,7 @@ func (d *dockable) createResetField(index int) {
 	d.content.AddChild(b)
 }
 
-func (d *dockable) applyFont(index int, fd unison.FontDescriptor) {
+func (d *fontSettingsDockable) applyFont(index int, fd unison.FontDescriptor) {
 	theme.CurrentFonts[index].Font.Font = fd.Font()
 	children := d.content.Children()
 	i := index * 7
@@ -240,7 +239,7 @@ func (d *dockable) applyFont(index int, fd unison.FontDescriptor) {
 	unison.ThemeChanged()
 }
 
-func (d *dockable) load(fileSystem fs.FS, filePath string) error {
+func (d *fontSettingsDockable) load(fileSystem fs.FS, filePath string) error {
 	s, err := theme.NewFontsFromFS(fileSystem, filePath)
 	if err != nil {
 		return err
@@ -252,6 +251,6 @@ func (d *dockable) load(fileSystem fs.FS, filePath string) error {
 	return nil
 }
 
-func (d *dockable) save(filePath string) error {
+func (d *fontSettingsDockable) save(filePath string) error {
 	return settings.Global().Fonts.Save(filePath)
 }

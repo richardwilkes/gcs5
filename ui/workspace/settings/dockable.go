@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package dsettings
+package settings
 
 import (
 	"fmt"

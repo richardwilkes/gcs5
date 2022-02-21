@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package colors
+package settings
 
 import (
 	"fmt"
@@ -19,24 +19,23 @@ import (
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/icons"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/dsettings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
 
-type dockable struct {
-	dsettings.Dockable
+type colorSettingsDockable struct {
+	Dockable
 	content *unison.Panel
 }
 
-// Show the Color settings.
-func Show() {
-	ws, dc, found := dsettings.Activate(func(d unison.Dockable) bool {
-		_, ok := d.(*dockable)
+// ShowColorSettings shows the Color settings.
+func ShowColorSettings() {
+	ws, dc, found := Activate(func(d unison.Dockable) bool {
+		_, ok := d.(*colorSettingsDockable)
 		return ok
 	})
 	if !found && ws != nil {
-		d := &dockable{}
+		d := &colorSettingsDockable{}
 		d.Self = d
 		d.TabTitle = i18n.Text("Colors")
 		d.Extension = ".colors"
@@ -47,7 +46,7 @@ func Show() {
 	}
 }
 
-func (d *dockable) initContent(content *unison.Panel) {
+func (d *colorSettingsDockable) initContent(content *unison.Panel) {
 	d.content = content
 	d.content.SetLayout(&unison.FlexLayout{
 		Columns:  8,
@@ -57,20 +56,20 @@ func (d *dockable) initContent(content *unison.Panel) {
 	d.fill()
 }
 
-func (d *dockable) reset() {
+func (d *colorSettingsDockable) reset() {
 	g := settings.Global()
 	g.Colors.Reset()
 	g.Colors.MakeCurrent()
 	d.sync()
 }
 
-func (d *dockable) sync() {
+func (d *colorSettingsDockable) sync() {
 	d.content.RemoveAllChildren()
 	d.fill()
 	d.MarkForRedraw()
 }
 
-func (d *dockable) fill() {
+func (d *colorSettingsDockable) fill() {
 	for i, one := range theme.CurrentColors {
 		if i%2 == 0 {
 			d.content.AddChild(widget.NewFieldLeadingLabel(one.Title))
@@ -83,7 +82,7 @@ func (d *dockable) fill() {
 	}
 }
 
-func (d *dockable) createColorWellField(c *theme.ThemedColor, light bool) {
+func (d *colorSettingsDockable) createColorWellField(c *theme.ThemedColor, light bool) {
 	w := unison.NewWell()
 	w.Mask = unison.ColorWellMask
 	if light {
@@ -108,7 +107,7 @@ func (d *dockable) createColorWellField(c *theme.ThemedColor, light bool) {
 	d.content.AddChild(w)
 }
 
-func (d *dockable) createResetField(c *theme.ThemedColor) {
+func (d *colorSettingsDockable) createResetField(c *theme.ThemedColor) {
 	b := unison.NewSVGButton(icons.ResetSVG())
 	b.Tooltip = unison.NewTooltipWithText("Reset this color")
 	b.ClickCallback = func() {
@@ -138,7 +137,7 @@ func (d *dockable) createResetField(c *theme.ThemedColor) {
 	d.content.AddChild(b)
 }
 
-func (d *dockable) load(fileSystem fs.FS, filePath string) error {
+func (d *colorSettingsDockable) load(fileSystem fs.FS, filePath string) error {
 	s, err := theme.NewColorsFromFS(fileSystem, filePath)
 	if err != nil {
 		return err
@@ -150,6 +149,6 @@ func (d *dockable) load(fileSystem fs.FS, filePath string) error {
 	return nil
 }
 
-func (d *dockable) save(filePath string) error {
+func (d *colorSettingsDockable) save(filePath string) error {
 	return settings.Global().Colors.Save(filePath)
 }

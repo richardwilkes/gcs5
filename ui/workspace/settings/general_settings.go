@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package general
+package settings
 
 import (
 	"io/fs"
@@ -20,7 +20,6 @@ import (
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/icons"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/dsettings"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -28,8 +27,8 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-type dockable struct {
-	dsettings.Dockable
+type generalSettingsDockable struct {
+	Dockable
 	nameField                           *unison.Field
 	autoFillProfileCheckbox             *unison.CheckBox
 	pointsField                         *widget.NumericField
@@ -43,14 +42,14 @@ type dockable struct {
 	gCalcKeyField                       *unison.Field
 }
 
-// Show the General Settings window.
-func Show() {
-	ws, dc, found := dsettings.Activate(func(d unison.Dockable) bool {
-		_, ok := d.(*dockable)
+// ShowGeneralSettings the General Settings window.
+func ShowGeneralSettings() {
+	ws, dc, found := Activate(func(d unison.Dockable) bool {
+		_, ok := d.(*generalSettingsDockable)
 		return ok
 	})
 	if !found && ws != nil {
-		d := &dockable{}
+		d := &generalSettingsDockable{}
 		d.Self = d
 		d.TabTitle = i18n.Text("General Settings")
 		d.Extension = ".general"
@@ -62,7 +61,7 @@ func Show() {
 	}
 }
 
-func (d *dockable) initContent(content *unison.Panel) {
+func (d *generalSettingsDockable) initContent(content *unison.Panel) {
 	content.SetLayout(&unison.FlexLayout{
 		Columns:  3,
 		HSpacing: unison.StdHSpacing,
@@ -79,7 +78,7 @@ func (d *dockable) initContent(content *unison.Panel) {
 	d.createGCalcKeyField(content)
 }
 
-func (d *dockable) createPlayerAndDescFields(content *unison.Panel) {
+func (d *generalSettingsDockable) createPlayerAndDescFields(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Default Player Name")))
 	d.nameField = widget.NewStringField(settings.Global().General.DefaultPlayerName, func(s string) {
 		settings.Global().General.DefaultPlayerName = s
@@ -90,7 +89,7 @@ func (d *dockable) createPlayerAndDescFields(content *unison.Panel) {
 	content.AddChild(d.autoFillProfileCheckbox)
 }
 
-func (d *dockable) createInitialPointsFields(content *unison.Panel) {
+func (d *generalSettingsDockable) createInitialPointsFields(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Initial Points")))
 	d.pointsField = widget.NewNumericField(settings.Global().General.InitialPoints, gsettings.InitialPointsMin,
 		gsettings.InitialPointsMax, func(v fixed.F64d4) { settings.Global().General.InitialPoints = v })
@@ -101,7 +100,7 @@ func (d *dockable) createInitialPointsFields(content *unison.Panel) {
 	content.AddChild(d.includeUnspentPointsInTotalCheckbox)
 }
 
-func (d *dockable) createTechLevelField(content *unison.Panel) {
+func (d *generalSettingsDockable) createTechLevelField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Default Tech Level")))
 	d.techLevelField = widget.NewStringField(settings.Global().General.DefaultTechLevel,
 		func(s string) { settings.Global().General.DefaultTechLevel = s })
@@ -110,7 +109,7 @@ func (d *dockable) createTechLevelField(content *unison.Panel) {
 	content.AddChild(unison.NewPanel())
 }
 
-func (d *dockable) createCalendarPopup(content *unison.Panel) {
+func (d *generalSettingsDockable) createCalendarPopup(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Calendar")))
 	d.calendarPopup = unison.NewPopupMenu()
 	libraries := settings.Global().Libraries()
@@ -130,7 +129,7 @@ func (d *dockable) createCalendarPopup(content *unison.Panel) {
 	content.AddChild(d.calendarPopup)
 }
 
-func (d *dockable) createScaleField(content *unison.Panel) {
+func (d *generalSettingsDockable) createScaleField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Initial Scale")))
 	d.initialScaleField = widget.NewPercentageField(settings.Global().General.InitialUIScale,
 		gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax,
@@ -138,7 +137,7 @@ func (d *dockable) createScaleField(content *unison.Panel) {
 	content.AddChild(widget.WrapWithSpan(2, d.initialScaleField))
 }
 
-func (d *dockable) createImageResolutionField(content *unison.Panel) {
+func (d *generalSettingsDockable) createImageResolutionField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Image Export Resolution")))
 	d.exportResolutionField = widget.NewIntegerField(settings.Global().General.ImageResolution,
 		gsettings.ImageResolutionMin, gsettings.ImageResolutionMax,
@@ -146,7 +145,7 @@ func (d *dockable) createImageResolutionField(content *unison.Panel) {
 	content.AddChild(widget.WrapWithSpan(2, d.exportResolutionField, widget.NewFieldTrailingLabel(i18n.Text("ppi"))))
 }
 
-func (d *dockable) createTooltipDelayField(content *unison.Panel) {
+func (d *generalSettingsDockable) createTooltipDelayField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Tooltip Delay")))
 	d.tooltipDelayField = widget.NewNumericField(settings.Global().General.TooltipDelay, gsettings.TooltipDelayMin,
 		gsettings.TooltipDelayMax, func(v fixed.F64d4) {
@@ -157,7 +156,7 @@ func (d *dockable) createTooltipDelayField(content *unison.Panel) {
 	content.AddChild(widget.WrapWithSpan(2, d.tooltipDelayField, widget.NewFieldTrailingLabel(i18n.Text("seconds"))))
 }
 
-func (d *dockable) createTooltipDismissalField(content *unison.Panel) {
+func (d *generalSettingsDockable) createTooltipDismissalField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Tooltip Dismissal")))
 	d.tooltipDismissalField = widget.NewNumericField(settings.Global().General.TooltipDismissal,
 		gsettings.TooltipDismissalMin, gsettings.TooltipDismissalMax, func(v fixed.F64d4) {
@@ -168,7 +167,7 @@ func (d *dockable) createTooltipDismissalField(content *unison.Panel) {
 	content.AddChild(widget.WrapWithSpan(2, d.tooltipDismissalField, widget.NewFieldTrailingLabel(i18n.Text("seconds"))))
 }
 
-func (d *dockable) createGCalcKeyField(content *unison.Panel) {
+func (d *generalSettingsDockable) createGCalcKeyField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("GURPS Calculator Key")))
 	button := unison.NewButton()
 	button.HideBase = true
@@ -184,18 +183,18 @@ func (d *dockable) createGCalcKeyField(content *unison.Panel) {
 	content.AddChild(widget.WrapWithSpan(2, d.gCalcKeyField, button))
 }
 
-func (d *dockable) findGCalcKey() {
+func (d *generalSettingsDockable) findGCalcKey() {
 	if err := desktop.OpenBrowser("http://www.gurpscalculator.com/Character/ImportGCS"); err != nil {
 		unison.ErrorDialogWithError(i18n.Text("Unable to open browser to determine GURPS Calculator Key"), err)
 	}
 }
 
-func (d *dockable) reset() {
+func (d *generalSettingsDockable) reset() {
 	*settings.Global().General = *gsettings.NewGeneral()
 	d.sync()
 }
 
-func (d *dockable) sync() {
+func (d *generalSettingsDockable) sync() {
 	s := settings.Global().General
 	d.nameField.SetText(s.DefaultPlayerName)
 	widget.SetCheckBoxState(d.autoFillProfileCheckbox, s.AutoFillProfile)
@@ -211,7 +210,7 @@ func (d *dockable) sync() {
 	d.MarkForRedraw()
 }
 
-func (d *dockable) load(fileSystem fs.FS, filePath string) error {
+func (d *generalSettingsDockable) load(fileSystem fs.FS, filePath string) error {
 	s, err := gsettings.NewGeneralFromFile(fileSystem, filePath)
 	if err != nil {
 		return err
@@ -221,6 +220,6 @@ func (d *dockable) load(fileSystem fs.FS, filePath string) error {
 	return nil
 }
 
-func (d *dockable) save(filePath string) error {
+func (d *generalSettingsDockable) save(filePath string) error {
 	return settings.Global().General.Save(filePath)
 }

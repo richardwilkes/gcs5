@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package pageref
+package settings
 
 import (
 	"fmt"
@@ -19,25 +19,24 @@ import (
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/icons"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/dsettings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
-type dockable struct {
-	dsettings.Dockable
+type pageRefMappingsDockable struct {
+	Dockable
 	content *unison.Panel
 }
 
-// Show the Page Reference Mappings.
-func Show() {
-	ws, dc, found := dsettings.Activate(func(d unison.Dockable) bool {
-		_, ok := d.(*dockable)
+// ShowPageRefMappings shows the Page Reference Mappings.
+func ShowPageRefMappings() {
+	ws, dc, found := Activate(func(d unison.Dockable) bool {
+		_, ok := d.(*pageRefMappingsDockable)
 		return ok
 	})
 	if !found && ws != nil {
-		d := &dockable{}
+		d := &pageRefMappingsDockable{}
 		d.Self = d
 		d.TabTitle = i18n.Text("Page Reference Mappings")
 		d.Extension = ".refs"
@@ -51,7 +50,7 @@ func Show() {
 	}
 }
 
-func (d *dockable) initContent(content *unison.Panel) {
+func (d *pageRefMappingsDockable) initContent(content *unison.Panel) {
 	d.content = content
 	d.content.SetLayout(&unison.FlexLayout{
 		Columns:  4,
@@ -61,12 +60,12 @@ func (d *dockable) initContent(content *unison.Panel) {
 	d.sync()
 }
 
-func (d *dockable) reset() {
+func (d *pageRefMappingsDockable) reset() {
 	settings.Global().PageRefs = settings.PageRefs{}
 	d.sync()
 }
 
-func (d *dockable) sync() {
+func (d *pageRefMappingsDockable) sync() {
 	d.content.RemoveAllChildren()
 	for _, one := range settings.Global().PageRefs.List() {
 		d.createIDField(one)
@@ -77,7 +76,7 @@ func (d *dockable) sync() {
 	d.MarkForRedraw()
 }
 
-func (d *dockable) createIDField(ref *settings.PageRef) {
+func (d *pageRefMappingsDockable) createIDField(ref *settings.PageRef) {
 	p := unison.NewLabel()
 	p.Text = ref.ID
 	p.HAlign = unison.MiddleAlignment
@@ -100,7 +99,7 @@ func (d *dockable) createIDField(ref *settings.PageRef) {
 	d.content.AddChild(p)
 }
 
-func (d *dockable) createOffsetField(ref *settings.PageRef) {
+func (d *pageRefMappingsDockable) createOffsetField(ref *settings.PageRef) {
 	p := widget.NewSignedIntegerField(ref.Offset, -9999, 9999, func(v int) {
 		ref.Offset = v
 		settings.Global().PageRefs.Set(ref)
@@ -114,7 +113,7 @@ page references, enter an offset here to compensate.`))
 	d.content.AddChild(p)
 }
 
-func (d *dockable) createNameField(ref *settings.PageRef) {
+func (d *pageRefMappingsDockable) createNameField(ref *settings.PageRef) {
 	p := unison.NewLabel()
 	p.Text = filepath.Base(ref.Path)
 	p.Tooltip = unison.NewTooltipWithText(ref.Path)
@@ -126,7 +125,7 @@ func (d *dockable) createNameField(ref *settings.PageRef) {
 	d.content.AddChild(p)
 }
 
-func (d *dockable) createTrashField(ref *settings.PageRef) {
+func (d *pageRefMappingsDockable) createTrashField(ref *settings.PageRef) {
 	b := unison.NewSVGButton(icons.TrashSVG())
 	b.ClickCallback = func() {
 		if unison.QuestionDialog(fmt.Sprintf(i18n.Text("Are you sure you want to remove\n%s (%s)?"), ref.ID,
@@ -147,7 +146,7 @@ func (d *dockable) createTrashField(ref *settings.PageRef) {
 	d.content.AddChild(b)
 }
 
-func (d *dockable) load(fileSystem fs.FS, filePath string) error {
+func (d *pageRefMappingsDockable) load(fileSystem fs.FS, filePath string) error {
 	s, err := settings.NewPageRefsFromFS(fileSystem, filePath)
 	if err != nil {
 		return err
@@ -157,6 +156,6 @@ func (d *dockable) load(fileSystem fs.FS, filePath string) error {
 	return nil
 }
 
-func (d *dockable) save(filePath string) error {
+func (d *pageRefMappingsDockable) save(filePath string) error {
 	return settings.Global().PageRefs.Save(filePath)
 }

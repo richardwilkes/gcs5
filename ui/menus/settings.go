@@ -12,10 +12,7 @@
 package menus
 
 import (
-	"github.com/richardwilkes/gcs/ui/workspace/dsettings/colors"
-	"github.com/richardwilkes/gcs/ui/workspace/dsettings/fonts"
-	"github.com/richardwilkes/gcs/ui/workspace/dsettings/general"
-	"github.com/richardwilkes/gcs/ui/workspace/dsettings/pageref"
+	"github.com/richardwilkes/gcs/ui/workspace/settings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -88,28 +85,28 @@ var DefaultBodyTypeSettings = &unison.Action{
 var GeneralSettings = &unison.Action{
 	ID:              GeneralSettingsItemID,
 	Title:           i18n.Text("General Settings…"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { general.Show() },
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) { settings.ShowGeneralSettings() },
 }
 
 // PageRefMappings opens the page reference mappings.
 var PageRefMappings = &unison.Action{
 	ID:              PageRefMappingsItemID,
 	Title:           i18n.Text("Page Reference Mappings…"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { pageref.Show() },
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) { settings.ShowPageRefMappings() },
 }
 
 // ColorSettings opens the color settings.
 var ColorSettings = &unison.Action{
 	ID:              ColorSettingsItemID,
 	Title:           i18n.Text("Colors…"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { colors.Show() },
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) { settings.ShowColorSettings() },
 }
 
 // FontSettings opens the font settings.
 var FontSettings = &unison.Action{
 	ID:              FontSettingsItemID,
 	Title:           i18n.Text("Fonts…"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { fonts.Show() },
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) { settings.ShowFontSettings() },
 }
 
 // MenuKeySettings opens the menu key settings.
