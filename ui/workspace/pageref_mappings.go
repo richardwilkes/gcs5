@@ -9,12 +9,13 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package settings
+package workspace
 
 import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
+	"strconv"
 
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/icons"
@@ -25,8 +26,74 @@ import (
 )
 
 type pageRefMappingsDockable struct {
-	Dockable
+	SettingsDockable
 	content *unison.Panel
+}
+
+// OpenReference opens the given page reference.
+func OpenReference(wnd *unison.Window, ref, highlight string) {
+	i := len(ref) - 1
+	for i >= 0 {
+		ch := ref[i]
+		if ch >= '0' && ch <= '9' {
+			i--
+		} else {
+			i++
+			break
+		}
+	}
+	if i > 0 {
+		page, err := strconv.Atoi(ref[i:])
+		if err != nil {
+			return
+		}
+		key := ref[:i]
+		s := settings.Global()
+		pageRef := s.PageRefs.Lookup(key)
+		if pageRef == nil {
+			// TODO: Need to let the user know *what* the dialog is for!
+			dialog := unison.NewOpenDialog()
+			dialog.SetAllowsMultipleSelection(false)
+			dialog.SetResolvesAliases(true)
+			dialog.SetAllowedExtensions("pdf")
+			if dialog.RunModal() {
+				pageRef = &settings.PageRef{
+					ID:   key,
+					Path: dialog.Paths()[0],
+				}
+				s.PageRefs.Set(pageRef)
+				RefreshPageRefMappingsView()
+			}
+		}
+		if pageRef != nil {
+			if d, wasOpen := OpenFile(wnd, pageRef.Path); d != nil {
+				if pdfDockable, ok := d.(*PDFDockable); ok {
+					pdfDockable.SetSearchText(highlight)
+					pdfDockable.LoadPage(page + pageRef.Offset - 1) // The pdf package uses 0 for the first page, not 1
+					if !wasOpen {
+						pdfDockable.ClearHistory()
+					}
+				}
+			}
+		}
+	}
+}
+
+// RefreshPageRefMappingsView causes the Page References Mappings view to be refreshed if it is open.
+func RefreshPageRefMappingsView() {
+	ws := Any()
+	if ws == nil {
+		return
+	}
+	ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(container *unison.DockContainer) bool {
+		for _, one := range container.Dockables() {
+			if d, ok := one.(*pageRefMappingsDockable); ok {
+				d.sync()
+				return true
+			}
+		}
+		return false
+	})
 }
 
 // ShowPageRefMappings shows the Page Reference Mappings.

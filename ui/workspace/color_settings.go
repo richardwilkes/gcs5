@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package settings
+package workspace
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ import (
 )
 
 type colorSettingsDockable struct {
-	Dockable
+	SettingsDockable
 	content *unison.Panel
 }
 
