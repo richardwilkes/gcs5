@@ -17,12 +17,13 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps/library"
+	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/pdf"
 	"github.com/richardwilkes/gcs/ui/icons"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
-	xfs "github.com/richardwilkes/toolbox/xio/fs"
+	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
@@ -34,10 +35,8 @@ const (
 )
 
 var (
-	_                 FileBackedDockable = &PDFDockable{}
-	_                 unison.TabCloser   = &PDFDockable{}
-	pdfMatchHighlight *unison.Paint
-	pdfLinkHighlight  *unison.Paint
+	_ FileBackedDockable = &PDFDockable{}
+	_ unison.TabCloser   = &PDFDockable{}
 )
 
 // PDFDockable holds the view for a PDF file.
@@ -51,6 +50,8 @@ type PDFDockable struct {
 	scaleField         *unison.Field
 	searchField        *unison.Field
 	matchesLabel       *unison.Label
+	backButton         *unison.Button
+	forwardButton      *unison.Button
 	firstPageButton    *unison.Button
 	previousPageButton *unison.Button
 	nextPageButton     *unison.Button
@@ -59,6 +60,9 @@ type PDFDockable struct {
 	link               *pdf.Link
 	rolloverRect       geom32.Rect
 	scale              int
+	historyPos         int
+	history            []int
+	noUpdate           bool
 }
 
 // NewPDFDockable creates a new FileBackedDockable for PDF files.
@@ -94,16 +98,28 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	})
 	d.scroll.SetContent(d.docPanel, unison.FillBehavior)
 
+	d.backButton = unison.NewSVGButton(icons.BackSVG())
+	d.backButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Back"))
+	d.backButton.ClickCallback = func() { d.Back() }
+
+	d.forwardButton = unison.NewSVGButton(icons.ForwardSVG())
+	d.forwardButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Forward"))
+	d.forwardButton.ClickCallback = func() { d.Forward() }
+
 	d.firstPageButton = unison.NewSVGButton(icons.FirstSVG())
+	d.firstPageButton.Tooltip = unison.NewTooltipWithText(i18n.Text("First Page"))
 	d.firstPageButton.ClickCallback = func() { d.LoadPage(0) }
 
 	d.previousPageButton = unison.NewSVGButton(icons.PreviousSVG())
+	d.previousPageButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Previous Page"))
 	d.previousPageButton.ClickCallback = func() { d.LoadPage(d.pdf.MostRecentPageNumber() - 1) }
 
 	d.nextPageButton = unison.NewSVGButton(icons.NextSVG())
+	d.nextPageButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Next Page"))
 	d.nextPageButton.ClickCallback = func() { d.LoadPage(d.pdf.MostRecentPageNumber() + 1) }
 
 	d.lastPageButton = unison.NewSVGButton(icons.LastSVG())
+	d.lastPageButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Last Page"))
 	d.lastPageButton.ClickCallback = func() { d.LoadPage(d.pdf.PageCount() - 1) }
 
 	pageLabel := unison.NewLabel()
@@ -113,6 +129,9 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	d.pageNumberField = unison.NewField()
 	d.pageNumberField.MinimumTextWidth = d.pageNumberField.Font.Width(strconv.Itoa(d.pdf.PageCount() * 10))
 	d.pageNumberField.ModifiedCallback = func() {
+		if d.noUpdate {
+			return
+		}
 		if pageNum, e := strconv.Atoi(d.pageNumberField.Text()); e == nil && pageNum > 0 && pageNum <= d.pdf.PageCount() {
 			d.LoadPage(pageNum - 1)
 		}
@@ -130,9 +149,13 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	ofLabel.Text = fmt.Sprintf(i18n.Text("of %d"), d.pdf.PageCount())
 
 	d.scaleField = unison.NewField()
+	d.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
 	d.scaleField.MinimumTextWidth = d.scaleField.Font.Width(strconv.Itoa(maxPDFDockableScale) + "%")
 	d.scaleField.SetText(strconv.Itoa(d.scale) + "%")
 	d.scaleField.ModifiedCallback = func() {
+		if d.noUpdate {
+			return
+		}
 		if s, e := strconv.Atoi(strings.TrimRight(d.scaleField.Text(), "%")); e == nil && s >= minPDFDockableScale && s <= maxPDFDockableScale {
 			d.scale = s
 			d.LoadPage(d.pdf.MostRecentPageNumber())
@@ -146,6 +169,9 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	}
 
 	d.searchField = widget.NewSearchField()
+	pageSearch := i18n.Text("Page Search")
+	d.searchField.Watermark = pageSearch
+	d.searchField.Tooltip = unison.NewTooltipWithText(pageSearch)
 	d.searchField.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,
@@ -153,6 +179,9 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	})
 	existingCallback := d.searchField.ModifiedCallback
 	d.searchField.ModifiedCallback = func() {
+		if d.noUpdate {
+			return
+		}
 		d.LoadPage(d.pdf.MostRecentPageNumber())
 		existingCallback()
 	}
@@ -173,6 +202,9 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 		HAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
+	toolbar.AddChild(d.backButton)
+	toolbar.AddChild(d.forwardButton)
+	toolbar.AddChild(unison.NewPanel())
 	toolbar.AddChild(d.firstPageButton)
 	toolbar.AddChild(d.previousPageButton)
 	toolbar.AddChild(d.nextPageButton)
@@ -199,25 +231,45 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	return d, nil
 }
 
+// ClearHistory clears the existing history.
+func (d *PDFDockable) ClearHistory() {
+	d.history = nil
+	d.historyPos = 0
+	d.backButton.SetEnabled(false)
+	d.forwardButton.SetEnabled(false)
+}
+
 // SetSearchText sets the search text and updates the display.
 func (d *PDFDockable) SetSearchText(text string) {
 	d.searchField.SetText(text)
 }
 
+// Back moves back in history one step.
+func (d *PDFDockable) Back() {
+	if d.historyPos > 0 {
+		d.historyPos--
+		d.LoadPage(d.history[d.historyPos])
+	}
+}
+
+// Forward moves forward in history one step.
+func (d *PDFDockable) Forward() {
+	if d.historyPos < len(d.history)-1 {
+		d.historyPos++
+		d.LoadPage(d.history[d.historyPos])
+	}
+}
+
 // LoadPage loads the specified page.
 func (d *PDFDockable) LoadPage(pageNumber int) {
 	d.pdf.LoadPage(pageNumber, float32(d.scale)/100, d.searchField.Text())
-	pageNumber = d.pdf.MostRecentPageNumber()
-	lastPageNumber := d.pdf.PageCount() - 1
-	d.firstPageButton.SetEnabled(pageNumber != 0)
-	d.previousPageButton.SetEnabled(pageNumber > 0)
-	d.nextPageButton.SetEnabled(pageNumber < lastPageNumber)
-	d.lastPageButton.SetEnabled(pageNumber != lastPageNumber)
 }
 
 func (d *PDFDockable) pageLoaded() {
-	d.page = d.pdf.CurrentPage()
+	d.noUpdate = true
+	defer func() { d.noUpdate = false }()
 
+	d.page = d.pdf.CurrentPage()
 	pageText := ""
 	if d.page.PageNumber >= 0 {
 		pageText = strconv.Itoa(d.page.PageNumber + 1)
@@ -241,6 +293,29 @@ func (d *PDFDockable) pageLoaded() {
 		d.matchesLabel.Text = matchText
 		d.matchesLabel.Parent().MarkForLayoutAndRedraw()
 	}
+
+	pageNumber := d.page.PageNumber
+	if d.history == nil {
+		d.history = append(d.history, pageNumber)
+		d.historyPos = 0
+	} else if d.history[d.historyPos] != pageNumber {
+		d.historyPos++
+		if d.historyPos < len(d.history) {
+			if d.history[d.historyPos] != pageNumber {
+				d.history[d.historyPos] = pageNumber
+				d.history = d.history[:d.historyPos+1]
+			}
+		} else {
+			d.history = append(d.history, pageNumber)
+		}
+	}
+	lastPageNumber := d.pdf.PageCount() - 1
+	d.backButton.SetEnabled(d.historyPos > 0)
+	d.forwardButton.SetEnabled(d.historyPos < len(d.history)-1)
+	d.firstPageButton.SetEnabled(pageNumber != 0)
+	d.previousPageButton.SetEnabled(pageNumber > 0)
+	d.nextPageButton.SetEnabled(pageNumber < lastPageNumber)
+	d.lastPageButton.SetEnabled(pageNumber != lastPageNumber)
 
 	d.docPanel.MarkForLayoutAndRedraw()
 	d.scroll.MarkForLayoutAndRedraw()
@@ -363,11 +438,21 @@ func (d *PDFDockable) draw(gc *unison.Canvas, dirty geom32.Rect) {
 	r := geom32.Rect{Size: d.page.Image.LogicalSize()}
 	gc.DrawRect(r, unison.White.Paint(gc, r, unison.Fill))
 	gc.DrawImageInRect(d.page.Image, r, nil, nil)
-	for _, match := range d.page.Matches {
-		gc.DrawRect(match, getPDFMatchHighlightPaint())
+	if len(d.page.Matches) != 0 {
+		p := unison.NewPaint()
+		p.SetStyle(unison.Fill)
+		p.SetBlendMode(unison.ModulateBlendMode)
+		p.SetColor(theme.PDFMarkerHighlightColor.GetColor())
+		for _, match := range d.page.Matches {
+			gc.DrawRect(match, p)
+		}
 	}
 	if d.link != nil {
-		gc.DrawRect(d.rolloverRect, getPDFLinkHighlightPaint())
+		p := unison.NewPaint()
+		p.SetStyle(unison.Fill)
+		p.SetBlendMode(unison.ModulateBlendMode)
+		p.SetColor(theme.PDFLinkHighlightColor.GetColor())
+		gc.DrawRect(d.rolloverRect, p)
 	}
 }
 
@@ -381,7 +466,7 @@ func (d *PDFDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 
 // Title implements FileBackedDockable
 func (d *PDFDockable) Title() string {
-	return xfs.BaseName(d.path)
+	return fs.BaseName(d.path)
 }
 
 // Tooltip implements FileBackedDockable
@@ -409,24 +494,4 @@ func (d *PDFDockable) AttemptClose() {
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.Close(d)
 	}
-}
-
-func getPDFMatchHighlightPaint() *unison.Paint {
-	if pdfMatchHighlight == nil {
-		pdfMatchHighlight = unison.NewPaint()
-		pdfMatchHighlight.SetStyle(unison.Fill)
-		pdfMatchHighlight.SetBlendMode(unison.ModulateBlendMode)
-		pdfMatchHighlight.SetColor(unison.Yellow)
-	}
-	return pdfMatchHighlight
-}
-
-func getPDFLinkHighlightPaint() *unison.Paint {
-	if pdfLinkHighlight == nil {
-		pdfLinkHighlight = unison.NewPaint()
-		pdfLinkHighlight.SetStyle(unison.Fill)
-		pdfLinkHighlight.SetBlendMode(unison.ModulateBlendMode)
-		pdfLinkHighlight.SetColor(unison.GreenYellow)
-	}
-	return pdfLinkHighlight
 }

@@ -24,22 +24,24 @@ import (
 // Additional colors over and above what unison provides by default.
 var (
 	HeaderColor                = &unison.ThemeColor{Light: unison.RGB(43, 43, 43), Dark: unison.RGB(64, 64, 64)}
-	OnHeaderColor              = &unison.ThemeColor{Light: unison.RGB(255, 255, 255), Dark: unison.RGB(192, 192, 192)}
-	EditableBorderColor        = &unison.ThemeColor{Light: unison.RGB(192, 192, 192), Dark: unison.RGB(96, 96, 96)}
+	OnHeaderColor              = &unison.ThemeColor{Light: unison.White, Dark: unison.Silver}
+	EditableBorderColor        = &unison.ThemeColor{Light: unison.Silver, Dark: unison.RGB(96, 96, 96)}
 	EditableBorderFocusedColor = &unison.ThemeColor{Light: unison.RGB(0, 0, 192), Dark: unison.RGB(0, 102, 102)}
 	AccentColor                = &unison.ThemeColor{Light: unison.RGB(0, 102, 102), Dark: unison.RGB(100, 153, 153)}
-	SearchListColor            = &unison.ThemeColor{Light: unison.RGB(224, 255, 255), Dark: unison.RGB(0, 43, 43)}
-	OnSearchListColor          = &unison.ThemeColor{Light: unison.RGB(0, 0, 0), Dark: unison.RGB(204, 204, 204)}
-	PageColor                  = &unison.ThemeColor{Light: unison.RGB(255, 255, 255), Dark: unison.RGB(16, 16, 16)}
-	OnPageColor                = &unison.ThemeColor{Light: unison.RGB(0, 0, 0), Dark: unison.RGB(160, 160, 160)}
-	PageVoidColor              = &unison.ThemeColor{Light: unison.RGB(128, 128, 128), Dark: unison.RGB(0, 0, 0)}
+	SearchListColor            = &unison.ThemeColor{Light: unison.LightCyan, Dark: unison.RGB(0, 43, 43)}
+	OnSearchListColor          = &unison.ThemeColor{Light: unison.Black, Dark: unison.RGB(204, 204, 204)}
+	PageColor                  = &unison.ThemeColor{Light: unison.White, Dark: unison.RGB(16, 16, 16)}
+	OnPageColor                = &unison.ThemeColor{Light: unison.Black, Dark: unison.RGB(160, 160, 160)}
+	PageVoidColor              = &unison.ThemeColor{Light: unison.Grey, Dark: unison.Black}
 	MarkerColor                = &unison.ThemeColor{Light: unison.RGB(252, 242, 196), Dark: unison.RGB(0, 51, 0)}
-	OnMarkerColor              = &unison.ThemeColor{Light: unison.RGB(0, 0, 0), Dark: unison.RGB(221, 221, 221)}
+	OnMarkerColor              = &unison.ThemeColor{Light: unison.Black, Dark: unison.RGB(221, 221, 221)}
 	OverloadedColor            = &unison.ThemeColor{Light: unison.RGB(192, 64, 64), Dark: unison.RGB(115, 37, 37)}
-	OnOverloadedColor          = &unison.ThemeColor{Light: unison.RGB(255, 255, 255), Dark: unison.RGB(221, 221, 221)}
-	HintColor                  = &unison.ThemeColor{Light: unison.RGB(128, 128, 128), Dark: unison.RGB(64, 64, 64)}
-	LinkColor                  = &unison.ThemeColor{Light: unison.RGB(0, 255, 127), Dark: unison.RGB(0, 255, 127)}
-	OnLinkColor                = &unison.ThemeColor{Light: unison.RGB(0, 0, 0), Dark: unison.RGB(0, 0, 0)}
+	OnOverloadedColor          = &unison.ThemeColor{Light: unison.White, Dark: unison.RGB(221, 221, 221)}
+	HintColor                  = &unison.ThemeColor{Light: unison.Grey, Dark: unison.RGB(64, 64, 64)}
+	LinkColor                  = &unison.ThemeColor{Light: unison.SpringGreen, Dark: unison.SpringGreen}
+	OnLinkColor                = &unison.ThemeColor{Light: unison.Black, Dark: unison.Black}
+	PDFLinkHighlightColor      = &unison.ThemeColor{Light: unison.SpringGreen, Dark: unison.SpringGreen}
+	PDFMarkerHighlightColor    = &unison.ThemeColor{Light: unison.Yellow, Dark: unison.Yellow}
 )
 
 var (
@@ -97,6 +99,8 @@ var (
 		{ID: "hint", Title: i18n.Text("Hint"), Color: HintColor},
 		{ID: "link", Title: i18n.Text("Link"), Color: LinkColor},
 		{ID: "on_link", Title: i18n.Text("On Link"), Color: OnLinkColor},
+		{ID: "pdf_link", Title: i18n.Text("PDF Link Highlight"), Color: PDFLinkHighlightColor},
+		{ID: "pdf_marker", Title: i18n.Text("PDF Marker Highlight"), Color: PDFMarkerHighlightColor},
 	}
 	// FactoryColors holds the original theme before any modifications.
 	FactoryColors []*ThemedColor

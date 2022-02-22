@@ -55,10 +55,13 @@ func OpenReference(wnd *unison.Window, ref, highlight string) {
 			}
 		}
 		if pageRef != nil {
-			if d := OpenFile(wnd, pageRef.Path); d != nil {
+			if d, wasOpen := OpenFile(wnd, pageRef.Path); d != nil {
 				if pdfDockable, ok := d.(*PDFDockable); ok {
 					pdfDockable.SetSearchText(highlight)
 					pdfDockable.LoadPage(page + pageRef.Offset - 1) // The pdf package uses 0 for the first page, not 1
+					if !wasOpen {
+						pdfDockable.ClearHistory()
+					}
 				}
 			}
 		}
