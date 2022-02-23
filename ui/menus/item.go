@@ -12,9 +12,24 @@
 package menus
 
 import (
+	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
+
+func registerItemMenuActions() {
+	registerAdvantagesMenuActions()
+	registerSkillsMenuActions()
+	registerSpellsMenuActions()
+	registerEquipmentMenuActions()
+	registerNotesMenuActions()
+	settings.RegisterKeyBinding("open.editor", OpenEditor)
+	settings.RegisterKeyBinding("copy.to_sheet", CopyToSheet)
+	settings.RegisterKeyBinding("copy.to_template", CopyToTemplate)
+	settings.RegisterKeyBinding("apply_template", ApplyTemplate)
+	settings.RegisterKeyBinding("pageref.open.first", OpenOnePageReference)
+	settings.RegisterKeyBinding("pageref.open.all", OpenEachPageReference)
+}
 
 func createItemMenu(f unison.MenuFactory) unison.Menu {
 	m := f.NewMenu(ItemMenuID, i18n.Text("Item"), nil)
@@ -34,6 +49,14 @@ func createItemMenu(f unison.MenuFactory) unison.Menu {
 	return m
 }
 
+func registerAdvantagesMenuActions() {
+	settings.RegisterKeyBinding("new.adq", NewAdvantage)
+	settings.RegisterKeyBinding("new.adq.container", NewAdvantageContainer)
+	settings.RegisterKeyBinding("new.adm", NewAdvantageModifier)
+	settings.RegisterKeyBinding("new.adm.container", NewAdvantageContainerModifier)
+	settings.RegisterKeyBinding("add.natural.attacks", AddNaturalAttacksAdvantage)
+}
+
 func createAdvantagesMenu(f unison.MenuFactory) unison.Menu {
 	m := f.NewMenu(AdvantagesMenuID, i18n.Text("Advantages"), nil)
 	m.InsertItem(-1, NewAdvantage.NewMenuItem(f))
@@ -46,6 +69,12 @@ func createAdvantagesMenu(f unison.MenuFactory) unison.Menu {
 	return m
 }
 
+func registerSkillsMenuActions() {
+	settings.RegisterKeyBinding("new.skl", NewSkill)
+	settings.RegisterKeyBinding("new.skl.container", NewSkillContainer)
+	settings.RegisterKeyBinding("new.skl.technique", NewTechnique)
+}
+
 func createSkillsMenu(f unison.MenuFactory) unison.Menu {
 	m := f.NewMenu(SkillsMenuID, i18n.Text("Skills"), nil)
 	m.InsertItem(-1, NewSkill.NewMenuItem(f))
@@ -55,6 +84,12 @@ func createSkillsMenu(f unison.MenuFactory) unison.Menu {
 	return m
 }
 
+func registerSpellsMenuActions() {
+	settings.RegisterKeyBinding("new.spl", NewSpell)
+	settings.RegisterKeyBinding("new.spl.container", NewSpellContainer)
+	settings.RegisterKeyBinding("new.spl.ritual", NewRitualMagicSpell)
+}
+
 func createSpellsMenu(f unison.MenuFactory) unison.Menu {
 	m := f.NewMenu(SkillsMenuID, i18n.Text("Spells"), nil)
 	m.InsertItem(-1, NewSpell.NewMenuItem(f))
@@ -62,6 +97,15 @@ func createSpellsMenu(f unison.MenuFactory) unison.Menu {
 	m.InsertSeparator(-1, false)
 	m.InsertItem(-1, NewRitualMagicSpell.NewMenuItem(f))
 	return m
+}
+
+func registerEquipmentMenuActions() {
+	settings.RegisterKeyBinding("new.eqp", NewCarriedEquipment)
+	settings.RegisterKeyBinding("new.eqp.container", NewCarriedEquipmentContainer)
+	settings.RegisterKeyBinding("new.eqp.other", NewOtherEquipment)
+	settings.RegisterKeyBinding("new.eqp.other.container", NewOtherEquipmentContainer)
+	settings.RegisterKeyBinding("new.eqm", NewEquipmentModifier)
+	settings.RegisterKeyBinding("new.eqm.container", NewEquipmentContainerModifier)
 }
 
 func createEquipmentMenu(f unison.MenuFactory) unison.Menu {
@@ -77,6 +121,11 @@ func createEquipmentMenu(f unison.MenuFactory) unison.Menu {
 	return m
 }
 
+func registerNotesMenuActions() {
+	settings.RegisterKeyBinding("new.not", NewNote)
+	settings.RegisterKeyBinding("new.not.container", NewNoteContainer)
+}
+
 func createNotesMenu(f unison.MenuFactory) unison.Menu {
 	m := f.NewMenu(NotesMenuID, i18n.Text("Notes"), nil)
 	m.InsertItem(-1, NewNote.NewMenuItem(f))
@@ -88,8 +137,7 @@ func createNotesMenu(f unison.MenuFactory) unison.Menu {
 var NewAdvantage = &unison.Action{
 	ID:              NewAdvantageItemID,
 	Title:           i18n.Text("New Advantage"),
-	HotKey:          unison.KeyD,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -97,8 +145,7 @@ var NewAdvantage = &unison.Action{
 var NewAdvantageContainer = &unison.Action{
 	ID:              NewAdvantageContainerItemID,
 	Title:           i18n.Text("New Advantage Container"),
-	HotKey:          unison.KeyD,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -106,8 +153,7 @@ var NewAdvantageContainer = &unison.Action{
 var NewAdvantageModifier = &unison.Action{
 	ID:              NewAdvantageModifierItemID,
 	Title:           i18n.Text("New Advantage Modifier"),
-	HotKey:          unison.KeyM,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.OptionModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.OptionModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -115,8 +161,7 @@ var NewAdvantageModifier = &unison.Action{
 var NewAdvantageContainerModifier = &unison.Action{
 	ID:              NewAdvantageContainerModifierItemID,
 	Title:           i18n.Text("New Advantage Container Modifier"),
-	HotKey:          unison.KeyM,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.OptionModifier | unison.ShiftModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -131,8 +176,7 @@ var AddNaturalAttacksAdvantage = &unison.Action{
 var NewSkill = &unison.Action{
 	ID:              NewSkillItemID,
 	Title:           i18n.Text("New Skill"),
-	HotKey:          unison.KeyK,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -140,8 +184,7 @@ var NewSkill = &unison.Action{
 var NewSkillContainer = &unison.Action{
 	ID:              NewSkillContainerItemID,
 	Title:           i18n.Text("New Skill Container"),
-	HotKey:          unison.KeyK,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -149,8 +192,7 @@ var NewSkillContainer = &unison.Action{
 var NewTechnique = &unison.Action{
 	ID:              NewTechniqueItemID,
 	Title:           i18n.Text("New Technique"),
-	HotKey:          unison.KeyT,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyT, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -158,8 +200,7 @@ var NewTechnique = &unison.Action{
 var NewSpell = &unison.Action{
 	ID:              NewSpellItemID,
 	Title:           i18n.Text("New Spell"),
-	HotKey:          unison.KeyB,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyB, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -167,8 +208,7 @@ var NewSpell = &unison.Action{
 var NewSpellContainer = &unison.Action{
 	ID:              NewSpellContainerItemID,
 	Title:           i18n.Text("New Spell Container"),
-	HotKey:          unison.KeyB,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyB, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -176,8 +216,7 @@ var NewSpellContainer = &unison.Action{
 var NewRitualMagicSpell = &unison.Action{
 	ID:              NewRitualMagicSpellItemID,
 	Title:           i18n.Text("New Ritual Magic Spell"),
-	HotKey:          unison.KeyB,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier | unison.OptionModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyB, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -185,8 +224,7 @@ var NewRitualMagicSpell = &unison.Action{
 var NewCarriedEquipment = &unison.Action{
 	ID:              NewCarriedEquipmentItemID,
 	Title:           i18n.Text("New Carried Equipment"),
-	HotKey:          unison.KeyE,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -194,8 +232,7 @@ var NewCarriedEquipment = &unison.Action{
 var NewCarriedEquipmentContainer = &unison.Action{
 	ID:              NewCarriedEquipmentContainerItemID,
 	Title:           i18n.Text("New Carried Equipment Container"),
-	HotKey:          unison.KeyE,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -203,8 +240,7 @@ var NewCarriedEquipmentContainer = &unison.Action{
 var NewOtherEquipment = &unison.Action{
 	ID:              NewOtherEquipmentItemID,
 	Title:           i18n.Text("New Other Equipment"),
-	HotKey:          unison.KeyE,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.OptionModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.OptionModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -212,8 +248,7 @@ var NewOtherEquipment = &unison.Action{
 var NewOtherEquipmentContainer = &unison.Action{
 	ID:              NewOtherEquipmentContainerItemID,
 	Title:           i18n.Text("New Other Equipment Container"),
-	HotKey:          unison.KeyE,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier | unison.OptionModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -221,8 +256,7 @@ var NewOtherEquipmentContainer = &unison.Action{
 var NewEquipmentModifier = &unison.Action{
 	ID:              NewEquipmentModifierItemID,
 	Title:           i18n.Text("New Equipment Modifier"),
-	HotKey:          unison.KeyM,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -230,8 +264,7 @@ var NewEquipmentModifier = &unison.Action{
 var NewEquipmentContainerModifier = &unison.Action{
 	ID:              NewEquipmentContainerModifierItemID,
 	Title:           i18n.Text("New Equipment Container Modifier"),
-	HotKey:          unison.KeyM,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -239,8 +272,7 @@ var NewEquipmentContainerModifier = &unison.Action{
 var NewNote = &unison.Action{
 	ID:              NewNoteItemID,
 	Title:           i18n.Text("New Note"),
-	HotKey:          unison.KeyN,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -248,8 +280,7 @@ var NewNote = &unison.Action{
 var NewNoteContainer = &unison.Action{
 	ID:              NewNoteContainerItemID,
 	Title:           i18n.Text("New Note Container"),
-	HotKey:          unison.KeyN,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier | unison.OptionModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -257,8 +288,7 @@ var NewNoteContainer = &unison.Action{
 var OpenEditor = &unison.Action{
 	ID:              OpenEditorItemID,
 	Title:           i18n.Text("Open Detail Editor"),
-	HotKey:          unison.KeyI,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyI, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -266,8 +296,7 @@ var OpenEditor = &unison.Action{
 var CopyToSheet = &unison.Action{
 	ID:              CopyToSheetItemID,
 	Title:           i18n.Text("Copy to Character Sheet"),
-	HotKey:          unison.KeyC,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyC, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -275,8 +304,7 @@ var CopyToSheet = &unison.Action{
 var CopyToTemplate = &unison.Action{
 	ID:              CopyToTemplateItemID,
 	Title:           i18n.Text("Copy to Template"),
-	HotKey:          unison.KeyT,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyT, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -284,8 +312,7 @@ var CopyToTemplate = &unison.Action{
 var ApplyTemplate = &unison.Action{
 	ID:              ApplyTemplateItemID,
 	Title:           i18n.Text("Apply Template To Character Sheet"),
-	HotKey:          unison.KeyA,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyA, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -293,8 +320,7 @@ var ApplyTemplate = &unison.Action{
 var OpenOnePageReference = &unison.Action{
 	ID:              OpenOnePageReferenceItemID,
 	Title:           i18n.Text("Open Page Reference"),
-	HotKey:          unison.KeyG,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyG, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -302,7 +328,6 @@ var OpenOnePageReference = &unison.Action{
 var OpenEachPageReference = &unison.Action{
 	ID:              OpenEachPageReferenceItemID,
 	Title:           i18n.Text("Open Each Page Reference"),
-	HotKey:          unison.KeyG,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyG, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }

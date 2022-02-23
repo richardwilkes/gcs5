@@ -40,8 +40,7 @@ func createStateMenu(f unison.MenuFactory) unison.Menu {
 var ToggleState = &unison.Action{
 	ID:              ToggleStateItemID,
 	Title:           i18n.Text("Toggle State"),
-	HotKey:          unison.KeyApostrophe,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyApostrophe, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -49,8 +48,7 @@ var ToggleState = &unison.Action{
 var Increment = &unison.Action{
 	ID:              IncrementItemID,
 	Title:           i18n.Text("Increment"),
-	HotKey:          unison.KeyEqual,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyEqual, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -58,8 +56,7 @@ var Increment = &unison.Action{
 var Decrement = &unison.Action{
 	ID:              DecrementItemID,
 	Title:           i18n.Text("Decrement"),
-	HotKey:          unison.KeyMinus,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyMinus, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -67,8 +64,7 @@ var Decrement = &unison.Action{
 var IncreaseUses = &unison.Action{
 	ID:              IncrementUsesItemID,
 	Title:           i18n.Text("Increase Uses"),
-	HotKey:          unison.KeyUp,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyUp, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -76,8 +72,7 @@ var IncreaseUses = &unison.Action{
 var DecreaseUses = &unison.Action{
 	ID:              DecrementUsesItemID,
 	Title:           i18n.Text("Decrease Uses"),
-	HotKey:          unison.KeyDown,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyDown, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -85,8 +80,7 @@ var DecreaseUses = &unison.Action{
 var IncreaseSkillLevel = &unison.Action{
 	ID:              IncrementSkillLevelItemID,
 	Title:           i18n.Text("Increase Skill Level"),
-	HotKey:          unison.KeySlash,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeySlash, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -94,8 +88,7 @@ var IncreaseSkillLevel = &unison.Action{
 var DecreaseSkillLevel = &unison.Action{
 	ID:              DecrementSkillLevelItemID,
 	Title:           i18n.Text("Decrease Skill Level"),
-	HotKey:          unison.KeyPeriod,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyPeriod, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -103,8 +96,7 @@ var DecreaseSkillLevel = &unison.Action{
 var IncreaseTechLevel = &unison.Action{
 	ID:              IncrementTechLevelItemID,
 	Title:           i18n.Text("Increase Tech Level"),
-	HotKey:          unison.KeyCloseBracket,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyCloseBracket, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -112,8 +104,7 @@ var IncreaseTechLevel = &unison.Action{
 var DecreaseTechLevel = &unison.Action{
 	ID:              DecrementTechLevelItemID,
 	Title:           i18n.Text("Decrease Tech Level"),
-	HotKey:          unison.KeyOpenBracket,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyOpenBracket, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -121,7 +112,6 @@ var DecreaseTechLevel = &unison.Action{
 var SwapDefaults = &unison.Action{
 	ID:              SwapDefaultsItemID,
 	Title:           i18n.Text("Swap Defaults"),
-	HotKey:          unison.KeyX,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyX, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }

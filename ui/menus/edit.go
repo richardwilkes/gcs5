@@ -12,9 +12,23 @@
 package menus
 
 import (
+	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
+
+func registerEditMenuActions() {
+	settings.RegisterKeyBinding("undo", Undo)
+	settings.RegisterKeyBinding("redo", Redo)
+	settings.RegisterKeyBinding("duplicate", Duplicate)
+	settings.RegisterKeyBinding("cut", unison.CutAction)
+	settings.RegisterKeyBinding("copy", unison.CopyAction)
+	settings.RegisterKeyBinding("paste", unison.PasteAction)
+	settings.RegisterKeyBinding("delete", unison.DeleteAction)
+	settings.RegisterKeyBinding("select_all", unison.SelectAllAction)
+	settings.RegisterKeyBinding("convert_to_container", ConvertToContainer)
+	settings.RegisterKeyBinding("jump_to_search", JumpToSearch)
+}
 
 func setupEditMenu(bar unison.Menu) {
 	f := bar.Factory()
@@ -41,8 +55,7 @@ func setupEditMenu(bar unison.Menu) {
 var Undo = &unison.Action{
 	ID:              UndoItemID,
 	Title:           i18n.Text("Undo"),
-	HotKey:          unison.KeyZ,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyZ, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -50,8 +63,7 @@ var Undo = &unison.Action{
 var Redo = &unison.Action{
 	ID:              RedoItemID,
 	Title:           i18n.Text("Redo"),
-	HotKey:          unison.KeyZ,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyZ, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -59,8 +71,7 @@ var Redo = &unison.Action{
 var Duplicate = &unison.Action{
 	ID:              DuplicateItemID,
 	Title:           i18n.Text("Duplicate"),
-	HotKey:          unison.KeyU,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyU, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -75,7 +86,6 @@ var ConvertToContainer = &unison.Action{
 var JumpToSearch = &unison.Action{
 	ID:              JumpToSearchItemID,
 	Title:           i18n.Text("Jump to Search"),
-	HotKey:          unison.KeyJ,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyJ, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }

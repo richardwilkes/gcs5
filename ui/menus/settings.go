@@ -12,10 +12,25 @@
 package menus
 
 import (
+	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
+
+func registerSettingsMenuActions() {
+	settings.RegisterKeyBinding("settings.sheet.per_sheet", PerSheetSettings)
+	settings.RegisterKeyBinding("settings.attributes.per_sheet", PerSheetAttributeSettings)
+	settings.RegisterKeyBinding("settings.body_type.per_sheet", PerSheetBodyTypeSettings)
+	settings.RegisterKeyBinding("settings.sheet.default", DefaultSheetSettings)
+	settings.RegisterKeyBinding("settings.attributes.default", DefaultAttributeSettings)
+	settings.RegisterKeyBinding("settings.body_type.default", DefaultBodyTypeSettings)
+	settings.RegisterKeyBinding("settings.general", GeneralSettings)
+	settings.RegisterKeyBinding("settings.pagerefs", PageRefMappings)
+	settings.RegisterKeyBinding("settings.colors", ColorSettings)
+	settings.RegisterKeyBinding("settings.fonts", FontSettings)
+	settings.RegisterKeyBinding("settings.keys", MenuKeySettings)
+}
 
 func createSettingsMenu(f unison.MenuFactory) unison.Menu {
 	m := f.NewMenu(SettingsMenuID, i18n.Text("Settings"), nil)
@@ -39,8 +54,7 @@ func createSettingsMenu(f unison.MenuFactory) unison.Menu {
 var PerSheetSettings = &unison.Action{
 	ID:              PerSheetSettingsItemID,
 	Title:           i18n.Text("Sheet Settings…"),
-	HotKey:          unison.KeyComma,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyComma, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -48,8 +62,7 @@ var PerSheetSettings = &unison.Action{
 var DefaultSheetSettings = &unison.Action{
 	ID:              DefaultSheetSettingsItemID,
 	Title:           i18n.Text("Default Sheet Settings…"),
-	HotKey:          unison.KeyComma,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyComma, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 

@@ -13,10 +13,28 @@ package menus
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps/library"
+	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
+
+func registerFileMenuActions() {
+	settings.RegisterKeyBinding("new.char.sheet", NewCharacterSheet)
+	settings.RegisterKeyBinding("new.char.template", NewCharacterTemplate)
+	settings.RegisterKeyBinding("new.adq.lib", NewAdvantagesLibrary)
+	settings.RegisterKeyBinding("new.adm.lib", NewAdvantageModifiersLibrary)
+	settings.RegisterKeyBinding("new.eqp.lib", NewEquipmentLibrary)
+	settings.RegisterKeyBinding("new.eqp.lib", NewEquipmentModifiersLibrary)
+	settings.RegisterKeyBinding("new.not.lib", NewNotesLibrary)
+	settings.RegisterKeyBinding("new.skl.lib", NewSkillsLibrary)
+	settings.RegisterKeyBinding("new.spl.lib", NewSpellsLibrary)
+	settings.RegisterKeyBinding("open", Open)
+	settings.RegisterKeyBinding("close", CloseTab)
+	settings.RegisterKeyBinding("save", Save)
+	settings.RegisterKeyBinding("save_as", SaveAs)
+	settings.RegisterKeyBinding("print", Print)
+}
 
 func setupFileMenu(bar unison.Menu) {
 	f := bar.Factory()
@@ -63,8 +81,7 @@ func exportToUpdater(_ unison.Menu) {
 var NewCharacterSheet = &unison.Action{
 	ID:              NewSheetItemID,
 	Title:           i18n.Text("New Character Sheet"),
-	HotKey:          unison.KeyN,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -128,8 +145,7 @@ var NewSpellsLibrary = &unison.Action{
 var Open = &unison.Action{
 	ID:         OpenItemID,
 	Title:      i18n.Text("Open…"),
-	HotKey:     unison.KeyO,
-	HotKeyMods: unison.OSMenuCmdModifier(),
+	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyO, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
 		dialog := unison.NewOpenDialog()
 		dialog.SetAllowsMultipleSelection(true)
@@ -145,8 +161,7 @@ var Open = &unison.Action{
 var CloseTab = &unison.Action{
 	ID:         CloseTabID,
 	Title:      i18n.Text("Close"),
-	HotKey:     unison.KeyW,
-	HotKeyMods: unison.OSMenuCmdModifier(),
+	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyW, Modifiers: unison.OSMenuCmdModifier()},
 	EnabledCallback: func(_ *unison.Action, _ interface{}) bool {
 		if wnd := unison.ActiveWindow(); wnd != nil {
 			if workspace.FromWindow(wnd) == nil {
@@ -182,8 +197,7 @@ var CloseTab = &unison.Action{
 var Save = &unison.Action{
 	ID:              SaveItemID,
 	Title:           i18n.Text("Save"),
-	HotKey:          unison.KeyS,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyS, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -191,8 +205,7 @@ var Save = &unison.Action{
 var SaveAs = &unison.Action{
 	ID:              SaveAsItemID,
 	Title:           i18n.Text("Save As…"),
-	HotKey:          unison.KeyS,
-	HotKeyMods:      unison.OSMenuCmdModifier() | unison.ShiftModifier,
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyS, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
 
@@ -200,7 +213,6 @@ var SaveAs = &unison.Action{
 var Print = &unison.Action{
 	ID:              PrintItemID,
 	Title:           i18n.Text("Print…"),
-	HotKey:          unison.KeyP,
-	HotKeyMods:      unison.OSMenuCmdModifier(),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyP, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }

@@ -20,6 +20,10 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+func registerLibraryMenuActions() {
+	settings.RegisterKeyBinding("change_library_locations", ChangeLibraryLocations)
+}
+
 func updateLibraryMenu(m unison.Menu) {
 	for i := m.Count() - 1; i >= 0; i-- {
 		m.RemoveItem(i)

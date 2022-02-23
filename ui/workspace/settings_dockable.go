@@ -183,11 +183,11 @@ func (d *SettingsDockable) showMenu(b *unison.Button) {
 	m := f.NewMenu(id, "", nil)
 	id++
 	if d.Loader != nil {
-		m.InsertItem(-1, f.NewItem(id, i18n.Text("Import…"), 0, 0, nil, d.handleImport))
+		m.InsertItem(-1, f.NewItem(id, i18n.Text("Import…"), unison.KeyBinding{}, nil, d.handleImport))
 		id++
 	}
 	if d.Saver != nil {
-		m.InsertItem(-1, f.NewItem(id, i18n.Text("Export…"), 0, 0, nil, d.handleExport))
+		m.InsertItem(-1, f.NewItem(id, i18n.Text("Export…"), unison.KeyBinding{}, nil, d.handleExport))
 		id++
 	}
 	if d.Loader != nil {
@@ -196,7 +196,8 @@ func (d *SettingsDockable) showMenu(b *unison.Button) {
 		if len(sets) != 0 {
 			m.InsertSeparator(-1, false)
 			for _, lib := range sets {
-				m.InsertItem(-1, f.NewItem(id, lib.Name, 0, 0, func(_ unison.MenuItem) bool { return false }, nil))
+				m.InsertItem(-1, f.NewItem(id, lib.Name, unison.KeyBinding{},
+					func(_ unison.MenuItem) bool { return false }, nil))
 				id++
 				for _, one := range lib.List {
 					d.insertFileToLoad(m, id, one)
@@ -209,7 +210,7 @@ func (d *SettingsDockable) showMenu(b *unison.Button) {
 }
 
 func (d *SettingsDockable) insertFileToLoad(m unison.Menu, id int, ref *library.NamedFileRef) {
-	m.InsertItem(-1, m.Factory().NewItem(id, ref.Name, 0, 0, nil, func(_ unison.MenuItem) {
+	m.InsertItem(-1, m.Factory().NewItem(id, ref.Name, unison.KeyBinding{}, nil, func(_ unison.MenuItem) {
 		d.doLoad(ref.FileSystem, ref.FilePath)
 	}))
 }

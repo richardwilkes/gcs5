@@ -12,17 +12,24 @@
 package menus
 
 import (
+	"sync"
+
 	"github.com/richardwilkes/gcs/ui/about"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
 
-var (
-	boundActions = make(map[string]*unison.Action)
-)
+var registerKeyBindingsOnce sync.Once
 
 // Setup the menu bar for the window.
 func Setup(wnd *unison.Window) {
+	registerKeyBindingsOnce.Do(func() {
+		registerFileMenuActions()
+		registerEditMenuActions()
+		registerItemMenuActions()
+		registerLibraryMenuActions()
+		registerSettingsMenuActions()
+	})
 	unison.DefaultMenuFactory().BarForWindow(wnd, func(bar unison.Menu) {
 		unison.InsertStdMenus(bar, about.Show, nil, nil)
 		std := bar.Item(unison.PreferencesItemID)

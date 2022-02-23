@@ -16,6 +16,7 @@ import (
 
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/icons"
+	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -46,7 +47,7 @@ func ShowMenuKeySettings() {
 func (d *menuKeySettingsDockable) initContent(content *unison.Panel) {
 	d.content = content
 	d.content.SetLayout(&unison.FlexLayout{
-		Columns:  7,
+		Columns:  3,
 		HSpacing: unison.StdHSpacing,
 		VSpacing: unison.StdVSpacing,
 	})
@@ -67,10 +68,25 @@ func (d *menuKeySettingsDockable) sync() {
 }
 
 func (d *menuKeySettingsDockable) fill() {
-	// TODO: Implement
+	for _, b := range settings.CurrentBindings() {
+		d.createBindingButton(b)
+		d.content.AddChild(widget.NewFieldTrailingLabel(b.Action.Title))
+		d.createResetField(b)
+	}
 }
 
-func (d *menuKeySettingsDockable) createResetField(index int) {
+func (d *menuKeySettingsDockable) createBindingButton(binding *settings.Binding) {
+	b := unison.NewButton()
+	b.Font = unison.KeyboardFont
+	b.Text = binding.Action.KeyBinding.String()
+	b.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+	})
+	d.content.AddChild(b)
+}
+
+func (d *menuKeySettingsDockable) createResetField(binding *settings.Binding) {
 	b := unison.NewSVGButton(icons.ResetSVG())
 	b.Tooltip = unison.NewTooltipWithText("Reset this key binding")
 	b.ClickCallback = func() {
