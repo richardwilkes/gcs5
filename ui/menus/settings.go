@@ -113,5 +113,5 @@ var FontSettings = &unison.Action{
 var MenuKeySettings = &unison.Action{
 	ID:              MenuKeySettingsItemID,
 	Title:           i18n.Text("Menu Keys…"),
-	ExecuteCallback: unimplemented,
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) { workspace.ShowMenuKeySettings() },
 }

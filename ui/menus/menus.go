@@ -17,12 +17,16 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+var (
+	boundActions = make(map[string]*unison.Action)
+)
+
 // Setup the menu bar for the window.
 func Setup(wnd *unison.Window) {
 	unison.DefaultMenuFactory().BarForWindow(wnd, func(bar unison.Menu) {
 		unison.InsertStdMenus(bar, about.Show, nil, nil)
-		stdPrefs := bar.Item(unison.PreferencesItemID)
-		stdPrefs.Menu().RemoveItem(stdPrefs.Index())
+		std := bar.Item(unison.PreferencesItemID)
+		std.Menu().RemoveItem(std.Index())
 		setupFileMenu(bar)
 		setupEditMenu(bar)
 		i := bar.Item(unison.EditMenuID).Index() + 1

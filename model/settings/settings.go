@@ -58,7 +58,7 @@ type Settings struct {
 	RecentFiles        []string                   `json:"recent_files,omitempty"`
 	LastDirs           map[string]string          `json:"last_dirs,omitempty"`
 	PageRefs           PageRefs                   `json:"page_refs,omitempty"`
-	KeyBindings        map[string]string          `json:"key_bindings,omitempty"`
+	KeyBindings        KeyBindings                `json:"key_bindings,omitempty"`
 	WindowPositions    map[string]*WindowPosition `json:"window_positions,omitempty"`
 	Colors             theme.Colors               `json:"colors"`
 	Fonts              theme.Fonts                `json:"fonts"`
