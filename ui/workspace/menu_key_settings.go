@@ -69,8 +69,8 @@ func (d *menuKeySettingsDockable) sync() {
 
 func (d *menuKeySettingsDockable) fill() {
 	for _, b := range settings.CurrentBindings() {
+		d.content.AddChild(widget.NewFieldLeadingLabel(b.Action.Title))
 		d.createBindingButton(b)
-		d.content.AddChild(widget.NewFieldTrailingLabel(b.Action.Title))
 		d.createResetField(b)
 	}
 }
