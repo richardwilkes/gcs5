@@ -12,12 +12,15 @@
 package workspace
 
 import (
+	"fmt"
 	"io/fs"
 
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/icons"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/log/jot"
+	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
@@ -83,6 +86,68 @@ func (d *menuKeySettingsDockable) createBindingButton(binding *settings.Binding)
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,
 	})
+	b.ClickCallback = func() {
+		localBinding := binding.KeyBinding
+		capturePanel := unison.NewLabel()
+		capturePanel.Font = unison.KeyboardFont
+		capturePanel.Text = binding.KeyBinding.String()
+		capturePanel.HAlign = unison.MiddleAlignment
+		capturePanel.SetBorder(unison.DefaultFieldTheme.FocusedBorder)
+		capturePanel.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
+			gc.DrawRect(rect, unison.DefaultFieldTheme.BackgroundInk.Paint(gc, rect, unison.Fill))
+			capturePanel.DefaultDraw(gc, rect)
+		}
+		capturePanel.KeyDownCallback = func(keyCode unison.KeyCode, mod unison.Modifiers, repeat bool) bool {
+			localBinding.KeyCode = keyCode
+			localBinding.Modifiers = mod
+			capturePanel.Text = localBinding.String()
+			capturePanel.MarkForRedraw()
+			return true
+		}
+		capturePanel.SetFocusable(true)
+		wrapper := unison.NewPanel()
+		wrapper.SetLayout(&unison.FlexLayout{
+			Columns: 1,
+			HAlign:  unison.MiddleAlignment,
+			VAlign:  unison.MiddleAlignment,
+		})
+		capturePanel.SetLayoutData(&unison.FlexLayoutData{
+			MinSize: geom32.Size{Width: 100, Height: 50},
+			HAlign:  unison.FillAlignment,
+			VAlign:  unison.FillAlignment,
+			HGrab:   true,
+			VGrab:   true,
+		})
+		wrapper.AddChild(capturePanel)
+		if dialog, err := unison.NewDialog(nil, nil, wrapper,
+			[]*unison.DialogButtonInfo{
+				{
+					Title:        i18n.Text("Clear"),
+					ResponseCode: unison.ModalResponseUserBase,
+					KeyCodes:     []unison.KeyCode{unison.KeyClear},
+				},
+				unison.NewCancelButtonInfo(),
+				unison.NewOKButtonInfoWithTitle(i18n.Text("Set")),
+			}); err != nil {
+			jot.Error(err)
+		} else {
+			unison.DisableMenus = true
+			defer func() { unison.DisableMenus = false }()
+			switch dialog.RunModal() {
+			case unison.ModalResponseUserBase:
+				localBinding = unison.KeyBinding{}
+				fallthrough
+			case unison.ModalResponseOK:
+				binding.KeyBinding = localBinding
+				g := settings.Global()
+				g.KeyBindings.Set(binding.ID, localBinding)
+				g.KeyBindings.MakeCurrent()
+				b.Text = localBinding.String()
+				b.MarkForRedraw()
+			default:
+			}
+		}
+	}
 	d.content.AddChild(b)
 }
 
@@ -90,7 +155,16 @@ func (d *menuKeySettingsDockable) createResetField(binding *settings.Binding) {
 	b := unison.NewSVGButton(icons.ResetSVG())
 	b.Tooltip = unison.NewTooltipWithText("Reset this key binding")
 	b.ClickCallback = func() {
-		// TODO: Implement
+		if unison.QuestionDialog(fmt.Sprintf(i18n.Text("Are you sure you want to reset '%s'?"), binding.Action.Title), "") == unison.ModalResponseOK {
+			g := settings.Global()
+			g.KeyBindings.ResetOne(binding.ID)
+			g.KeyBindings.MakeCurrent()
+			binding.KeyBinding = g.KeyBindings.Current(binding.ID)
+			parent := b.Parent()
+			if other, ok := parent.Children()[parent.IndexOfChild(b)-1].Self.(*unison.Button); ok {
+				other.Text = binding.KeyBinding.String()
+			}
+		}
 	}
 	b.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.MiddleAlignment,
@@ -105,7 +179,7 @@ func (d *menuKeySettingsDockable) load(fileSystem fs.FS, filePath string) error 
 		return err
 	}
 	g := settings.Global()
-	g.KeyBindings = b
+	g.KeyBindings = *b
 	g.KeyBindings.MakeCurrent()
 	d.sync()
 	return nil

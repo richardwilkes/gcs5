@@ -74,7 +74,6 @@ func Default(entity *gurps.Entity) *Settings {
 		LibrarySet:         library.NewLibraries(),
 		LibraryExplorer:    NavigatorSettings{DividerPosition: 300},
 		LastDirs:           make(map[string]string),
-		KeyBindings:        make(KeyBindings),
 		WindowPositions:    make(map[string]*WindowPosition),
 		QuickExports:       gurps.NewQuickExports(),
 		Sheet:              gurps.FactorySheetSettings(entity),

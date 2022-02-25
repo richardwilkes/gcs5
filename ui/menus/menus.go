@@ -14,6 +14,7 @@ package menus
 import (
 	"sync"
 
+	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/about"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -30,6 +31,7 @@ func Setup(wnd *unison.Window) {
 		registerLibraryMenuActions()
 		registerSettingsMenuActions()
 	})
+	settings.Global().KeyBindings.MakeCurrent()
 	unison.DefaultMenuFactory().BarForWindow(wnd, func(bar unison.Menu) {
 		unison.InsertStdMenus(bar, about.Show, nil, nil)
 		std := bar.Item(unison.PreferencesItemID)

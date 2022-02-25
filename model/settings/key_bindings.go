@@ -23,13 +23,14 @@ import (
 )
 
 var (
-	currentBindings              = make(KeyBindings)
 	factoryBindings              = make(map[string]*Binding)
-	_               json.Omitter = KeyBindings{}
+	_               json.Omitter = &KeyBindings{}
 )
 
 // KeyBindings holds a set of key bindings.
-type KeyBindings map[string]unison.KeyBinding
+type KeyBindings struct {
+	data map[string]unison.KeyBinding
+}
 
 // Binding holds a single key binding.
 type Binding struct {
@@ -43,7 +44,6 @@ func RegisterKeyBinding(id string, action *unison.Action) {
 	if _, exists := factoryBindings[id]; exists {
 		return
 	}
-	delete(currentBindings, id)
 	factoryBindings[id] = &Binding{
 		ID:         id,
 		KeyBinding: action.KeyBinding,
@@ -51,13 +51,14 @@ func RegisterKeyBinding(id string, action *unison.Action) {
 	}
 }
 
-// CurrentBindings returns a sorted list with the current bindings. Note that only the ID and Action field are valid.
+// CurrentBindings returns a sorted list with the current bindings.
 func CurrentBindings() []*Binding {
 	list := make([]*Binding, 0, len(factoryBindings))
 	for _, v := range factoryBindings {
 		list = append(list, &Binding{
-			ID:     v.ID,
-			Action: v.Action,
+			ID:         v.ID,
+			KeyBinding: v.Action.KeyBinding,
+			Action:     v.Action,
 		})
 	}
 	sort.Slice(list, func(i, j int) bool {
@@ -74,17 +75,17 @@ func CurrentBindings() []*Binding {
 
 // NewKeyBindingsFromFS creates a new set of key bindings from a file. Any missing values will be filled in with
 // defaults.
-func NewKeyBindingsFromFS(fileSystem fs.FS, filePath string) (KeyBindings, error) {
+func NewKeyBindingsFromFS(fileSystem fs.FS, filePath string) (*KeyBindings, error) {
 	var b KeyBindings
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &b); err != nil {
 		return nil, err
 	}
-	return b, nil
+	return &b, nil
 }
 
 // ShouldOmit implements json.Omitter.
-func (b KeyBindings) ShouldOmit() bool {
-	for k, v := range b {
+func (b *KeyBindings) ShouldOmit() bool {
+	for k, v := range b.data {
 		if info, ok := factoryBindings[k]; ok && v != info.KeyBinding {
 			return false
 		}
@@ -93,14 +94,14 @@ func (b KeyBindings) ShouldOmit() bool {
 }
 
 // Save writes the Fonts to the file as JSON.
-func (b KeyBindings) Save(filePath string) error {
+func (b *KeyBindings) Save(filePath string) error {
 	return jio.SaveToFile(context.Background(), filePath, b)
 }
 
 // MarshalJSON implements json.Marshaler.
-func (b KeyBindings) MarshalJSON() ([]byte, error) {
-	data := make(map[string]unison.KeyBinding, len(currentBindings))
-	for k, v := range currentBindings {
+func (b *KeyBindings) MarshalJSON() ([]byte, error) {
+	data := make(map[string]unison.KeyBinding, len(b.data))
+	for k, v := range b.data {
 		if info, ok := factoryBindings[k]; ok && info.KeyBinding != v {
 			data[k] = v
 		}
@@ -110,34 +111,21 @@ func (b KeyBindings) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *KeyBindings) UnmarshalJSON(data []byte) error {
-	m := make(map[string]unison.KeyBinding, len(currentBindings))
+	m := make(map[string]unison.KeyBinding, len(factoryBindings))
 	if err := json.Unmarshal(data, &m); err != nil {
 		return err
 	}
-	kb := make(KeyBindings)
-	for k, v := range factoryBindings {
-		if current, ok := m[k]; ok && current != v.KeyBinding {
-			kb[k] = current
-		} else {
-			kb[k] = v.KeyBinding
-		}
-	}
-	*b = kb
+	b.data = m
 	return nil
 }
 
 // MakeCurrent applies these key bindings to the current key bindings set.
-func (b KeyBindings) MakeCurrent() {
+func (b *KeyBindings) MakeCurrent() {
 	var actions []*unison.Action
 	for k, v := range factoryBindings {
-		current, ok := b[k]
+		current, ok := b.data[k]
 		if !ok {
 			current = v.KeyBinding
-		}
-		if current != v.KeyBinding {
-			currentBindings[k] = current
-		} else {
-			delete(currentBindings, k)
 		}
 		if v.Action.KeyBinding != current {
 			v.Action.KeyBinding = current
@@ -161,23 +149,37 @@ func (b KeyBindings) MakeCurrent() {
 	}
 }
 
-// Set the binding for the given ID.
-func (b KeyBindings) Set(id string, binding unison.KeyBinding) {
+// Current returns the binding for the given ID.
+func (b *KeyBindings) Current(id string) unison.KeyBinding {
 	if f, ok := factoryBindings[id]; ok {
+		if c, ok2 := b.data[id]; ok2 {
+			return c
+		}
+		return f.KeyBinding
+	}
+	return unison.KeyBinding{}
+}
+
+// Set the binding for the given ID.
+func (b *KeyBindings) Set(id string, binding unison.KeyBinding) {
+	if f, ok := factoryBindings[id]; ok {
+		if b.data == nil {
+			b.data = make(map[string]unison.KeyBinding, len(factoryBindings))
+		}
 		if f.KeyBinding != binding {
-			b[id] = binding
+			b.data[id] = binding
 		} else {
-			delete(b, id)
+			delete(b.data, id)
 		}
 	}
 }
 
 // Reset to factory defaults.
 func (b *KeyBindings) Reset() {
-	*b = make(KeyBindings)
+	b.data = nil
 }
 
 // ResetOne resets one font by ID to factory defaults.
-func (b KeyBindings) ResetOne(id string) {
-	delete(currentBindings, id)
+func (b *KeyBindings) ResetOne(id string) {
+	delete(b.data, id)
 }
