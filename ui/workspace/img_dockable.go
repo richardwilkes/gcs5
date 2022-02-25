@@ -81,7 +81,7 @@ func NewImageDockable(filePath string) (*ImageDockable, error) {
 	d.scroll.SetContent(d.imgPanel, unison.FillBehavior)
 
 	d.scaleField = unison.NewField()
-	d.scaleField.MinimumTextWidth = d.scaleField.Font.Width(strconv.Itoa(maxImageDockableScale) + "%")
+	d.scaleField.MinimumTextWidth = d.scaleField.Font.SimpleWidth(strconv.Itoa(maxImageDockableScale) + "%")
 	d.scaleField.SetText(strconv.Itoa(d.scale) + "%")
 	d.scaleField.ModifiedCallback = func() {
 		if s, e := strconv.Atoi(strings.TrimRight(d.scaleField.Text(), "%")); e == nil && s >= minImageDockableScale && s <= maxImageDockableScale {

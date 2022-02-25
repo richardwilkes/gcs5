@@ -41,7 +41,7 @@ func NewSignedIntegerField(value, min, max int, applier func(int)) *SignedIntege
 	f.SetText(fmt.Sprintf("%+d", value))
 	f.ModifiedCallback = f.modified
 	f.ValidateCallback = f.validate
-	f.MinimumTextWidth = mathf32.Max(f.Font.Extents(strconv.Itoa(min)).Width, f.Font.Extents(strconv.Itoa(max)).Width)
+	f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth(strconv.Itoa(min)), f.Font.SimpleWidth(strconv.Itoa(max)))
 	return f
 }
 

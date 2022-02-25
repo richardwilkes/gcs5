@@ -41,8 +41,8 @@ func NewPercentageField(value, min, max fixed.F64d4, applier func(fixed.F64d4)) 
 	f.SetText(value.String() + "%")
 	f.ModifiedCallback = f.modified
 	f.ValidateCallback = f.validate
-	f.MinimumTextWidth = mathf32.Max(f.Font.Extents((min.Trunc()+fixed.F64d4One-1).String()+"%").Width,
-		f.Font.Extents((max.Trunc()+fixed.F64d4One-1).String()+"%").Width)
+	f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth((min.Trunc()+fixed.F64d4One-1).String()+"%"),
+		f.Font.SimpleWidth((max.Trunc()+fixed.F64d4One-1).String()+"%"))
 	return f
 }
 

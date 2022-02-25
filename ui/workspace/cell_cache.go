@@ -32,15 +32,16 @@ func (c *cellCache) matches(width float32, data string) bool {
 }
 
 func createAndAddCellLabel(parent *unison.Panel, width float32, text string, f unison.Font, selected bool) {
-	var lines []string
+	decoration := &unison.TextDecoration{Font: f}
+	var lines []*unison.Text
 	if width > 0 {
-		lines = f.WrapText(text, width)
+		lines = unison.NewTextWrappedLines(text, decoration, width)
 	} else {
-		lines = strings.Split(text, "\n")
+		lines = unison.NewTextLines(text, decoration)
 	}
 	for _, line := range lines {
 		label := unison.NewLabel()
-		label.Text = line
+		label.Text = line.String()
 		label.Font = f
 		if selected {
 			label.LabelTheme.OnBackgroundInk = unison.OnSelectionColor

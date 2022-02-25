@@ -127,7 +127,7 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	pageLabel.Text = i18n.Text("Page")
 
 	d.pageNumberField = unison.NewField()
-	d.pageNumberField.MinimumTextWidth = d.pageNumberField.Font.Width(strconv.Itoa(d.pdf.PageCount() * 10))
+	d.pageNumberField.MinimumTextWidth = d.pageNumberField.Font.SimpleWidth(strconv.Itoa(d.pdf.PageCount() * 10))
 	d.pageNumberField.ModifiedCallback = func() {
 		if d.noUpdate {
 			return
@@ -150,7 +150,7 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 
 	d.scaleField = unison.NewField()
 	d.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
-	d.scaleField.MinimumTextWidth = d.scaleField.Font.Width(strconv.Itoa(maxPDFDockableScale) + "%")
+	d.scaleField.MinimumTextWidth = d.scaleField.Font.SimpleWidth(strconv.Itoa(maxPDFDockableScale) + "%")
 	d.scaleField.SetText(strconv.Itoa(d.scale) + "%")
 	d.scaleField.ModifiedCallback = func() {
 		if d.noUpdate {

@@ -12,6 +12,7 @@
 package library
 
 import (
+	"errors"
 	"io/fs"
 	"os"
 	"path"
@@ -66,7 +67,9 @@ func ScanForNamedFileSets(builtIn fs.FS, builtInDir, extension string, omitDupli
 func scanForNamedFileSets(fileSystem fs.FS, dirPath, extension string, omitDuplicateNames bool, set map[string]bool) []*NamedFileRef {
 	entries, err := fs.ReadDir(fileSystem, dirPath)
 	if err != nil {
-		jot.Error(errs.Wrap(err))
+		if !errors.Is(err, fs.ErrNotExist) {
+			jot.Error(errs.Wrap(err))
+		}
 		return nil
 	}
 	list := make([]*NamedFileRef, 0)
