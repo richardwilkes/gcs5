@@ -177,11 +177,19 @@ func (s *Skill) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if s.Container() {
+		if s.SkillContainer == nil {
+			s.SkillContainer = &SkillContainer{}
+		}
 		for _, one := range s.Children {
 			one.Parent = s
 		}
-	} else if s.Prereq == nil {
-		s.Prereq = NewPrereqList()
+	} else {
+		if s.SkillItem == nil {
+			s.SkillItem = &SkillItem{}
+		}
+		if s.Prereq == nil {
+			s.Prereq = NewPrereqList()
+		}
 	}
 	return nil
 }

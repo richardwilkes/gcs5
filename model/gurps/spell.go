@@ -37,7 +37,7 @@ import (
 type SpellItem struct {
 	TechLevel         *string             `json:"tech_level,omitempty"`
 	Difficulty        AttributeDifficulty `json:"difficulty"`
-	College           []string            `json:"college,omitempty"`
+	College           CollegeList         `json:"college,omitempty"`
 	PowerSource       string              `json:"power_source,omitempty"`
 	Class             string              `json:"spell_class,omitempty"`
 	Resist            string              `json:"resist,omitempty"`
@@ -181,11 +181,19 @@ func (s *Spell) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if s.Container() {
+		if s.SpellContainer == nil {
+			s.SpellContainer = &SpellContainer{}
+		}
 		for _, one := range s.Children {
 			one.Parent = s
 		}
-	} else if s.Prereq == nil {
-		s.Prereq = NewPrereqList()
+	} else {
+		if s.SpellItem == nil {
+			s.SpellItem = &SpellItem{}
+		}
+		if s.Prereq == nil {
+			s.Prereq = NewPrereqList()
+		}
 	}
 	return nil
 }

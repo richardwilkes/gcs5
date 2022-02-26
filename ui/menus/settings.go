@@ -50,7 +50,7 @@ func createSettingsMenu(f unison.MenuFactory) unison.Menu {
 	return m
 }
 
-// PerSheetSettings opens the settings for the foremost character sheet.
+// PerSheetSettings opens the settings for the front character sheet.
 var PerSheetSettings = &unison.Action{
 	ID:              PerSheetSettingsItemID,
 	Title:           i18n.Text("Sheet Settings…"),

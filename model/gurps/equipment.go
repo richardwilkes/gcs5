@@ -174,6 +174,9 @@ func (e *Equipment) UnmarshalJSON(data []byte) error {
 		e.Prereq = NewPrereqList()
 	}
 	if e.Container() {
+		if e.EquipmentContainer == nil {
+			e.EquipmentContainer = &EquipmentContainer{}
+		}
 		if e.Quantity == 0 {
 			// Old formats omitted the quantity for containers. Try to see if it was omitted or if it was explicitly
 			// set to zero.

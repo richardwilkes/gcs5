@@ -160,11 +160,19 @@ func (a *Advantage) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if a.Container() {
+		if a.AdvantageContainer == nil {
+			a.AdvantageContainer = &AdvantageContainer{}
+		}
 		for _, one := range a.Children {
 			one.Parent = a
 		}
-	} else if a.Prereq == nil {
-		a.Prereq = NewPrereqList()
+	} else {
+		if a.AdvantageItem == nil {
+			a.AdvantageItem = &AdvantageItem{}
+		}
+		if a.Prereq == nil {
+			a.Prereq = NewPrereqList()
+		}
 	}
 	return nil
 }

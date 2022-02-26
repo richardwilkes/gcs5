@@ -23,6 +23,7 @@ const (
 	PoundAlt
 	Ounce
 	Ton
+	TonAlt
 	Kilogram
 	Gram
 	LastWeightUnits = Gram
@@ -35,6 +36,7 @@ var (
 		PoundAlt,
 		Ounce,
 		Ton,
+		TonAlt,
 		Kilogram,
 		Gram,
 	}
@@ -57,6 +59,10 @@ var (
 		{
 			key:    "tn",
 			string: "tn",
+		},
+		{
+			key:    "t",
+			string: "t",
 		},
 		{
 			key:    "kg",

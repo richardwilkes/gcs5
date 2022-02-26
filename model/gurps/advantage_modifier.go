@@ -123,7 +123,19 @@ func (a *AdvantageModifier) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 func (a *AdvantageModifier) UnmarshalJSON(data []byte) error {
 	a.AdvantageModifierData = AdvantageModifierData{}
-	return json.Unmarshal(data, &a.AdvantageModifierData)
+	if err := json.Unmarshal(data, &a.AdvantageModifierData); err != nil {
+		return err
+	}
+	if a.Container() {
+		if a.AdvantageModifierContainer == nil {
+			a.AdvantageModifierContainer = &AdvantageModifierContainer{}
+		}
+	} else {
+		if a.AdvantageModifierItem == nil {
+			a.AdvantageModifierItem = &AdvantageModifierItem{}
+		}
+	}
+	return nil
 }
 
 // Container returns true if this is a container.

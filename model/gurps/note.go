@@ -102,6 +102,9 @@ func (n *Note) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if n.Container() {
+		if n.NoteContainer == nil {
+			n.NoteContainer = &NoteContainer{}
+		}
 		for _, one := range n.Children {
 			one.Parent = n
 		}

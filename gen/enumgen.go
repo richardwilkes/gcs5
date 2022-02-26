@@ -839,6 +839,12 @@ func main() {
 				NoLocalize: true,
 			},
 			{
+				Name:       "TonAlt",
+				Key:        "t",
+				String:     "t",
+				NoLocalize: true,
+			},
+			{
 				Name:       "Kilogram",
 				Key:        "kg",
 				String:     "kg",
