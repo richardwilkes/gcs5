@@ -239,6 +239,16 @@ func OpenFile(wnd *unison.Window, filePath string) (dockable unison.Dockable, wa
 				unison.ErrorDialogWithError(i18n.Text("Unable to open equipment list"), err)
 				return nil, false
 			}
+		case ".gcs":
+			if d, err = NewSheetDockable(filePath); err != nil {
+				unison.ErrorDialogWithError(i18n.Text("Unable to open sheet"), err)
+				return nil, false
+			}
+		case ".gct":
+			if d, err = NewTemplateDockable(filePath); err != nil {
+				unison.ErrorDialogWithError(i18n.Text("Unable to open template"), err)
+				return nil, false
+			}
 		case ".not":
 			if d, err = NewNoteListDockable(filePath); err != nil {
 				unison.ErrorDialogWithError(i18n.Text("Unable to open notes list"), err)
