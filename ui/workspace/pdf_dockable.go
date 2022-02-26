@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/gcs/model/theme"
@@ -29,9 +30,11 @@ import (
 )
 
 const (
-	minPDFDockableScale   = 25
-	maxPDFDockableScale   = 300
-	deltaPDFDockableScale = 10
+	minPDFDockableScale                = 25
+	maxPDFDockableScale                = 300
+	deltaPDFDockableScale              = 10
+	maxElapsedRenderTimeWithoutOverlay = time.Millisecond * 250
+	renderTimeSlop                     = time.Millisecond * 10
 )
 
 var (
@@ -79,6 +82,8 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 		return nil, err
 	}
 	d.KeyDownCallback = d.keyDown
+	d.FocusChangeInHierarchyCallback = d.focusChangeInHierarchy
+	d.GainedFocusCallback = d.pdf.RequestRenderPriority
 	d.SetLayout(&unison.FlexLayout{Columns: 1})
 
 	d.docPanel = unison.NewPanel()
@@ -97,6 +102,7 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 		VGrab:  true,
 	})
 	d.scroll.SetContent(d.docPanel, unison.FillBehavior)
+	d.scroll.ContentView().DrawOverCallback = d.drawOverlay
 
 	d.backButton = unison.NewSVGButton(icons.BackSVG())
 	d.backButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Back"))
@@ -263,6 +269,7 @@ func (d *PDFDockable) Forward() {
 // LoadPage loads the specified page.
 func (d *PDFDockable) LoadPage(pageNumber int) {
 	d.pdf.LoadPage(pageNumber, float32(d.scale)/100, d.searchField.Text())
+	d.MarkForRedraw()
 }
 
 func (d *PDFDockable) pageLoaded() {
@@ -365,6 +372,10 @@ func (d *PDFDockable) mouseUp(where geom32.Point, button int, _ unison.Modifiers
 	return true
 }
 
+func (d *PDFDockable) focusChangeInHierarchy(_, _ *unison.Panel) {
+	d.pdf.RequestRenderPriority()
+}
+
 func (d *PDFDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bool) bool {
 	scale := d.scale
 	switch keyCode {
@@ -427,33 +438,92 @@ func (d *PDFDockable) draw(gc *unison.Canvas, dirty geom32.Rect) {
 	if d.page == nil {
 		return
 	}
-	if d.page.Error != nil {
-		r := d.docPanel.ContentRect(false)
-		r.Inset(geom32.NewUniformInsets(unison.StdHSpacing))
-		unison.DrawLabel(gc, r, unison.MiddleAlignment, unison.StartAlignment, fmt.Sprintf("%s", d.page.Error), //nolint:gocritic // Want the special handling %s provides
-			unison.SystemFont, unison.OnContentColor, unison.DefaultDialogTheme.ErrorIcon, unison.LeftSide,
-			unison.StdHSpacing, false)
-		return
-	}
-	r := geom32.Rect{Size: d.page.Image.LogicalSize()}
-	gc.DrawRect(r, unison.White.Paint(gc, r, unison.Fill))
-	gc.DrawImageInRect(d.page.Image, r, nil, nil)
-	if len(d.page.Matches) != 0 {
-		p := unison.NewPaint()
-		p.SetStyle(unison.Fill)
-		p.SetBlendMode(unison.ModulateBlendMode)
-		p.SetColor(theme.PDFMarkerHighlightColor.GetColor())
-		for _, match := range d.page.Matches {
-			gc.DrawRect(match, p)
+	if d.page.Image != nil {
+		r := geom32.Rect{Size: d.page.Image.LogicalSize()}
+		gc.DrawRect(r, unison.White.Paint(gc, r, unison.Fill))
+		gc.DrawImageInRect(d.page.Image, r, nil, nil)
+		if len(d.page.Matches) != 0 {
+			p := unison.NewPaint()
+			p.SetStyle(unison.Fill)
+			p.SetBlendMode(unison.ModulateBlendMode)
+			p.SetColor(theme.PDFMarkerHighlightColor.GetColor())
+			for _, match := range d.page.Matches {
+				gc.DrawRect(match, p)
+			}
+		}
+		if d.link != nil {
+			p := unison.NewPaint()
+			p.SetStyle(unison.Fill)
+			p.SetBlendMode(unison.ModulateBlendMode)
+			p.SetColor(theme.PDFLinkHighlightColor.GetColor())
+			gc.DrawRect(d.rolloverRect, p)
 		}
 	}
-	if d.link != nil {
-		p := unison.NewPaint()
-		p.SetStyle(unison.Fill)
-		p.SetBlendMode(unison.ModulateBlendMode)
-		p.SetColor(theme.PDFLinkHighlightColor.GetColor())
-		gc.DrawRect(d.rolloverRect, p)
+}
+
+func (d *PDFDockable) drawOverlay(gc *unison.Canvas, dirty geom32.Rect) {
+	if d.page != nil && d.page.Error != nil {
+		d.drawOverlayMsg(gc, dirty, fmt.Sprintf("%s", d.page.Error), true) //nolint:gocritic // I want the extra processing %s does in this case
 	}
+	if finished, pageNumber, requested := d.pdf.RenderingFinished(); !finished {
+		if waitFor := maxElapsedRenderTimeWithoutOverlay - time.Since(requested); waitFor > renderTimeSlop {
+			unison.InvokeTaskAfter(d.MarkForRedraw, waitFor)
+		} else {
+			d.drawOverlayMsg(gc, dirty, fmt.Sprintf(i18n.Text("Rendering page %d…"), pageNumber+1), false)
+		}
+	}
+}
+
+func (d *PDFDockable) drawOverlayMsg(gc *unison.Canvas, dirty geom32.Rect, msg string, forError bool) {
+	var fgInk, bgInk unison.Ink
+	var icon unison.Drawable
+	font := unison.SystemFont.Face().Font(24)
+	baseline := font.Baseline()
+	if forError {
+		fgInk = unison.OnErrorColor
+		bgInk = unison.ErrorColor.GetColor().SetAlphaIntensity(0.7)
+		icon = &unison.DrawableSVG{
+			SVG:  unison.CircledExclamationSVG(),
+			Size: geom32.NewSize(baseline, baseline),
+		}
+	} else {
+		fgInk = unison.OnContentColor
+		bgInk = unison.ContentColor.GetColor().SetAlphaIntensity(0.7)
+	}
+	decoration := &unison.TextDecoration{
+		Font:  font,
+		Paint: fgInk.Paint(gc, dirty, unison.Fill),
+	}
+	text := unison.NewText(msg, decoration)
+	r := d.scroll.ContentView().ContentRect(false)
+	cy := r.CenterY()
+	width := text.Width()
+	height := text.Height()
+	var iconSize geom32.Size
+	if icon != nil {
+		iconSize = icon.LogicalSize()
+		width += iconSize.Width + unison.StdHSpacing
+		if height < iconSize.Height {
+			height = iconSize.Height
+		}
+	}
+	backWidth := width + 40
+	backHeight := height + 40
+	r.X += (r.Width - backWidth) / 2
+	if forError {
+		r.Y = cy - (backHeight + unison.StdVSpacing)
+	} else {
+		r.Y = cy + unison.StdVSpacing
+	}
+	r.Width = backWidth
+	r.Height = backHeight
+	gc.DrawRoundedRect(r, 10, 10, bgInk.Paint(gc, dirty, unison.Fill))
+	x := r.X + (r.Width-width)/2
+	if icon != nil {
+		icon.DrawInRect(gc, geom32.NewRect(x, r.Y+(r.Height-iconSize.Height)/2, iconSize.Width, iconSize.Height), nil, decoration.Paint)
+		x += iconSize.Width + unison.StdHSpacing
+	}
+	text.Draw(gc, x, r.Y+(r.Height-height)/2+baseline)
 }
 
 // TitleIcon implements FileBackedDockable

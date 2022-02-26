@@ -15,6 +15,7 @@ import (
 	"image"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/richardwilkes/pdf"
 	"github.com/richardwilkes/toolbox/errs"
@@ -57,17 +58,18 @@ type params struct {
 
 // PDF holds a PDF page renderer.
 type PDF struct {
-	MaxSearchMatches   int
-	PPI                int
-	DisplayScaleAdjust float32
-	doc                *pdf.Document
-	pageCount          int
-	pageLoadedCallback func()
-	lock               sync.RWMutex
-	page               *Page
-	lastRequest        *params
-	rendering          *params
-	sequence           int
+	MaxSearchMatches     int
+	PPI                  int
+	DisplayScaleAdjust   float32
+	doc                  *pdf.Document
+	pageCount            int
+	pageLoadedCallback   func()
+	lock                 sync.RWMutex
+	page                 *Page
+	lastRequest          *params
+	sequence             int
+	lastRenderedSequence int
+	lastRenderRequest    time.Time
 }
 
 // New creates a new PDF page renderer.
@@ -107,8 +109,8 @@ func (p *PDF) CurrentPage() *Page {
 func (p *PDF) MostRecentPageNumber() int {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
-	if p.rendering != nil {
-		return p.rendering.pageNumber
+	if p.lastRequest != nil {
+		return p.lastRequest.pageNumber
 	}
 	if p.page != nil {
 		return p.page.PageNumber
@@ -127,6 +129,9 @@ func (p *PDF) LoadPage(pageNumber int, scale float32, search string) {
 		p.lastRequest.search == search {
 		return
 	}
+	if p.lastRequest == nil || p.lastRenderedSequence == p.lastRequest.sequence {
+		p.lastRenderRequest = time.Now()
+	}
 	p.sequence++
 	p.lastRequest = &params{
 		sequence:   p.sequence,
@@ -134,87 +139,107 @@ func (p *PDF) LoadPage(pageNumber int, scale float32, search string) {
 		scale:      scale,
 		search:     search,
 	}
-	if p.rendering == nil {
-		p.rendering = p.lastRequest
-		go p.render(p.rendering)
+	submit(p, false)
+}
+
+// RequestRenderPriority attempts to bump this PDF's rendering to the head of the queue.
+func (p *PDF) RequestRenderPriority() {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	if p.lastRequest != nil {
+		submit(p, true)
 	}
 }
 
 func (p *PDF) render(state *params) {
-	if p.shouldAbortRender() {
+	if p.shouldAbortRender(state) {
 		return
 	}
 
 	dpi := int(state.scale * float32(p.PPI) / p.DisplayScaleAdjust)
 	toc := p.doc.TableOfContents(dpi)
-	if p.shouldAbortRender() {
+	if p.shouldAbortRender(state) {
 		return
 	}
 
 	page, err := p.doc.RenderPage(state.pageNumber, dpi, p.MaxSearchMatches, state.search)
 	if err != nil {
-		p.errorDuringRender(state.pageNumber, err)
+		p.errorDuringRender(state, err)
 		return
 	}
-	if p.shouldAbortRender() {
+	if p.shouldAbortRender(state) {
 		return
 	}
 
 	var img *unison.Image
 	img, err = unison.NewImageFromPixels(page.Image.Rect.Dx(), page.Image.Rect.Dy(), page.Image.Pix, p.DisplayScaleAdjust)
 	if err != nil {
-		p.errorDuringRender(state.pageNumber, err)
+		p.errorDuringRender(state, err)
 		return
 	}
+	p.lock.RLock()
+	displayScaleAdjust := p.DisplayScaleAdjust
+	p.lock.RUnlock()
+	if p.shouldAbortRender(state) {
+		return
+	}
+	pg := &Page{
+		PageNumber: state.pageNumber,
+		Image:      img,
+		TOC:        convertTOCEntries(toc, displayScaleAdjust),
+		Links:      convertLinks(page.Links, displayScaleAdjust),
+		Matches:    convertMatches(page.SearchHits, displayScaleAdjust),
+	}
 	p.lock.Lock()
-	if p.rendering.sequence != p.lastRequest.sequence {
-		p.rendering = p.lastRequest
-		go p.render(p.rendering)
+	if state.sequence != p.lastRequest.sequence {
 		p.lock.Unlock()
 		return
 	}
-	p.rendering = nil
-	p.page = &Page{
-		PageNumber: state.pageNumber,
-		Image:      img,
-		TOC:        p.convertTOCEntries(toc),
-		Links:      p.convertLinks(page.Links),
-		Matches:    p.convertMatches(page.SearchHits),
-	}
+	p.page = pg
+	p.lastRenderedSequence = state.sequence
 	p.lock.Unlock()
 	p.pageLoadedCallback()
 }
 
-func (p *PDF) shouldAbortRender() bool {
+// RenderingFinished returns true if there is no rendering being done for this PDF at the moment.
+func (p *PDF) RenderingFinished() (finished bool, pageNumber int, requested time.Time) {
 	p.lock.RLock()
-	abort := p.rendering.sequence != p.lastRequest.sequence
-	p.lock.RUnlock()
-	if abort {
-		p.lock.Lock()
-		defer p.lock.Unlock()
-		p.rendering = p.lastRequest
-		go p.render(p.rendering)
+	defer p.lock.RUnlock()
+	if p.lastRequest != nil {
+		finished = p.lastRenderedSequence == p.lastRequest.sequence
+		pageNumber = p.lastRequest.pageNumber
+		requested = p.lastRenderRequest
+	} else {
+		finished = true
+		if p.page != nil {
+			pageNumber = p.page.PageNumber
+		}
+		requested = time.Now()
 	}
-	return abort
+	return
 }
 
-func (p *PDF) errorDuringRender(pageNumber int, err error) {
+func (p *PDF) shouldAbortRender(state *params) bool {
+	p.lock.RLock()
+	defer p.lock.RUnlock()
+	return state.sequence != p.lastRequest.sequence
+}
+
+func (p *PDF) errorDuringRender(state *params, err error) {
 	p.lock.Lock()
-	if p.rendering.sequence != p.lastRequest.sequence {
-		p.rendering = p.lastRequest
-		go p.render(p.rendering)
+	if state.sequence != p.lastRequest.sequence {
 		p.lock.Unlock()
 		return
 	}
 	p.page = &Page{
 		Error:      err,
-		PageNumber: pageNumber,
+		PageNumber: state.pageNumber,
 	}
 	p.lock.Unlock()
 	p.pageLoadedCallback()
 }
 
-func (p *PDF) convertTOCEntries(entries []*pdf.TOCEntry) []*TOC {
+func convertTOCEntries(entries []*pdf.TOCEntry, displayScaleAdjust float32) []*TOC {
 	if len(entries) == 0 {
 		return nil
 	}
@@ -223,45 +248,45 @@ func (p *PDF) convertTOCEntries(entries []*pdf.TOCEntry) []*TOC {
 		toc[i] = &TOC{
 			Title:        entry.Title,
 			PageNumber:   entry.PageNumber,
-			PageLocation: p.pointFromPagePoint(entry.PageX, entry.PageY),
-			Children:     p.convertTOCEntries(entry.Children),
+			PageLocation: pointFromPagePoint(entry.PageX, entry.PageY, displayScaleAdjust),
+			Children:     convertTOCEntries(entry.Children, displayScaleAdjust),
 		}
 	}
 	return toc
 }
 
-func (p *PDF) convertLinks(pageLinks []*pdf.PageLink) []*Link {
+func convertLinks(pageLinks []*pdf.PageLink, displayScaleAdjust float32) []*Link {
 	if len(pageLinks) == 0 {
 		return nil
 	}
 	links := make([]*Link, len(pageLinks))
 	for i, link := range pageLinks {
 		links[i] = &Link{
-			Bounds:       p.rectFromPageRect(link.Bounds),
+			Bounds:       rectFromPageRect(link.Bounds, displayScaleAdjust),
 			PageNumber:   link.PageNumber,
-			PageLocation: p.pointFromPagePoint(link.PageX, link.PageY),
+			PageLocation: pointFromPagePoint(link.PageX, link.PageY, displayScaleAdjust),
 			URI:          link.URI,
 		}
 	}
 	return links
 }
 
-func (p *PDF) convertMatches(hits []image.Rectangle) []geom32.Rect {
+func convertMatches(hits []image.Rectangle, displayScaleAdjust float32) []geom32.Rect {
 	if len(hits) == 0 {
 		return nil
 	}
 	matches := make([]geom32.Rect, len(hits))
 	for i, hit := range hits {
-		matches[i] = p.rectFromPageRect(hit)
+		matches[i] = rectFromPageRect(hit, displayScaleAdjust)
 	}
 	return matches
 }
 
-func (p *PDF) pointFromPagePoint(x, y int) geom32.Point {
-	return geom32.NewPoint(float32(x)*p.DisplayScaleAdjust, float32(y)*p.DisplayScaleAdjust)
+func pointFromPagePoint(x, y int, displayScaleAdjust float32) geom32.Point {
+	return geom32.NewPoint(float32(x)*displayScaleAdjust, float32(y)*displayScaleAdjust)
 }
 
-func (p *PDF) rectFromPageRect(r image.Rectangle) geom32.Rect {
-	return geom32.NewRect(float32(r.Min.X)*p.DisplayScaleAdjust, float32(r.Min.Y)*p.DisplayScaleAdjust, float32(r.Dx())*p.DisplayScaleAdjust,
-		float32(r.Dy())*p.DisplayScaleAdjust)
+func rectFromPageRect(r image.Rectangle, displayScaleAdjust float32) geom32.Rect {
+	return geom32.NewRect(float32(r.Min.X)*displayScaleAdjust, float32(r.Min.Y)*displayScaleAdjust,
+		float32(r.Dx())*displayScaleAdjust, float32(r.Dy())*displayScaleAdjust)
 }
