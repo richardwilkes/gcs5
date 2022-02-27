@@ -16,6 +16,7 @@ import (
 
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/res"
+	"github.com/richardwilkes/gcs/setup/trampolines"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -106,7 +107,7 @@ func createAndAddPageRefCellLabel(parent *unison.Panel, text, highlight string, 
 				}
 			}
 			if len(list) != 0 {
-				OpenReference(parent.Window(), list[0], highlight)
+				trampolines.OpenPageReference(parent.Window(), list[0], highlight)
 			}
 			return true
 		}

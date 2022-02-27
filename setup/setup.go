@@ -26,5 +26,5 @@ func Setup() {
 	gurps.RegisterFileTypes()
 	trampolines.MenuSetup = menus.Setup
 	trampolines.OpenFile = workspace.OpenFile
-	trampolines.OpenPageReference = workspace.OpenReference
+	trampolines.OpenPageReference = workspace.OpenPageReference
 }

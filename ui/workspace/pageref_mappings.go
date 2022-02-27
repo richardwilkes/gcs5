@@ -32,8 +32,9 @@ type pageRefMappingsDockable struct {
 	content *unison.Panel
 }
 
-// OpenReference opens the given page reference.
-func OpenReference(wnd *unison.Window, ref, highlight string) {
+// OpenPageReference opens the given page reference in the given window, which should contain a workspace. May pass nil
+// for wnd to let it pick the first such window it discovers.
+func OpenPageReference(wnd *unison.Window, ref, highlight string) {
 	i := len(ref) - 1
 	for i >= 0 {
 		ch := ref[i]
