@@ -13,9 +13,9 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
-	"github.com/richardwilkes/gcs/model/gurps/library"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/settings"
+	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings/display"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"

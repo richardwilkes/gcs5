@@ -15,7 +15,7 @@ import (
 	"embed"
 	"sort"
 
-	"github.com/richardwilkes/gcs/model/gurps/library"
+	library2 "github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/toolbox/txt"
 )
 
@@ -24,15 +24,15 @@ var embeddedFS embed.FS
 
 // NameGeneratorRef holds a reference to a NameGenerator.
 type NameGeneratorRef struct {
-	FileRef   *library.NamedFileRef
+	FileRef   *library2.NamedFileRef
 	generator *NameGenerator
 }
 
 // AvailableNameGenerators scans the libraries and returns the available name generators.
-func AvailableNameGenerators(libraries library.Libraries) []*NameGeneratorRef {
+func AvailableNameGenerators(libraries library2.Libraries) []*NameGeneratorRef {
 	var list []*NameGeneratorRef
 	seen := make(map[string]bool)
-	for _, set := range library.ScanForNamedFileSets(embeddedFS, "data", ".names", true, libraries) {
+	for _, set := range library2.ScanForNamedFileSets(embeddedFS, "data", ".names", true, libraries) {
 		for _, one := range set.List {
 			if seen[one.Name] {
 				continue

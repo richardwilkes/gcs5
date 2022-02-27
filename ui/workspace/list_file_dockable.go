@@ -12,7 +12,7 @@
 package workspace
 
 import (
-	"github.com/richardwilkes/gcs/model/gurps/library"
+	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/ui/icons"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"

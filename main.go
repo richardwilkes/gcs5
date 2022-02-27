@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/richardwilkes/gcs/model/export"
-	"github.com/richardwilkes/gcs/model/gurps/library"
+	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui"
 	"github.com/richardwilkes/toolbox/atexit"

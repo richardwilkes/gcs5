@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/richardwilkes/gcs/model/gurps/library"
+	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/pdf"
 	"github.com/richardwilkes/gcs/ui/icons"

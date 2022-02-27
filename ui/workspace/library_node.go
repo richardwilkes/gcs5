@@ -12,7 +12,7 @@
 package workspace
 
 import (
-	"github.com/richardwilkes/gcs/model/gurps/library"
+	library2 "github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
@@ -25,13 +25,13 @@ var (
 // LibraryNode holds a library in the navigator.
 type LibraryNode struct {
 	nav      *Navigator
-	library  *library.Library
+	library  *library2.Library
 	children []unison.TableRowData
 	open     bool
 }
 
 // NewLibraryNode creates a new LibraryNode.
-func NewLibraryNode(nav *Navigator, lib *library.Library) *LibraryNode {
+func NewLibraryNode(nav *Navigator, lib *library2.Library) *LibraryNode {
 	n := &LibraryNode{
 		nav:     nav,
 		library: lib,
@@ -75,9 +75,9 @@ func (n *LibraryNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 	switch col {
 	case 0:
 		if n.open {
-			return createNodeCell(library.OpenFolder, n.library.Title, selected)
+			return createNodeCell(library2.OpenFolder, n.library.Title, selected)
 		}
-		return createNodeCell(library.ClosedFolder, n.library.Title, selected)
+		return createNodeCell(library2.ClosedFolder, n.library.Title, selected)
 	default:
 		jot.Errorf("column index out of range (0-0): %d", col)
 		return unison.NewLabel()
