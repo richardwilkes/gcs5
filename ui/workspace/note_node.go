@@ -14,6 +14,7 @@ package workspace
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -23,6 +24,7 @@ import (
 const (
 	noteDescriptionColumn = iota
 	noteWhenColumn
+	noteCategoryColumn
 	noteReferenceColumn
 	noteColumnCount
 )
@@ -46,6 +48,7 @@ func NewNoteListDockable(filePath string) (*ListFileDockable, error) {
 	return NewListFileDockable(filePath, []unison.TableColumnHeader{
 		unison.NewTableColumnHeader(i18n.Text("Note")),
 		unison.NewTableColumnHeader(i18n.Text("When")),
+		unison.NewTableColumnHeader(i18n.Text("Category")),
 		newPageReferenceHeader(),
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(notes))
@@ -82,6 +85,11 @@ func (n *NoteNode) ChildRows() []unison.TableRowData {
 	return n.children
 }
 
+// Categories implements CategoryProvider.
+func (n *NoteNode) Categories() []string {
+	return n.note.Categories
+}
+
 // CellDataForSort returns the string that represents the data in the specified cell.
 func (n *NoteNode) CellDataForSort(index int) string {
 	switch index {
@@ -89,6 +97,8 @@ func (n *NoteNode) CellDataForSort(index int) string {
 		return n.note.Text
 	case noteWhenColumn:
 		return n.note.When
+	case noteCategoryColumn:
+		return strings.Join(n.note.Categories, ", ")
 	case noteReferenceColumn:
 		return n.note.PageRef
 	default:
@@ -137,6 +147,5 @@ func (n *NoteNode) SetOpen(open bool) {
 	if n.note.Container() && open != n.note.Open {
 		n.note.Open = open
 		n.table.SyncToModel()
-		n.table.SizeColumnsToFit(true)
 	}
 }

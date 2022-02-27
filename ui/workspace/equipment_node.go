@@ -109,6 +109,11 @@ func (n *EquipmentNode) ChildRows() []unison.TableRowData {
 	return n.children
 }
 
+// Categories implements CategoryProvider.
+func (n *EquipmentNode) Categories() []string {
+	return n.equipment.Categories
+}
+
 // CellDataForSort returns the string that represents the data in the specified cell.
 func (n *EquipmentNode) CellDataForSort(index int) string {
 	switch index {
@@ -193,6 +198,5 @@ func (n *EquipmentNode) SetOpen(open bool) {
 	if n.equipment.Container() && open != n.equipment.Open {
 		n.equipment.Open = open
 		n.table.SyncToModel()
-		n.table.SizeColumnsToFit(true)
 	}
 }

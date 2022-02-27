@@ -38,6 +38,7 @@ type NoteData struct {
 	Text           string    `json:"text,omitempty"`
 	When           string    `json:"when,omitempty"`
 	PageRef        string    `json:"reference,omitempty"`
+	Categories     []string  `json:"categories,omitempty"`
 	*NoteContainer `json:",omitempty"`
 }
 

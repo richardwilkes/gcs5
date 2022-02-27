@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
@@ -56,6 +57,19 @@ func NewLibrariesFromFS(fileSystem fs.FS, filePath string) (Libraries, error) {
 	libs.Master()
 	libs.User()
 	return libs, nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (l *Libraries) UnmarshalJSON(data []byte) error {
+	var libs map[string]*Library
+	if err := json.Unmarshal(data, &libs); err != nil {
+		return err
+	}
+	for lib, v := range libs {
+		v.ConfigureForKey(lib)
+	}
+	*l = libs
+	return nil
 }
 
 // Master holds information about the master library.

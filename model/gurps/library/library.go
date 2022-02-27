@@ -145,8 +145,8 @@ func (l *Library) Less(other *Library) bool {
 	if l.IsUser() {
 		return true
 	}
-	if l.IsMaster() && !l.IsUser() {
-		return true
+	if l.IsMaster() {
+		return !other.IsUser()
 	}
 	if txt.NaturalLess(l.GitHubAccountName, other.GitHubAccountName, true) {
 		return true

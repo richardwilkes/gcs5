@@ -24,6 +24,7 @@ import (
 const (
 	advantageModifierDescriptionColumn = iota
 	advantageModifierCostColumn
+	advantageModifierCategoryColumn
 	advantageModifierReferenceColumn
 	advantageModifierColumnCount
 )
@@ -47,6 +48,7 @@ func NewAdvantageModifierListDockable(filePath string) (*ListFileDockable, error
 	return NewListFileDockable(filePath, []unison.TableColumnHeader{
 		unison.NewTableColumnHeader(i18n.Text("Modifier")),
 		unison.NewTableColumnHeader(i18n.Text("Cost Modifier")),
+		unison.NewTableColumnHeader(i18n.Text("Category")),
 		newPageReferenceHeader(),
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(modifiers))
@@ -83,6 +85,11 @@ func (n *AdvantageModifierNode) ChildRows() []unison.TableRowData {
 	return n.children
 }
 
+// Categories implements CategoryProvider.
+func (n *AdvantageModifierNode) Categories() []string {
+	return n.modifier.Categories
+}
+
 // CellDataForSort returns the string that represents the data in the specified cell.
 func (n *AdvantageModifierNode) CellDataForSort(index int) string {
 	switch index {
@@ -98,6 +105,8 @@ func (n *AdvantageModifierNode) CellDataForSort(index int) string {
 			return ""
 		}
 		return n.modifier.CostDescription()
+	case advantageModifierCategoryColumn:
+		return strings.Join(n.modifier.Categories, ", ")
 	case advantageModifierReferenceColumn:
 		return n.modifier.PageRef
 	default:
@@ -154,6 +163,5 @@ func (n *AdvantageModifierNode) SetOpen(open bool) {
 	if n.modifier.Container() && open != n.modifier.Open {
 		n.modifier.Open = open
 		n.table.SyncToModel()
-		n.table.SizeColumnsToFit(true)
 	}
 }

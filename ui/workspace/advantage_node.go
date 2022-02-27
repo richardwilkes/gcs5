@@ -89,6 +89,11 @@ func (n *AdvantageNode) ChildRows() []unison.TableRowData {
 	return n.children
 }
 
+// Categories implements CategoryProvider.
+func (n *AdvantageNode) Categories() []string {
+	return n.advantage.Categories
+}
+
 // CellDataForSort returns the string that represents the data in the specified cell.
 func (n *AdvantageNode) CellDataForSort(index int) string {
 	switch index {
@@ -164,6 +169,5 @@ func (n *AdvantageNode) SetOpen(open bool) {
 	if n.advantage.Container() && open != n.advantage.Open {
 		n.advantage.Open = open
 		n.table.SyncToModel()
-		n.table.SizeColumnsToFit(true)
 	}
 }

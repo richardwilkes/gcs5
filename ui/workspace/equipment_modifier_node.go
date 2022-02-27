@@ -26,6 +26,7 @@ const (
 	equipmentModifierTechLevelColumn
 	equipmentModifierCostColumn
 	equipmentModifierWeightColumn
+	equipmentModifierCategoryColumn
 	equipmentModifierReferenceColumn
 	equipmentModifierColumnCount
 )
@@ -53,6 +54,7 @@ func NewEquipmentModifierListDockable(filePath string) (*ListFileDockable, error
 		tlHdr,
 		unison.NewTableColumnHeader(i18n.Text("Cost Adjustment")),
 		unison.NewTableColumnHeader(i18n.Text("Weight Adjustment")),
+		unison.NewTableColumnHeader(i18n.Text("Category")),
 		newPageReferenceHeader(),
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(modifiers))
@@ -89,6 +91,11 @@ func (n *EquipmentModifierNode) ChildRows() []unison.TableRowData {
 	return n.children
 }
 
+// Categories implements CategoryProvider.
+func (n *EquipmentModifierNode) Categories() []string {
+	return n.modifier.Categories
+}
+
 // CellDataForSort returns the string that represents the data in the specified cell.
 func (n *EquipmentModifierNode) CellDataForSort(index int) string {
 	switch index {
@@ -114,6 +121,8 @@ func (n *EquipmentModifierNode) CellDataForSort(index int) string {
 			return ""
 		}
 		return n.modifier.WeightDescription()
+	case equipmentModifierCategoryColumn:
+		return strings.Join(n.modifier.Categories, ", ")
 	case equipmentModifierReferenceColumn:
 		return n.modifier.PageRef
 	default:
@@ -170,6 +179,5 @@ func (n *EquipmentModifierNode) SetOpen(open bool) {
 	if n.modifier.Container() && open != n.modifier.Open {
 		n.modifier.Open = open
 		n.table.SyncToModel()
-		n.table.SizeColumnsToFit(true)
 	}
 }

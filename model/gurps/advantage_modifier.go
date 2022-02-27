@@ -54,6 +54,7 @@ type AdvantageModifierData struct {
 	PageRef                     string    `json:"reference,omitempty"`
 	Notes                       string    `json:"notes,omitempty"`
 	VTTNotes                    string    `json:"vtt_notes,omitempty"`
+	Categories                  []string  `json:"categories,omitempty"`
 	*AdvantageModifierItem      `json:",omitempty"`
 	*AdvantageModifierContainer `json:",omitempty"`
 }

@@ -109,6 +109,11 @@ func (n *SpellNode) ChildRows() []unison.TableRowData {
 	return n.children
 }
 
+// Categories implements CategoryProvider.
+func (n *SpellNode) Categories() []string {
+	return n.spell.Categories
+}
+
 // CellDataForSort returns the string that represents the data in the specified cell.
 func (n *SpellNode) CellDataForSort(index int) string {
 	switch index {
@@ -216,6 +221,5 @@ func (n *SpellNode) SetOpen(open bool) {
 	if n.spell.Container() && open != n.spell.Open {
 		n.spell.Open = open
 		n.table.SyncToModel()
-		n.table.SizeColumnsToFit(true)
 	}
 }

@@ -87,6 +87,11 @@ func (n *SkillNode) ChildRows() []unison.TableRowData {
 	return n.children
 }
 
+// Categories implements CategoryProvider.
+func (n *SkillNode) Categories() []string {
+	return n.skill.Categories
+}
+
 // CellDataForSort returns the string that represents the data in the specified cell.
 func (n *SkillNode) CellDataForSort(index int) string {
 	switch index {
@@ -159,6 +164,5 @@ func (n *SkillNode) SetOpen(open bool) {
 	if n.skill.Container() && open != n.skill.Open {
 		n.skill.Open = open
 		n.table.SyncToModel()
-		n.table.SizeColumnsToFit(true)
 	}
 }
