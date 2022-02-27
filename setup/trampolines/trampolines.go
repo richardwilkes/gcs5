@@ -17,3 +17,11 @@ import "github.com/richardwilkes/unison"
 
 // MenuSetup sets up the menus for the given window.
 var MenuSetup func(wnd *unison.Window)
+
+// OpenFile attempts to open the given file path in the given window, which should contain a workspace. May pass nil for
+// wnd to let it pick the first such window it discovers.
+var OpenFile func(wnd *unison.Window, filePath string) (dockable unison.Dockable, wasOpen bool)
+
+// OpenPageReference opens the given page reference in the given window, which should contain a workspace. May pass nil
+// for wnd to let it pick the first such window it discovers.
+var OpenPageReference func(wnd *unison.Window, ref, highlight string)

@@ -188,20 +188,31 @@ func OpenFiles(filePaths []string) {
 	}
 }
 
-// OpenFile attempts to open the given file path in the given window.
+// OpenFile attempts to open the given file path in the given window, which should contain a workspace. May pass nil for
+// wnd to let it pick the first such window it discovers.
 func OpenFile(wnd *unison.Window, filePath string) (dockable unison.Dockable, wasOpen bool) {
-	workspace := FromWindow(wnd)
+	var workspace *Workspace
+	if wnd == nil {
+		workspace = Any()
+	} else {
+		workspace = FromWindow(wnd)
+	}
 	if workspace == nil {
+		unison.ErrorDialogWithMessage(i18n.Text("Unable to locate workspace"), "")
 		return nil, false
 	}
 	var defaultDockContainer *unison.DockContainer
-	if focus := wnd.Focus(); focus != nil {
+	if focus := workspace.Window.Focus(); focus != nil {
 		if dc := unison.DockContainerFor(focus); dc != nil && dc.Dock == workspace.DocumentDock.Dock {
 			defaultDockContainer = dc
 		}
 	}
 	var d unison.Dockable
-	filePath = path.Clean(filePath)
+	var err error
+	if filePath, err = filepath.Abs(filePath); err != nil {
+		unison.ErrorDialogWithError(i18n.Text("Unable to open file"), err)
+		return nil, false
+	}
 	workspace.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
 		for _, one := range dc.Dockables() {
 			if f, ok := one.(node.FileBackedDockable); ok {
@@ -225,7 +236,6 @@ func OpenFile(wnd *unison.Window, filePath string) (dockable unison.Dockable, wa
 	if fi.IsSpecial {
 		return nil, false
 	}
-	var err error
 	if d, err = fi.Load(filePath); err != nil {
 		unison.ErrorDialogWithError(i18n.Text("Unable to open file"), err)
 		return nil, false
