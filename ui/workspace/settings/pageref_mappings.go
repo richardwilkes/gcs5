@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package workspace
+package settings
 
 import (
 	"fmt"
@@ -21,6 +21,7 @@ import (
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/setup/trampolines"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/gcs/ui/workspace/external"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
@@ -28,7 +29,7 @@ import (
 )
 
 type pageRefMappingsDockable struct {
-	SettingsDockable
+	Dockable
 	content *unison.Panel
 }
 
@@ -84,7 +85,7 @@ func OpenPageReference(wnd *unison.Window, ref, highlight string) {
 
 // RefreshPageRefMappingsView causes the Page References Mappings view to be refreshed if it is open.
 func RefreshPageRefMappingsView() {
-	ws := Any()
+	ws := workspace.Any()
 	if ws == nil {
 		return
 	}

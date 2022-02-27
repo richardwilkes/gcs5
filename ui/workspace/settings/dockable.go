@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package workspace
+package settings
 
 import (
 	"fmt"
@@ -20,6 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
+	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
@@ -27,12 +28,12 @@ import (
 )
 
 var (
-	_ unison.Dockable  = &SettingsDockable{}
-	_ unison.TabCloser = &SettingsDockable{}
+	_ unison.Dockable  = &Dockable{}
+	_ unison.TabCloser = &Dockable{}
 )
 
-// SettingsDockable holds common settings dockable data.
-type SettingsDockable struct {
+// Dockable holds common settings dockable data.
+type Dockable struct {
 	unison.Panel
 	TabTitle  string
 	Extension string
@@ -43,8 +44,8 @@ type SettingsDockable struct {
 
 // Activate attempts to locate an existing dockable that 'matcher' returns true for. If found, it will have been
 // activated and focused.
-func Activate(matcher func(d unison.Dockable) bool) (ws *Workspace, dc *unison.DockContainer, found bool) {
-	if ws = Any(); ws == nil {
+func Activate(matcher func(d unison.Dockable) bool) (ws *workspace.Workspace, dc *unison.DockContainer, found bool) {
+	if ws = workspace.Any(); ws == nil {
 		jot.Error("no workspace available")
 		return nil, nil, false
 	}
@@ -71,7 +72,7 @@ func Activate(matcher func(d unison.Dockable) bool) (ws *Workspace, dc *unison.D
 }
 
 // Setup the dockable and display it.
-func (d *SettingsDockable) Setup(ws *Workspace, dc *unison.DockContainer, addToStartToolbar, addToEndToolbar, initContent func(*unison.Panel)) {
+func (d *Dockable) Setup(ws *workspace.Workspace, dc *unison.DockContainer, addToStartToolbar, addToEndToolbar, initContent func(*unison.Panel)) {
 	d.SetLayout(&unison.FlexLayout{Columns: 1})
 	d.AddChild(d.createToolbar(addToStartToolbar, addToEndToolbar))
 	content := unison.NewPanel()
@@ -94,7 +95,7 @@ func (d *SettingsDockable) Setup(ws *Workspace, dc *unison.DockContainer, addToS
 }
 
 // TitleIcon implements unison.Dockable
-func (d *SettingsDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
+func (d *Dockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  res.SettingsSVG,
 		Size: suggestedSize,
@@ -102,33 +103,33 @@ func (d *SettingsDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable 
 }
 
 // Title implements unison.Dockable
-func (d *SettingsDockable) Title() string {
+func (d *Dockable) Title() string {
 	return d.TabTitle
 }
 
 // Tooltip implements unison.Dockable
-func (d *SettingsDockable) Tooltip() string {
+func (d *Dockable) Tooltip() string {
 	return ""
 }
 
 // Modified implements unison.Dockable
-func (d *SettingsDockable) Modified() bool {
+func (d *Dockable) Modified() bool {
 	return false
 }
 
 // MayAttemptClose implements unison.TabCloser
-func (d *SettingsDockable) MayAttemptClose() bool {
+func (d *Dockable) MayAttemptClose() bool {
 	return true
 }
 
 // AttemptClose implements unison.TabCloser
-func (d *SettingsDockable) AttemptClose() {
+func (d *Dockable) AttemptClose() {
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.Close(d)
 	}
 }
 
-func (d *SettingsDockable) createToolbar(addToStartToolbar, addToEndToolbar func(*unison.Panel)) *unison.Panel {
+func (d *Dockable) createToolbar(addToStartToolbar, addToEndToolbar func(*unison.Panel)) *unison.Panel {
 	toolbar := unison.NewPanel()
 	toolbar.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
@@ -171,13 +172,13 @@ func (d *SettingsDockable) createToolbar(addToStartToolbar, addToEndToolbar func
 	return toolbar
 }
 
-func (d *SettingsDockable) handleReset() {
+func (d *Dockable) handleReset() {
 	if unison.QuestionDialog(fmt.Sprintf(i18n.Text("Are you sure you want to reset the\n%s?"), d.TabTitle), "") == unison.ModalResponseOK {
 		d.Resetter()
 	}
 }
 
-func (d *SettingsDockable) showMenu(b *unison.Button) {
+func (d *Dockable) showMenu(b *unison.Button) {
 	f := unison.DefaultMenuFactory()
 	id := unison.ContextMenuIDFlag
 	m := f.NewMenu(id, "", nil)
@@ -209,19 +210,19 @@ func (d *SettingsDockable) showMenu(b *unison.Button) {
 	m.Popup(b.RectToRoot(b.ContentRect(true)), 0)
 }
 
-func (d *SettingsDockable) insertFileToLoad(m unison.Menu, id int, ref *library.NamedFileRef) {
+func (d *Dockable) insertFileToLoad(m unison.Menu, id int, ref *library.NamedFileRef) {
 	m.InsertItem(-1, m.Factory().NewItem(id, ref.Name, unison.KeyBinding{}, nil, func(_ unison.MenuItem) {
 		d.doLoad(ref.FileSystem, ref.FilePath)
 	}))
 }
 
-func (d *SettingsDockable) doLoad(fileSystem fs.FS, filePath string) {
+func (d *Dockable) doLoad(fileSystem fs.FS, filePath string) {
 	if err := d.Loader(fileSystem, filePath); err != nil {
 		unison.ErrorDialogWithError(i18n.Text("Unable to load ")+d.TabTitle, err)
 	}
 }
 
-func (d *SettingsDockable) handleImport(_ unison.MenuItem) {
+func (d *Dockable) handleImport(_ unison.MenuItem) {
 	dialog := unison.NewOpenDialog()
 	dialog.SetResolvesAliases(true)
 	dialog.SetAllowedExtensions(d.Extension)
@@ -234,7 +235,7 @@ func (d *SettingsDockable) handleImport(_ unison.MenuItem) {
 	}
 }
 
-func (d *SettingsDockable) handleExport(_ unison.MenuItem) {
+func (d *Dockable) handleExport(_ unison.MenuItem) {
 	dialog := unison.NewSaveDialog()
 	dialog.SetAllowedExtensions(d.Extension)
 	if dialog.RunModal() {

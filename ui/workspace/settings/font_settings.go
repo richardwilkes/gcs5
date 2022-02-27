@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package workspace
+package settings
 
 import (
 	"fmt"
@@ -26,7 +26,7 @@ import (
 )
 
 type fontSettingsDockable struct {
-	SettingsDockable
+	Dockable
 	content  *unison.Panel
 	noUpdate bool
 }

@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package workspace
+package settings
 
 import (
 	"io/fs"
@@ -28,7 +28,7 @@ import (
 )
 
 type generalSettingsDockable struct {
-	SettingsDockable
+	Dockable
 	nameField                           *unison.Field
 	autoFillProfileCheckbox             *unison.CheckBox
 	pointsField                         *widget.NumericField
