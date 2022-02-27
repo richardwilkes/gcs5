@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package workspace
+package gurps
 
 import (
 	"os"
@@ -22,22 +22,22 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-// SheetDockable holds the view for a GURPS character sheet.
-type SheetDockable struct {
+// TemplateDockable holds the view for a GURPS character template.
+type TemplateDockable struct {
 	unison.Panel
 	path   string
 	scroll *unison.ScrollPanel
 	entity *gurps.Entity
 }
 
-// NewSheetDockable creates a new unison.Dockable for GURPS character sheet files.
-func NewSheetDockable(filePath string) (unison.Dockable, error) {
+// NewTemplateDockable creates a new unison.Dockable for GURPS character template files.
+func NewTemplateDockable(filePath string) (unison.Dockable, error) {
 	entity, err := gurps.NewEntityFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err
 	}
 
-	d := &SheetDockable{
+	d := &TemplateDockable{
 		path:   filePath,
 		scroll: unison.NewScrollPanel(),
 		entity: entity,
@@ -68,7 +68,7 @@ func NewSheetDockable(filePath string) (unison.Dockable, error) {
 }
 
 // TitleIcon implements node.FileBackedDockable
-func (d *SheetDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
+func (d *TemplateDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
 		Size: suggestedSize,
@@ -76,32 +76,32 @@ func (d *SheetDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 }
 
 // Title implements node.FileBackedDockable
-func (d *SheetDockable) Title() string {
+func (d *TemplateDockable) Title() string {
 	return fs.BaseName(d.path)
 }
 
 // Tooltip implements node.FileBackedDockable
-func (d *SheetDockable) Tooltip() string {
+func (d *TemplateDockable) Tooltip() string {
 	return d.path
 }
 
 // BackingFilePath implements node.FileBackedDockable
-func (d *SheetDockable) BackingFilePath() string {
+func (d *TemplateDockable) BackingFilePath() string {
 	return d.path
 }
 
 // Modified implements node.FileBackedDockable
-func (d *SheetDockable) Modified() bool {
+func (d *TemplateDockable) Modified() bool {
 	return false
 }
 
 // MayAttemptClose implements unison.TabCloser
-func (d *SheetDockable) MayAttemptClose() bool {
+func (d *TemplateDockable) MayAttemptClose() bool {
 	return true
 }
 
 // AttemptClose implements unison.TabCloser
-func (d *SheetDockable) AttemptClose() {
+func (d *TemplateDockable) AttemptClose() {
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.Close(d)
 	}

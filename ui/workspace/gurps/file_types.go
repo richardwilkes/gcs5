@@ -20,8 +20,8 @@ import (
 
 // RegisterFileTypes registers GCS file types.
 func RegisterFileTypes() {
-	registerExportableGCSFileInfo(".gcs", res.GCSSheet, workspace.NewSheetDockable)
-	registerGCSFileInfo(".gct", res.GCSTemplate, workspace.NewTemplateDockable)
+	registerExportableGCSFileInfo(".gcs", res.GCSSheet, NewSheetDockable)
+	registerGCSFileInfo(".gct", res.GCSTemplate, NewTemplateDockable)
 	registerGCSFileInfo(".adq", res.GCSAdvantages, workspace.NewAdvantageListDockable)
 	registerGCSFileInfo(".adm", res.GCSAdvantageModifiers, workspace.NewAdvantageModifierListDockable)
 	registerGCSFileInfo(".eqp", res.GCSEquipment, workspace.NewEquipmentListDockable)
