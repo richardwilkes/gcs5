@@ -22,7 +22,7 @@ import (
 	"github.com/richardwilkes/gcs/pdf"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/node"
+	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio/fs"
@@ -39,8 +39,8 @@ const (
 )
 
 var (
-	_ node.FileBackedDockable = &PDFDockable{}
-	_ unison.TabCloser        = &PDFDockable{}
+	_ workspace.FileBackedDockable = &PDFDockable{}
+	_ unison.TabCloser             = &PDFDockable{}
 )
 
 // PDFDockable holds the view for a PDF file.

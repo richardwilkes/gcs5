@@ -18,7 +18,6 @@ import (
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
-	"github.com/richardwilkes/gcs/ui/workspace/node"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -29,6 +28,12 @@ var _ unison.Dockable = &Navigator{}
 // Pather defines the method for returning a path from an object.
 type Pather interface {
 	Path() string
+}
+
+// FileBackedDockable defines methods a Dockable that is based on a file should implement.
+type FileBackedDockable interface {
+	unison.Dockable
+	BackingFilePath() string
 }
 
 // Navigator holds the workspace navigation panel.
@@ -215,7 +220,7 @@ func OpenFile(wnd *unison.Window, filePath string) (dockable unison.Dockable, wa
 	}
 	workspace.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
 		for _, one := range dc.Dockables() {
-			if f, ok := one.(node.FileBackedDockable); ok {
+			if f, ok := one.(FileBackedDockable); ok {
 				if filePath == f.BackingFilePath() {
 					d = one
 					dc.SetCurrentDockable(one)

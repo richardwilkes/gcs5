@@ -17,7 +17,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/library"
-	"github.com/richardwilkes/gcs/ui/workspace/node"
+	"github.com/richardwilkes/gcs/ui/workspace"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -30,8 +30,8 @@ const (
 )
 
 var (
-	_ node.FileBackedDockable = &ImageDockable{}
-	_ unison.TabCloser        = &ImageDockable{}
+	_ workspace.FileBackedDockable = &ImageDockable{}
+	_ unison.TabCloser             = &ImageDockable{}
 )
 
 // ImageDockable holds the view for an image file.
