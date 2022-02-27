@@ -29,11 +29,15 @@ const (
 	noteColumnCount
 )
 
-var _ unison.TableRowData = &NoteNode{}
+var (
+	_ unison.TableRowData = &NoteNode{}
+	_ Matcher             = &NoteNode{}
+)
 
 // NoteNode holds a note in the note list.
 type NoteNode struct {
 	table     *unison.Table
+	parent    *NoteNode
 	note      *gurps.Note
 	children  []unison.TableRowData
 	cellCache []*cellCache
@@ -53,20 +57,26 @@ func NewNoteListDockable(filePath string) (unison.Dockable, error) {
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(notes))
 		for _, one := range notes {
-			rows = append(rows, NewNoteNode(table, one))
+			rows = append(rows, NewNoteNode(table, nil, one))
 		}
 		return rows
 	}), nil
 }
 
 // NewNoteNode creates a new NoteNode.
-func NewNoteNode(table *unison.Table, note *gurps.Note) *NoteNode {
+func NewNoteNode(table *unison.Table, parent *NoteNode, note *gurps.Note) *NoteNode {
 	n := &NoteNode{
 		table:     table,
+		parent:    parent,
 		note:      note,
 		cellCache: make([]*cellCache, noteColumnCount),
 	}
 	return n
+}
+
+// ParentRow returns the parent row, or nil if this is a root node.
+func (n *NoteNode) ParentRow() unison.TableRowData {
+	return n.parent
 }
 
 // CanHaveChildRows always returns true.
@@ -79,15 +89,10 @@ func (n *NoteNode) ChildRows() []unison.TableRowData {
 	if n.note.Container() && n.children == nil {
 		n.children = make([]unison.TableRowData, len(n.note.Children))
 		for i, one := range n.note.Children {
-			n.children[i] = NewNoteNode(n.table, one)
+			n.children[i] = NewNoteNode(n.table, n, one)
 		}
 	}
 	return n.children
-}
-
-// Categories implements CategoryProvider.
-func (n *NoteNode) Categories() []string {
-	return n.note.Categories
 }
 
 // CellDataForSort returns the string that represents the data in the specified cell.
@@ -148,4 +153,12 @@ func (n *NoteNode) SetOpen(open bool) {
 		n.note.Open = open
 		n.table.SyncToModel()
 	}
+}
+
+// Match implements Matcher.
+func (n *NoteNode) Match(text string) bool {
+	return strings.Contains(strings.ToLower(n.note.Text), text) ||
+		strings.Contains(strings.ToLower(n.note.When), text) ||
+		strings.Contains(strings.ToLower(n.note.PageRef), text) ||
+		stringSliceContains(n.note.Categories, text)
 }

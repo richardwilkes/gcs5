@@ -36,11 +36,15 @@ const (
 	equipmentColumnCount
 )
 
-var _ unison.TableRowData = &EquipmentNode{}
+var (
+	_ unison.TableRowData = &EquipmentNode{}
+	_ Matcher             = &EquipmentNode{}
+)
 
 // EquipmentNode holds equipment in the equipment list.
 type EquipmentNode struct {
 	table     *unison.Table
+	parent    *EquipmentNode
 	equipment *gurps.Equipment
 	children  []unison.TableRowData
 	cellCache []*cellCache
@@ -77,20 +81,26 @@ func NewEquipmentListDockable(filePath string) (unison.Dockable, error) {
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(eqp))
 		for _, one := range eqp {
-			rows = append(rows, NewEquipmentNode(table, one))
+			rows = append(rows, NewEquipmentNode(table, nil, one))
 		}
 		return rows
 	}), nil
 }
 
 // NewEquipmentNode creates a new EquipmentNode.
-func NewEquipmentNode(table *unison.Table, eqp *gurps.Equipment) *EquipmentNode {
+func NewEquipmentNode(table *unison.Table, parent *EquipmentNode, eqp *gurps.Equipment) *EquipmentNode {
 	n := &EquipmentNode{
 		table:     table,
+		parent:    parent,
 		equipment: eqp,
 		cellCache: make([]*cellCache, equipmentColumnCount),
 	}
 	return n
+}
+
+// ParentRow returns the parent row, or nil if this is a root node.
+func (n *EquipmentNode) ParentRow() unison.TableRowData {
+	return n.parent
 }
 
 // CanHaveChildRows always returns true.
@@ -103,15 +113,10 @@ func (n *EquipmentNode) ChildRows() []unison.TableRowData {
 	if n.equipment.Container() && n.children == nil {
 		n.children = make([]unison.TableRowData, len(n.equipment.Children))
 		for i, one := range n.equipment.Children {
-			n.children[i] = NewEquipmentNode(n.table, one)
+			n.children[i] = NewEquipmentNode(n.table, n, one)
 		}
 	}
 	return n.children
-}
-
-// Categories implements CategoryProvider.
-func (n *EquipmentNode) Categories() []string {
-	return n.equipment.Categories
 }
 
 // CellDataForSort returns the string that represents the data in the specified cell.
@@ -199,4 +204,18 @@ func (n *EquipmentNode) SetOpen(open bool) {
 		n.equipment.Open = open
 		n.table.SyncToModel()
 	}
+}
+
+// Match implements Matcher.
+func (n *EquipmentNode) Match(text string) bool {
+	return strings.Contains(strings.ToLower(n.equipment.Description()), text) ||
+		strings.Contains(strings.ToLower(n.equipment.SecondaryText()), text) ||
+		(n.equipment.MaxUses > 0 && strings.Contains(strconv.Itoa(n.equipment.Uses), text)) ||
+		strings.Contains(strings.ToLower(n.equipment.TechLevel), text) ||
+		strings.Contains(strings.ToLower(n.equipment.LegalityClass), text) ||
+		strings.Contains(strings.ToLower(n.equipment.AdjustedValue().String()), text) ||
+		strings.Contains(strings.ToLower(n.equipment.AdjustedWeight(false,
+			gurps.SheetSettingsFor(n.equipment.Entity).DefaultWeightUnits).String()), text) ||
+		strings.Contains(strings.ToLower(n.equipment.PageRef), text) ||
+		stringSliceContains(n.equipment.Categories, text)
 }

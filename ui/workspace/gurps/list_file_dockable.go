@@ -12,6 +12,9 @@
 package gurps
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -22,9 +25,11 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-// CategoryProvider defines the methods objects that can provide categories must implement.
-type CategoryProvider interface {
-	Categories() []string
+// Matcher defines the methods that rows that can participate in searching must implement.
+type Matcher interface {
+	// Match should look for the text in the object and return true if it is present. Note that calls to this method
+	// should always pass in text that has already been run through strings.ToLower().
+	Match(text string) bool
 }
 
 // ListFileDockable holds the view for a file that contains a (potentially hierarchical) list of data.
@@ -34,9 +39,14 @@ type ListFileDockable struct {
 	lockButton      *unison.Button
 	hierarchyButton *unison.Button
 	sizeToFitButton *unison.Button
-	categoryPopup   *unison.PopupMenu
+	backButton      *unison.Button
+	forwardButton   *unison.Button
+	searchField     *unison.Field
+	matchesLabel    *unison.Label
 	scroll          *unison.ScrollPanel
 	table           *unison.Table
+	searchResult    []unison.TableRowData
+	searchIndex     int
 	locked          bool
 }
 
@@ -82,22 +92,51 @@ func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHead
 
 	d.lockButton = unison.NewSVGButton(res.LockSVG)
 	d.toggleLock()
-	d.lockButton.ClickCallback = func() { d.toggleLock() }
+	d.lockButton.ClickCallback = d.toggleLock
 
 	d.hierarchyButton = unison.NewSVGButton(res.HierarchySVG)
 	d.hierarchyButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Opens/closes all hierarchical rows"))
-	d.hierarchyButton.ClickCallback = func() { d.toggleHierarchy() }
+	d.hierarchyButton.ClickCallback = d.toggleHierarchy
 
 	d.sizeToFitButton = unison.NewSVGButton(res.SizeToFitSVG)
 	d.sizeToFitButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Sets the width of each column to fit its contents"))
-	d.sizeToFitButton.ClickCallback = func() { d.sizeToFit() }
+	d.sizeToFitButton.ClickCallback = d.sizeToFit
 
-	d.categoryPopup = unison.NewPopupMenu()
-	d.categoryPopup.AddItem(i18n.Text("Any Category"))
-	d.categoryPopup.AddSeparator()
-	for _, one := range d.categoryList() {
-		d.categoryPopup.AddItem(one)
+	d.backButton = unison.NewSVGButton(res.BackSVG)
+	d.backButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Previous Match"))
+	d.backButton.ClickCallback = d.previousMatch
+	d.backButton.SetEnabled(false)
+
+	d.forwardButton = unison.NewSVGButton(res.ForwardSVG)
+	d.forwardButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Next Match"))
+	d.forwardButton.ClickCallback = d.nextMatch
+	d.forwardButton.SetEnabled(false)
+
+	d.searchField = unison.NewField()
+	search := i18n.Text("Search")
+	d.searchField.Watermark = search
+	d.searchField.Tooltip = unison.NewTooltipWithText(search)
+	d.searchField.ModifiedCallback = d.searchModified
+	d.searchField.KeyDownCallback = func(keyCode unison.KeyCode, mod unison.Modifiers, repeat bool) bool {
+		if keyCode == unison.KeyReturn || keyCode == unison.KeyNumPadEnter {
+			if mod.ShiftDown() {
+				d.previousMatch()
+			} else {
+				d.nextMatch()
+			}
+			return true
+		}
+		return d.searchField.DefaultKeyDown(keyCode, mod, repeat)
 	}
+	d.searchField.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+		HGrab:  true,
+	})
+
+	d.matchesLabel = unison.NewLabel()
+	d.matchesLabel.Text = "-"
+	d.matchesLabel.Tooltip = unison.NewTooltipWithText(i18n.Text("Number of matches found"))
 
 	toolbar := unison.NewPanel()
 	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, geom32.Insets{Bottom: 1}, false),
@@ -114,7 +153,10 @@ func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHead
 	toolbar.AddChild(d.lockButton)
 	toolbar.AddChild(d.hierarchyButton)
 	toolbar.AddChild(d.sizeToFitButton)
-	toolbar.AddChild(d.categoryPopup)
+	toolbar.AddChild(d.backButton)
+	toolbar.AddChild(d.forwardButton)
+	toolbar.AddChild(d.searchField)
+	toolbar.AddChild(d.matchesLabel)
 	toolbar.SetLayout(&unison.FlexLayout{
 		Columns:  len(toolbar.Children()),
 		HSpacing: unison.StdHSpacing,
@@ -123,32 +165,6 @@ func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHead
 	d.AddChild(toolbar)
 	d.AddChild(d.scroll)
 	return d
-}
-
-func (d *ListFileDockable) categoryList() []string {
-	m := make(map[string]bool)
-	for _, row := range d.table.TopLevelRows() {
-		extractCategories(row, m)
-	}
-	list := make([]string, 0, len(m))
-	for one := range m {
-		list = append(list, one)
-	}
-	txt.SortStringsNaturalAscending(list)
-	return list
-}
-
-func extractCategories(row unison.TableRowData, categories map[string]bool) {
-	if provider, ok := row.(CategoryProvider); ok {
-		for _, one := range provider.Categories() {
-			categories[one] = true
-		}
-	}
-	if row.CanHaveChildRows() {
-		for _, child := range row.ChildRows() {
-			extractCategories(child, categories)
-		}
-	}
 }
 
 // TitleIcon implements node.FileBackedDockable
@@ -218,7 +234,6 @@ func (d *ListFileDockable) toggleHierarchy() {
 		}
 	}
 	d.table.SyncToModel()
-	d.table.MarkForRedraw()
 }
 
 func setRowOpen(row unison.TableRowData, open bool) {
@@ -233,4 +248,58 @@ func setRowOpen(row unison.TableRowData, open bool) {
 func (d *ListFileDockable) sizeToFit() {
 	d.table.SizeColumnsToFit(true)
 	d.table.MarkForRedraw()
+}
+
+func (d *ListFileDockable) searchModified() {
+	d.searchIndex = 0
+	d.searchResult = nil
+	text := strings.ToLower(d.searchField.Text())
+	for _, row := range d.table.TopLevelRows() {
+		d.search(text, row)
+	}
+	d.adjustForMatch()
+}
+
+func (d *ListFileDockable) search(text string, row unison.TableRowData) {
+	if matcher, ok := row.(Matcher); ok {
+		if matcher.Match(text) {
+			d.searchResult = append(d.searchResult, row)
+		}
+	}
+	if row.CanHaveChildRows() {
+		for _, child := range row.ChildRows() {
+			d.search(text, child)
+		}
+	}
+}
+
+func (d *ListFileDockable) previousMatch() {
+	if d.searchIndex > 0 {
+		d.searchIndex--
+		d.adjustForMatch()
+	}
+}
+
+func (d *ListFileDockable) nextMatch() {
+	if d.searchIndex < len(d.searchResult)-1 {
+		d.searchIndex++
+		d.adjustForMatch()
+	}
+}
+
+func (d *ListFileDockable) adjustForMatch() {
+	d.backButton.SetEnabled(d.searchIndex != 0)
+	d.forwardButton.SetEnabled(len(d.searchResult) != 0 && d.searchIndex != len(d.searchResult)-1)
+	if len(d.searchResult) != 0 {
+		d.matchesLabel.Text = fmt.Sprintf(i18n.Text("%d of %d"), d.searchIndex+1, len(d.searchResult))
+		row := d.searchResult[d.searchIndex]
+		d.table.DiscloseRow(row, false)
+		d.table.ClearSelection()
+		rowIndex := d.table.RowToIndex(row)
+		d.table.SelectByIndex(rowIndex)
+		d.table.ScrollRowIntoView(rowIndex)
+	} else {
+		d.matchesLabel.Text = "-"
+	}
+	d.matchesLabel.Parent().MarkForLayoutAndRedraw()
 }

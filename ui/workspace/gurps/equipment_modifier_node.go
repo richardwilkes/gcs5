@@ -31,11 +31,15 @@ const (
 	equipmentModifierColumnCount
 )
 
-var _ unison.TableRowData = &EquipmentModifierNode{}
+var (
+	_ unison.TableRowData = &EquipmentModifierNode{}
+	_ Matcher             = &EquipmentModifierNode{}
+)
 
 // EquipmentModifierNode holds an equipment modifier in the equipment modifier list.
 type EquipmentModifierNode struct {
 	table     *unison.Table
+	parent    *EquipmentModifierNode
 	modifier  *gurps.EquipmentModifier
 	children  []unison.TableRowData
 	cellCache []*cellCache
@@ -59,20 +63,26 @@ func NewEquipmentModifierListDockable(filePath string) (unison.Dockable, error) 
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(modifiers))
 		for _, one := range modifiers {
-			rows = append(rows, NewEquipmentModifierNode(table, one))
+			rows = append(rows, NewEquipmentModifierNode(table, nil, one))
 		}
 		return rows
 	}), nil
 }
 
 // NewEquipmentModifierNode creates a new EquipmentModifierNode.
-func NewEquipmentModifierNode(table *unison.Table, modifier *gurps.EquipmentModifier) *EquipmentModifierNode {
+func NewEquipmentModifierNode(table *unison.Table, parent *EquipmentModifierNode, modifier *gurps.EquipmentModifier) *EquipmentModifierNode {
 	n := &EquipmentModifierNode{
 		table:     table,
+		parent:    parent,
 		modifier:  modifier,
 		cellCache: make([]*cellCache, equipmentModifierColumnCount),
 	}
 	return n
+}
+
+// ParentRow returns the parent row, or nil if this is a root node.
+func (n *EquipmentModifierNode) ParentRow() unison.TableRowData {
+	return n.parent
 }
 
 // CanHaveChildRows always returns true.
@@ -85,15 +95,10 @@ func (n *EquipmentModifierNode) ChildRows() []unison.TableRowData {
 	if n.modifier.Container() && n.children == nil {
 		n.children = make([]unison.TableRowData, len(n.modifier.Children))
 		for i, one := range n.modifier.Children {
-			n.children[i] = NewEquipmentModifierNode(n.table, one)
+			n.children[i] = NewEquipmentModifierNode(n.table, n, one)
 		}
 	}
 	return n.children
-}
-
-// Categories implements CategoryProvider.
-func (n *EquipmentModifierNode) Categories() []string {
-	return n.modifier.Categories
 }
 
 // CellDataForSort returns the string that represents the data in the specified cell.
@@ -180,4 +185,16 @@ func (n *EquipmentModifierNode) SetOpen(open bool) {
 		n.modifier.Open = open
 		n.table.SyncToModel()
 	}
+}
+
+// Match implements Matcher.
+func (n *EquipmentModifierNode) Match(text string) bool {
+	return strings.Contains(strings.ToLower(n.modifier.Name), text) ||
+		strings.Contains(strings.ToLower(n.modifier.SecondaryText()), text) ||
+		(!n.modifier.Container() &&
+			(strings.Contains(strings.ToLower(n.modifier.TechLevel), text) ||
+				strings.Contains(strings.ToLower(n.modifier.CostDescription()), text) ||
+				strings.Contains(strings.ToLower(n.modifier.WeightDescription()), text))) ||
+		strings.Contains(strings.ToLower(n.modifier.PageRef), text) ||
+		stringSliceContains(n.modifier.Categories, text)
 }

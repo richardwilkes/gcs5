@@ -30,11 +30,15 @@ const (
 	advantageColumnCount
 )
 
-var _ unison.TableRowData = &AdvantageNode{}
+var (
+	_ unison.TableRowData = &AdvantageNode{}
+	_ Matcher             = &AdvantageNode{}
+)
 
 // AdvantageNode holds an advantage in the advantage list.
 type AdvantageNode struct {
 	table     *unison.Table
+	parent    *AdvantageNode
 	advantage *gurps.Advantage
 	children  []unison.TableRowData
 	cellCache []*cellCache
@@ -57,20 +61,26 @@ func NewAdvantageListDockable(filePath string) (unison.Dockable, error) {
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(advantages))
 		for _, one := range advantages {
-			rows = append(rows, NewAdvantageNode(table, one))
+			rows = append(rows, NewAdvantageNode(table, nil, one))
 		}
 		return rows
 	}), nil
 }
 
 // NewAdvantageNode creates a new AdvantageNode.
-func NewAdvantageNode(table *unison.Table, advantage *gurps.Advantage) *AdvantageNode {
+func NewAdvantageNode(table *unison.Table, parent *AdvantageNode, advantage *gurps.Advantage) *AdvantageNode {
 	n := &AdvantageNode{
 		table:     table,
+		parent:    parent,
 		advantage: advantage,
 		cellCache: make([]*cellCache, advantageColumnCount),
 	}
 	return n
+}
+
+// ParentRow returns the parent row, or nil if this is a root node.
+func (n *AdvantageNode) ParentRow() unison.TableRowData {
+	return n.parent
 }
 
 // CanHaveChildRows always returns true.
@@ -83,15 +93,10 @@ func (n *AdvantageNode) ChildRows() []unison.TableRowData {
 	if n.advantage.Container() && n.children == nil {
 		n.children = make([]unison.TableRowData, len(n.advantage.Children))
 		for i, one := range n.advantage.Children {
-			n.children[i] = NewAdvantageNode(n.table, one)
+			n.children[i] = NewAdvantageNode(n.table, n, one)
 		}
 	}
 	return n.children
-}
-
-// Categories implements CategoryProvider.
-func (n *AdvantageNode) Categories() []string {
-	return n.advantage.Categories
 }
 
 // CellDataForSort returns the string that represents the data in the specified cell.
@@ -170,4 +175,23 @@ func (n *AdvantageNode) SetOpen(open bool) {
 		n.advantage.Open = open
 		n.table.SyncToModel()
 	}
+}
+
+// Match implements Matcher.
+func (n *AdvantageNode) Match(text string) bool {
+	return strings.Contains(strings.ToLower(n.advantage.Description()), text) ||
+		strings.Contains(strings.ToLower(n.advantage.SecondaryText()), text) ||
+		strings.Contains(strings.ToLower(n.advantage.AdjustedPoints().String()), text) ||
+		strings.Contains(strings.ToLower(n.advantage.TypeAsText()), text) ||
+		strings.Contains(strings.ToLower(n.advantage.PageRef), text) ||
+		stringSliceContains(n.advantage.Categories, text)
+}
+
+func stringSliceContains(strs []string, text string) bool {
+	for _, s := range strs {
+		if strings.Contains(strings.ToLower(s), text) {
+			return true
+		}
+	}
+	return false
 }

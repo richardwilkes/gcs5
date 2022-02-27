@@ -36,19 +36,26 @@ type DirectoryNode struct {
 	nav      *Navigator
 	library  *library.Library
 	path     string
+	parent   unison.TableRowData
 	children []unison.TableRowData
 	open     bool
 }
 
 // NewDirectoryNode creates a new DirectoryNode.
-func NewDirectoryNode(nav *Navigator, lib *library.Library, dirPath string) *DirectoryNode {
+func NewDirectoryNode(nav *Navigator, lib *library.Library, dirPath string, parent unison.TableRowData) *DirectoryNode {
 	n := &DirectoryNode{
 		nav:     nav,
 		library: lib,
 		path:    dirPath,
+		parent:  parent,
 	}
 	n.Refresh()
 	return n
+}
+
+// ParentRow returns the parent row, or nil if this is a root node.
+func (n *DirectoryNode) ParentRow() unison.TableRowData {
+	return n.parent
 }
 
 // Path returns the full path for this directory.
@@ -58,10 +65,10 @@ func (n *DirectoryNode) Path() string {
 
 // Refresh the contents of this node.
 func (n *DirectoryNode) Refresh() {
-	n.children = refreshChildren(n.nav, n.library, n.path)
+	n.children = refreshChildren(n.nav, n.library, n.path, n)
 }
 
-func refreshChildren(nav *Navigator, lib *library.Library, dirPath string) []unison.TableRowData {
+func refreshChildren(nav *Navigator, lib *library.Library, dirPath string, parent unison.TableRowData) []unison.TableRowData {
 	libPath := lib.Path()
 	entries, err := os.ReadDir(filepath.Join(libPath, dirPath))
 	if err != nil {
@@ -84,12 +91,12 @@ func refreshChildren(nav *Navigator, lib *library.Library, dirPath string) []uni
 				}
 			}
 			if isDir {
-				dirNode := NewDirectoryNode(nav, lib, p)
+				dirNode := NewDirectoryNode(nav, lib, p, parent)
 				if dirNode.recursiveFileCount() > 0 {
 					children = append(children, dirNode)
 				}
 			} else if !library.FileInfoFor(name).IsSpecial {
-				children = append(children, NewFileNode(lib, p))
+				children = append(children, NewFileNode(lib, p, parent))
 			}
 		}
 	}

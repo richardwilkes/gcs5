@@ -40,6 +40,11 @@ func NewLibraryNode(nav *Navigator, lib *library.Library) *LibraryNode {
 	return n
 }
 
+// ParentRow always returns nil.
+func (n *LibraryNode) ParentRow() unison.TableRowData {
+	return nil
+}
+
 // Path returns the full path for this library.
 func (n *LibraryNode) Path() string {
 	return n.library.Path()
@@ -47,7 +52,7 @@ func (n *LibraryNode) Path() string {
 
 // Refresh the contents of this node.
 func (n *LibraryNode) Refresh() {
-	n.children = refreshChildren(n.nav, n.library, ".")
+	n.children = refreshChildren(n.nav, n.library, ".", n)
 }
 
 // CanHaveChildRows always returns true.

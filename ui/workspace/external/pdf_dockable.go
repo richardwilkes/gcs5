@@ -107,11 +107,11 @@ func NewPDFDockable(filePath string) (unison.Dockable, error) {
 
 	d.backButton = unison.NewSVGButton(res.BackSVG)
 	d.backButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Back"))
-	d.backButton.ClickCallback = func() { d.Back() }
+	d.backButton.ClickCallback = d.Back
 
 	d.forwardButton = unison.NewSVGButton(res.ForwardSVG)
 	d.forwardButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Forward"))
-	d.forwardButton.ClickCallback = func() { d.Forward() }
+	d.forwardButton.ClickCallback = d.Forward
 
 	d.firstPageButton = unison.NewSVGButton(res.FirstSVG)
 	d.firstPageButton.Tooltip = unison.NewTooltipWithText(i18n.Text("First Page"))
@@ -184,13 +184,11 @@ func NewPDFDockable(filePath string) (unison.Dockable, error) {
 		VAlign: unison.MiddleAlignment,
 		HGrab:  true,
 	})
-	existingCallback := d.searchField.ModifiedCallback
 	d.searchField.ModifiedCallback = func() {
 		if d.noUpdate {
 			return
 		}
 		d.LoadPage(d.pdf.MostRecentPageNumber())
-		existingCallback()
 	}
 
 	d.matchesLabel = unison.NewLabel()
@@ -415,10 +413,9 @@ func (d *PDFDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bool
 	}
 	if d.scale != scale {
 		d.scale = scale
-		f := d.scaleField.ModifiedCallback
-		d.scaleField.ModifiedCallback = nil
+		d.noUpdate = true
 		d.scaleField.SetText(strconv.Itoa(d.scale) + "%")
-		d.scaleField.ModifiedCallback = f
+		d.noUpdate = false
 		d.LoadPage(d.pdf.MostRecentPageNumber())
 	}
 	return true

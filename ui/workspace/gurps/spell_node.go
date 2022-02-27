@@ -36,11 +36,15 @@ const (
 	spellColumnCount
 )
 
-var _ unison.TableRowData = &SpellNode{}
+var (
+	_ unison.TableRowData = &SpellNode{}
+	_ Matcher             = &SpellNode{}
+)
 
 // SpellNode holds a spell in the spell list.
 type SpellNode struct {
 	table     *unison.Table
+	parent    *SpellNode
 	spell     *gurps.Spell
 	children  []unison.TableRowData
 	cellCache []*cellCache
@@ -77,20 +81,26 @@ func NewSpellListDockable(filePath string) (unison.Dockable, error) {
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(spells))
 		for _, one := range spells {
-			rows = append(rows, NewSpellNode(table, one))
+			rows = append(rows, NewSpellNode(table, nil, one))
 		}
 		return rows
 	}), nil
 }
 
 // NewSpellNode creates a new SpellNode.
-func NewSpellNode(table *unison.Table, spell *gurps.Spell) *SpellNode {
+func NewSpellNode(table *unison.Table, parent *SpellNode, spell *gurps.Spell) *SpellNode {
 	n := &SpellNode{
 		table:     table,
+		parent:    parent,
 		spell:     spell,
 		cellCache: make([]*cellCache, spellColumnCount),
 	}
 	return n
+}
+
+// ParentRow returns the parent row, or nil if this is a root node.
+func (n *SpellNode) ParentRow() unison.TableRowData {
+	return n.parent
 }
 
 // CanHaveChildRows always returns true.
@@ -103,15 +113,10 @@ func (n *SpellNode) ChildRows() []unison.TableRowData {
 	if n.spell.Container() && n.children == nil {
 		n.children = make([]unison.TableRowData, len(n.spell.Children))
 		for i, one := range n.spell.Children {
-			n.children[i] = NewSpellNode(n.table, one)
+			n.children[i] = NewSpellNode(n.table, n, one)
 		}
 	}
 	return n.children
-}
-
-// Categories implements CategoryProvider.
-func (n *SpellNode) Categories() []string {
-	return n.spell.Categories
 }
 
 // CellDataForSort returns the string that represents the data in the specified cell.
@@ -222,4 +227,21 @@ func (n *SpellNode) SetOpen(open bool) {
 		n.spell.Open = open
 		n.table.SyncToModel()
 	}
+}
+
+// Match implements Matcher.
+func (n *SpellNode) Match(text string) bool {
+	return strings.Contains(strings.ToLower(n.spell.Description()), text) ||
+		strings.Contains(strings.ToLower(n.spell.SecondaryText()), text) ||
+		(!n.spell.Container() &&
+			(strings.Contains(strings.ToLower(n.spell.Resist), text) ||
+				strings.Contains(strings.ToLower(n.spell.Class), text) ||
+				strings.Contains(strings.ToLower(n.spell.CastingCost), text) ||
+				strings.Contains(strings.ToLower(n.spell.MaintenanceCost), text) ||
+				strings.Contains(strings.ToLower(n.spell.CastingTime), text) ||
+				strings.Contains(strings.ToLower(n.spell.Duration), text) ||
+				strings.Contains(strings.ToLower(n.spell.Difficulty.Description(n.spell.Entity)), text) ||
+				stringSliceContains(n.spell.College, text))) ||
+		strings.Contains(strings.ToLower(n.spell.PageRef), text) ||
+		stringSliceContains(n.spell.Categories, text)
 }

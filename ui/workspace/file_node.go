@@ -26,14 +26,21 @@ var _ unison.TableRowData = &FileNode{}
 type FileNode struct {
 	library *library.Library
 	path    string
+	parent  unison.TableRowData
 }
 
 // NewFileNode creates a new FileNode.
-func NewFileNode(lib *library.Library, filePath string) *FileNode {
+func NewFileNode(lib *library.Library, filePath string, parent unison.TableRowData) *FileNode {
 	return &FileNode{
 		library: lib,
 		path:    filePath,
+		parent:  parent,
 	}
+}
+
+// ParentRow returns the parent row, or nil if this is a root node.
+func (n *FileNode) ParentRow() unison.TableRowData {
+	return n.parent
 }
 
 // CanHaveChildRows always returns false.
@@ -57,7 +64,7 @@ func (n *FileNode) CellDataForSort(index int) string {
 }
 
 // ColumnCell returns the cell for the given column index.
-func (n *FileNode) ColumnCell(row, col int, selected bool) unison.Paneler {
+func (n *FileNode) ColumnCell(_, col int, selected bool) unison.Paneler {
 	switch col {
 	case 0:
 		name := path.Base(n.path)

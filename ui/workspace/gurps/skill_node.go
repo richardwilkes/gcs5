@@ -29,11 +29,15 @@ const (
 	skillColumnCount
 )
 
-var _ unison.TableRowData = &SkillNode{}
+var (
+	_ unison.TableRowData = &SkillNode{}
+	_ Matcher             = &SkillNode{}
+)
 
 // SkillNode holds a skill in the skill list.
 type SkillNode struct {
 	table     *unison.Table
+	parent    *SkillNode
 	skill     *gurps.Skill
 	children  []unison.TableRowData
 	cellCache []*cellCache
@@ -55,20 +59,26 @@ func NewSkillListDockable(filePath string) (unison.Dockable, error) {
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(skills))
 		for _, one := range skills {
-			rows = append(rows, NewSkillNode(table, one))
+			rows = append(rows, NewSkillNode(table, nil, one))
 		}
 		return rows
 	}), nil
 }
 
 // NewSkillNode creates a new SkillNode.
-func NewSkillNode(table *unison.Table, skill *gurps.Skill) *SkillNode {
+func NewSkillNode(table *unison.Table, parent *SkillNode, skill *gurps.Skill) *SkillNode {
 	n := &SkillNode{
 		table:     table,
+		parent:    parent,
 		skill:     skill,
 		cellCache: make([]*cellCache, skillColumnCount),
 	}
 	return n
+}
+
+// ParentRow returns the parent row, or nil if this is a root node.
+func (n *SkillNode) ParentRow() unison.TableRowData {
+	return n.parent
 }
 
 // CanHaveChildRows always returns true.
@@ -81,15 +91,10 @@ func (n *SkillNode) ChildRows() []unison.TableRowData {
 	if n.skill.Container() && n.children == nil {
 		n.children = make([]unison.TableRowData, len(n.skill.Children))
 		for i, one := range n.skill.Children {
-			n.children[i] = NewSkillNode(n.table, one)
+			n.children[i] = NewSkillNode(n.table, n, one)
 		}
 	}
 	return n.children
-}
-
-// Categories implements CategoryProvider.
-func (n *SkillNode) Categories() []string {
-	return n.skill.Categories
 }
 
 // CellDataForSort returns the string that represents the data in the specified cell.
@@ -165,4 +170,13 @@ func (n *SkillNode) SetOpen(open bool) {
 		n.skill.Open = open
 		n.table.SyncToModel()
 	}
+}
+
+// Match implements Matcher.
+func (n *SkillNode) Match(text string) bool {
+	return strings.Contains(strings.ToLower(n.skill.Description()), text) ||
+		strings.Contains(strings.ToLower(n.skill.SecondaryText()), text) ||
+		(!n.skill.Container() && strings.Contains(strings.ToLower(n.skill.Difficulty.Description(n.skill.Entity)), text)) ||
+		strings.Contains(strings.ToLower(n.skill.PageRef), text) ||
+		stringSliceContains(n.skill.Categories, text)
 }

@@ -29,11 +29,15 @@ const (
 	advantageModifierColumnCount
 )
 
-var _ unison.TableRowData = &AdvantageModifierNode{}
+var (
+	_ unison.TableRowData = &AdvantageModifierNode{}
+	_ Matcher             = &AdvantageModifierNode{}
+)
 
 // AdvantageModifierNode holds an advantage modifier in the advantage modifier list.
 type AdvantageModifierNode struct {
 	table     *unison.Table
+	parent    *AdvantageModifierNode
 	modifier  *gurps.AdvantageModifier
 	children  []unison.TableRowData
 	cellCache []*cellCache
@@ -53,20 +57,26 @@ func NewAdvantageModifierListDockable(filePath string) (unison.Dockable, error) 
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(modifiers))
 		for _, one := range modifiers {
-			rows = append(rows, NewAdvantageModifierNode(table, one))
+			rows = append(rows, NewAdvantageModifierNode(table, nil, one))
 		}
 		return rows
 	}), nil
 }
 
 // NewAdvantageModifierNode creates a new AdvantageModifierNode.
-func NewAdvantageModifierNode(table *unison.Table, modifier *gurps.AdvantageModifier) *AdvantageModifierNode {
+func NewAdvantageModifierNode(table *unison.Table, parent *AdvantageModifierNode, modifier *gurps.AdvantageModifier) *AdvantageModifierNode {
 	n := &AdvantageModifierNode{
 		table:     table,
+		parent:    parent,
 		modifier:  modifier,
 		cellCache: make([]*cellCache, advantageModifierColumnCount),
 	}
 	return n
+}
+
+// ParentRow returns the parent row, or nil if this is a root node.
+func (n *AdvantageModifierNode) ParentRow() unison.TableRowData {
+	return n.parent
 }
 
 // CanHaveChildRows always returns true.
@@ -79,15 +89,10 @@ func (n *AdvantageModifierNode) ChildRows() []unison.TableRowData {
 	if n.modifier.Container() && n.children == nil {
 		n.children = make([]unison.TableRowData, len(n.modifier.Children))
 		for i, one := range n.modifier.Children {
-			n.children[i] = NewAdvantageModifierNode(n.table, one)
+			n.children[i] = NewAdvantageModifierNode(n.table, n, one)
 		}
 	}
 	return n.children
-}
-
-// Categories implements CategoryProvider.
-func (n *AdvantageModifierNode) Categories() []string {
-	return n.modifier.Categories
 }
 
 // CellDataForSort returns the string that represents the data in the specified cell.
@@ -164,4 +169,13 @@ func (n *AdvantageModifierNode) SetOpen(open bool) {
 		n.modifier.Open = open
 		n.table.SyncToModel()
 	}
+}
+
+// Match implements Matcher.
+func (n *AdvantageModifierNode) Match(text string) bool {
+	return strings.Contains(strings.ToLower(n.modifier.Name), text) ||
+		strings.Contains(strings.ToLower(n.modifier.SecondaryText()), text) ||
+		(!n.modifier.Container() && strings.Contains(strings.ToLower(n.modifier.CostDescription()), text)) ||
+		strings.Contains(strings.ToLower(n.modifier.PageRef), text) ||
+		stringSliceContains(n.modifier.Categories, text)
 }
