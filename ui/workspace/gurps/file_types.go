@@ -14,7 +14,6 @@ package gurps
 import (
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/res"
-	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/unison"
 )
 
@@ -22,13 +21,13 @@ import (
 func RegisterFileTypes() {
 	registerExportableGCSFileInfo(".gcs", res.GCSSheet, NewSheetDockable)
 	registerGCSFileInfo(".gct", res.GCSTemplate, NewTemplateDockable)
-	registerGCSFileInfo(".adq", res.GCSAdvantages, workspace.NewAdvantageListDockable)
-	registerGCSFileInfo(".adm", res.GCSAdvantageModifiers, workspace.NewAdvantageModifierListDockable)
-	registerGCSFileInfo(".eqp", res.GCSEquipment, workspace.NewEquipmentListDockable)
-	registerGCSFileInfo(".eqm", res.GCSEquipmentModifiers, workspace.NewEquipmentModifierListDockable)
-	registerGCSFileInfo(".skl", res.GCSSkills, workspace.NewSkillListDockable)
-	registerGCSFileInfo(".spl", res.GCSSpells, workspace.NewSpellListDockable)
-	registerGCSFileInfo(".not", res.GCSNotes, workspace.NewNoteListDockable)
+	registerGCSFileInfo(".adq", res.GCSAdvantages, NewAdvantageListDockable)
+	registerGCSFileInfo(".adm", res.GCSAdvantageModifiers, NewAdvantageModifierListDockable)
+	registerGCSFileInfo(".eqp", res.GCSEquipment, NewEquipmentListDockable)
+	registerGCSFileInfo(".eqm", res.GCSEquipmentModifiers, NewEquipmentModifierListDockable)
+	registerGCSFileInfo(".skl", res.GCSSkills, NewSkillListDockable)
+	registerGCSFileInfo(".spl", res.GCSSpells, NewSpellListDockable)
+	registerGCSFileInfo(".not", res.GCSNotes, NewNoteListDockable)
 }
 
 func registerGCSFileInfo(ext string, svg *unison.SVG, loader func(filePath string) (unison.Dockable, error)) {
