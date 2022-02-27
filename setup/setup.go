@@ -12,6 +12,8 @@
 package setup
 
 import (
+	"github.com/richardwilkes/gcs/ui/menus"
+	"github.com/richardwilkes/gcs/ui/trampolines"
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/gcs/ui/workspace/external"
 	"github.com/richardwilkes/gcs/ui/workspace/gurps"
@@ -22,4 +24,5 @@ func Setup() {
 	workspace.RegisterFileTypes()
 	external.RegisterFileTypes()
 	gurps.RegisterFileTypes()
+	trampolines.MenuSetup = menus.Setup
 }

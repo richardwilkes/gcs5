@@ -14,7 +14,6 @@ package ui
 import (
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/menus"
-	"github.com/richardwilkes/gcs/ui/trampolines"
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -26,7 +25,6 @@ func Start(files []string) {
 	go libs.PerformUpdateChecks()
 	unison.Start(
 		unison.StartupFinishedCallback(func() {
-			trampolines.MenuSetup = menus.Setup
 			wnd, err := unison.NewWindow("GCS")
 			jot.FatalIfErr(err)
 			menus.Setup(wnd)
