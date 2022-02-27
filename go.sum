@@ -31,8 +31,6 @@ github.com/richardwilkes/pdf v0.0.0-20220115194011-2380c98780aa/go.mod h1:aN1tva
 github.com/richardwilkes/rpgtools v1.4.1 h1:uoQKvM64owkU5gKYAlqZuWDvIfKcs8OCVRsXRPu1i2o=
 github.com/richardwilkes/rpgtools v1.4.1/go.mod h1:w4bCZ1a0YGKPzSA/Yr3XinTMVLlYOKEnrormltb1r9s=
 github.com/richardwilkes/toolbox v1.60.0/go.mod h1:kP6cWRrfXgv7laMDlJj+MJnvrukwLC62FNm4WJkSi58=
-github.com/richardwilkes/toolbox v1.62.0 h1:0I9WSPzTL/WtAzHjbQtIY21SUbedRU/RvaP6QAZJ5Mo=
-github.com/richardwilkes/toolbox v1.62.0/go.mod h1:O2ZWzewgRuKusafA6EpItUDqvKEfk19f6zhq0e6mxqk=
 github.com/richardwilkes/toolbox v1.63.0 h1:2N22TxCr3kMu+3OzMOzpqh6VwgqIeaETpQCJ93dWTrE=
 github.com/richardwilkes/toolbox v1.63.0/go.mod h1:QyMTqRYc4Fewznc/fkQNMkhXQ39IMyEh097d42i7KJs=
 github.com/rogpeppe/go-internal v1.6.1/go.mod h1:xXDCJY+GAPziupqXw64V24skbSoqbTEfhy4qGm1nDQc=
@@ -47,8 +45,6 @@ golang.org/x/image v0.0.0-20211028202545-6944b10bf410 h1:hTftEOvwiOq2+O8k2D5/Q7C
 golang.org/x/image v0.0.0-20211028202545-6944b10bf410/go.mod h1:023OzeP/+EPmXeapQh35lcL3II3LrY8Ic+EFFKVhULM=
 golang.org/x/sys v0.0.0-20200909081042-eff7692f9009/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20220128215802-99c3d69c2c27/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
-golang.org/x/sys v0.0.0-20220209214540-3681064d5158 h1:rm+CHSpPEEW2IsXUib1ThaHIjuBVZjxNgSKmBLFfD4c=
-golang.org/x/sys v0.0.0-20220209214540-3681064d5158/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220224120231-95c6836cb0e7 h1:BXxu8t6QN0G1uff4bzZzSkpsax8+ALqTGUtz08QrV00=
 golang.org/x/sys v0.0.0-20220224120231-95c6836cb0e7/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/text v0.3.6/go.mod h1:5Zoc/QRtKVWzQhOtBMvqHzDpF6irO9z98xDceosuGiQ=
