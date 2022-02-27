@@ -9,22 +9,24 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package icons
+package res
 
 import (
+	_ "embed"
+
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
-var bookmarkSVG *unison.SVG
+// Various images.
+var (
+	//go:embed "default_portrait.png"
+	DefaultPortraitData []byte
+	DefaultPortrait     = mustImg(DefaultPortraitData)
+)
 
-// BookmarkSVG returns an SVG that holds an icon for a bookmark / page reference.
-func BookmarkSVG() *unison.SVG {
-	if bookmarkSVG == nil {
-		var err error
-		bookmarkSVG, err = unison.NewSVG(geom32.NewSize(384, 512), "M384 48v464L192 400 0 512V48C0 21.5 21.5 0 48 0h288c26.5 0 48 21.5 48 48z")
-		jot.FatalIfErr(err)
-	}
-	return bookmarkSVG
+func mustImg(data []byte) *unison.Image {
+	img, err := unison.NewImageFromBytes(DefaultPortraitData, 0.5)
+	jot.FatalIfErr(err)
+	return img
 }

@@ -18,7 +18,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps"
-	"github.com/richardwilkes/gcs/ui/icons"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -61,7 +61,7 @@ func NewEquipmentListDockable(filePath string) (*ListFileDockable, error) {
 	weightHdr := unison.NewTableColumnHeader("")
 	baseline := weightHdr.Font.Baseline()
 	weightHdr.Drawable = &unison.DrawableSVG{
-		SVG:  icons.WeightSVG(),
+		SVG:  res.WeightSVG,
 		Size: geom32.NewSize(baseline, baseline),
 	}
 	weightHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("Weight"))

@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/theme"
-	"github.com/richardwilkes/gcs/ui/icons"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -56,7 +56,7 @@ func newPageReferenceHeader() unison.TableColumnHeader {
 e.g. B22 would refer to "Basic Set", page 22`))
 	baseline := header.Font.Baseline()
 	header.Drawable = &unison.DrawableSVG{
-		SVG:  icons.BookmarkSVG(),
+		SVG:  res.BookmarkSVG,
 		Size: geom32.NewSize(baseline, baseline),
 	}
 	return header

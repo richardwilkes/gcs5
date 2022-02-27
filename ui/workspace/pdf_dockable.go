@@ -20,7 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/pdf"
-	"github.com/richardwilkes/gcs/ui/icons"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -104,27 +104,27 @@ func NewPDFDockable(filePath string) (*PDFDockable, error) {
 	d.scroll.SetContent(d.docPanel, unison.FillBehavior)
 	d.scroll.ContentView().DrawOverCallback = d.drawOverlay
 
-	d.backButton = unison.NewSVGButton(icons.BackSVG())
+	d.backButton = unison.NewSVGButton(res.BackSVG)
 	d.backButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Back"))
 	d.backButton.ClickCallback = func() { d.Back() }
 
-	d.forwardButton = unison.NewSVGButton(icons.ForwardSVG())
+	d.forwardButton = unison.NewSVGButton(res.ForwardSVG)
 	d.forwardButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Forward"))
 	d.forwardButton.ClickCallback = func() { d.Forward() }
 
-	d.firstPageButton = unison.NewSVGButton(icons.FirstSVG())
+	d.firstPageButton = unison.NewSVGButton(res.FirstSVG)
 	d.firstPageButton.Tooltip = unison.NewTooltipWithText(i18n.Text("First Page"))
 	d.firstPageButton.ClickCallback = func() { d.LoadPage(0) }
 
-	d.previousPageButton = unison.NewSVGButton(icons.PreviousSVG())
+	d.previousPageButton = unison.NewSVGButton(res.PreviousSVG)
 	d.previousPageButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Previous Page"))
 	d.previousPageButton.ClickCallback = func() { d.LoadPage(d.pdf.MostRecentPageNumber() - 1) }
 
-	d.nextPageButton = unison.NewSVGButton(icons.NextSVG())
+	d.nextPageButton = unison.NewSVGButton(res.NextSVG)
 	d.nextPageButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Next Page"))
 	d.nextPageButton.ClickCallback = func() { d.LoadPage(d.pdf.MostRecentPageNumber() + 1) }
 
-	d.lastPageButton = unison.NewSVGButton(icons.LastSVG())
+	d.lastPageButton = unison.NewSVGButton(res.LastSVG)
 	d.lastPageButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Last Page"))
 	d.lastPageButton.ClickCallback = func() { d.LoadPage(d.pdf.PageCount() - 1) }
 

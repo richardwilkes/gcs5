@@ -19,7 +19,7 @@ import (
 
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
-	"github.com/richardwilkes/gcs/ui/icons"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
@@ -96,7 +96,7 @@ func (d *SettingsDockable) Setup(ws *Workspace, dc *unison.DockContainer, addToS
 // TitleIcon implements unison.Dockable
 func (d *SettingsDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
-		SVG:  icons.SettingsSVG(),
+		SVG:  res.SettingsSVG,
 		Size: suggestedSize,
 	}
 }
@@ -149,13 +149,13 @@ func (d *SettingsDockable) createToolbar(addToStartToolbar, addToEndToolbar func
 		addToEndToolbar(toolbar)
 	}
 	if d.Resetter != nil {
-		b := unison.NewSVGButton(icons.ResetSVG())
+		b := unison.NewSVGButton(res.ResetSVG)
 		b.Tooltip = unison.NewTooltipWithText(i18n.Text("Reset"))
 		b.ClickCallback = d.handleReset
 		toolbar.AddChild(b)
 	}
 	if d.Loader != nil || d.Saver != nil {
-		b := unison.NewSVGButton(icons.MenuSVG())
+		b := unison.NewSVGButton(res.MenuSVG)
 		b.ClickCallback = func() { d.showMenu(b) }
 		toolbar.AddChild(b)
 	}

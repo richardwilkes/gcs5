@@ -13,7 +13,7 @@ package workspace
 
 import (
 	"github.com/richardwilkes/gcs/model/library"
-	"github.com/richardwilkes/gcs/ui/icons"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio/fs"
@@ -80,15 +80,15 @@ func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHead
 		VGrab:  true,
 	})
 
-	d.lockButton = unison.NewSVGButton(icons.LockSVG())
+	d.lockButton = unison.NewSVGButton(res.LockSVG)
 	d.toggleLock()
 	d.lockButton.ClickCallback = func() { d.toggleLock() }
 
-	d.hierarchyButton = unison.NewSVGButton(icons.HierarchySVG())
+	d.hierarchyButton = unison.NewSVGButton(res.HierarchySVG)
 	d.hierarchyButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Opens/closes all hierarchical rows"))
 	d.hierarchyButton.ClickCallback = func() { d.toggleHierarchy() }
 
-	d.sizeToFitButton = unison.NewSVGButton(icons.SizeToFitSVG())
+	d.sizeToFitButton = unison.NewSVGButton(res.SizeToFitSVG)
 	d.sizeToFitButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Sets the width of each column to fit its contents"))
 	d.sizeToFitButton.ClickCallback = func() { d.sizeToFit() }
 
@@ -195,10 +195,10 @@ func (d *ListFileDockable) toggleLock() {
 	d.locked = !d.locked
 	if dsvg, ok := d.lockButton.Drawable.(*unison.DrawableSVG); ok {
 		if d.locked {
-			dsvg.SVG = icons.LockSVG()
+			dsvg.SVG = res.LockSVG
 			d.lockButton.Tooltip = unison.NewTooltipWithSecondaryText(i18n.Text("Locked"), i18n.Text("Click to enable editing"))
 		} else {
-			dsvg.SVG = icons.UnlockedSVG()
+			dsvg.SVG = res.UnlockedSVG
 			d.lockButton.Tooltip = unison.NewTooltipWithSecondaryText(i18n.Text("Unlocked"), i18n.Text("Click to disable editing"))
 		}
 	}

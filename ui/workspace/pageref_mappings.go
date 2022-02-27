@@ -18,7 +18,7 @@ import (
 	"strconv"
 
 	"github.com/richardwilkes/gcs/model/settings"
-	"github.com/richardwilkes/gcs/ui/icons"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
@@ -193,7 +193,7 @@ func (d *pageRefMappingsDockable) createNameField(ref *settings.PageRef) {
 }
 
 func (d *pageRefMappingsDockable) createTrashField(ref *settings.PageRef) {
-	b := unison.NewSVGButton(icons.TrashSVG())
+	b := unison.NewSVGButton(res.TrashSVG)
 	b.ClickCallback = func() {
 		if unison.QuestionDialog(fmt.Sprintf(i18n.Text("Are you sure you want to remove\n%s (%s)?"), ref.ID,
 			filepath.Base(ref.Path)), "") == unison.ModalResponseOK {

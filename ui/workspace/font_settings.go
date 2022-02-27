@@ -17,7 +17,7 @@ import (
 
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/model/theme"
-	"github.com/richardwilkes/gcs/ui/icons"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -193,7 +193,7 @@ func (d *fontSettingsDockable) createSlantField(index int) {
 }
 
 func (d *fontSettingsDockable) createResetField(index int) {
-	b := unison.NewSVGButton(icons.ResetSVG())
+	b := unison.NewSVGButton(res.ResetSVG)
 	b.Tooltip = unison.NewTooltipWithText("Reset this font")
 	b.ClickCallback = func() {
 		if unison.QuestionDialog(fmt.Sprintf(i18n.Text("Are you sure you want to reset %s?"),

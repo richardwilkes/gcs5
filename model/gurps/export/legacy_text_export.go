@@ -23,7 +23,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/gcs/images"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
@@ -33,6 +32,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/model/theme"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xio/fs"
@@ -140,7 +140,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 	case "PORTRAIT":
 		portraitData := ex.entity.Profile.PortraitData
 		if len(portraitData) == 0 {
-			portraitData = images.DefaultPortraitData
+			portraitData = res.DefaultPortraitData
 		}
 		filePath := filepath.Join(filepath.Dir(ex.exportPath), fs.TrimExtension(filepath.Base(ex.exportPath))+".png")
 		if err := os.WriteFile(filePath, portraitData, 0o640); err != nil {
@@ -150,7 +150,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 	case "PORTRAIT_EMBEDDED":
 		portraitData := ex.entity.Profile.PortraitData
 		if len(portraitData) == 0 {
-			portraitData = images.DefaultPortraitData
+			portraitData = res.DefaultPortraitData
 		}
 		ex.out.WriteString("data:image/png;base64,")
 		ex.out.WriteString(base64.URLEncoding.EncodeToString(portraitData))

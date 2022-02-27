@@ -18,7 +18,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/settings"
-	"github.com/richardwilkes/gcs/ui/icons"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -173,7 +173,7 @@ func (d *generalSettingsDockable) createGCalcKeyField(content *unison.Panel) {
 	button.HideBase = true
 	baseline := button.Font.Baseline()
 	button.Drawable = &unison.DrawableSVG{
-		SVG:  icons.SearchSVG(),
+		SVG:  res.SearchSVG,
 		Size: geom32.NewSize(baseline, baseline),
 	}
 	button.ClickCallback = d.findGCalcKey
