@@ -18,7 +18,7 @@ import (
 
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/jio"
-	library2 "github.com/richardwilkes/gcs/model/library"
+	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/toolbox/eval"
 	"github.com/richardwilkes/toolbox/log/jot"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
@@ -32,12 +32,12 @@ type Ancestry struct {
 }
 
 // AvailableAncestries scans the libraries and returns the available ancestries.
-func AvailableAncestries(libraries library2.Libraries) []*library2.NamedFileSet {
-	return library2.ScanForNamedFileSets(embeddedFS, "data", ".ancestry", true, libraries)
+func AvailableAncestries(libraries library.Libraries) []*library.NamedFileSet {
+	return library.ScanForNamedFileSets(embeddedFS, "data", ".ancestry", true, libraries)
 }
 
 // Lookup an Ancestry by name.
-func Lookup(name string, libraries library2.Libraries) *Ancestry {
+func Lookup(name string, libraries library.Libraries) *Ancestry {
 	for _, lib := range AvailableAncestries(libraries) {
 		for _, one := range lib.List {
 			if one.Name == name {

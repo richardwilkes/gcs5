@@ -27,21 +27,19 @@ func RegisterFileTypes() {
 }
 
 func registerImageFileInfo(ext string) {
-	fi := library.FileInfo{
+	library.FileInfo{
 		Extension: ext,
 		SVG:       res.ImageFileSVG,
 		Load:      NewImageDockable,
 		IsImage:   true,
-	}
-	fi.Register()
+	}.Register()
 }
 
 func registerPDFFileInfo() {
-	fi := library.FileInfo{
+	library.FileInfo{
 		Extension: ".pdf",
 		SVG:       res.PDFFileSVG,
 		Load:      NewPDFDockable,
 		IsPDF:     true,
-	}
-	fi.Register()
+	}.Register()
 }

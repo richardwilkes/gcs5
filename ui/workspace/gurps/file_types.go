@@ -32,22 +32,20 @@ func RegisterFileTypes() {
 }
 
 func registerGCSFileInfo(ext string, svg *unison.SVG, loader func(filePath string) (unison.Dockable, error)) {
-	fi := library.FileInfo{
+	library.FileInfo{
 		Extension: ext,
 		SVG:       svg,
 		Load:      loader,
 		IsGCSData: true,
-	}
-	fi.Register()
+	}.Register()
 }
 
 func registerExportableGCSFileInfo(ext string, svg *unison.SVG, loader func(filePath string) (unison.Dockable, error)) {
-	fi := library.FileInfo{
+	library.FileInfo{
 		Extension:    ext,
 		SVG:          svg,
 		Load:         loader,
 		IsGCSData:    true,
 		IsExportable: true,
-	}
-	fi.Register()
+	}.Register()
 }

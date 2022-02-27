@@ -23,7 +23,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/jio"
-	library2 "github.com/richardwilkes/gcs/model/library"
+	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox"
@@ -53,7 +53,7 @@ type NavigatorSettings struct {
 type Settings struct {
 	LastSeenGCSVersion string                     `json:"last_seen_gcs_version,omitempty"`
 	General            *settings.General          `json:"general,omitempty"`
-	LibrarySet         library2.Libraries         `json:"libraries,omitempty"`
+	LibrarySet         library.Libraries          `json:"libraries,omitempty"`
 	LibraryExplorer    NavigatorSettings          `json:"library_explorer"`
 	RecentFiles        []string                   `json:"recent_files,omitempty"`
 	LastDirs           map[string]string          `json:"last_dirs,omitempty"`
@@ -71,7 +71,7 @@ func Default(entity *gurps.Entity) *Settings {
 	return &Settings{
 		LastSeenGCSVersion: cmdline.AppVersion,
 		General:            settings.NewGeneral(),
-		LibrarySet:         library2.NewLibraries(),
+		LibrarySet:         library.NewLibraries(),
 		LibraryExplorer:    NavigatorSettings{DividerPosition: 300},
 		LastDirs:           make(map[string]string),
 		WindowPositions:    make(map[string]*WindowPosition),
@@ -122,7 +122,7 @@ func (s *Settings) AddRecentFile(filePath string) {
 	if runtime.GOOS == toolbox.MacOS || runtime.GOOS == toolbox.WindowsOS {
 		ext = strings.ToLower(ext)
 	}
-	for _, one := range library2.AcceptableExtensions() {
+	for _, one := range library.AcceptableExtensions() {
 		if one == ext {
 			full, err := filepath.Abs(filePath)
 			if err != nil {
@@ -160,7 +160,7 @@ func (s *Settings) SheetSettings() *gurps.SheetSettings {
 }
 
 // Libraries implements gurps.SettingsProvider.
-func (s *Settings) Libraries() library2.Libraries {
+func (s *Settings) Libraries() library.Libraries {
 	return s.LibrarySet
 }
 

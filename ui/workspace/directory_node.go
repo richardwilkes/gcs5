@@ -19,7 +19,7 @@ import (
 	"sort"
 	"strings"
 
-	library2 "github.com/richardwilkes/gcs/model/library"
+	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
@@ -34,14 +34,14 @@ var (
 // DirectoryNode holds a directory in the navigator.
 type DirectoryNode struct {
 	nav      *Navigator
-	library  *library2.Library
+	library  *library.Library
 	path     string
 	children []unison.TableRowData
 	open     bool
 }
 
 // NewDirectoryNode creates a new DirectoryNode.
-func NewDirectoryNode(nav *Navigator, lib *library2.Library, dirPath string) *DirectoryNode {
+func NewDirectoryNode(nav *Navigator, lib *library.Library, dirPath string) *DirectoryNode {
 	n := &DirectoryNode{
 		nav:     nav,
 		library: lib,
@@ -61,7 +61,7 @@ func (n *DirectoryNode) Refresh() {
 	n.children = refreshChildren(n.nav, n.library, n.path)
 }
 
-func refreshChildren(nav *Navigator, lib *library2.Library, dirPath string) []unison.TableRowData {
+func refreshChildren(nav *Navigator, lib *library.Library, dirPath string) []unison.TableRowData {
 	libPath := lib.Path()
 	entries, err := os.ReadDir(filepath.Join(libPath, dirPath))
 	if err != nil {
@@ -88,7 +88,7 @@ func refreshChildren(nav *Navigator, lib *library2.Library, dirPath string) []un
 				if dirNode.recursiveFileCount() > 0 {
 					children = append(children, dirNode)
 				}
-			} else if _, exists := library2.FileTypes[strings.ToLower(path.Ext(name))]; exists {
+			} else if !library.FileInfoFor(name).IsSpecial {
 				children = append(children, NewFileNode(lib, p))
 			}
 		}
@@ -117,14 +117,14 @@ func (n *DirectoryNode) CellDataForSort(index int) string {
 }
 
 // ColumnCell returns the cell for the given column index.
-func (n *DirectoryNode) ColumnCell(row, col int, selected bool) unison.Paneler {
+func (n *DirectoryNode) ColumnCell(_, col int, selected bool) unison.Paneler {
 	switch col {
 	case 0:
 		title := path.Base(n.path)
 		if n.open {
-			return createNodeCell(library2.OpenFolder, title, selected)
+			return createNodeCell(library.OpenFolder, title, selected)
 		}
-		return createNodeCell(library2.ClosedFolder, title, selected)
+		return createNodeCell(library.ClosedFolder, title, selected)
 	default:
 		jot.Fatalf(1, "column index out of range (0-0): %d", col)
 		return nil

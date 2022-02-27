@@ -38,27 +38,25 @@ type FileInfo struct {
 	IsExportable bool
 }
 
-// FileTypes holds a map of keys to FileInfo data.
-var FileTypes = make(map[string]*FileInfo)
+var fileTypeRegistry = make(map[string]FileInfo)
 
 // Register with the central registry.
-func (f *FileInfo) Register() {
-	FileTypes[f.Extension] = f
+func (f FileInfo) Register() {
+	fileTypeRegistry[f.Extension] = f
 }
 
 // FileInfoFor returns the FileInfo for the given file path's extension.
-func FileInfoFor(filePath string) *FileInfo {
-	info, ok := FileTypes[strings.ToLower(path.Ext(filePath))]
-	if !ok {
-		info = FileTypes[GenericFile]
+func FileInfoFor(filePath string) FileInfo {
+	if info, ok := fileTypeRegistry[strings.ToLower(path.Ext(filePath))]; ok {
+		return info
 	}
-	return info
+	return fileTypeRegistry[GenericFile]
 }
 
 // AcceptableExtensions returns the file extensions that we should be able to open.
 func AcceptableExtensions() []string {
-	list := make([]string, 0, len(FileTypes))
-	for k, v := range FileTypes {
+	list := make([]string, 0, len(fileTypeRegistry))
+	for k, v := range fileTypeRegistry {
 		if !v.IsSpecial {
 			list = append(list, k)
 		}

@@ -46,12 +46,11 @@ func RegisterFileTypes() {
 }
 
 func registerSpecialFileInfo(key string, svg *unison.SVG) {
-	fi := library.FileInfo{
+	library.FileInfo{
 		Extension: key,
 		SVG:       svg,
 		IsSpecial: true,
-	}
-	fi.Register()
+	}.Register()
 }
 
 func newNavigator() *Navigator {
@@ -242,14 +241,11 @@ func OpenFile(wnd *unison.Window, filePath string) (dockable unison.Dockable, wa
 
 func createNodeCell(ext, title string, selected bool) *unison.Panel {
 	size := unison.LabelFont.Size() + 5
-	info, ok := library.FileTypes[ext]
-	if !ok {
-		info = library.FileTypes[library.GenericFile]
-	}
+	fi := library.FileInfoFor(ext)
 	label := unison.NewLabel()
 	label.Text = title
 	label.Drawable = &unison.DrawableSVG{
-		SVG:  info.SVG,
+		SVG:  fi.SVG,
 		Size: geom32.NewSize(size, size),
 	}
 	if selected {
