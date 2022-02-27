@@ -40,8 +40,8 @@ type AdvantageNode struct {
 	cellCache []*cellCache
 }
 
-// NewAdvantageListDockable creates a new ListFileDockable for advantage list files.
-func NewAdvantageListDockable(filePath string) (*ListFileDockable, error) {
+// NewAdvantageListDockable creates a new unison.Dockable for advantage list files.
+func NewAdvantageListDockable(filePath string) (unison.Dockable, error) {
 	advantages, err := gurps.NewAdvantagesFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err

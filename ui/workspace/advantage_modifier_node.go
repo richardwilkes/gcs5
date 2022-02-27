@@ -39,8 +39,8 @@ type AdvantageModifierNode struct {
 	cellCache []*cellCache
 }
 
-// NewAdvantageModifierListDockable creates a new ListFileDockable for advantage modifier list files.
-func NewAdvantageModifierListDockable(filePath string) (*ListFileDockable, error) {
+// NewAdvantageModifierListDockable creates a new unison.Dockable for advantage modifier list files.
+func NewAdvantageModifierListDockable(filePath string) (unison.Dockable, error) {
 	modifiers, err := gurps.NewAdvantageModifiersFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err

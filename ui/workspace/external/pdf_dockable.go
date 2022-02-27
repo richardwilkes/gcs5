@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package workspace
+package external
 
 import (
 	"fmt"
@@ -22,6 +22,7 @@ import (
 	"github.com/richardwilkes/gcs/pdf"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace/node"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio/fs"
@@ -38,8 +39,8 @@ const (
 )
 
 var (
-	_ FileBackedDockable = &PDFDockable{}
-	_ unison.TabCloser   = &PDFDockable{}
+	_ node.FileBackedDockable = &PDFDockable{}
+	_ unison.TabCloser        = &PDFDockable{}
 )
 
 // PDFDockable holds the view for a PDF file.
@@ -68,8 +69,8 @@ type PDFDockable struct {
 	noUpdate           bool
 }
 
-// NewPDFDockable creates a new FileBackedDockable for PDF files.
-func NewPDFDockable(filePath string) (*PDFDockable, error) {
+// NewPDFDockable creates a new unison.Dockable for PDF files.
+func NewPDFDockable(filePath string) (unison.Dockable, error) {
 	d := &PDFDockable{
 		path:  filePath,
 		scale: 100,
@@ -526,7 +527,7 @@ func (d *PDFDockable) drawOverlayMsg(gc *unison.Canvas, dirty geom32.Rect, msg s
 	text.Draw(gc, x, r.Y+(r.Height-height)/2+baseline)
 }
 
-// TitleIcon implements FileBackedDockable
+// TitleIcon implements node.FileBackedDockable
 func (d *PDFDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
@@ -534,22 +535,22 @@ func (d *PDFDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	}
 }
 
-// Title implements FileBackedDockable
+// Title implements node.FileBackedDockable
 func (d *PDFDockable) Title() string {
 	return fs.BaseName(d.path)
 }
 
-// Tooltip implements FileBackedDockable
+// Tooltip implements node.FileBackedDockable
 func (d *PDFDockable) Tooltip() string {
 	return d.path
 }
 
-// BackingFilePath implements FileBackedDockable
+// BackingFilePath implements node.FileBackedDockable
 func (d *PDFDockable) BackingFilePath() string {
 	return d.path
 }
 
-// Modified implements FileBackedDockable
+// Modified implements node.FileBackedDockable
 func (d *PDFDockable) Modified() bool {
 	return false
 }

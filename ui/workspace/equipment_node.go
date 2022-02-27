@@ -46,8 +46,8 @@ type EquipmentNode struct {
 	cellCache []*cellCache
 }
 
-// NewEquipmentListDockable creates a new ListFileDockable for equipment list files.
-func NewEquipmentListDockable(filePath string) (*ListFileDockable, error) {
+// NewEquipmentListDockable creates a new unison.Dockable for equipment list files.
+func NewEquipmentListDockable(filePath string) (unison.Dockable, error) {
 	eqp, err := gurps.NewEquipmentFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err

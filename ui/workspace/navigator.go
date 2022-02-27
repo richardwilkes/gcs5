@@ -14,22 +14,17 @@ package workspace
 import (
 	"path"
 	"path/filepath"
-	"strings"
 
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
+	"github.com/richardwilkes/gcs/res"
+	"github.com/richardwilkes/gcs/ui/workspace/node"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
 var _ unison.Dockable = &Navigator{}
-
-// FileBackedDockable defines methods a Dockable that is based on a file should implement.
-type FileBackedDockable interface {
-	unison.Dockable
-	BackingFilePath() string
-}
 
 // Pather defines the method for returning a path from an object.
 type Pather interface {
@@ -41,6 +36,22 @@ type Navigator struct {
 	unison.Panel
 	scroll *unison.ScrollPanel
 	table  *unison.Table
+}
+
+// RegisterFileTypes registers special navigator file types.
+func RegisterFileTypes() {
+	registerSpecialFileInfo(library.ClosedFolder, res.ClosedFolderSVG)
+	registerSpecialFileInfo(library.OpenFolder, res.OpenFolderSVG)
+	registerSpecialFileInfo(library.GenericFile, res.GenericFileSVG)
+}
+
+func registerSpecialFileInfo(key string, svg *unison.SVG) {
+	fi := library.FileInfo{
+		Extension: key,
+		SVG:       svg,
+		IsSpecial: true,
+	}
+	fi.Register()
 }
 
 func newNavigator() *Navigator {
@@ -194,7 +205,7 @@ func OpenFile(wnd *unison.Window, filePath string) (dockable unison.Dockable, wa
 	filePath = path.Clean(filePath)
 	workspace.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
 		for _, one := range dc.Dockables() {
-			if f, ok := one.(FileBackedDockable); ok {
+			if f, ok := one.(node.FileBackedDockable); ok {
 				if filePath == f.BackingFilePath() {
 					d = one
 					dc.SetCurrentDockable(one)
@@ -211,68 +222,14 @@ func OpenFile(wnd *unison.Window, filePath string) (dockable unison.Dockable, wa
 	if d != nil {
 		return d, true
 	}
+	fi := library.FileInfoFor(filePath)
+	if fi.IsSpecial {
+		return nil, false
+	}
 	var err error
-	if unison.EncodedImageFormatForPath(filePath).CanRead() {
-		if d, err = NewImageDockable(filePath); err != nil {
-			unison.ErrorDialogWithError(i18n.Text("Unable to open image file"), err)
-			return nil, false
-		}
-	} else {
-		switch strings.ToLower(path.Ext(filePath)) {
-		case ".adm":
-			if d, err = NewAdvantageModifierListDockable(filePath); err != nil {
-				unison.ErrorDialogWithError(i18n.Text("Unable to open advantage modifiers list"), err)
-				return nil, false
-			}
-		case ".adq":
-			if d, err = NewAdvantageListDockable(filePath); err != nil {
-				unison.ErrorDialogWithError(i18n.Text("Unable to open advantages list"), err)
-				return nil, false
-			}
-		case ".eqm":
-			if d, err = NewEquipmentModifierListDockable(filePath); err != nil {
-				unison.ErrorDialogWithError(i18n.Text("Unable to open equipment modifiers list"), err)
-				return nil, false
-			}
-		case ".eqp":
-			if d, err = NewEquipmentListDockable(filePath); err != nil {
-				unison.ErrorDialogWithError(i18n.Text("Unable to open equipment list"), err)
-				return nil, false
-			}
-		case ".gcs":
-			if d, err = NewSheetDockable(filePath); err != nil {
-				unison.ErrorDialogWithError(i18n.Text("Unable to open sheet"), err)
-				return nil, false
-			}
-		case ".gct":
-			if d, err = NewTemplateDockable(filePath); err != nil {
-				unison.ErrorDialogWithError(i18n.Text("Unable to open template"), err)
-				return nil, false
-			}
-		case ".not":
-			if d, err = NewNoteListDockable(filePath); err != nil {
-				unison.ErrorDialogWithError(i18n.Text("Unable to open notes list"), err)
-				return nil, false
-			}
-		case ".pdf":
-			if d, err = NewPDFDockable(filePath); err != nil {
-				unison.ErrorDialogWithError(i18n.Text("Unable to open PDF"), err)
-				return nil, false
-			}
-		case ".skl":
-			if d, err = NewSkillListDockable(filePath); err != nil {
-				unison.ErrorDialogWithError(i18n.Text("Unable to open skills list"), err)
-				return nil, false
-			}
-		case ".spl":
-			if d, err = NewSpellListDockable(filePath); err != nil {
-				unison.ErrorDialogWithError(i18n.Text("Unable to open spells list"), err)
-				return nil, false
-			}
-		default:
-			unison.ErrorDialogWithMessage(i18n.Text("Unable to open file"), filePath)
-			return nil, false
-		}
+	if d, err = fi.Load(filePath); err != nil {
+		unison.ErrorDialogWithError(i18n.Text("Unable to open file"), err)
+		return nil, false
 	}
 	if defaultDockContainer != nil {
 		defaultDockContainer.Stack(d, -1)

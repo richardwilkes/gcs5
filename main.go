@@ -18,6 +18,7 @@ import (
 	"github.com/richardwilkes/gcs/model/export"
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
+	"github.com/richardwilkes/gcs/setup"
 	"github.com/richardwilkes/gcs/ui"
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/cmdline"
@@ -39,6 +40,7 @@ func main() {
 	var textTmplPath string
 	cl.NewStringOption(&textTmplPath).SetName("text").SetSingle('x').SetArg("file").SetUsage(i18n.Text("Export sheets using the specified template file"))
 	fileList := jotrotate.ParseAndSetup(cl)
+	setup.Setup()
 	settings.Global() // Here to force early initialization
 	if textTmplPath != "" {
 		if len(fileList) == 0 {

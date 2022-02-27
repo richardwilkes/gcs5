@@ -39,8 +39,8 @@ type NoteNode struct {
 	cellCache []*cellCache
 }
 
-// NewNoteListDockable creates a new ListFileDockable for note list files.
-func NewNoteListDockable(filePath string) (*ListFileDockable, error) {
+// NewNoteListDockable creates a new unison.Dockable for note list files.
+func NewNoteListDockable(filePath string) (unison.Dockable, error) {
 	notes, err := gurps.NewNotesFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err

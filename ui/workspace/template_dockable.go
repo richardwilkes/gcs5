@@ -30,8 +30,8 @@ type TemplateDockable struct {
 	entity *gurps.Entity
 }
 
-// NewTemplateDockable creates a new TemplateDockable for GURPS character template files.
-func NewTemplateDockable(filePath string) (*TemplateDockable, error) {
+// NewTemplateDockable creates a new unison.Dockable for GURPS character template files.
+func NewTemplateDockable(filePath string) (unison.Dockable, error) {
 	entity, err := gurps.NewEntityFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func NewTemplateDockable(filePath string) (*TemplateDockable, error) {
 	return d, nil
 }
 
-// TitleIcon implements FileBackedDockable
+// TitleIcon implements node.FileBackedDockable
 func (d *TemplateDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
@@ -75,22 +75,22 @@ func (d *TemplateDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable 
 	}
 }
 
-// Title implements FileBackedDockable
+// Title implements node.FileBackedDockable
 func (d *TemplateDockable) Title() string {
 	return fs.BaseName(d.path)
 }
 
-// Tooltip implements FileBackedDockable
+// Tooltip implements node.FileBackedDockable
 func (d *TemplateDockable) Tooltip() string {
 	return d.path
 }
 
-// BackingFilePath implements FileBackedDockable
+// BackingFilePath implements node.FileBackedDockable
 func (d *TemplateDockable) BackingFilePath() string {
 	return d.path
 }
 
-// Modified implements FileBackedDockable
+// Modified implements node.FileBackedDockable
 func (d *TemplateDockable) Modified() bool {
 	return false
 }

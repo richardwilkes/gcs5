@@ -41,8 +41,8 @@ type EquipmentModifierNode struct {
 	cellCache []*cellCache
 }
 
-// NewEquipmentModifierListDockable creates a new ListFileDockable for equipment modifier list files.
-func NewEquipmentModifierListDockable(filePath string) (*ListFileDockable, error) {
+// NewEquipmentModifierListDockable creates a new unison.Dockable for equipment modifier list files.
+func NewEquipmentModifierListDockable(filePath string) (unison.Dockable, error) {
 	modifiers, err := gurps.NewEquipmentModifiersFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err

@@ -46,8 +46,8 @@ type SpellNode struct {
 	cellCache []*cellCache
 }
 
-// NewSpellListDockable creates a new ListFileDockable for spell list files.
-func NewSpellListDockable(filePath string) (*ListFileDockable, error) {
+// NewSpellListDockable creates a new unison.Dockable for spell list files.
+func NewSpellListDockable(filePath string) (unison.Dockable, error) {
 	spells, err := gurps.NewSpellsFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err

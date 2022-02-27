@@ -39,8 +39,8 @@ type SkillNode struct {
 	cellCache []*cellCache
 }
 
-// NewSkillListDockable creates a new ListFileDockable for skill list files.
-func NewSkillListDockable(filePath string) (*ListFileDockable, error) {
+// NewSkillListDockable creates a new unison.Dockable for skill list files.
+func NewSkillListDockable(filePath string) (unison.Dockable, error) {
 	skills, err := gurps.NewSkillsFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err

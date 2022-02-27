@@ -151,7 +151,7 @@ func extractCategories(row unison.TableRowData, categories map[string]bool) {
 	}
 }
 
-// TitleIcon implements FileBackedDockable
+// TitleIcon implements node.FileBackedDockable
 func (d *ListFileDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
@@ -159,22 +159,22 @@ func (d *ListFileDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable 
 	}
 }
 
-// Title implements FileBackedDockable
+// Title implements node.FileBackedDockable
 func (d *ListFileDockable) Title() string {
 	return fs.BaseName(d.path)
 }
 
-// Tooltip implements FileBackedDockable
+// Tooltip implements node.FileBackedDockable
 func (d *ListFileDockable) Tooltip() string {
 	return d.path
 }
 
-// BackingFilePath implements FileBackedDockable
+// BackingFilePath implements node.FileBackedDockable
 func (d *ListFileDockable) BackingFilePath() string {
 	return d.path
 }
 
-// Modified implements FileBackedDockable
+// Modified implements node.FileBackedDockable
 func (d *ListFileDockable) Modified() bool {
 	return false
 }

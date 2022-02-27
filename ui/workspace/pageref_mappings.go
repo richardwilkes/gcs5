@@ -20,6 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace/external"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -67,7 +68,7 @@ func OpenReference(wnd *unison.Window, ref, highlight string) {
 		}
 		if pageRef != nil {
 			if d, wasOpen := OpenFile(wnd, pageRef.Path); d != nil {
-				if pdfDockable, ok := d.(*PDFDockable); ok {
+				if pdfDockable, ok := d.(*external.PDFDockable); ok {
 					pdfDockable.SetSearchText(highlight)
 					pdfDockable.LoadPage(page + pageRef.Offset - 1) // The pdf package uses 0 for the first page, not 1
 					if !wasOpen {

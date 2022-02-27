@@ -15,7 +15,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/unison"
 )
@@ -29,7 +28,9 @@ const (
 
 // FileInfo contains some static information about a given file type.
 type FileInfo struct {
+	Extension    string
 	SVG          *unison.SVG
+	Load         func(filePath string) (unison.Dockable, error)
 	IsSpecial    bool
 	IsGCSData    bool
 	IsImage      bool
@@ -40,25 +41,9 @@ type FileInfo struct {
 // FileTypes holds a map of keys to FileInfo data.
 var FileTypes = make(map[string]*FileInfo)
 
-func init() {
-	FileTypes[ClosedFolder] = &FileInfo{SVG: res.ClosedFolderSVG, IsSpecial: true}
-	FileTypes[OpenFolder] = &FileInfo{SVG: res.OpenFolderSVG, IsSpecial: true}
-	FileTypes[GenericFile] = &FileInfo{SVG: res.GenericFileSVG, IsSpecial: true}
-	FileTypes[".gcs"] = &FileInfo{SVG: res.GCSSheet, IsGCSData: true, IsExportable: true}
-	FileTypes[".gct"] = &FileInfo{SVG: res.GCSTemplate, IsGCSData: true}
-	FileTypes[".adq"] = &FileInfo{SVG: res.GCSAdvantages, IsGCSData: true}
-	FileTypes[".adm"] = &FileInfo{SVG: res.GCSAdvantageModifiers, IsGCSData: true}
-	FileTypes[".eqp"] = &FileInfo{SVG: res.GCSEquipment, IsGCSData: true}
-	FileTypes[".eqm"] = &FileInfo{SVG: res.GCSEquipmentModifiers, IsGCSData: true}
-	FileTypes[".skl"] = &FileInfo{SVG: res.GCSSkills, IsGCSData: true}
-	FileTypes[".spl"] = &FileInfo{SVG: res.GCSSpells, IsGCSData: true}
-	FileTypes[".not"] = &FileInfo{SVG: res.GCSNotes, IsGCSData: true}
-	FileTypes[".pdf"] = &FileInfo{SVG: res.PDFFileSVG, IsPDF: true}
-	FileTypes[".png"] = &FileInfo{SVG: res.ImageFileSVG, IsImage: true}
-	FileTypes[".jpg"] = &FileInfo{SVG: res.ImageFileSVG, IsImage: true}
-	FileTypes[".jpeg"] = &FileInfo{SVG: res.ImageFileSVG, IsImage: true}
-	FileTypes[".webp"] = &FileInfo{SVG: res.ImageFileSVG, IsImage: true}
-	FileTypes[".gif"] = &FileInfo{SVG: res.ImageFileSVG, IsImage: true}
+// Register with the central registry.
+func (f *FileInfo) Register() {
+	FileTypes[f.Extension] = f
 }
 
 // FileInfoFor returns the FileInfo for the given file path's extension.

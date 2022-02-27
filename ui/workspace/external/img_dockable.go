@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package workspace
+package external
 
 import (
 	"fmt"
@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/library"
+	"github.com/richardwilkes/gcs/ui/workspace/node"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -29,8 +30,8 @@ const (
 )
 
 var (
-	_ FileBackedDockable = &ImageDockable{}
-	_ unison.TabCloser   = &ImageDockable{}
+	_ node.FileBackedDockable = &ImageDockable{}
+	_ unison.TabCloser        = &ImageDockable{}
 )
 
 // ImageDockable holds the view for an image file.
@@ -47,8 +48,8 @@ type ImageDockable struct {
 	inDrag     bool
 }
 
-// NewImageDockable creates a new FileBackedDockable for image files.
-func NewImageDockable(filePath string) (*ImageDockable, error) {
+// NewImageDockable creates a new unison.Dockable for image files.
+func NewImageDockable(filePath string) (unison.Dockable, error) {
 	img, err := unison.NewImageFromFilePathOrURL(filePath, 1)
 	if err != nil {
 		return nil, err
@@ -245,7 +246,7 @@ func (d *ImageDockable) draw(gc *unison.Canvas, dirty geom32.Rect) {
 	gc.DrawImageInRect(d.img, geom32.NewRect(0, 0, size.Width*float32(d.scale)/100, size.Height*float32(d.scale)/100), nil, nil)
 }
 
-// TitleIcon implements FileBackedDockable
+// TitleIcon implements node.FileBackedDockable
 func (d *ImageDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
@@ -253,22 +254,22 @@ func (d *ImageDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	}
 }
 
-// Title implements FileBackedDockable
+// Title implements node.FileBackedDockable
 func (d *ImageDockable) Title() string {
 	return xfs.BaseName(d.path)
 }
 
-// Tooltip implements FileBackedDockable
+// Tooltip implements node.FileBackedDockable
 func (d *ImageDockable) Tooltip() string {
 	return d.path
 }
 
-// BackingFilePath implements FileBackedDockable
+// BackingFilePath implements node.FileBackedDockable
 func (d *ImageDockable) BackingFilePath() string {
 	return d.path
 }
 
-// Modified implements FileBackedDockable
+// Modified implements node.FileBackedDockable
 func (d *ImageDockable) Modified() bool {
 	return false
 }
