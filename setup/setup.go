@@ -17,7 +17,6 @@ import (
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/gcs/ui/workspace/external"
 	"github.com/richardwilkes/gcs/ui/workspace/gurps"
-	"github.com/richardwilkes/gcs/ui/workspace/settings"
 )
 
 // Setup the application. This code is here to break circular dependencies.
@@ -26,6 +25,4 @@ func Setup() {
 	external.RegisterFileTypes()
 	gurps.RegisterFileTypes()
 	trampolines.MenuSetup = menus.Setup
-	trampolines.OpenFile = workspace.OpenFile
-	trampolines.OpenPageReference = settings.OpenPageReference
 }
