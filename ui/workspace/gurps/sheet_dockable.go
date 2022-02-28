@@ -16,20 +16,32 @@ import (
 	"path/filepath"
 
 	"github.com/richardwilkes/gcs/model/gurps"
+	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/library"
+	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/model/theme"
+	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/gcs/ui/workspace/gurps/sheet"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
+var (
+	_ workspace.FileBackedDockable = &SheetDockable{}
+	_ sheet.ScaleProvider          = &SheetDockable{}
+)
+
 // SheetDockable holds the view for a GURPS character sheet.
 type SheetDockable struct {
 	unison.Panel
-	path   string
-	scroll *unison.ScrollPanel
-	entity *gurps.Entity
+	path       string
+	scroll     *unison.ScrollPanel
+	entity     *gurps.Entity
+	scaleField *widget.PercentageField
+	scale      int
 }
 
 // NewSheetDockable creates a new unison.Dockable for GURPS character sheet files.
@@ -43,6 +55,7 @@ func NewSheetDockable(filePath string) (unison.Dockable, error) {
 		path:   filePath,
 		scroll: unison.NewScrollPanel(),
 		entity: entity,
+		scale:  settings.Global().General.InitialUIScale,
 	}
 	d.Self = d
 	d.SetLayout(&unison.FlexLayout{
@@ -68,11 +81,43 @@ func NewSheetDockable(filePath string) (unison.Dockable, error) {
 		gc.DrawRect(rect, theme.PageVoidColor.Paint(gc, rect, unison.Fill))
 	}
 
+	d.scaleField = widget.NewPercentageField(d.scale, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, func(v int) {
+		d.scale = v
+		r := pages.FrameRect()
+		_, r.Size, _ = pages.Sizes(geom32.Size{})
+		pages.SetFrameRect(r)
+	})
+	d.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
+
+	toolbar := unison.NewPanel()
+	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, geom32.Insets{Bottom: 1}, false),
+		unison.NewEmptyBorder(geom32.Insets{
+			Top:    unison.StdVSpacing,
+			Left:   unison.StdHSpacing,
+			Bottom: unison.StdVSpacing,
+			Right:  unison.StdHSpacing,
+		})))
+	toolbar.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		HGrab:  true,
+	})
+	toolbar.AddChild(d.scaleField)
+	toolbar.SetLayout(&unison.FlexLayout{
+		Columns:  len(toolbar.Children()),
+		HSpacing: unison.StdHSpacing,
+	})
+
+	d.AddChild(toolbar)
 	d.AddChild(d.scroll)
 	return d, nil
 }
 
-// TitleIcon implements node.FileBackedDockable
+// CurrentScale implements sheet.ScaleProvider
+func (d *SheetDockable) CurrentScale() float32 {
+	return float32(d.scale) / 100.0
+}
+
+// TitleIcon implements workspace.FileBackedDockable
 func (d *SheetDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
@@ -80,22 +125,22 @@ func (d *SheetDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	}
 }
 
-// Title implements node.FileBackedDockable
+// Title implements workspace.FileBackedDockable
 func (d *SheetDockable) Title() string {
 	return fs.BaseName(d.path)
 }
 
-// Tooltip implements node.FileBackedDockable
+// Tooltip implements workspace.FileBackedDockable
 func (d *SheetDockable) Tooltip() string {
 	return d.path
 }
 
-// BackingFilePath implements node.FileBackedDockable
+// BackingFilePath implements workspace.FileBackedDockable
 func (d *SheetDockable) BackingFilePath() string {
 	return d.path
 }
 
-// Modified implements node.FileBackedDockable
+// Modified implements workspace.FileBackedDockable
 func (d *SheetDockable) Modified() bool {
 	return false
 }

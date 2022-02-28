@@ -36,7 +36,7 @@ func NewPage(entity *gurps.Entity) *Page {
 	p.Self = p
 	p.SetSizer(p.pageSizer)
 	p.DrawCallback = p.drawSelf
-	p.AdjustBorder()
+	p.FrameChangeCallback = p.AdjustBorder
 	return p
 }
 

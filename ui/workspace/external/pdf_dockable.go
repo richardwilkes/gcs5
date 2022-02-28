@@ -14,7 +14,6 @@ package external
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/richardwilkes/gcs/model/library"
@@ -51,7 +50,7 @@ type PDFDockable struct {
 	scroll             *unison.ScrollPanel
 	docPanel           *unison.Panel
 	pageNumberField    *unison.Field
-	scaleField         *unison.Field
+	scaleField         *widget.PercentageField
 	searchField        *unison.Field
 	matchesLabel       *unison.Label
 	backButton         *unison.Button
@@ -155,25 +154,14 @@ func NewPDFDockable(filePath string) (unison.Dockable, error) {
 	ofLabel.Font = unison.DefaultFieldTheme.Font
 	ofLabel.Text = fmt.Sprintf(i18n.Text("of %d"), d.pdf.PageCount())
 
-	d.scaleField = unison.NewField()
-	d.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
-	d.scaleField.MinimumTextWidth = d.scaleField.Font.SimpleWidth(strconv.Itoa(maxPDFDockableScale) + "%")
-	d.scaleField.SetText(strconv.Itoa(d.scale) + "%")
-	d.scaleField.ModifiedCallback = func() {
+	d.scaleField = widget.NewPercentageField(d.scale, minPDFDockableScale, maxPDFDockableScale, func(v int) {
 		if d.noUpdate {
 			return
 		}
-		if s, e := strconv.Atoi(strings.TrimRight(d.scaleField.Text(), "%")); e == nil && s >= minPDFDockableScale && s <= maxPDFDockableScale {
-			d.scale = s
-			d.LoadPage(d.pdf.MostRecentPageNumber())
-		}
-	}
-	d.scaleField.ValidateCallback = func() bool {
-		if s, e := strconv.Atoi(strings.TrimRight(d.scaleField.Text(), "%")); e != nil || s < minPDFDockableScale || s > maxPDFDockableScale {
-			return false
-		}
-		return true
-	}
+		d.scale = v
+		d.LoadPage(d.pdf.MostRecentPageNumber())
+	})
+	d.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
 
 	d.searchField = widget.NewSearchField()
 	pageSearch := i18n.Text("Page Search")
@@ -285,9 +273,8 @@ func (d *PDFDockable) pageLoaded() {
 		d.pageNumberField.Parent().MarkForLayoutAndRedraw()
 	}
 
-	scaleText := strconv.Itoa(d.scale) + "%"
-	if scaleText != d.scaleField.Text() {
-		d.scaleField.SetText(scaleText)
+	if d.scaleField.Value() != d.scale {
+		d.scaleField.SetValue(d.scale)
 		d.scaleField.Parent().MarkForLayoutAndRedraw()
 	}
 
@@ -414,7 +401,7 @@ func (d *PDFDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bool
 	if d.scale != scale {
 		d.scale = scale
 		d.noUpdate = true
-		d.scaleField.SetText(strconv.Itoa(d.scale) + "%")
+		d.scaleField.SetValue(d.scale)
 		d.noUpdate = false
 		d.LoadPage(d.pdf.MostRecentPageNumber())
 	}
@@ -524,7 +511,7 @@ func (d *PDFDockable) drawOverlayMsg(gc *unison.Canvas, dirty geom32.Rect, msg s
 	text.Draw(gc, x, r.Y+(r.Height-height)/2+baseline)
 }
 
-// TitleIcon implements node.FileBackedDockable
+// TitleIcon implements workspace.FileBackedDockable
 func (d *PDFDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
@@ -532,22 +519,22 @@ func (d *PDFDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	}
 }
 
-// Title implements node.FileBackedDockable
+// Title implements workspace.FileBackedDockable
 func (d *PDFDockable) Title() string {
 	return fs.BaseName(d.path)
 }
 
-// Tooltip implements node.FileBackedDockable
+// Tooltip implements workspace.FileBackedDockable
 func (d *PDFDockable) Tooltip() string {
 	return d.path
 }
 
-// BackingFilePath implements node.FileBackedDockable
+// BackingFilePath implements workspace.FileBackedDockable
 func (d *PDFDockable) BackingFilePath() string {
 	return d.path
 }
 
-// Modified implements node.FileBackedDockable
+// Modified implements workspace.FileBackedDockable
 func (d *PDFDockable) Modified() bool {
 	return false
 }

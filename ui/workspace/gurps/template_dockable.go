@@ -67,7 +67,7 @@ func NewTemplateDockable(filePath string) (unison.Dockable, error) {
 	return d, nil
 }
 
-// TitleIcon implements node.FileBackedDockable
+// TitleIcon implements workspace.FileBackedDockable
 func (d *TemplateDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
@@ -75,22 +75,22 @@ func (d *TemplateDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable 
 	}
 }
 
-// Title implements node.FileBackedDockable
+// Title implements workspace.FileBackedDockable
 func (d *TemplateDockable) Title() string {
 	return fs.BaseName(d.path)
 }
 
-// Tooltip implements node.FileBackedDockable
+// Tooltip implements workspace.FileBackedDockable
 func (d *TemplateDockable) Tooltip() string {
 	return d.path
 }
 
-// BackingFilePath implements node.FileBackedDockable
+// BackingFilePath implements workspace.FileBackedDockable
 func (d *TemplateDockable) BackingFilePath() string {
 	return d.path
 }
 
-// Modified implements node.FileBackedDockable
+// Modified implements workspace.FileBackedDockable
 func (d *TemplateDockable) Modified() bool {
 	return false
 }

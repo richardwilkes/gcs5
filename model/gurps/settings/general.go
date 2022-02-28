@@ -40,9 +40,9 @@ var (
 	ImageResolutionDef  = 200
 	ImageResolutionMin  = 50
 	ImageResolutionMax  = 400
-	InitialUIScaleDef   = fixed.F64d4FromInt(125)
-	InitialUIScaleMin   = fxp.Ten
-	InitialUIScaleMax   = fixed.F64d4FromInt(999)
+	InitialUIScaleDef   = 125
+	InitialUIScaleMin   = 50
+	InitialUIScaleMax   = 400
 )
 
 // General holds settings for a sheet.
@@ -54,7 +54,7 @@ type General struct {
 	InitialPoints               fixed.F64d4 `json:"initial_points,omitempty"`
 	TooltipDelay                fixed.F64d4 `json:"tooltip_delay,omitempty"`
 	TooltipDismissal            fixed.F64d4 `json:"tooltip_dismissal,omitempty"`
-	InitialUIScale              fixed.F64d4 `json:"initial_scale,omitempty"`
+	InitialUIScale              int         `json:"initial_scale,omitempty"`
 	ImageResolution             int         `json:"image_resolution,omitempty"`
 	AutoFillProfile             bool        `json:"auto_fill_profile,omitempty"`
 	IncludeUnspentPointsInTotal bool        `json:"include_unspent_points_in_total,omitempty"`
@@ -101,7 +101,7 @@ func NewGeneralFromFile(fileSystem fs.FS, filePath string) (*General, error) {
 	s.TooltipDelay = fxp.ResetIfOutOfRange(s.TooltipDelay, TooltipDelayMin, TooltipDelayMax, TooltipDelayDef)
 	s.TooltipDismissal = fxp.ResetIfOutOfRange(s.TooltipDismissal, TooltipDismissalMin, TooltipDismissalMax, TooltipDismissalDef)
 	s.ImageResolution = fxp.ResetIfOutOfRangeInt(s.ImageResolution, ImageResolutionMin, ImageResolutionMax, ImageResolutionDef)
-	s.InitialUIScale = fxp.ResetIfOutOfRange(s.InitialUIScale, InitialUIScaleMin, InitialUIScaleMax, InitialUIScaleDef)
+	s.InitialUIScale = fxp.ResetIfOutOfRangeInt(s.InitialUIScale, InitialUIScaleMin, InitialUIScaleMax, InitialUIScaleDef)
 	return s, nil
 }
 

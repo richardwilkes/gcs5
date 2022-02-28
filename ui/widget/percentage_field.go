@@ -13,10 +13,11 @@ package widget
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/mathf32"
 	"github.com/richardwilkes/unison"
 )
@@ -24,13 +25,14 @@ import (
 // PercentageField holds the data for a percentage field.
 type PercentageField struct {
 	*unison.Field
-	applier func(v fixed.F64d4)
-	minimum fixed.F64d4
-	maximum fixed.F64d4
+	applier func(v int)
+	value   int
+	minimum int
+	maximum int
 }
 
 // NewPercentageField creates a new field that holds a percentage (where 100 == 100%).
-func NewPercentageField(value, min, max fixed.F64d4, applier func(fixed.F64d4)) *PercentageField {
+func NewPercentageField(value, min, max int, applier func(int)) *PercentageField {
 	f := &PercentageField{
 		Field:   unison.NewField(),
 		applier: applier,
@@ -38,30 +40,37 @@ func NewPercentageField(value, min, max fixed.F64d4, applier func(fixed.F64d4)) 
 		maximum: max,
 	}
 	f.Self = f
-	f.SetText(value.String() + "%")
+	f.SetValue(value)
 	f.ModifiedCallback = f.modified
 	f.ValidateCallback = f.validate
-	f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth((min.Trunc()+fixed.F64d4One-1).String()+"%"),
-		f.Font.SimpleWidth((max.Trunc()+fixed.F64d4One-1).String()+"%"))
+	f.RuneTypedCallback = f.runeTyped
+	f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth(strconv.Itoa(min)+"%"), f.Font.SimpleWidth(strconv.Itoa(max)+"%"))
 	return f
 }
 
-func (f *PercentageField) trimmed() string {
-	return strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(f.Text()), "%"))
+// Value returns the current value of the field.
+func (f *PercentageField) Value() int {
+	return f.value
+}
+
+// SetValue sets the current value of the field. Will be limited to the minimum and maximum values.
+func (f *PercentageField) SetValue(value int) {
+	f.value = xmath.MinInt(xmath.MaxInt(value, f.minimum), f.maximum)
+	f.SetText(strconv.Itoa(f.value) + "%")
 }
 
 func (f *PercentageField) validate() bool {
-	v, err := fixed.F64d4FromString(f.trimmed())
+	v, err := strconv.Atoi(f.trimmed())
 	if err != nil {
 		f.Tooltip = unison.NewTooltipWithText(i18n.Text("Invalid percentage"))
 		return false
 	}
 	if v < f.minimum {
-		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Percentage must be at least %s%%"), f.minimum.String()))
+		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Percentage must be at least %d%%"), f.minimum))
 		return false
 	}
 	if v > f.maximum {
-		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Percentage must be no more than %s%%"), f.maximum.String()))
+		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Percentage must be no more than %d%%"), f.maximum))
 		return false
 	}
 	f.Tooltip = nil
@@ -69,7 +78,33 @@ func (f *PercentageField) validate() bool {
 }
 
 func (f *PercentageField) modified() {
-	if v, err := fixed.F64d4FromString(f.trimmed()); err == nil && v >= f.minimum && v <= f.maximum {
+	if v, err := strconv.Atoi(f.trimmed()); err == nil && v >= f.minimum && v <= f.maximum {
+		f.value = v
 		f.applier(v)
+	}
+}
+
+func (f *PercentageField) trimmed() string {
+	return strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(f.Text()), "%"))
+}
+
+func (f *PercentageField) runeTyped(ch rune) bool {
+	switch {
+	case ch >= '0' && ch <= '9':
+		return f.DefaultRuneTyped(ch)
+	case ch == '-' || ch == '_':
+		f.SetValue(f.Value() - 10)
+		return true
+	case ch == '=' || ch == '+':
+		f.SetValue(f.Value() + 10)
+		return true
+	case ch == '%':
+		if strings.Contains(f.SelectedText(), "%") || !strings.Contains(f.Text(), "%") {
+			return f.DefaultRuneTyped(ch)
+		}
+		fallthrough
+	default:
+		unison.Beep()
+		return false
 	}
 }

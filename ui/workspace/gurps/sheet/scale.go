@@ -25,10 +25,11 @@ type ScaleProvider interface {
 // 1.
 func DetermineScale(p unison.Paneler) float32 {
 	for !toolbox.IsNil(p) {
-		if s, ok := p.(ScaleProvider); ok {
+		panel := p.AsPanel()
+		if s, ok := panel.Self.(ScaleProvider); ok {
 			return s.CurrentScale()
 		}
-		p = p.AsPanel().Parent()
+		p = panel.Parent()
 	}
 	return 1
 }

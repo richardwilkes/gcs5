@@ -13,11 +13,11 @@ package external
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/richardwilkes/gcs/model/library"
+	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
+	"github.com/richardwilkes/toolbox/i18n"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -41,7 +41,7 @@ type ImageDockable struct {
 	img        *unison.Image
 	imgPanel   *unison.Panel
 	scroll     *unison.ScrollPanel
-	scaleField *unison.Field
+	scaleField *widget.PercentageField
 	dragStart  geom32.Point
 	dragOrigin geom32.Point
 	scale      int
@@ -81,31 +81,21 @@ func NewImageDockable(filePath string) (unison.Dockable, error) {
 	})
 	d.scroll.SetContent(d.imgPanel, unison.FillBehavior)
 
-	d.scaleField = unison.NewField()
-	d.scaleField.MinimumTextWidth = d.scaleField.Font.SimpleWidth(strconv.Itoa(maxImageDockableScale) + "%")
-	d.scaleField.SetText(strconv.Itoa(d.scale) + "%")
-	d.scaleField.ModifiedCallback = func() {
-		if s, e := strconv.Atoi(strings.TrimRight(d.scaleField.Text(), "%")); e == nil && s >= minImageDockableScale && s <= maxImageDockableScale {
-			viewRect := d.scroll.ContentView().ContentRect(false)
-			center := d.imgPanel.PointFromRoot(d.scroll.ContentView().PointToRoot(viewRect.Center()))
-			center.X /= float32(d.scale) / 100
-			center.X *= float32(s) / 100
-			center.Y /= float32(d.scale) / 100
-			center.Y *= float32(s) / 100
-			d.scale = s
-			d.scroll.MarkForLayoutAndRedraw()
-			d.scroll.ValidateLayout()
-			viewRect.X = center.X - viewRect.Width/2
-			viewRect.Y = center.Y - viewRect.Height/2
-			d.imgPanel.ScrollRectIntoView(viewRect)
-		}
-	}
-	d.scaleField.ValidateCallback = func() bool {
-		if s, e := strconv.Atoi(strings.TrimRight(d.scaleField.Text(), "%")); e != nil || s < minImageDockableScale || s > maxImageDockableScale {
-			return false
-		}
-		return true
-	}
+	d.scaleField = widget.NewPercentageField(d.scale, minImageDockableScale, maxImageDockableScale, func(v int) {
+		viewRect := d.scroll.ContentView().ContentRect(false)
+		center := d.imgPanel.PointFromRoot(d.scroll.ContentView().PointToRoot(viewRect.Center()))
+		center.X /= float32(d.scale) / 100
+		center.X *= float32(v) / 100
+		center.Y /= float32(d.scale) / 100
+		center.Y *= float32(v) / 100
+		d.scale = v
+		d.scroll.MarkForLayoutAndRedraw()
+		d.scroll.ValidateLayout()
+		viewRect.X = center.X - viewRect.Width/2
+		viewRect.Y = center.Y - viewRect.Height/2
+		d.imgPanel.ScrollRectIntoView(viewRect)
+	})
+	d.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
 
 	typeLabel := unison.NewLabel()
 	typeLabel.Text = unison.EncodedImageFormatForPath(filePath).String()
@@ -181,7 +171,7 @@ func (d *ImageDockable) mouseWheel(_, delta geom32.Point, mod unison.Modifiers) 
 	} else if scale > maxImageDockableScale {
 		scale = maxImageDockableScale
 	}
-	d.scaleField.SetText(strconv.Itoa(scale) + "%")
+	d.scaleField.SetValue(scale)
 	return true
 }
 
@@ -228,7 +218,7 @@ func (d *ImageDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bo
 		return false
 	}
 	if d.scale != scale {
-		d.scaleField.SetText(strconv.Itoa(scale) + "%")
+		d.scaleField.SetValue(scale)
 	}
 	return true
 }
@@ -246,7 +236,7 @@ func (d *ImageDockable) draw(gc *unison.Canvas, dirty geom32.Rect) {
 	gc.DrawImageInRect(d.img, geom32.NewRect(0, 0, size.Width*float32(d.scale)/100, size.Height*float32(d.scale)/100), nil, nil)
 }
 
-// TitleIcon implements node.FileBackedDockable
+// TitleIcon implements workspace.FileBackedDockable
 func (d *ImageDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
@@ -254,22 +244,22 @@ func (d *ImageDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	}
 }
 
-// Title implements node.FileBackedDockable
+// Title implements workspace.FileBackedDockable
 func (d *ImageDockable) Title() string {
 	return xfs.BaseName(d.path)
 }
 
-// Tooltip implements node.FileBackedDockable
+// Tooltip implements workspace.FileBackedDockable
 func (d *ImageDockable) Tooltip() string {
 	return d.path
 }
 
-// BackingFilePath implements node.FileBackedDockable
+// BackingFilePath implements workspace.FileBackedDockable
 func (d *ImageDockable) BackingFilePath() string {
 	return d.path
 }
 
-// Modified implements node.FileBackedDockable
+// Modified implements workspace.FileBackedDockable
 func (d *ImageDockable) Modified() bool {
 	return false
 }

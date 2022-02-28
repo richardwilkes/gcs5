@@ -133,7 +133,7 @@ func (d *generalSettingsDockable) createScaleField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Initial Scale")))
 	d.initialScaleField = widget.NewPercentageField(settings.Global().General.InitialUIScale,
 		gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax,
-		func(v fixed.F64d4) { settings.Global().General.InitialUIScale = v })
+		func(v int) { settings.Global().General.InitialUIScale = v })
 	content.AddChild(widget.WrapWithSpan(2, d.initialScaleField))
 }
 
@@ -202,7 +202,7 @@ func (d *generalSettingsDockable) sync() {
 	widget.SetCheckBoxState(d.includeUnspentPointsInTotalCheckbox, s.IncludeUnspentPointsInTotal)
 	d.techLevelField.SetText(s.DefaultTechLevel)
 	d.calendarPopup.Select(s.CalendarRef(settings.Global().Libraries()).Name)
-	d.initialScaleField.SetText(s.InitialUIScale.String() + "%")
+	d.initialScaleField.SetText(strconv.Itoa(s.InitialUIScale) + "%")
 	d.exportResolutionField.SetText(strconv.Itoa(s.ImageResolution))
 	d.tooltipDelayField.SetText(s.TooltipDelay.String())
 	d.tooltipDismissalField.SetText(s.TooltipDismissal.String())

@@ -167,7 +167,7 @@ func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHead
 	return d
 }
 
-// TitleIcon implements node.FileBackedDockable
+// TitleIcon implements workspace.FileBackedDockable
 func (d *ListFileDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
@@ -175,22 +175,22 @@ func (d *ListFileDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable 
 	}
 }
 
-// Title implements node.FileBackedDockable
+// Title implements workspace.FileBackedDockable
 func (d *ListFileDockable) Title() string {
 	return fs.BaseName(d.path)
 }
 
-// Tooltip implements node.FileBackedDockable
+// Tooltip implements workspace.FileBackedDockable
 func (d *ListFileDockable) Tooltip() string {
 	return d.path
 }
 
-// BackingFilePath implements node.FileBackedDockable
+// BackingFilePath implements workspace.FileBackedDockable
 func (d *ListFileDockable) BackingFilePath() string {
 	return d.path
 }
 
-// Modified implements node.FileBackedDockable
+// Modified implements workspace.FileBackedDockable
 func (d *ListFileDockable) Modified() bool {
 	return false
 }
