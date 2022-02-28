@@ -14,16 +14,17 @@ package external
 import (
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/res"
+	"github.com/richardwilkes/unison"
 )
 
 // RegisterFileTypes registers external file types.
 func RegisterFileTypes() {
 	registerPDFFileInfo()
-	registerImageFileInfo(".gif")
-	registerImageFileInfo(".jpeg")
-	registerImageFileInfo(".jpg")
-	registerImageFileInfo(".png")
-	registerImageFileInfo(".webp")
+	for _, one := range unison.KnownImageFormatExtensions {
+		if unison.EncodedImageFormatForPath(one).CanRead() {
+			registerImageFileInfo(one)
+		}
+	}
 }
 
 func registerImageFileInfo(ext string) {
