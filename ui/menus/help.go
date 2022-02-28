@@ -17,6 +17,9 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+// WebSiteDomain holds the web site domain for GCS.
+const WebSiteDomain = "gurpscharactersheet.com"
+
 func setupHelpMenu(bar unison.Menu) {
 	f := bar.Factory()
 	m := bar.Menu(unison.HelpMenuID)
@@ -79,7 +82,7 @@ var WebSite = &unison.Action{
 	ID:    WebSiteItemID,
 	Title: i18n.Text("Web Site"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		showWebPage("https://gurpscharactersheet.com")
+		showWebPage("https://" + WebSiteDomain)
 	},
 }
 

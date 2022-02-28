@@ -22,6 +22,12 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+// Additional fonts over and above what unison provides by default.
+var (
+	PageFooterPrimaryFont   = &unison.IndirectFont{Font: unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.MediumFontWeight, unison.StandardSpacing, unison.NoSlant).Font(6)}
+	PageFooterSecondaryFont = &unison.IndirectFont{Font: unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.NormalFontWeight, unison.StandardSpacing, unison.NoSlant).Font(5)}
+)
+
 var (
 	// CurrentFonts holds the current theme fonts.
 	CurrentFonts = []*ThemedFont{
@@ -32,6 +38,8 @@ var (
 		{ID: "label", Title: i18n.Text("Label"), Font: unison.LabelFont},
 		{ID: "field", Title: i18n.Text("Field"), Font: unison.FieldFont},
 		{ID: "keyboard", Title: i18n.Text("Keyboard"), Font: unison.KeyboardFont},
+		{ID: "page.footer.primary", Title: i18n.Text("Page Primary Footer"), Font: PageFooterPrimaryFont},
+		{ID: "page.footer.secondary", Title: i18n.Text("Page Secondary Footer"), Font: PageFooterSecondaryFont},
 	}
 	// FactoryFonts holds the original theme before any modifications.
 	FactoryFonts []*ThemedFont

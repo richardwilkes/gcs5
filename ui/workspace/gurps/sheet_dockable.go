@@ -17,6 +17,8 @@ import (
 
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/library"
+	"github.com/richardwilkes/gcs/model/theme"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/sheet"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -43,26 +45,29 @@ func NewSheetDockable(filePath string) (unison.Dockable, error) {
 		entity: entity,
 	}
 	d.Self = d
+	d.SetLayout(&unison.FlexLayout{
+		Columns: 1,
+		HAlign:  unison.FillAlignment,
+		VAlign:  unison.FillAlignment,
+	})
 
-	label := unison.NewLabel()
-	label.Text = "Not yet implemented…"
-	label.HAlign = unison.MiddleAlignment
-	label.VAlign = unison.MiddleAlignment
-	label.Font = unison.LabelFont.Face().Font(24)
-	d.scroll.SetContent(label, unison.FillBehavior)
-
+	pages := unison.NewPanel()
+	pages.SetLayout(&unison.FlexLayout{
+		Columns:  1,
+		VSpacing: 1,
+	})
+	pages.AddChild(sheet.NewPage(entity))
+	d.scroll.SetContent(pages, unison.UnmodifiedBehavior)
 	d.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 		VGrab:  true,
 	})
+	d.scroll.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
+		gc.DrawRect(rect, theme.PageVoidColor.Paint(gc, rect, unison.Fill))
+	}
 
-	d.SetLayout(&unison.FlexLayout{
-		Columns: 1,
-		HAlign:  unison.FillAlignment,
-		VAlign:  unison.FillAlignment,
-	})
 	d.AddChild(d.scroll)
 	return d, nil
 }
