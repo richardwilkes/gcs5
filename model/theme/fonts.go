@@ -24,6 +24,8 @@ import (
 
 // Additional fonts over and above what unison provides by default.
 var (
+	PageLabelPrimaryFont    = &unison.IndirectFont{Font: unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.NormalFontWeight, unison.StandardSpacing, unison.NoSlant).Font(7)}
+	PageLabelSecondaryFont  = &unison.IndirectFont{Font: unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.NormalFontWeight, unison.StandardSpacing, unison.NoSlant).Font(6)}
 	PageFooterPrimaryFont   = &unison.IndirectFont{Font: unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.MediumFontWeight, unison.StandardSpacing, unison.NoSlant).Font(6)}
 	PageFooterSecondaryFont = &unison.IndirectFont{Font: unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.NormalFontWeight, unison.StandardSpacing, unison.NoSlant).Font(5)}
 )
@@ -38,6 +40,8 @@ var (
 		{ID: "label", Title: i18n.Text("Label"), Font: unison.LabelFont},
 		{ID: "field", Title: i18n.Text("Field"), Font: unison.FieldFont},
 		{ID: "keyboard", Title: i18n.Text("Keyboard"), Font: unison.KeyboardFont},
+		{ID: "page.label.primary", Title: i18n.Text("Page Primary Labels"), Font: PageLabelPrimaryFont},
+		{ID: "page.label.secondary", Title: i18n.Text("Page Secondary Labels"), Font: PageLabelSecondaryFont},
 		{ID: "page.footer.primary", Title: i18n.Text("Page Primary Footer"), Font: PageFooterPrimaryFont},
 		{ID: "page.footer.secondary", Title: i18n.Text("Page Secondary Footer"), Font: PageFooterSecondaryFont},
 	}

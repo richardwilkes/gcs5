@@ -21,8 +21,8 @@ type ScaleProvider interface {
 	CurrentScale() float32
 }
 
-// DetermineScale walks the hierarchy looking for a ScaleProvider. If found, returns its current scale, otherwise returns
-// 1.
+// DetermineScale walks the hierarchy looking for a ScaleProvider. If found, returns its current scale (where 1 is 100%),
+// otherwise returns 1.
 func DetermineScale(p unison.Paneler) float32 {
 	for !toolbox.IsNil(p) {
 		panel := p.AsPanel()

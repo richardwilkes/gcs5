@@ -69,7 +69,7 @@ func NewSheetDockable(filePath string) (unison.Dockable, error) {
 		Columns:  1,
 		VSpacing: 1,
 	})
-	pages.AddChild(sheet.NewPage(entity))
+	pages.AddChild(d.createFirstPage())
 	d.scroll.SetContent(pages, unison.UnmodifiedBehavior)
 	d.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
@@ -155,4 +155,10 @@ func (d *SheetDockable) AttemptClose() {
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.Close(d)
 	}
+}
+
+func (d *SheetDockable) createFirstPage() *sheet.Page {
+	p := sheet.NewPage(d.entity)
+	p.AddChild(sheet.NewPortrait(d.entity))
+	return p
 }

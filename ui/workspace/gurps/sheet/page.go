@@ -27,21 +27,43 @@ import (
 // Page holds a logical page worth of content.
 type Page struct {
 	unison.Panel
+	flex   *unison.FlexLayout
 	entity *gurps.Entity
 }
 
 // NewPage creates a new page.
 func NewPage(entity *gurps.Entity) *Page {
-	p := &Page{entity: entity}
+	p := &Page{
+		entity: entity,
+		flex: &unison.FlexLayout{
+			Columns:  1,
+			HSpacing: 1,
+			VSpacing: 1,
+		},
+	}
 	p.Self = p
 	p.SetSizer(p.pageSizer)
+	p.SetLayout(p)
 	p.DrawCallback = p.drawSelf
-	p.FrameChangeCallback = p.AdjustBorder
+	p.FrameChangeCallback = p.frameChanged
 	return p
+}
+
+// LayoutSizes implements unison.Layout
+func (p *Page) LayoutSizes(_ *unison.Panel, _ geom32.Size) (min, pref, max geom32.Size) {
+	_, pref, _ = p.scaleSizeInsets()
+	return pref, pref, pref
+}
+
+// PerformLayout implements unison.Layout
+func (p *Page) PerformLayout(_ *unison.Panel) {
+	p.flex.PerformLayout(p.AsPanel())
 }
 
 func (p *Page) scaleSizeInsets() (scale float32, size geom32.Size, insets geom32.Insets) {
 	scale = DetermineScale(p)
+	p.flex.HSpacing = scale
+	p.flex.VSpacing = scale
 	sheetSettings := gurps.SheetSettingsFor(p.entity)
 	w, h := sheetSettings.Page.Size.Dimensions()
 	size.Width = w.Pixels() * scale
@@ -56,8 +78,7 @@ func (p *Page) scaleSizeInsets() (scale float32, size geom32.Size, insets geom32
 	return
 }
 
-// AdjustBorder applies the current scaling factor to the border.
-func (p *Page) AdjustBorder() {
+func (p *Page) frameChanged() {
 	_, _, insets := p.scaleSizeInsets()
 	p.SetBorder(unison.NewEmptyBorder(insets))
 }
