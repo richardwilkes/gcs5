@@ -42,16 +42,16 @@ func NewPage(entity *gurps.Entity) *Page {
 		},
 	}
 	p.Self = p
+	p.SetBorder(unison.NewEmptyBorder(p.insets()))
 	p.SetSizer(p.pageSizer)
 	p.SetLayout(p)
 	p.DrawCallback = p.drawSelf
-	p.FrameChangeCallback = p.frameChanged
 	return p
 }
 
 // LayoutSizes implements unison.Layout
 func (p *Page) LayoutSizes(_ *unison.Panel, _ geom32.Size) (min, pref, max geom32.Size) {
-	_, pref, _ = p.scaleSizeInsets()
+	pref = p.prefSize()
 	return pref, pref, pref
 }
 
@@ -60,37 +60,35 @@ func (p *Page) PerformLayout(_ *unison.Panel) {
 	p.flex.PerformLayout(p.AsPanel())
 }
 
-func (p *Page) scaleSizeInsets() (scale float32, size geom32.Size, insets geom32.Insets) {
-	scale = DetermineScale(p)
-	p.flex.HSpacing = scale
-	p.flex.VSpacing = scale
-	sheetSettings := gurps.SheetSettingsFor(p.entity)
-	w, h := sheetSettings.Page.Size.Dimensions()
-	size.Width = w.Pixels() * scale
-	size.Height = h.Pixels() * scale
-	insets.Top = sheetSettings.Page.TopMargin.Pixels() * scale
-	insets.Left = sheetSettings.Page.LeftMargin.Pixels() * scale
-	insets.Bottom = sheetSettings.Page.BottomMargin.Pixels() * scale
-	insets.Right = sheetSettings.Page.RightMargin.Pixels() * scale
-	pH := theme.PageFooterPrimaryFont.Face().Font(theme.PageFooterPrimaryFont.Size() * scale).LineHeight()
-	sH := theme.PageFooterSecondaryFont.Face().Font(theme.PageFooterSecondaryFont.Size() * scale).LineHeight()
-	insets.Bottom += mathf32.Max(pH, sH) + sH
-	return
+func (p *Page) prefSize() geom32.Size {
+	w, h := gurps.SheetSettingsFor(p.entity).Page.Size.Dimensions()
+	return geom32.Size{
+		Width:  w.Pixels(),
+		Height: h.Pixels(),
+	}
 }
 
-func (p *Page) frameChanged() {
-	_, _, insets := p.scaleSizeInsets()
-	p.SetBorder(unison.NewEmptyBorder(insets))
+func (p *Page) insets() geom32.Insets {
+	sheetSettings := gurps.SheetSettingsFor(p.entity)
+	insets := geom32.Insets{
+		Top:    sheetSettings.Page.TopMargin.Pixels(),
+		Left:   sheetSettings.Page.LeftMargin.Pixels(),
+		Bottom: sheetSettings.Page.BottomMargin.Pixels(),
+		Right:  sheetSettings.Page.RightMargin.Pixels(),
+	}
+	height := theme.PageFooterSecondaryFont.LineHeight()
+	insets.Bottom += mathf32.Max(theme.PageFooterPrimaryFont.LineHeight(), height) + height
+	return insets
 }
 
 func (p *Page) pageSizer(_ geom32.Size) (min, pref, max geom32.Size) {
-	_, pref, _ = p.scaleSizeInsets()
+	pref = p.prefSize()
 	return pref, pref, pref
 }
 
 func (p *Page) drawSelf(gc *unison.Canvas, _ geom32.Rect) {
-	scale, size, insets := p.scaleSizeInsets()
-	r := geom32.Rect{Size: size}
+	insets := p.insets()
+	r := geom32.Rect{Size: p.prefSize()}
 	gc.DrawRect(r, theme.PageColor.Paint(gc, r, unison.Fill))
 	r.X += insets.Left
 	r.Width -= insets.Left + insets.Right
@@ -100,11 +98,11 @@ func (p *Page) drawSelf(gc *unison.Canvas, _ geom32.Rect) {
 	pageNumber := parent.IndexOfChild(p) + 1
 
 	primaryDecorations := &unison.TextDecoration{
-		Font:  theme.PageFooterPrimaryFont.Face().Font(theme.PageFooterPrimaryFont.Size() * scale),
+		Font:  theme.PageFooterPrimaryFont,
 		Paint: theme.OnPageColor.Paint(gc, r, unison.Fill),
 	}
 	secondaryDecorations := &unison.TextDecoration{
-		Font:  theme.PageFooterSecondaryFont.Face().Font(theme.PageFooterSecondaryFont.Size() * scale),
+		Font:  theme.PageFooterSecondaryFont,
 		Paint: primaryDecorations.Paint,
 	}
 

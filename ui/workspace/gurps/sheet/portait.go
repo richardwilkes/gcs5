@@ -31,10 +31,7 @@ func NewPortrait(entity *gurps.Entity) *Portrait {
 	p := &Portrait{entity: entity}
 	p.Self = p
 	p.SetSizer(p.portraitSizer)
-	p.SetBorder(&TitledBorder{
-		Owner: p,
-		Title: i18n.Text("Portrait"),
-	})
+	p.SetBorder(&TitledBorder{Title: i18n.Text("Portrait")})
 	p.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text(`Double-click to set a character portrait, or drag an image onto this block.
 
 The dimensions of the chosen picture should be in a ratio of 3 pixels wide
@@ -47,10 +44,9 @@ Dimensions of %dx%d are ideal.`), gurps.PortraitWidth*2, gurps.PortraitHeight*2)
 
 func (p *Portrait) portraitSizer(_ geom32.Size) (min, pref, max geom32.Size) {
 	insets := p.Border().Insets()
-	scale := DetermineScale(p)
-	pref.Width = insets.Left + insets.Right + scale*gurps.PortraitWidth
-	pref.Height = insets.Top + insets.Bottom + scale*gurps.PortraitHeight
-	return min, pref, max
+	pref.Width = insets.Left + insets.Right + gurps.PortraitWidth
+	pref.Height = insets.Top + insets.Bottom + gurps.PortraitHeight
+	return pref, pref, pref
 }
 
 func (p *Portrait) drawSelf(gc *unison.Canvas, r geom32.Rect) {

@@ -29,10 +29,7 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-var (
-	_ workspace.FileBackedDockable = &SheetDockable{}
-	_ sheet.ScaleProvider          = &SheetDockable{}
-)
+var _ workspace.FileBackedDockable = &SheetDockable{}
 
 // SheetDockable holds the view for a GURPS character sheet.
 type SheetDockable struct {
@@ -41,7 +38,7 @@ type SheetDockable struct {
 	scroll     *unison.ScrollPanel
 	entity     *gurps.Entity
 	scaleField *widget.PercentageField
-	scale      int
+	pages      *unison.Panel
 }
 
 // NewSheetDockable creates a new unison.Dockable for GURPS character sheet files.
@@ -55,7 +52,7 @@ func NewSheetDockable(filePath string) (unison.Dockable, error) {
 		path:   filePath,
 		scroll: unison.NewScrollPanel(),
 		entity: entity,
-		scale:  settings.Global().General.InitialUIScale,
+		pages:  unison.NewPanel(),
 	}
 	d.Self = d
 	d.SetLayout(&unison.FlexLayout{
@@ -64,13 +61,12 @@ func NewSheetDockable(filePath string) (unison.Dockable, error) {
 		VAlign:  unison.FillAlignment,
 	})
 
-	pages := unison.NewPanel()
-	pages.SetLayout(&unison.FlexLayout{
+	d.pages.SetLayout(&unison.FlexLayout{
 		Columns:  1,
 		VSpacing: 1,
 	})
-	pages.AddChild(d.createFirstPage())
-	d.scroll.SetContent(pages, unison.UnmodifiedBehavior)
+	d.pages.AddChild(d.createFirstPage())
+	d.scroll.SetContent(d.pages, unison.UnmodifiedBehavior)
 	d.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
@@ -81,12 +77,8 @@ func NewSheetDockable(filePath string) (unison.Dockable, error) {
 		gc.DrawRect(rect, theme.PageVoidColor.Paint(gc, rect, unison.Fill))
 	}
 
-	d.scaleField = widget.NewPercentageField(d.scale, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, func(v int) {
-		d.scale = v
-		r := pages.FrameRect()
-		_, r.Size, _ = pages.Sizes(geom32.Size{})
-		pages.SetFrameRect(r)
-	})
+	scale := settings.Global().General.InitialSheetUIScale
+	d.scaleField = widget.NewPercentageField(scale, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, d.applyScale)
 	d.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
 
 	toolbar := unison.NewPanel()
@@ -109,12 +101,14 @@ func NewSheetDockable(filePath string) (unison.Dockable, error) {
 
 	d.AddChild(toolbar)
 	d.AddChild(d.scroll)
+
+	d.applyScale(scale)
 	return d, nil
 }
 
-// CurrentScale implements sheet.ScaleProvider
-func (d *SheetDockable) CurrentScale() float32 {
-	return float32(d.scale) / 100.0
+func (d *SheetDockable) applyScale(scale int) {
+	d.pages.SetScale(float32(scale) / 100)
+	d.scroll.Sync()
 }
 
 // TitleIcon implements workspace.FileBackedDockable

@@ -19,42 +19,33 @@ import (
 
 var _ unison.Border = &TitledBorder{}
 
-// TitledBorder provides a titled line border that scales.
+// TitledBorder provides a titled line border.
 type TitledBorder struct {
-	Owner unison.Paneler
 	Title string
-}
-
-func (t *TitledBorder) scaleInsetsText(paint *unison.Paint) (scale float32, insets geom32.Insets, text *unison.Text) {
-	scale = DetermineScale(t.Owner)
-	text = unison.NewText(t.Title, &unison.TextDecoration{
-		Font:  theme.PageLabelPrimaryFont.Face().Font(theme.PageLabelPrimaryFont.Size() * scale),
-		Paint: paint,
-	})
-	insets = geom32.Insets{
-		Top:    text.Height() + scale*2,
-		Left:   scale,
-		Bottom: scale,
-		Right:  scale,
-	}
-	return
 }
 
 // Insets implements unison.Border
 func (t *TitledBorder) Insets() geom32.Insets {
-	_, insets, _ := t.scaleInsetsText(nil)
-	return insets
+	return geom32.Insets{
+		Top:    theme.PageLabelPrimaryFont.LineHeight() + 2,
+		Left:   1,
+		Bottom: 1,
+		Right:  1,
+	}
 }
 
 // Draw implements unison.Border
 func (t *TitledBorder) Draw(gc *unison.Canvas, rect geom32.Rect) {
-	scale, insets, text := t.scaleInsetsText(theme.OnHeaderColor.Paint(gc, rect, unison.Fill))
 	clip := rect
-	clip.Inset(insets)
+	clip.Inset(t.Insets())
 	path := unison.NewPath()
 	path.SetFillType(unison.EvenOdd)
 	path.Rect(rect)
 	path.Rect(clip)
 	gc.DrawPath(path, theme.HeaderColor.Paint(gc, rect, unison.Fill))
-	text.Draw(gc, rect.X+(rect.Width-text.Width())/2, rect.Y+scale+text.Baseline())
+	text := unison.NewText(t.Title, &unison.TextDecoration{
+		Font:  theme.PageLabelPrimaryFont,
+		Paint: theme.OnHeaderColor.Paint(gc, rect, unison.Fill),
+	})
+	text.Draw(gc, rect.X+(rect.Width-text.Width())/2, rect.Y+1+text.Baseline())
 }

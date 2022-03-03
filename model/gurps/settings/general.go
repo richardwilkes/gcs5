@@ -28,21 +28,22 @@ import (
 
 // Default, min & max values for the general numeric settings
 var (
-	InitialPointsDef    = fixed.F64d4FromInt(150)
-	InitialPointsMin    fixed.F64d4
-	InitialPointsMax    = fixed.F64d4FromInt(9999999)
-	TooltipDelayDef     = fixed.F64d4FromStringForced("0.75")
-	TooltipDelayMin     fixed.F64d4
-	TooltipDelayMax     = fxp.Thirty
-	TooltipDismissalDef = fixed.F64d4FromInt(60)
-	TooltipDismissalMin = fixed.F64d4One
-	TooltipDismissalMax = fixed.F64d4FromInt(3600)
-	ImageResolutionDef  = 200
-	ImageResolutionMin  = 50
-	ImageResolutionMax  = 400
-	InitialUIScaleDef   = 125
-	InitialUIScaleMin   = 50
-	InitialUIScaleMax   = 400
+	InitialPointsDef       = fixed.F64d4FromInt(150)
+	InitialPointsMin       fixed.F64d4
+	InitialPointsMax       = fixed.F64d4FromInt(9999999)
+	TooltipDelayDef        = fixed.F64d4FromStringForced("0.75")
+	TooltipDelayMin        fixed.F64d4
+	TooltipDelayMax        = fxp.Thirty
+	TooltipDismissalDef    = fixed.F64d4FromInt(60)
+	TooltipDismissalMin    = fixed.F64d4One
+	TooltipDismissalMax    = fixed.F64d4FromInt(3600)
+	ImageResolutionDef     = 200
+	ImageResolutionMin     = 50
+	ImageResolutionMax     = 400
+	InitialUIScaleMin      = 50
+	InitialUIScaleMax      = 400
+	InitialListUIScaleDef  = 100
+	InitialSheetUIScaleDef = 125
 )
 
 // General holds settings for a sheet.
@@ -54,7 +55,8 @@ type General struct {
 	InitialPoints               fixed.F64d4 `json:"initial_points,omitempty"`
 	TooltipDelay                fixed.F64d4 `json:"tooltip_delay,omitempty"`
 	TooltipDismissal            fixed.F64d4 `json:"tooltip_dismissal,omitempty"`
-	InitialUIScale              int         `json:"initial_scale,omitempty"`
+	InitialListUIScale          int         `json:"initial_list_scale,omitempty"`
+	InitialSheetUIScale         int         `json:"initial_sheet_scale,omitempty"`
 	ImageResolution             int         `json:"image_resolution,omitempty"`
 	AutoFillProfile             bool        `json:"auto_fill_profile,omitempty"`
 	IncludeUnspentPointsInTotal bool        `json:"include_unspent_points_in_total,omitempty"`
@@ -74,7 +76,8 @@ func NewGeneral() *General {
 		InitialPoints:               InitialPointsDef,
 		TooltipDelay:                TooltipDelayDef,
 		TooltipDismissal:            TooltipDismissalDef,
-		InitialUIScale:              InitialUIScaleDef,
+		InitialListUIScale:          InitialListUIScaleDef,
+		InitialSheetUIScale:         InitialSheetUIScaleDef,
 		ImageResolution:             ImageResolutionDef,
 		AutoFillProfile:             true,
 		IncludeUnspentPointsInTotal: true,
@@ -101,7 +104,8 @@ func NewGeneralFromFile(fileSystem fs.FS, filePath string) (*General, error) {
 	s.TooltipDelay = fxp.ResetIfOutOfRange(s.TooltipDelay, TooltipDelayMin, TooltipDelayMax, TooltipDelayDef)
 	s.TooltipDismissal = fxp.ResetIfOutOfRange(s.TooltipDismissal, TooltipDismissalMin, TooltipDismissalMax, TooltipDismissalDef)
 	s.ImageResolution = fxp.ResetIfOutOfRangeInt(s.ImageResolution, ImageResolutionMin, ImageResolutionMax, ImageResolutionDef)
-	s.InitialUIScale = fxp.ResetIfOutOfRangeInt(s.InitialUIScale, InitialUIScaleMin, InitialUIScaleMax, InitialUIScaleDef)
+	s.InitialListUIScale = fxp.ResetIfOutOfRangeInt(s.InitialListUIScale, InitialUIScaleMin, InitialUIScaleMax, InitialListUIScaleDef)
+	s.InitialSheetUIScale = fxp.ResetIfOutOfRangeInt(s.InitialSheetUIScale, InitialUIScaleMin, InitialUIScaleMax, InitialSheetUIScaleDef)
 	return s, nil
 }
 

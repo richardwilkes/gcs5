@@ -15,8 +15,11 @@ import (
 	"fmt"
 	"strings"
 
+	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/library"
+	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
+	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio/fs"
@@ -39,11 +42,13 @@ type ListFileDockable struct {
 	lockButton      *unison.Button
 	hierarchyButton *unison.Button
 	sizeToFitButton *unison.Button
+	scaleField      *widget.PercentageField
 	backButton      *unison.Button
 	forwardButton   *unison.Button
 	searchField     *unison.Field
 	matchesLabel    *unison.Label
 	scroll          *unison.ScrollPanel
+	tableHeader     *unison.TableHeader
 	table           *unison.Table
 	searchResult    []unison.TableRowData
 	searchIndex     int
@@ -71,8 +76,8 @@ func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHead
 	d.table.SetTopLevelRows(topLevelRows(d.table))
 	d.table.SizeColumnsToFit(true)
 
-	header := unison.NewTableHeader(d.table, columnHeaders...)
-	header.Less = func(s1, s2 string) bool {
+	d.tableHeader = unison.NewTableHeader(d.table, columnHeaders...)
+	d.tableHeader.Less = func(s1, s2 string) bool {
 		if n1, err := fixed.F64d4FromString(s1); err == nil {
 			var n2 fixed.F64d4
 			if n2, err = fixed.F64d4FromString(s2); err == nil {
@@ -81,7 +86,7 @@ func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHead
 		}
 		return txt.NaturalLess(s1, s2, true)
 	}
-	d.scroll.SetColumnHeader(header)
+	d.scroll.SetColumnHeader(d.tableHeader)
 	d.scroll.SetContent(d.table, unison.FillBehavior)
 	d.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
@@ -101,6 +106,10 @@ func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHead
 	d.sizeToFitButton = unison.NewSVGButton(res.SizeToFitSVG)
 	d.sizeToFitButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Sets the width of each column to fit its contents"))
 	d.sizeToFitButton.ClickCallback = d.sizeToFit
+
+	scale := settings.Global().General.InitialListUIScale
+	d.scaleField = widget.NewPercentageField(scale, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, d.applyScale)
+	d.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
 
 	d.backButton = unison.NewSVGButton(res.BackSVG)
 	d.backButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Previous Match"))
@@ -153,6 +162,7 @@ func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHead
 	toolbar.AddChild(d.lockButton)
 	toolbar.AddChild(d.hierarchyButton)
 	toolbar.AddChild(d.sizeToFitButton)
+	toolbar.AddChild(d.scaleField)
 	toolbar.AddChild(d.backButton)
 	toolbar.AddChild(d.forwardButton)
 	toolbar.AddChild(d.searchField)
@@ -164,7 +174,16 @@ func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHead
 
 	d.AddChild(toolbar)
 	d.AddChild(d.scroll)
+
+	d.applyScale(scale)
 	return d
+}
+
+func (d *ListFileDockable) applyScale(scale int) {
+	s := float32(scale) / 100
+	d.tableHeader.SetScale(s)
+	d.table.SetScale(s)
+	d.scroll.Sync()
 }
 
 // TitleIcon implements workspace.FileBackedDockable
