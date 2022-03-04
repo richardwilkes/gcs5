@@ -74,9 +74,12 @@ func (s *SkillDefault) FullName(entity *Entity) string {
 			buffer.WriteString(s.Specialization)
 			buffer.WriteByte(')')
 		}
-		if strings.EqualFold(gid.Parry, s.DefaultType) {
+		switch {
+		case strings.EqualFold(gid.Dodge, s.DefaultType):
+			buffer.WriteString(i18n.Text(" Dodge"))
+		case strings.EqualFold(gid.Parry, s.DefaultType):
 			buffer.WriteString(i18n.Text(" Parry"))
-		} else if strings.EqualFold(gid.Block, s.DefaultType) {
+		case strings.EqualFold(gid.Block, s.DefaultType):
 			buffer.WriteString(i18n.Text(" Block"))
 		}
 		return buffer.String()
@@ -148,6 +151,12 @@ func (s *SkillDefault) best(entity *Entity, requirePoints bool, excludes map[str
 // SkillLevelFast returns the base skill level for this SkillDefault.
 func (s *SkillDefault) SkillLevelFast(entity *Entity, requirePoints bool, excludes map[string]bool, ruleOf20 bool) fixed.F64d4 {
 	switch s.Type() {
+	case gid.Dodge:
+		level := entity.Dodge(entity.EncumbranceLevel(true))
+		if ruleOf20 && level > 20 {
+			level = 20
+		}
+		return s.finalLevel(fixed.F64d4FromInt(level))
 	case gid.Parry:
 		best := s.bestFast(entity, requirePoints, excludes)
 		if best != fixed.F64d4Min {
