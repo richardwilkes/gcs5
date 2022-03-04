@@ -91,6 +91,37 @@ func FactorySheetSettings(entity *Entity) *SheetSettings {
 	}
 }
 
+// EnsureValidity checks the current settings for validity and if they aren't valid, makes them so.
+func (s *SheetSettings) EnsureValidity() {
+	if s.Page == nil {
+		s.Page = settings.NewPage()
+	} else {
+		s.Page.EnsureValidity()
+	}
+	if s.BlockLayout == nil {
+		s.BlockLayout = NewBlockLayout()
+	} else {
+		s.BlockLayout.EnsureValidity()
+	}
+	if s.Attributes == nil {
+		s.Attributes = FactoryAttributeDefs()
+	} else {
+		s.Attributes.EnsureValidity()
+	}
+	if s.HitLocations == nil {
+		s.HitLocations = FactoryBodyType()
+	} else {
+		s.HitLocations.EnsureValidity()
+	}
+	s.DamageProgression = s.DamageProgression.EnsureValid()
+	s.DefaultLengthUnits = s.DefaultLengthUnits.EnsureValid()
+	s.DefaultWeightUnits = s.DefaultWeightUnits.EnsureValid()
+	s.UserDescriptionDisplay = s.UserDescriptionDisplay.EnsureValid()
+	s.ModifiersDisplay = s.ModifiersDisplay.EnsureValid()
+	s.NotesDisplay = s.NotesDisplay.EnsureValid()
+	s.SkillLevelAdjDisplay = s.SkillLevelAdjDisplay.EnsureValid()
+}
+
 // MarshalJSON implements json.Marshaler.
 func (s *SheetSettings) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&s.SheetSettingsData)
@@ -102,18 +133,7 @@ func (s *SheetSettings) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &s.SheetSettingsData); err != nil {
 		return err
 	}
-	if s.Page == nil {
-		s.Page = settings.NewPage()
-	}
-	if s.BlockLayout == nil {
-		s.BlockLayout = NewBlockLayout()
-	}
-	if s.Attributes == nil {
-		s.Attributes = FactoryAttributeDefs()
-	}
-	if s.HitLocations == nil {
-		s.HitLocations = FactoryBodyType()
-	}
+	s.EnsureValidity()
 	return nil
 }
 

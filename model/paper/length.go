@@ -68,3 +68,11 @@ func (l *Length) UnmarshalJSON(in []byte) error {
 	*l = LengthFromString(s)
 	return nil
 }
+
+// EnsureValidity checks the current settings for validity and if they aren't valid, makes them so.
+func (l *Length) EnsureValidity() {
+	l.Units = l.Units.EnsureValid()
+	if l.Length < 0 {
+		l.Length = 0
+	}
+}

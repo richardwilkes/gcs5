@@ -80,8 +80,14 @@ func NewBodyTypeFromFile(fileSystem fs.FS, filePath string) (*BodyType, error) {
 	} else {
 		b = data.HitLocations
 	}
+	b.EnsureValidity()
 	b.Update(nil)
 	return b, nil
+}
+
+// EnsureValidity checks the current settings for validity and if they aren't valid, makes them so.
+func (b *BodyType) EnsureValidity() {
+	// TODO: Implement validity check
 }
 
 // Clone a copy of this.

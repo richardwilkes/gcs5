@@ -37,6 +37,16 @@ func NewPage() *Page {
 	}
 }
 
+// EnsureValidity checks the current settings for validity and if they aren't valid, makes them so.
+func (p *Page) EnsureValidity() {
+	p.Size = p.Size.EnsureValid()
+	p.Orientation = p.Orientation.EnsureValid()
+	p.TopMargin.EnsureValidity()
+	p.LeftMargin.EnsureValidity()
+	p.BottomMargin.EnsureValidity()
+	p.RightMargin.EnsureValidity()
+}
+
 // Clone a copy of this.
 func (p *Page) Clone() *Page {
 	clone := *p

@@ -84,18 +84,32 @@ func NewAttributeDefsFromFile(fileSystem fs.FS, filePath string) (*AttributeDefs
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
 		return nil, errs.NewWithCause("invalid attribute definitions file: "+filePath, err)
 	}
+	var defs *AttributeDefs
 	if data.attributeDefsData != nil {
-		return data.attributeDefsData.Current, nil
+		defs = data.attributeDefsData.Current
 	}
-	if data.OldKey1 != nil {
-		return data.OldKey1, nil
+	if defs == nil && data.OldKey1 != nil {
+		defs = data.OldKey1
 	}
-	return data.OldKey2, nil
+	if defs == nil && data.OldKey2 != nil {
+		defs = data.OldKey2
+	}
+	if defs == nil {
+		defs = FactoryAttributeDefs()
+	} else {
+		defs.EnsureValidity()
+	}
+	return defs, nil
 }
 
 // Save writes the AttributeDefs to the file as JSON.
 func (a *AttributeDefs) Save(filePath string) error {
 	return jio.SaveToFile(context.Background(), filePath, &attributeDefsData{Current: a})
+}
+
+// EnsureValidity checks the current settings for validity and if they aren't valid, makes them so.
+func (a *AttributeDefs) EnsureValidity() {
+	// TODO: Implement validity check
 }
 
 // MarshalJSON implements json.Marshaler.

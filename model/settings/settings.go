@@ -87,6 +87,7 @@ func Global() *Settings {
 		if err := jio.LoadFromFile(context.Background(), Path(), &global); err != nil {
 			global = Default(nil)
 		}
+		global.EnsureValidity(nil)
 		gurps.SettingsProvider = global
 		gurps.InstallEvaluatorFunctions(fxp.EvalFuncs)
 		global.Colors.MakeCurrent()
@@ -98,6 +99,32 @@ func Global() *Settings {
 // Save to the standard path.
 func (s *Settings) Save() error {
 	return jio.SaveToFile(context.Background(), Path(), s)
+}
+
+// EnsureValidity checks the current settings for validity and if they aren't valid, makes them so.
+func (s *Settings) EnsureValidity(entity *gurps.Entity) {
+	if s.General == nil {
+		s.General = settings.NewGeneral()
+	} else {
+		s.General.EnsureValidity()
+	}
+	if len(s.LibrarySet) == 0 {
+		s.LibrarySet = library.NewLibraries()
+	}
+	if s.LastDirs == nil {
+		s.LastDirs = make(map[string]string)
+	}
+	if s.WindowPositions == nil {
+		s.WindowPositions = make(map[string]*WindowPosition)
+	}
+	if s.QuickExports == nil {
+		s.QuickExports = gurps.NewQuickExports()
+	}
+	if s.Sheet == nil {
+		s.Sheet = gurps.FactorySheetSettings(entity)
+	} else {
+		s.Sheet.EnsureValidity()
+	}
 }
 
 // ListRecentFiles returns the current list of recently opened files. Files that are no longer readable for any reason

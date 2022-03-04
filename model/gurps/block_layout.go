@@ -55,6 +55,32 @@ func NewBlockLayout() *BlockLayout {
 	return &b
 }
 
+// EnsureValidity checks the current settings for validity and if they aren't valid, makes them so.
+func (b *BlockLayout) EnsureValidity() {
+	var layout []string
+	remaining := b.CreateFullKeySet()
+	for _, line := range b.Layout {
+		var parts []string
+		for _, part := range strings.Split(strings.ToLower(strings.TrimSpace(line)), " ") {
+			if remaining[part] {
+				delete(remaining, part)
+				parts = append(parts, part)
+			}
+		}
+		if len(parts) != 0 {
+			layout = append(layout, strings.Join(parts, " "))
+		}
+	}
+	if len(remaining) != 0 {
+		for _, k := range allBlockLayoutKeys {
+			if remaining[k] {
+				layout = append(layout, k)
+			}
+		}
+	}
+	b.Layout = layout
+}
+
 // MarshalJSON implements json.Marshaler.
 func (b *BlockLayout) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&b.Layout)
@@ -96,18 +122,11 @@ func (b *BlockLayout) Reset() {
 
 // CreateFullKeySet creates a map that contains each of the possible block layout keys.
 func (b *BlockLayout) CreateFullKeySet() map[string]bool {
-	return map[string]bool{
-		blockLayoutReactionsKey:            true,
-		blockLayoutConditionalModifiersKey: true,
-		blockLayoutMeleeKey:                true,
-		blockLayoutRangedKey:               true,
-		blockLayoutAdvantagesKey:           true,
-		blockLayoutSkillsKey:               true,
-		blockLayoutSpellsKey:               true,
-		blockLayoutEquipmentKey:            true,
-		blockLayoutOtherEquipmentKey:       true,
-		blockLayoutNotesKey:                true,
+	m := make(map[string]bool)
+	for _, one := range allBlockLayoutKeys {
+		m[one] = true
 	}
+	return m
 }
 
 // HTMLGridTemplate returns the text for the HTML grid layout.

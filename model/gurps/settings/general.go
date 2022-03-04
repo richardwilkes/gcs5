@@ -52,12 +52,12 @@ type General struct {
 	DefaultTechLevel            string      `json:"default_tech_level,omitempty"`
 	CalendarName                string      `json:"calendar_ref,omitempty"`
 	GCalcKey                    string      `json:"gurps_calculator_key,omitempty"`
-	InitialPoints               fixed.F64d4 `json:"initial_points,omitempty"`
-	TooltipDelay                fixed.F64d4 `json:"tooltip_delay,omitempty"`
-	TooltipDismissal            fixed.F64d4 `json:"tooltip_dismissal,omitempty"`
-	InitialListUIScale          int         `json:"initial_list_scale,omitempty"`
-	InitialSheetUIScale         int         `json:"initial_sheet_scale,omitempty"`
-	ImageResolution             int         `json:"image_resolution,omitempty"`
+	InitialPoints               fixed.F64d4 `json:"initial_points"`
+	TooltipDelay                fixed.F64d4 `json:"tooltip_delay"`
+	TooltipDismissal            fixed.F64d4 `json:"tooltip_dismissal"`
+	InitialListUIScale          int         `json:"initial_list_scale"`
+	InitialSheetUIScale         int         `json:"initial_sheet_scale"`
+	ImageResolution             int         `json:"image_resolution"`
 	AutoFillProfile             bool        `json:"auto_fill_profile,omitempty"`
 	IncludeUnspentPointsInTotal bool        `json:"include_unspent_points_in_total,omitempty"`
 }
@@ -100,12 +100,7 @@ func NewGeneralFromFile(fileSystem fs.FS, filePath string) (*General, error) {
 		settings := data.General
 		s = &settings
 	}
-	s.InitialPoints = fxp.ResetIfOutOfRange(s.InitialPoints, InitialPointsMin, InitialPointsMax, InitialPointsDef)
-	s.TooltipDelay = fxp.ResetIfOutOfRange(s.TooltipDelay, TooltipDelayMin, TooltipDelayMax, TooltipDelayDef)
-	s.TooltipDismissal = fxp.ResetIfOutOfRange(s.TooltipDismissal, TooltipDismissalMin, TooltipDismissalMax, TooltipDismissalDef)
-	s.ImageResolution = fxp.ResetIfOutOfRangeInt(s.ImageResolution, ImageResolutionMin, ImageResolutionMax, ImageResolutionDef)
-	s.InitialListUIScale = fxp.ResetIfOutOfRangeInt(s.InitialListUIScale, InitialUIScaleMin, InitialUIScaleMax, InitialListUIScaleDef)
-	s.InitialSheetUIScale = fxp.ResetIfOutOfRangeInt(s.InitialSheetUIScale, InitialUIScaleMin, InitialUIScaleMax, InitialSheetUIScaleDef)
+	s.EnsureValidity()
 	return s, nil
 }
 
@@ -129,4 +124,14 @@ func (s *General) CalendarRef(libraries library.Libraries) *CalendarRef {
 		}
 	}
 	return ref
+}
+
+// EnsureValidity checks the current settings for validity and if they aren't valid, makes them so.
+func (s *General) EnsureValidity() {
+	s.InitialPoints = fxp.ResetIfOutOfRange(s.InitialPoints, InitialPointsMin, InitialPointsMax, InitialPointsDef)
+	s.TooltipDelay = fxp.ResetIfOutOfRange(s.TooltipDelay, TooltipDelayMin, TooltipDelayMax, TooltipDelayDef)
+	s.TooltipDismissal = fxp.ResetIfOutOfRange(s.TooltipDismissal, TooltipDismissalMin, TooltipDismissalMax, TooltipDismissalDef)
+	s.ImageResolution = fxp.ResetIfOutOfRangeInt(s.ImageResolution, ImageResolutionMin, ImageResolutionMax, ImageResolutionDef)
+	s.InitialListUIScale = fxp.ResetIfOutOfRangeInt(s.InitialListUIScale, InitialUIScaleMin, InitialUIScaleMax, InitialListUIScaleDef)
+	s.InitialSheetUIScale = fxp.ResetIfOutOfRangeInt(s.InitialSheetUIScale, InitialUIScaleMin, InitialUIScaleMax, InitialSheetUIScaleDef)
 }
