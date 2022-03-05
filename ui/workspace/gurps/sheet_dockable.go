@@ -153,6 +153,48 @@ func (d *SheetDockable) AttemptClose() {
 
 func (d *SheetDockable) createFirstPage() *sheet.Page {
 	p := sheet.NewPage(d.entity)
-	p.AddChild(sheet.NewPortrait(d.entity))
+
+	top := unison.NewPanel()
+	top.SetLayout(&unison.FlexLayout{
+		Columns:  4,
+		HSpacing: 1,
+		VSpacing: 1,
+		HAlign:   unison.FillAlignment,
+		VAlign:   unison.FillAlignment,
+	})
+	top.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.FillAlignment,
+		HGrab:  true,
+	})
+	p.AddChild(top)
+
+	portrait := sheet.NewPortrait(d.entity)
+	portrait.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.StartAlignment,
+		VAlign: unison.StartAlignment,
+	})
+	top.AddChild(portrait)
+	filler := unison.NewPanel()
+	filler.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.FillAlignment,
+		HGrab:  true,
+	})
+	top.AddChild(filler)
+	filler = unison.NewPanel()
+	filler.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.FillAlignment,
+		HGrab:  true,
+	})
+	top.AddChild(filler)
+	points := sheet.NewPoints(d.entity)
+	points.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.EndAlignment,
+		VAlign: unison.StartAlignment,
+	})
+	top.AddChild(points)
+
 	return p
 }

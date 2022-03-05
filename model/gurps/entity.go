@@ -396,6 +396,14 @@ func (e *Entity) UnspentPoints() fixed.F64d4 {
 	return e.TotalPoints - e.SpentPoints()
 }
 
+// SetUnspentPoints sets the number of unspent points.
+func (e *Entity) SetUnspentPoints(unspent fixed.F64d4) {
+	if unspent != e.UnspentPoints() {
+		// TODO: Need undo logic
+		e.TotalPoints = unspent + e.SpentPoints()
+	}
+}
+
 // AttributePoints returns the number of points spent on attributes.
 func (e *Entity) AttributePoints() fixed.F64d4 {
 	var total fixed.F64d4
