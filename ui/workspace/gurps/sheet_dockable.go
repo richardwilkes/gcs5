@@ -29,7 +29,10 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-var _ workspace.FileBackedDockable = &SheetDockable{}
+var (
+	_ workspace.FileBackedDockable = &SheetDockable{}
+	_ sheet.ModificationUpdater    = &SheetDockable{}
+)
 
 // SheetDockable holds the view for a GURPS character sheet.
 type SheetDockable struct {
@@ -39,6 +42,7 @@ type SheetDockable struct {
 	entity     *gurps.Entity
 	scaleField *widget.PercentageField
 	pages      *unison.Panel
+	MiscPanel  *sheet.Misc
 }
 
 // NewSheetDockable creates a new unison.Dockable for GURPS character sheet files.
@@ -136,7 +140,7 @@ func (d *SheetDockable) BackingFilePath() string {
 
 // Modified implements workspace.FileBackedDockable
 func (d *SheetDockable) Modified() bool {
-	return false
+	return d.MiscPanel.Modified
 }
 
 // MayAttemptClose implements unison.TabCloser
@@ -182,13 +186,12 @@ func (d *SheetDockable) createFirstPage() *sheet.Page {
 		HGrab:  true,
 	})
 	top.AddChild(filler)
-	filler = unison.NewPanel()
-	filler.SetLayoutData(&unison.FlexLayoutData{
+	d.MiscPanel = sheet.NewMisc(d.entity)
+	d.MiscPanel.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
-		HGrab:  true,
 	})
-	top.AddChild(filler)
+	top.AddChild(d.MiscPanel)
 	points := sheet.NewPoints(d.entity)
 	points.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.EndAlignment,
@@ -197,4 +200,9 @@ func (d *SheetDockable) createFirstPage() *sheet.Page {
 	top.AddChild(points)
 
 	return p
+}
+
+// UpdateModified implements sheet.ModificationUpdater
+func (d *SheetDockable) UpdateModified() {
+	d.MiscPanel.UpdateModified()
 }

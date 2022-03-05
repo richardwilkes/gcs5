@@ -44,7 +44,12 @@ func NewPoints(entity *gurps.Entity) *Points {
 	})))
 
 	field := widget.NewNumericPageField(entity.UnspentPoints(), fixed.F64d4FromInt(-999999), fixed.F64d4FromInt(999999),
-		entity.SetUnspentPoints)
+		func(v fixed.F64d4) {
+			if v != entity.UnspentPoints() {
+				entity.SetUnspentPoints(v)
+				MarkModified(p)
+			}
+		})
 	field.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,

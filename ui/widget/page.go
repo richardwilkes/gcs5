@@ -28,6 +28,16 @@ func NewPageLabel(title string) *unison.Label {
 	return label
 }
 
+// NewStringPageField creates a new text entry field for a sheet page.
+func NewStringPageField(value string, applier func(string)) *unison.Field {
+	field := NewStringField(value, applier)
+	field.Font = theme.PageFieldPrimaryFont
+	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
+	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom32.Insets{Bottom: 1}, false)
+	field.SetBorder(field.UnfocusedBorder)
+	return field
+}
+
 // NewNumericPageField creates a new numeric text entry field for a sheet page.
 func NewNumericPageField(value, min, max fixed.F64d4, applier func(fixed.F64d4)) *NumericField {
 	field := NewNumericField(value, min, max, applier)
