@@ -93,10 +93,10 @@ func (f *PercentageField) runeTyped(ch rune) bool {
 	case ch >= '0' && ch <= '9':
 		return f.DefaultRuneTyped(ch)
 	case ch == '-' || ch == '_':
-		f.SetValue(f.Value() - 10)
+		f.SetValue((f.Value()/10)*10 - 10)
 		return true
 	case ch == '=' || ch == '+':
-		f.SetValue(f.Value() + 10)
+		f.SetValue((f.Value()/10)*10 + 10)
 		return true
 	case ch == '%':
 		if strings.Contains(f.SelectedText(), "%") || !strings.Contains(f.Text(), "%") {
