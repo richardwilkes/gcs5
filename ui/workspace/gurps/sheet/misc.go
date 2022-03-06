@@ -20,26 +20,25 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-// ModificationUpdater defines the methods required to update the modified status.
-type ModificationUpdater interface {
-	UpdateModified()
-}
-
-// Misc holds the Miscellaneous panel on a sheet.
-type Misc struct {
+// MiscPanel holds the contents of the miscellaneous block on the sheet.
+type MiscPanel struct {
 	unison.Panel
 	entity        *gurps.Entity
 	ModifiedField *unison.Label
 	Modified      bool
 }
 
-// NewMisc creates a new Miscellaneous panel for a sheet.
-func NewMisc(entity *gurps.Entity) *Misc {
-	m := &Misc{entity: entity}
+// NewMiscPanel creates a new miscellaneous panel.
+func NewMiscPanel(entity *gurps.Entity) *MiscPanel {
+	m := &MiscPanel{entity: entity}
 	m.Self = m
 	m.SetLayout(&unison.FlexLayout{
 		Columns:  2,
 		HSpacing: 4,
+	})
+	m.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.FillAlignment,
 	})
 	m.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Miscellaneous")}, unison.NewEmptyBorder(geom32.Insets{
 		Top:    1,
@@ -48,38 +47,23 @@ func NewMisc(entity *gurps.Entity) *Misc {
 		Right:  2,
 	})))
 
-	m.AddChild(widget.NewPageLabel(i18n.Text("Created")))
-	disabledField := widget.NewNonEditablePageField(entity.CreatedOn.String(), unison.StartAlignment)
-	disabledField.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		VAlign: unison.MiddleAlignment,
-	})
-	m.AddChild(disabledField)
+	m.AddChild(widget.NewPageLabelEnd(i18n.Text("Created")))
+	m.AddChild(widget.NewNonEditablePageField(entity.CreatedOn.String(), ""))
 
-	m.AddChild(widget.NewPageLabel(i18n.Text("Modified")))
-	m.ModifiedField = widget.NewNonEditablePageField(entity.ModifiedOn.String(), unison.StartAlignment)
-	m.ModifiedField.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		VAlign: unison.MiddleAlignment,
-	})
+	m.AddChild(widget.NewPageLabelEnd(i18n.Text("Modified")))
+	m.ModifiedField = widget.NewNonEditablePageField(entity.ModifiedOn.String(), "")
 	m.AddChild(m.ModifiedField)
 
-	m.AddChild(widget.NewPageLabel(i18n.Text("Player")))
-	field := widget.NewStringPageField(entity.Profile.PlayerName, func(v string) {
+	m.AddChild(widget.NewPageLabelEnd(i18n.Text("Player")))
+	m.AddChild(widget.NewStringPageFieldNoGrab(entity.Profile.PlayerName, func(v string) {
 		entity.Profile.PlayerName = v
 		MarkModified(m)
-	})
-	field.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		VAlign: unison.MiddleAlignment,
-	})
-	m.AddChild(field)
+	}))
 
 	return m
 }
 
-// UpdateModified implements ModificationUpdater
-func (m *Misc) UpdateModified() {
+func (m *MiscPanel) updateModified() {
 	m.Modified = true
 	m.entity.ModifiedOn = jio.Now()
 	text := m.entity.ModifiedOn.String()
@@ -103,8 +87,8 @@ func (m *Misc) UpdateModified() {
 func MarkModified(p unison.Paneler) {
 	panel := p.AsPanel()
 	for panel != nil {
-		if um, ok := panel.Self.(ModificationUpdater); ok {
-			um.UpdateModified()
+		if um, ok := panel.Self.(*Dockable); ok {
+			um.MiscPanel.updateModified()
 			break
 		}
 		panel = panel.Parent()

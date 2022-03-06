@@ -19,59 +19,48 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-type Identity struct {
+// IdentityPanel holds the contents of the identity block on the sheet.
+type IdentityPanel struct {
 	unison.Panel
 	entity *gurps.Entity
 }
 
-func NewIdentity(entity *gurps.Entity) *Identity {
-	p := &Identity{entity: entity}
+// NewIdentityPanel creates a new identity panel.
+func NewIdentityPanel(entity *gurps.Entity) *IdentityPanel {
+	p := &IdentityPanel{entity: entity}
 	p.Self = p
 	p.SetLayout(&unison.FlexLayout{
 		Columns:  2,
 		HSpacing: 4,
 	})
-	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Identity")}, unison.NewEmptyBorder(geom32.Insets{
+	p.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.FillAlignment,
+		HGrab:  true,
+	})
+	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("IdentityPanel")}, unison.NewEmptyBorder(geom32.Insets{
 		Top:    1,
 		Left:   2,
 		Bottom: 1,
 		Right:  2,
 	})))
 
-	p.AddChild(widget.NewPageLabel(i18n.Text("Name")))
-	field := widget.NewStringPageField(entity.Profile.Name, func(v string) {
+	p.AddChild(widget.NewPageLabelEnd(i18n.Text("Name")))
+	p.AddChild(widget.NewStringPageField(entity.Profile.Name, func(v string) {
 		entity.Profile.Name = v
 		MarkModified(p)
-	})
-	field.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		VAlign: unison.MiddleAlignment,
-		HGrab:  true,
-	})
-	p.AddChild(field)
+	}))
 
-	p.AddChild(widget.NewPageLabel(i18n.Text("Title")))
-	field = widget.NewStringPageField(entity.Profile.Title, func(v string) {
+	p.AddChild(widget.NewPageLabelEnd(i18n.Text("Title")))
+	p.AddChild(widget.NewStringPageField(entity.Profile.Title, func(v string) {
 		entity.Profile.Title = v
 		MarkModified(p)
-	})
-	field.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		VAlign: unison.MiddleAlignment,
-		HGrab:  true,
-	})
-	p.AddChild(field)
+	}))
 
-	p.AddChild(widget.NewPageLabel(i18n.Text("Organization")))
-	field = widget.NewStringPageField(entity.Profile.Organization, func(v string) {
+	p.AddChild(widget.NewPageLabelEnd(i18n.Text("Organization")))
+	p.AddChild(widget.NewStringPageField(entity.Profile.Organization, func(v string) {
 		entity.Profile.Organization = v
 		MarkModified(p)
-	})
-	field.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		VAlign: unison.MiddleAlignment,
-		HGrab:  true,
-	})
-	p.AddChild(field)
+	}))
 	return p
 }

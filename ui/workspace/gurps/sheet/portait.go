@@ -20,36 +20,58 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-// Portrait displays and allows editing of an Entity's portrait.
-type Portrait struct {
+// PortraitPanel holds the contents of the portrait block on the sheet.
+type PortraitPanel struct {
 	unison.Panel
 	entity *gurps.Entity
 }
 
-// NewPortrait creates a new portrait panel.
-func NewPortrait(entity *gurps.Entity) *Portrait {
-	p := &Portrait{entity: entity}
+// NewPortraitPanel creates a new portrait panel.
+func NewPortraitPanel(entity *gurps.Entity) *PortraitPanel {
+	p := &PortraitPanel{entity: entity}
 	p.Self = p
+	p.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.StartAlignment,
+		VAlign: unison.StartAlignment,
+		VSpan:  2,
+	})
 	p.SetSizer(p.portraitSizer)
-	p.SetBorder(&TitledBorder{Title: i18n.Text("Portrait")})
+	p.SetBorder(&TitledBorder{Title: i18n.Text("PortraitPanel")})
 	p.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text(`Double-click to set a character portrait, or drag an image onto this block.
 
 The dimensions of the chosen picture should be in a ratio of 3 pixels wide
 for every 4 pixels tall to scale without distortion.
 
-Dimensions of %dx%d are ideal.`), gurps.PortraitWidth*2, gurps.PortraitHeight*2))
+Recommended minimum dimensions are %dx%d.`), gurps.PortraitWidth*2, gurps.PortraitHeight*2))
 	p.DrawCallback = p.drawSelf
 	return p
 }
 
-func (p *Portrait) portraitSizer(_ geom32.Size) (min, pref, max geom32.Size) {
+func (p *PortraitPanel) portraitSizer(_ geom32.Size) (min, pref, max geom32.Size) {
+	var width, height float32
 	insets := p.Border().Insets()
-	pref.Width = insets.Left + insets.Right + gurps.PortraitWidth
-	pref.Height = insets.Top + insets.Bottom + gurps.PortraitHeight
+	parent := p.Parent()
+	for parent != nil {
+		if sheet, ok := parent.Self.(*Dockable); ok {
+			_, idPanelPref, _ := sheet.IdentityPanel.Sizes(geom32.Size{})
+			_, descPanelPref, _ := sheet.DescriptionPanel.Sizes(geom32.Size{})
+			height = idPanelPref.Height + 1 + descPanelPref.Height
+			break
+		}
+		parent = parent.Parent()
+	}
+	if height -= insets.Top + insets.Bottom; height > 0 {
+		width = height * 0.75
+	} else {
+		width = gurps.PortraitWidth
+		height = gurps.PortraitHeight
+	}
+	pref.Width = insets.Left + insets.Right + width
+	pref.Height = insets.Top + insets.Bottom + height
 	return pref, pref, pref
 }
 
-func (p *Portrait) drawSelf(gc *unison.Canvas, r geom32.Rect) {
+func (p *PortraitPanel) drawSelf(gc *unison.Canvas, r geom32.Rect) {
 	r = p.ContentRect(false)
 	paint := unison.ContentColor.Paint(gc, r, unison.Fill)
 	gc.DrawRect(r, paint)

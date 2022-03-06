@@ -19,12 +19,34 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-// NewPageLabel creates a new field label for a sheet page.
+var nonEditableFieldColor = unison.NewDynamicColor(func() unison.Color {
+	return unison.OnContentColor.GetColor().SetAlphaIntensity(0.375)
+})
+
+// NewPageLabel creates a new start-aligned field label for a sheet page.
 func NewPageLabel(title string) *unison.Label {
 	label := unison.NewLabel()
 	label.OnBackgroundInk = unison.OnContentColor
 	label.Text = title
 	label.Font = theme.PageLabelPrimaryFont
+	label.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+	})
+	return label
+}
+
+// NewPageLabelEnd creates a new end-aligned field label for a sheet page.
+func NewPageLabelEnd(title string) *unison.Label {
+	label := unison.NewLabel()
+	label.OnBackgroundInk = unison.OnContentColor
+	label.Text = title
+	label.Font = theme.PageLabelPrimaryFont
+	label.HAlign = unison.EndAlignment
+	label.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+	})
 	return label
 }
 
@@ -35,6 +57,25 @@ func NewStringPageField(value string, applier func(string)) *unison.Field {
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
 	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom32.Insets{Bottom: 1}, false)
 	field.SetBorder(field.UnfocusedBorder)
+	field.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+		HGrab:  true,
+	})
+	return field
+}
+
+// NewStringPageFieldNoGrab creates a new text entry field for a sheet page, but with HGrab set to false.
+func NewStringPageFieldNoGrab(value string, applier func(string)) *unison.Field {
+	field := NewStringField(value, applier)
+	field.Font = theme.PageFieldPrimaryFont
+	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
+	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom32.Insets{Bottom: 1}, false)
+	field.SetBorder(field.UnfocusedBorder)
+	field.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+	})
 	return field
 }
 
@@ -52,13 +93,31 @@ func NewNumericPageField(value, min, max fixed.F64d4, applier func(fixed.F64d4))
 	return field
 }
 
-// NewNonEditablePageField creates a new non-editable field that uses the same font and size as the page field.
-func NewNonEditablePageField(title string, alignment unison.Alignment) *unison.Label {
+// NewNonEditablePageField creates a new start-aligned non-editable field that uses the same font and size as the page
+// field.
+func NewNonEditablePageField(title, tooltip string) *unison.Label {
+	return newNonEditablePageField(title, tooltip, unison.StartAlignment)
+}
+
+// NewNonEditablePageFieldEnd creates a new end-aligned non-editable field that uses the same font and size as the page
+// field.
+func NewNonEditablePageFieldEnd(title, tooltip string) *unison.Label {
+	return newNonEditablePageField(title, tooltip, unison.EndAlignment)
+}
+
+func newNonEditablePageField(title, tooltip string, hAlign unison.Alignment) *unison.Label {
 	label := unison.NewLabel()
-	label.OnBackgroundInk = unison.OnContentColor
+	label.OnBackgroundInk = nonEditableFieldColor
 	label.Text = title
 	label.Font = theme.PageFieldPrimaryFont
-	label.HAlign = alignment
+	label.HAlign = hAlign
 	label.SetBorder(unison.NewEmptyBorder(geom32.NewHorizontalInsets(1))) // Account for cursor in normal fields
+	label.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+	})
+	if tooltip != "" {
+		label.Tooltip = unison.NewTooltipWithText(tooltip)
+	}
 	return label
 }

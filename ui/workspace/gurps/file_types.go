@@ -14,12 +14,13 @@ package gurps
 import (
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/res"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/sheet"
 	"github.com/richardwilkes/unison"
 )
 
 // RegisterFileTypes registers GCS file types.
 func RegisterFileTypes() {
-	registerExportableGCSFileInfo(".gcs", res.GCSSheet, NewSheetDockable)
+	registerExportableGCSFileInfo(".gcs", res.GCSSheet, sheet.NewSheetDockable)
 	registerGCSFileInfo(".gct", res.GCSTemplate, NewTemplateDockable)
 	registerGCSFileInfo(".adq", res.GCSAdvantages, NewAdvantageListDockable)
 	registerGCSFileInfo(".adm", res.GCSAdvantageModifiers, NewAdvantageModifierListDockable)

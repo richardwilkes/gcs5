@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package sheet
 
 import (
 	"os"
@@ -22,27 +22,27 @@ import (
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
-	"github.com/richardwilkes/gcs/ui/workspace/gurps/sheet"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
-var (
-	_ workspace.FileBackedDockable = &SheetDockable{}
-	_ sheet.ModificationUpdater    = &SheetDockable{}
-)
+var _ workspace.FileBackedDockable = &Dockable{}
 
-// SheetDockable holds the view for a GURPS character sheet.
-type SheetDockable struct {
+// Dockable holds the view for a GURPS character sheet.
+type Dockable struct {
 	unison.Panel
-	path       string
-	scroll     *unison.ScrollPanel
-	entity     *gurps.Entity
-	scaleField *widget.PercentageField
-	pages      *unison.Panel
-	MiscPanel  *sheet.Misc
+	path             string
+	scroll           *unison.ScrollPanel
+	entity           *gurps.Entity
+	scaleField       *widget.PercentageField
+	pages            *unison.Panel
+	PortaitPanel     *PortraitPanel
+	IdentityPanel    *IdentityPanel
+	MiscPanel        *MiscPanel
+	DescriptionPanel *DescriptionPanel
+	PointsPanel      *PointsPanel
 }
 
 // NewSheetDockable creates a new unison.Dockable for GURPS character sheet files.
@@ -52,7 +52,7 @@ func NewSheetDockable(filePath string) (unison.Dockable, error) {
 		return nil, err
 	}
 
-	d := &SheetDockable{
+	d := &Dockable{
 		path:   filePath,
 		scroll: unison.NewScrollPanel(),
 		entity: entity,
@@ -110,13 +110,13 @@ func NewSheetDockable(filePath string) (unison.Dockable, error) {
 	return d, nil
 }
 
-func (d *SheetDockable) applyScale(scale int) {
+func (d *Dockable) applyScale(scale int) {
 	d.pages.SetScale(float32(scale) / 100)
 	d.scroll.Sync()
 }
 
 // TitleIcon implements workspace.FileBackedDockable
-func (d *SheetDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
+func (d *Dockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
 		Size: suggestedSize,
@@ -124,39 +124,39 @@ func (d *SheetDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 }
 
 // Title implements workspace.FileBackedDockable
-func (d *SheetDockable) Title() string {
+func (d *Dockable) Title() string {
 	return fs.BaseName(d.path)
 }
 
 // Tooltip implements workspace.FileBackedDockable
-func (d *SheetDockable) Tooltip() string {
+func (d *Dockable) Tooltip() string {
 	return d.path
 }
 
 // BackingFilePath implements workspace.FileBackedDockable
-func (d *SheetDockable) BackingFilePath() string {
+func (d *Dockable) BackingFilePath() string {
 	return d.path
 }
 
 // Modified implements workspace.FileBackedDockable
-func (d *SheetDockable) Modified() bool {
+func (d *Dockable) Modified() bool {
 	return d.MiscPanel.Modified
 }
 
 // MayAttemptClose implements unison.TabCloser
-func (d *SheetDockable) MayAttemptClose() bool {
+func (d *Dockable) MayAttemptClose() bool {
 	return true
 }
 
 // AttemptClose implements unison.TabCloser
-func (d *SheetDockable) AttemptClose() {
+func (d *Dockable) AttemptClose() {
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.Close(d)
 	}
 }
 
-func (d *SheetDockable) createFirstPage() *sheet.Page {
-	p := sheet.NewPage(d.entity)
+func (d *Dockable) createFirstPage() *Page {
+	p := NewPage(d.entity)
 
 	top := unison.NewPanel()
 	top.SetLayout(&unison.FlexLayout{
@@ -173,46 +173,17 @@ func (d *SheetDockable) createFirstPage() *sheet.Page {
 	})
 	p.AddChild(top)
 
-	portrait := sheet.NewPortrait(d.entity)
-	portrait.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.StartAlignment,
-		VAlign: unison.StartAlignment,
-		VSpan:  2,
-	})
-	top.AddChild(portrait)
-	identity := sheet.NewIdentity(d.entity)
-	identity.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		VAlign: unison.FillAlignment,
-		HGrab:  true,
-	})
-	top.AddChild(identity)
-	d.MiscPanel = sheet.NewMisc(d.entity)
-	d.MiscPanel.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		VAlign: unison.FillAlignment,
-	})
+	d.PortaitPanel = NewPortraitPanel(d.entity)
+	d.IdentityPanel = NewIdentityPanel(d.entity)
+	d.MiscPanel = NewMiscPanel(d.entity)
+	d.DescriptionPanel = NewDescriptionPanel(d.entity)
+	d.PointsPanel = NewPointsPanel(d.entity)
+
+	top.AddChild(d.PortaitPanel)
+	top.AddChild(d.IdentityPanel)
 	top.AddChild(d.MiscPanel)
-	points := sheet.NewPoints(d.entity)
-	points.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.EndAlignment,
-		VAlign: unison.StartAlignment,
-		VSpan:  2,
-	})
-	top.AddChild(points)
-	desc := sheet.NewDescription(d.entity)
-	desc.SetLayoutData(&unison.FlexLayoutData{
-		HSpan:  2,
-		HAlign: unison.FillAlignment,
-		VAlign: unison.StartAlignment,
-		HGrab:  true,
-	})
-	top.AddChild(desc)
+	top.AddChild(d.PointsPanel)
+	top.AddChild(d.DescriptionPanel)
 
 	return p
-}
-
-// UpdateModified implements sheet.ModificationUpdater
-func (d *SheetDockable) UpdateModified() {
-	d.MiscPanel.UpdateModified()
 }
