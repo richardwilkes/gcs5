@@ -94,3 +94,12 @@ func MarkModified(p unison.Paneler) {
 		panel = panel.Parent()
 	}
 }
+
+// SetTextAndMarkModified sets the field to the given text, selects it, requests focus, then calls MarkModified().
+func SetTextAndMarkModified(field *unison.Field, text string) {
+	field.SetText(text)
+	field.SelectAll()
+	field.RequestFocus()
+	field.Parent().MarkForLayoutAndRedraw()
+	MarkModified(field)
+}

@@ -162,6 +162,7 @@ func (e *Entity) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &e.EntityData); err != nil {
 		return err
 	}
+	e.Recalculate()
 	return nil
 }
 

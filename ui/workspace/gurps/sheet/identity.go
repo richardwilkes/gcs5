@@ -13,6 +13,8 @@ package sheet
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/ancestry"
+	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
@@ -45,11 +47,17 @@ func NewIdentityPanel(entity *gurps.Entity) *IdentityPanel {
 		Right:  2,
 	})))
 
-	p.AddChild(widget.NewPageLabelEnd(i18n.Text("Name")))
-	p.AddChild(widget.NewStringPageField(entity.Profile.Name, func(v string) {
+	field := widget.NewStringPageField(entity.Profile.Name, func(v string) {
 		entity.Profile.Name = v
 		MarkModified(p)
-	}))
+	})
+	p.AddChild(widget.NewPageLabelWithRandomizer(i18n.Text("Name"),
+		i18n.Text("Randomize the name using the current ancestry"), func() {
+			entity.Profile.Name = entity.Ancestry().RandomName(
+				ancestry.AvailableNameGenerators(settings.Global().Libraries()), entity.Profile.Gender)
+			SetTextAndMarkModified(field, entity.Profile.Name)
+		}))
+	p.AddChild(field)
 
 	p.AddChild(widget.NewPageLabelEnd(i18n.Text("Title")))
 	p.AddChild(widget.NewStringPageField(entity.Profile.Title, func(v string) {

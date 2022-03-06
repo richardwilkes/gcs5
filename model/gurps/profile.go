@@ -91,14 +91,14 @@ func (p *Profile) AutoFill(entity *Entity) {
 	p.TechLevel = generalSettings.DefaultTechLevel
 	p.PlayerName = generalSettings.DefaultPlayerName
 	a := entity.Ancestry()
-	p.Gender = a.RandomGender()
-	p.Age = strconv.Itoa(a.RandomAge(entity, p.Gender))
-	p.Eyes = a.RandomEyes(p.Gender)
-	p.Hair = a.RandomHair(p.Gender)
-	p.Skin = a.RandomSkin(p.Gender)
-	p.Handedness = a.RandomHandedness(p.Gender)
-	p.Height = a.RandomHeight(entity, p.Gender)
-	p.Weight = a.RandomWeight(entity, p.Gender)
+	p.Gender = a.RandomGender("")
+	p.Age = strconv.Itoa(a.RandomAge(entity, p.Gender, 0))
+	p.Eyes = a.RandomEyes(p.Gender, "")
+	p.Hair = a.RandomHair(p.Gender, "")
+	p.Skin = a.RandomSkin(p.Gender, "")
+	p.Handedness = a.RandomHandedness(p.Gender, "")
+	p.Height = a.RandomHeight(entity, p.Gender, 0)
+	p.Weight = a.RandomWeight(entity, p.Gender, 0)
 	p.Name = a.RandomName(ancestry.AvailableNameGenerators(SettingsProvider.Libraries()), p.Gender)
 	p.Birthday = generalSettings.CalendarRef(SettingsProvider.Libraries()).RandomBirthday(p.Birthday)
 }

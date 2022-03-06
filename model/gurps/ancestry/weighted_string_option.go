@@ -27,17 +27,21 @@ func (o *StringOption) Valid() bool {
 }
 
 // ChooseStringOption selects a string option from the available set.
-func ChooseStringOption(options []*StringOption) string {
+func ChooseStringOption(options []*StringOption, not string) string {
 	total := 0
 	for _, one := range options {
-		total += one.Weight
+		if one.Value != not {
+			total += one.Weight
+		}
 	}
 	if total > 0 {
 		choice := 1 + rand.NewCryptoRand().Intn(total)
 		for _, one := range options {
-			choice -= one.Weight
-			if choice < 1 {
-				return one.Value
+			if one.Value != not {
+				choice -= one.Weight
+				if choice < 1 {
+					return one.Value
+				}
 			}
 		}
 	}

@@ -27,17 +27,21 @@ func (o *WeightedAncestryOptions) Valid() bool {
 }
 
 // ChooseWeightedAncestryOptions selects a string option from the available set.
-func ChooseWeightedAncestryOptions(options []*WeightedAncestryOptions) *Options {
+func ChooseWeightedAncestryOptions(options []*WeightedAncestryOptions, omitter func(*Options) bool) *Options {
 	total := 0
 	for _, one := range options {
-		total += one.Weight
+		if omitter == nil || !omitter(one.Value) {
+			total += one.Weight
+		}
 	}
 	if total > 0 {
 		choice := 1 + rand.NewCryptoRand().Intn(total)
 		for _, one := range options {
-			choice -= one.Weight
-			if choice < 1 {
-				return one.Value
+			if omitter == nil || !omitter(one.Value) {
+				choice -= one.Weight
+				if choice < 1 {
+					return one.Value
+				}
 			}
 		}
 	}

@@ -15,6 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/theme"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/toolbox/xmath/mathf32"
@@ -52,6 +53,39 @@ func NewPageLabelEnd(title string) *unison.Label {
 	})
 	label.SetBorder(unison.NewEmptyBorder(geom32.Insets{Bottom: 1})) // To match field underline spacing
 	return label
+}
+
+// NewPageLabelWithRandomizer creates a new end-aligned field label for a sheet page that includes a randomization
+// button.
+func NewPageLabelWithRandomizer(title, tooltip string, clickCallback func()) *unison.Panel {
+	wrapper := unison.NewPanel()
+	wrapper.SetLayout(&unison.FlexLayout{
+		Columns:  2,
+		HSpacing: 4,
+	})
+	wrapper.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+	})
+	b := unison.NewButton()
+	b.ButtonTheme = unison.DefaultSVGButtonTheme
+	b.DrawableOnlyVMargin = 1
+	b.DrawableOnlyHMargin = 1
+	b.HideBase = true
+	baseline := theme.PageLabelPrimaryFont.Baseline()
+	size := geom32.NewSize(baseline, baseline)
+	b.Drawable = &unison.DrawableSVG{
+		SVG:  res.RandomizeSVG,
+		Size: *size.GrowToInteger(),
+	}
+	if tooltip != "" {
+		b.Tooltip = unison.NewTooltipWithText(tooltip)
+	}
+	b.ClickCallback = clickCallback
+	b.SetLayoutData(&unison.FlexLayoutData{HGrab: true})
+	wrapper.AddChild(b)
+	wrapper.AddChild(NewPageLabelEnd(title))
+	return wrapper
 }
 
 // NewStringPageField creates a new text entry field for a sheet page.

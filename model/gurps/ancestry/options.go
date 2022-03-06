@@ -18,7 +18,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/eval"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 const (
@@ -29,6 +28,7 @@ const (
 	defaultEye        = "Brown"
 	defaultSkin       = "Brown"
 	defaultHandedness = "Right"
+	maximumTries      = 5
 )
 
 // Options holds options that may be randomized for an Entity's ancestry.
@@ -45,59 +45,76 @@ type Options struct {
 }
 
 // RandomHeight returns a randomized height.
-func (o *Options) RandomHeight(resolver eval.VariableResolver) measure.Length {
-	value := fxp.EvaluateToNumber(o.HeightFormula, resolver)
-	if value <= 0 {
-		return measure.LengthFromInt(defaultHeight, measure.Inch)
+func (o *Options) RandomHeight(resolver eval.VariableResolver, not measure.Length) measure.Length {
+	def := measure.LengthFromInt(defaultHeight, measure.Inch)
+	for i := 0; i < maximumTries; i++ {
+		value := measure.Length(fxp.EvaluateToNumber(o.HeightFormula, resolver))
+		if value <= 0 {
+			value = def
+		}
+		if value != not {
+			return value
+		}
 	}
-	return measure.Length(value)
+	return def
 }
 
 // RandomWeight returns a randomized weight.
-func (o *Options) RandomWeight(resolver eval.VariableResolver) measure.Weight {
-	value := fxp.EvaluateToNumber(o.WeightFormula, resolver)
-	if value <= 0 {
-		return measure.WeightFromInt(defaultWeight, measure.Pound)
+func (o *Options) RandomWeight(resolver eval.VariableResolver, not measure.Weight) measure.Weight {
+	def := measure.WeightFromInt(defaultWeight, measure.Pound)
+	for i := 0; i < maximumTries; i++ {
+		value := measure.Weight(fxp.EvaluateToNumber(o.WeightFormula, resolver))
+		if value <= 0 {
+			value = def
+		}
+		if value != not {
+			return value
+		}
 	}
-	return measure.Weight(value)
+	return def
 }
 
 // RandomAge returns a randomized age.
-func (o *Options) RandomAge(resolver eval.VariableResolver) int {
-	value := fxp.EvaluateToNumber(o.AgeFormula, resolver).Trunc()
-	if value <= 0 {
-		value = fixed.F64d4FromInt(defaultAge)
+func (o *Options) RandomAge(resolver eval.VariableResolver, not int) int {
+	for i := 0; i < maximumTries; i++ {
+		age := fxp.EvaluateToNumber(o.AgeFormula, resolver).AsInt()
+		if age <= 0 {
+			age = defaultAge
+		}
+		if age != not {
+			return age
+		}
 	}
-	return value.AsInt()
+	return defaultAge
 }
 
 // RandomHair returns a randomized hair.
-func (o *Options) RandomHair() string {
-	if choice := ChooseStringOption(o.HairOptions); choice != "" {
+func (o *Options) RandomHair(not string) string {
+	if choice := ChooseStringOption(o.HairOptions, not); choice != "" {
 		return choice
 	}
 	return defaultHair
 }
 
 // RandomEye returns a randomized eye.
-func (o *Options) RandomEye() string {
-	if choice := ChooseStringOption(o.EyeOptions); choice != "" {
+func (o *Options) RandomEye(not string) string {
+	if choice := ChooseStringOption(o.EyeOptions, not); choice != "" {
 		return choice
 	}
 	return defaultEye
 }
 
 // RandomSkin returns a randomized skin.
-func (o *Options) RandomSkin() string {
-	if choice := ChooseStringOption(o.SkinOptions); choice != "" {
+func (o *Options) RandomSkin(not string) string {
+	if choice := ChooseStringOption(o.SkinOptions, not); choice != "" {
 		return choice
 	}
 	return defaultSkin
 }
 
 // RandomHandedness returns a randomized handedness.
-func (o *Options) RandomHandedness() string {
-	if choice := ChooseStringOption(o.HandednessOptions); choice != "" {
+func (o *Options) RandomHandedness(not string) string {
+	if choice := ChooseStringOption(o.HandednessOptions, not); choice != "" {
 		return choice
 	}
 	return defaultHandedness

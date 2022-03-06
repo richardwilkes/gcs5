@@ -70,8 +70,10 @@ func (a *Ancestry) Save(filePath string) error {
 }
 
 // RandomGender returns a randomized gender.
-func (a *Ancestry) RandomGender() string {
-	if choice := ChooseWeightedAncestryOptions(a.GenderOptions); choice != nil {
+func (a *Ancestry) RandomGender(not string) string {
+	if choice := ChooseWeightedAncestryOptions(a.GenderOptions, func(o *Options) bool {
+		return o.Name == not
+	}); choice != nil {
 		return choice.Name
 	}
 	return ""
@@ -89,78 +91,78 @@ func (a *Ancestry) GenderedOptions(gender string) *Options {
 }
 
 // RandomHeight returns a randomized height.
-func (a *Ancestry) RandomHeight(resolver eval.VariableResolver, gender string) measure.Length {
+func (a *Ancestry) RandomHeight(resolver eval.VariableResolver, gender string, not measure.Length) measure.Length {
 	if options := a.GenderedOptions(gender); options != nil && options.HeightFormula != "" {
-		return options.RandomHeight(resolver)
+		return options.RandomHeight(resolver, not)
 	}
 	if a.CommonOptions != nil && a.CommonOptions.HeightFormula != "" {
-		return a.CommonOptions.RandomHeight(resolver)
+		return a.CommonOptions.RandomHeight(resolver, not)
 	}
 	return measure.LengthFromInt(defaultHeight, measure.Inch)
 }
 
 // RandomWeight returns a randomized weight.
-func (a *Ancestry) RandomWeight(resolver eval.VariableResolver, gender string) measure.Weight {
+func (a *Ancestry) RandomWeight(resolver eval.VariableResolver, gender string, not measure.Weight) measure.Weight {
 	if options := a.GenderedOptions(gender); options != nil && options.WeightFormula != "" {
-		return options.RandomWeight(resolver)
+		return options.RandomWeight(resolver, not)
 	}
 	if a.CommonOptions != nil && a.CommonOptions.WeightFormula != "" {
-		return a.CommonOptions.RandomWeight(resolver)
+		return a.CommonOptions.RandomWeight(resolver, not)
 	}
 	return measure.WeightFromInt(defaultWeight, measure.Pound)
 }
 
 // RandomAge returns a randomized age.
-func (a *Ancestry) RandomAge(resolver eval.VariableResolver, gender string) int {
+func (a *Ancestry) RandomAge(resolver eval.VariableResolver, gender string, not int) int {
 	if options := a.GenderedOptions(gender); options != nil && options.AgeFormula != "" {
-		return options.RandomAge(resolver)
+		return options.RandomAge(resolver, not)
 	}
 	if a.CommonOptions != nil && a.CommonOptions.AgeFormula != "" {
-		return a.CommonOptions.RandomAge(resolver)
+		return a.CommonOptions.RandomAge(resolver, not)
 	}
 	return defaultAge
 }
 
 // RandomHair returns a randomized hair.
-func (a *Ancestry) RandomHair(gender string) string {
+func (a *Ancestry) RandomHair(gender, not string) string {
 	if options := a.GenderedOptions(gender); options != nil && len(options.HairOptions) != 0 {
-		return options.RandomHair()
+		return options.RandomHair(not)
 	}
 	if a.CommonOptions != nil && len(a.CommonOptions.HairOptions) != 0 {
-		return a.CommonOptions.RandomHair()
+		return a.CommonOptions.RandomHair(not)
 	}
 	return defaultHair
 }
 
 // RandomEyes returns a randomized eyes.
-func (a *Ancestry) RandomEyes(gender string) string {
+func (a *Ancestry) RandomEyes(gender, not string) string {
 	if options := a.GenderedOptions(gender); options != nil && len(options.EyeOptions) != 0 {
-		return options.RandomEye()
+		return options.RandomEye(not)
 	}
 	if a.CommonOptions != nil && len(a.CommonOptions.EyeOptions) != 0 {
-		return a.CommonOptions.RandomEye()
+		return a.CommonOptions.RandomEye(not)
 	}
 	return defaultEye
 }
 
 // RandomSkin returns a randomized skin.
-func (a *Ancestry) RandomSkin(gender string) string {
+func (a *Ancestry) RandomSkin(gender, not string) string {
 	if options := a.GenderedOptions(gender); options != nil && len(options.SkinOptions) != 0 {
-		return options.RandomSkin()
+		return options.RandomSkin(not)
 	}
 	if a.CommonOptions != nil && len(a.CommonOptions.SkinOptions) != 0 {
-		return a.CommonOptions.RandomSkin()
+		return a.CommonOptions.RandomSkin(not)
 	}
 	return defaultSkin
 }
 
 // RandomHandedness returns a randomized handedness.
-func (a *Ancestry) RandomHandedness(gender string) string {
+func (a *Ancestry) RandomHandedness(gender, not string) string {
 	if options := a.GenderedOptions(gender); options != nil && len(options.HandednessOptions) != 0 {
-		return options.RandomHandedness()
+		return options.RandomHandedness(not)
 	}
 	if a.CommonOptions != nil && len(a.CommonOptions.HandednessOptions) != 0 {
-		return a.CommonOptions.RandomHandedness()
+		return a.CommonOptions.RandomHandedness(not)
 	}
 	return defaultHandedness
 }
