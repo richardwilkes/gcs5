@@ -177,15 +177,16 @@ func (d *SheetDockable) createFirstPage() *sheet.Page {
 	portrait.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.StartAlignment,
 		VAlign: unison.StartAlignment,
+		VSpan:  2,
 	})
 	top.AddChild(portrait)
-	filler := unison.NewPanel()
-	filler.SetLayoutData(&unison.FlexLayoutData{
+	identity := sheet.NewIdentity(d.entity)
+	identity.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
-	top.AddChild(filler)
+	top.AddChild(identity)
 	d.MiscPanel = sheet.NewMisc(d.entity)
 	d.MiscPanel.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
@@ -196,8 +197,17 @@ func (d *SheetDockable) createFirstPage() *sheet.Page {
 	points.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.EndAlignment,
 		VAlign: unison.StartAlignment,
+		VSpan:  2,
 	})
 	top.AddChild(points)
+	desc := sheet.NewDescription(d.entity)
+	desc.SetLayoutData(&unison.FlexLayoutData{
+		HSpan:  2,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.StartAlignment,
+		HGrab:  true,
+	})
+	top.AddChild(desc)
 
 	return p
 }

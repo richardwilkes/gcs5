@@ -67,7 +67,7 @@ func NewMisc(entity *gurps.Entity) *Misc {
 	m.AddChild(widget.NewPageLabel(i18n.Text("Player")))
 	field := widget.NewStringPageField(entity.Profile.PlayerName, func(v string) {
 		entity.Profile.PlayerName = v
-		m.UpdateModified()
+		MarkModified(m)
 	})
 	field.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
