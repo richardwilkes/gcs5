@@ -23,8 +23,27 @@ import (
 )
 
 var nonEditableFieldColor = unison.NewDynamicColor(func() unison.Color {
-	return unison.OnContentColor.GetColor().SetAlphaIntensity(0.375)
+	return unison.OnEditableColor.GetColor().SetAlphaIntensity(0.6)
 })
+
+// NewPageHeader creates a new center-aligned header for a sheet page.
+func NewPageHeader(title string, hSpan int) *unison.Label {
+	label := unison.NewLabel()
+	label.OnBackgroundInk = theme.OnHeaderColor
+	label.Text = title
+	label.Font = theme.PageLabelPrimaryFont
+	label.HAlign = unison.MiddleAlignment
+	label.SetLayoutData(&unison.FlexLayoutData{
+		HSpan:  hSpan,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+	})
+	label.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
+		gc.DrawRect(rect, theme.HeaderColor.Paint(gc, rect, unison.Fill))
+		label.DefaultDraw(gc, rect)
+	}
+	return label
+}
 
 // NewPageLabel creates a new start-aligned field label for a sheet page.
 func NewPageLabel(title string) *unison.Label {

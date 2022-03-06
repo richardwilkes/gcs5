@@ -28,31 +28,37 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-var _ workspace.FileBackedDockable = &Dockable{}
+var _ workspace.FileBackedDockable = &Sheet{}
 
-// Dockable holds the view for a GURPS character sheet.
-type Dockable struct {
+// Sheet holds the view for a GURPS character sheet.
+type Sheet struct {
 	unison.Panel
-	path             string
-	scroll           *unison.ScrollPanel
-	entity           *gurps.Entity
-	scaleField       *widget.PercentageField
-	pages            *unison.Panel
-	PortaitPanel     *PortraitPanel
-	IdentityPanel    *IdentityPanel
-	MiscPanel        *MiscPanel
-	DescriptionPanel *DescriptionPanel
-	PointsPanel      *PointsPanel
+	path               string
+	scroll             *unison.ScrollPanel
+	entity             *gurps.Entity
+	scaleField         *widget.PercentageField
+	pages              *unison.Panel
+	PortaitPanel       *PortraitPanel
+	IdentityPanel      *IdentityPanel
+	MiscPanel          *MiscPanel
+	DescriptionPanel   *DescriptionPanel
+	PointsPanel        *PointsPanel
+	PrimaryAttrPanel   *PrimaryAttrPanel
+	SecondaryAttrPanel *SecondaryAttrPanel
+	PointPoolsPanel    *PointPoolsPanel
+	BodyPanel          *BodyPanel
+	EncumbrancePanel   *EncumbrancePanel
+	LiftingPanel       *LiftingPanel
 }
 
-// NewSheetDockable creates a new unison.Dockable for GURPS character sheet files.
-func NewSheetDockable(filePath string) (unison.Dockable, error) {
+// NewSheet creates a new unison.Dockable for GURPS character sheet files.
+func NewSheet(filePath string) (unison.Dockable, error) {
 	entity, err := gurps.NewEntityFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err
 	}
 
-	d := &Dockable{
+	d := &Sheet{
 		path:   filePath,
 		scroll: unison.NewScrollPanel(),
 		entity: entity,
@@ -110,13 +116,13 @@ func NewSheetDockable(filePath string) (unison.Dockable, error) {
 	return d, nil
 }
 
-func (d *Dockable) applyScale(scale int) {
+func (d *Sheet) applyScale(scale int) {
 	d.pages.SetScale(float32(scale) / 100)
 	d.scroll.Sync()
 }
 
 // TitleIcon implements workspace.FileBackedDockable
-func (d *Dockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
+func (d *Sheet) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
 		Size: suggestedSize,
@@ -124,54 +130,58 @@ func (d *Dockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 }
 
 // Title implements workspace.FileBackedDockable
-func (d *Dockable) Title() string {
+func (d *Sheet) Title() string {
 	return fs.BaseName(d.path)
 }
 
 // Tooltip implements workspace.FileBackedDockable
-func (d *Dockable) Tooltip() string {
+func (d *Sheet) Tooltip() string {
 	return d.path
 }
 
 // BackingFilePath implements workspace.FileBackedDockable
-func (d *Dockable) BackingFilePath() string {
+func (d *Sheet) BackingFilePath() string {
 	return d.path
 }
 
 // Modified implements workspace.FileBackedDockable
-func (d *Dockable) Modified() bool {
+func (d *Sheet) Modified() bool {
 	return d.MiscPanel.Modified
 }
 
 // MayAttemptClose implements unison.TabCloser
-func (d *Dockable) MayAttemptClose() bool {
+func (d *Sheet) MayAttemptClose() bool {
 	return true
 }
 
 // AttemptClose implements unison.TabCloser
-func (d *Dockable) AttemptClose() {
+func (d *Sheet) AttemptClose() {
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.Close(d)
 	}
 }
 
-func (d *Dockable) createFirstPage() *Page {
+func (d *Sheet) createFirstPage() *Page {
 	p := NewPage(d.entity)
+	p.AddChild(d.createFirstRow())
+	p.AddChild(d.createSecondRow())
+	return p
+}
 
-	top := unison.NewPanel()
-	top.SetLayout(&unison.FlexLayout{
+func (d *Sheet) createFirstRow() *unison.Panel {
+	p := unison.NewPanel()
+	p.SetLayout(&unison.FlexLayout{
 		Columns:  4,
 		HSpacing: 1,
 		VSpacing: 1,
 		HAlign:   unison.FillAlignment,
 		VAlign:   unison.FillAlignment,
 	})
-	top.SetLayoutData(&unison.FlexLayoutData{
+	p.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
-	p.AddChild(top)
 
 	d.PortaitPanel = NewPortraitPanel(d.entity)
 	d.IdentityPanel = NewIdentityPanel(d.entity)
@@ -179,11 +189,42 @@ func (d *Dockable) createFirstPage() *Page {
 	d.DescriptionPanel = NewDescriptionPanel(d.entity)
 	d.PointsPanel = NewPointsPanel(d.entity)
 
-	top.AddChild(d.PortaitPanel)
-	top.AddChild(d.IdentityPanel)
-	top.AddChild(d.MiscPanel)
-	top.AddChild(d.PointsPanel)
-	top.AddChild(d.DescriptionPanel)
+	p.AddChild(d.PortaitPanel)
+	p.AddChild(d.IdentityPanel)
+	p.AddChild(d.MiscPanel)
+	p.AddChild(d.PointsPanel)
+	p.AddChild(d.DescriptionPanel)
+	return p
+}
+
+func (d *Sheet) createSecondRow() *unison.Panel {
+	p := unison.NewPanel()
+	p.SetLayout(&unison.FlexLayout{
+		Columns:  4,
+		HSpacing: 1,
+		VSpacing: 1,
+		HAlign:   unison.FillAlignment,
+		VAlign:   unison.FillAlignment,
+	})
+	p.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.FillAlignment,
+		HGrab:  true,
+	})
+
+	d.PrimaryAttrPanel = NewPrimaryAttrPanel(d.entity)
+	d.SecondaryAttrPanel = NewSecondaryAttrPanel(d.entity)
+	d.PointPoolsPanel = NewPointPoolsPanel(d.entity)
+	d.BodyPanel = NewBodyPanel(d.entity)
+	d.EncumbrancePanel = NewEncumbrancePanel(d.entity)
+	d.LiftingPanel = NewLiftingPanel(d.entity)
+
+	p.AddChild(d.PrimaryAttrPanel)
+	p.AddChild(d.SecondaryAttrPanel)
+	p.AddChild(d.BodyPanel)
+	p.AddChild(d.EncumbrancePanel)
+	p.AddChild(d.PointPoolsPanel)
+	p.AddChild(d.LiftingPanel)
 
 	return p
 }

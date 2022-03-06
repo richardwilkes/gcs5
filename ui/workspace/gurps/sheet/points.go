@@ -47,6 +47,28 @@ func NewPointsPanel(entity *gurps.Entity) *PointsPanel {
 		Bottom: 1,
 		Right:  2,
 	})))
+	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
+		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
+		children := p.Children()
+		for i := 0; i < len(children); i += 2 {
+			var ink unison.Ink
+			if (i/2)&1 == 1 {
+				ink = unison.BandingColor
+			} else {
+				ink = unison.ContentColor
+			}
+			r := children[i].FrameRect()
+			r.X = rect.X
+			r.Width = rect.Width
+			if i == 0 {
+				r.Y--
+				r.Height++
+			} else if i == len(children)-2 {
+				r.Height++
+			}
+			gc.DrawRect(r, ink.Paint(gc, r, unison.Fill))
+		}
+	}
 
 	field := widget.NewNumericPageField(entity.UnspentPoints(), fixed.F64d4FromInt(-999999), fixed.F64d4FromInt(999999),
 		func(v fixed.F64d4) {

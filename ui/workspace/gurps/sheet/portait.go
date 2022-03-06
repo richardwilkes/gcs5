@@ -36,7 +36,7 @@ func NewPortraitPanel(entity *gurps.Entity) *PortraitPanel {
 		VSpan:  2,
 	})
 	p.SetSizer(p.portraitSizer)
-	p.SetBorder(&TitledBorder{Title: i18n.Text("PortraitPanel")})
+	p.SetBorder(&TitledBorder{Title: i18n.Text("Portrait")})
 	p.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text(`Double-click to set a character portrait, or drag an image onto this block.
 
 The dimensions of the chosen picture should be in a ratio of 3 pixels wide
@@ -52,7 +52,7 @@ func (p *PortraitPanel) portraitSizer(_ geom32.Size) (min, pref, max geom32.Size
 	insets := p.Border().Insets()
 	parent := p.Parent()
 	for parent != nil {
-		if sheet, ok := parent.Self.(*Dockable); ok {
+		if sheet, ok := parent.Self.(*Sheet); ok {
 			_, idPanelPref, _ := sheet.IdentityPanel.Sizes(geom32.Size{})
 			_, descPanelPref, _ := sheet.DescriptionPanel.Sizes(geom32.Size{})
 			height = idPanelPref.Height + 1 + descPanelPref.Height

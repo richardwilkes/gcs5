@@ -40,7 +40,7 @@ func NewIdentityPanel(entity *gurps.Entity) *IdentityPanel {
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
-	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("IdentityPanel")}, unison.NewEmptyBorder(geom32.Insets{
+	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Identity")}, unison.NewEmptyBorder(geom32.Insets{
 		Top:    1,
 		Left:   2,
 		Bottom: 1,

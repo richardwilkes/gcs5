@@ -43,7 +43,7 @@ func NewDescriptionPanel(entity *gurps.Entity) *DescriptionPanel {
 		VAlign: unison.StartAlignment,
 		HGrab:  true,
 	})
-	d.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("DescriptionPanel")}, unison.NewEmptyBorder(geom32.Insets{
+	d.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Description")}, unison.NewEmptyBorder(geom32.Insets{
 		Top:    1,
 		Left:   2,
 		Bottom: 1,

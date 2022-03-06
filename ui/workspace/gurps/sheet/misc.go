@@ -87,7 +87,7 @@ func (m *MiscPanel) updateModified() {
 func MarkModified(p unison.Paneler) {
 	panel := p.AsPanel()
 	for panel != nil {
-		if um, ok := panel.Self.(*Dockable); ok {
+		if um, ok := panel.Self.(*Sheet); ok {
 			um.MiscPanel.updateModified()
 			break
 		}
