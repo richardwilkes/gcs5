@@ -43,7 +43,7 @@ var (
 	InitialUIScaleMin      = 50
 	InitialUIScaleMax      = 400
 	InitialListUIScaleDef  = 100
-	InitialSheetUIScaleDef = 125
+	InitialSheetUIScaleDef = 133
 )
 
 // General holds settings for a sheet.
