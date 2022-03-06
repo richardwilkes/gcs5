@@ -227,7 +227,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 	case "AGE":
 		ex.writeEncodedText(ex.entity.Profile.Age)
 	case "SIZE":
-		ex.writeEncodedText(ex.entity.Profile.AdjustedSizeModifier().StringWithSign())
+		ex.writeEncodedText(fmt.Sprintf("%+d", ex.entity.Profile.AdjustedSizeModifier()))
 	case "SKIN":
 		ex.writeEncodedText(ex.entity.Profile.Skin)
 	case "BIRTHDAY":

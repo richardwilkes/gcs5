@@ -17,6 +17,7 @@ import (
 	"io/fs"
 	"math"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -897,7 +898,7 @@ func (e *Entity) ResolveVariable(variableName string) string {
 	e.variableResolverExclusions[variableName] = true
 	defer func() { delete(e.variableResolverExclusions, variableName) }()
 	if gid.SizeModifier == variableName {
-		return e.Profile.AdjustedSizeModifier().String()
+		return strconv.Itoa(e.Profile.AdjustedSizeModifier())
 	}
 	parts := strings.SplitN(variableName, ".", 2)
 	attr := e.Attributes.Set[parts[0]]

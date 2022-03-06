@@ -48,7 +48,7 @@ type Profile struct {
 	PortraitData      []byte         `json:"portrait,omitempty"`
 	Height            measure.Length `json:"height,omitempty"`
 	Weight            measure.Weight `json:"weight,omitempty"`
-	SizeModifier      fixed.F64d4    `json:"SM,omitempty"`
+	SizeModifier      int            `json:"SM,omitempty"`
 	SizeModifierBonus fixed.F64d4    `json:"-"`
 	portrait          *unison.Image
 }
@@ -73,8 +73,16 @@ func (p *Profile) Portrait() *unison.Image {
 }
 
 // AdjustedSizeModifier returns the adjusted size modifier.
-func (p *Profile) AdjustedSizeModifier() fixed.F64d4 {
-	return (p.SizeModifier + p.SizeModifierBonus).Trunc()
+func (p *Profile) AdjustedSizeModifier() int {
+	return p.SizeModifier + p.SizeModifierBonus.AsInt()
+}
+
+// SetAdjustedSizeModifier sets the adjusted size modifier.
+func (p *Profile) SetAdjustedSizeModifier(value int) {
+	if value != p.AdjustedSizeModifier() {
+		// TODO: Need undo logic
+		p.SizeModifier = value - p.SizeModifierBonus.AsInt()
+	}
 }
 
 // AutoFill fills in the default profile entries.

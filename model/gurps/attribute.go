@@ -156,11 +156,11 @@ func (a *Attribute) PointCost() fixed.F64d4 {
 	if def == nil {
 		return 0
 	}
-	var sm fixed.F64d4
+	var sm int
 	if a.Entity != nil {
 		sm = a.Entity.Profile.AdjustedSizeModifier()
 	}
-	return def.ComputeCost(a.Entity, a.Adjustment, sm, a.CostReduction)
+	return def.ComputeCost(a.Entity, a.Adjustment, a.CostReduction, sm)
 }
 
 // IsThresholdOpMet if the given ThresholdOp is met.

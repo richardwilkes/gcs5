@@ -13,6 +13,7 @@ package sheet
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
@@ -53,8 +54,8 @@ func NewDescriptionPanel(entity *gurps.Entity) *DescriptionPanel {
 	}))
 
 	d.AddChild(widget.NewPageLabelEnd(i18n.Text("Height")))
-	d.AddChild(widget.NewStringPageField(entity.Profile.Height.String(), func(v string) {
-		// TODO: Implement length editor
+	d.AddChild(widget.NewHeightPageField(entity, entity.Profile.Height, 0, func(v measure.Length) {
+		entity.Profile.Height = v
 		MarkModified(d)
 	}))
 
@@ -71,8 +72,8 @@ func NewDescriptionPanel(entity *gurps.Entity) *DescriptionPanel {
 	}))
 
 	d.AddChild(widget.NewPageLabelEnd(i18n.Text("Weight")))
-	d.AddChild(widget.NewStringPageField(entity.Profile.Weight.String(), func(v string) {
-		// TODO: Implement weight editor
+	d.AddChild(widget.NewWeightPageField(entity, entity.Profile.Weight, 0, func(v measure.Weight) {
+		entity.Profile.Weight = v
 		MarkModified(d)
 	}))
 
@@ -89,10 +90,12 @@ func NewDescriptionPanel(entity *gurps.Entity) *DescriptionPanel {
 	}))
 
 	d.AddChild(widget.NewPageLabelEnd(i18n.Text("Size")))
-	d.AddChild(widget.NewStringPageField(entity.Profile.AdjustedSizeModifier().String(), func(v string) {
-		// TODO: Use different editor for numbers
+	field := widget.NewSignedIntegerPageField(entity.Profile.AdjustedSizeModifier(), -99, 99, func(v int) {
+		entity.Profile.SetAdjustedSizeModifier(v)
 		MarkModified(d)
-	}))
+	})
+	field.HAlign = unison.StartAlignment
+	d.AddChild(field)
 
 	d.AddChild(widget.NewPageLabelEnd(i18n.Text("Skin")))
 	d.AddChild(widget.NewStringPageField(entity.Profile.Skin, func(v string) {

@@ -93,10 +93,10 @@ func (a *AttributeDef) BaseValue(resolver eval.VariableResolver) fixed.F64d4 {
 }
 
 // ComputeCost returns the value adjusted for a cost reduction.
-func (a *AttributeDef) ComputeCost(entity *Entity, value, sizeModifier, costReduction fixed.F64d4) fixed.F64d4 {
+func (a *AttributeDef) ComputeCost(entity *Entity, value, costReduction fixed.F64d4, sizeModifier int) fixed.F64d4 {
 	cost := value.Mul(a.CostPerPoint)
 	if sizeModifier > 0 && a.CostAdjPercentPerSM > 0 && !(a.DefID == "hp" && entity.SheetSettings.DamageProgression == attribute.KnowingYourOwnStrength) {
-		costReduction += sizeModifier.Mul(a.CostAdjPercentPerSM)
+		costReduction += fixed.F64d4FromInt(sizeModifier).Mul(a.CostAdjPercentPerSM)
 	}
 	if costReduction > 0 {
 		if costReduction > fxp.Eighty {

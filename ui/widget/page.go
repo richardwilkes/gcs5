@@ -12,6 +12,8 @@
 package widget
 
 import (
+	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
@@ -33,6 +35,7 @@ func NewPageLabel(title string) *unison.Label {
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,
 	})
+	label.SetBorder(unison.NewEmptyBorder(geom32.Insets{Bottom: 1})) // To match field underline spacing
 	return label
 }
 
@@ -47,6 +50,7 @@ func NewPageLabelEnd(title string) *unison.Label {
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,
 	})
+	label.SetBorder(unison.NewEmptyBorder(geom32.Insets{Bottom: 1})) // To match field underline spacing
 	return label
 }
 
@@ -68,6 +72,49 @@ func NewStringPageField(value string, applier func(string)) *unison.Field {
 // NewStringPageFieldNoGrab creates a new text entry field for a sheet page, but with HGrab set to false.
 func NewStringPageFieldNoGrab(value string, applier func(string)) *unison.Field {
 	field := NewStringField(value, applier)
+	field.Font = theme.PageFieldPrimaryFont
+	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
+	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom32.Insets{Bottom: 1}, false)
+	field.SetBorder(field.UnfocusedBorder)
+	field.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+	})
+	return field
+}
+
+// NewHeightPageField creates a new height entry field for a sheet page.
+func NewHeightPageField(entity *gurps.Entity, value, max measure.Length, applier func(measure.Length)) *HeightField {
+	field := NewHeightField(entity, value, max, applier)
+	field.Font = theme.PageFieldPrimaryFont
+	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
+	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom32.Insets{Bottom: 1}, false)
+	field.SetBorder(field.UnfocusedBorder)
+	field.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+	})
+	return field
+}
+
+// NewWeightPageField creates a new weight entry field for a sheet page.
+func NewWeightPageField(entity *gurps.Entity, value, max measure.Weight, applier func(measure.Weight)) *WeightField {
+	field := NewWeightField(entity, value, max, applier)
+	field.Font = theme.PageFieldPrimaryFont
+	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
+	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom32.Insets{Bottom: 1}, false)
+	field.SetBorder(field.UnfocusedBorder)
+	field.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+	})
+	return field
+}
+
+// NewSignedIntegerPageField creates a new signed integer entry field for a sheet page.
+func NewSignedIntegerPageField(value, min, max int, applier func(int)) *SignedIntegerField {
+	field := NewSignedIntegerField(value, min, max, applier)
+	field.HAlign = unison.EndAlignment
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
 	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom32.Insets{Bottom: 1}, false)
@@ -111,7 +158,11 @@ func newNonEditablePageField(title, tooltip string, hAlign unison.Alignment) *un
 	label.Text = title
 	label.Font = theme.PageFieldPrimaryFont
 	label.HAlign = hAlign
-	label.SetBorder(unison.NewEmptyBorder(geom32.NewHorizontalInsets(1))) // Account for cursor in normal fields
+	label.SetBorder(unison.NewEmptyBorder(geom32.Insets{
+		Left:   1,
+		Bottom: 1,
+		Right:  1,
+	})) // Match normal fields
 	label.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,
