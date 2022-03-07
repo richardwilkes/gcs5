@@ -74,6 +74,21 @@ func NewPageLabelEnd(title string) *unison.Label {
 	return label
 }
 
+// NewPageLabelCenter creates a new center-aligned field label for a sheet page.
+func NewPageLabelCenter(title string) *unison.Label {
+	label := unison.NewLabel()
+	label.OnBackgroundInk = unison.OnContentColor
+	label.Text = title
+	label.Font = theme.PageLabelPrimaryFont
+	label.HAlign = unison.MiddleAlignment
+	label.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+	})
+	label.SetBorder(unison.NewEmptyBorder(geom32.Insets{Bottom: 1})) // To match field underline spacing
+	return label
+}
+
 // NewPageLabelWithRandomizer creates a new end-aligned field label for a sheet page that includes a randomization
 // button.
 func NewPageLabelWithRandomizer(title, tooltip string, clickCallback func()) *unison.Panel {
@@ -203,6 +218,12 @@ func NewNonEditablePageField(title, tooltip string) *unison.Label {
 // field.
 func NewNonEditablePageFieldEnd(title, tooltip string) *unison.Label {
 	return newNonEditablePageField(title, tooltip, unison.EndAlignment)
+}
+
+// NewNonEditablePageFieldCenter creates a new center-aligned non-editable field that uses the same font and size as the
+// page field.
+func NewNonEditablePageFieldCenter(title, tooltip string) *unison.Label {
+	return newNonEditablePageField(title, tooltip, unison.MiddleAlignment)
 }
 
 func newNonEditablePageField(title, tooltip string, hAlign unison.Alignment) *unison.Label {
