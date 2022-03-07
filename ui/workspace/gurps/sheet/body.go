@@ -111,6 +111,10 @@ func (p *BodyPanel) addTable(bodyType *gurps.BodyType, depth int) {
 		dr := location.DisplayDR(p.entity, &tooltip)
 		p.AddChild(widget.NewNonEditablePageFieldCenter(dr,
 			fmt.Sprintf(i18n.Text("The DR covering the %s hit location%s"), location.TableName, tooltip.String())))
+
+		if location.SubTable != nil {
+			p.addTable(location.SubTable, depth+1)
+		}
 	}
 }
 
