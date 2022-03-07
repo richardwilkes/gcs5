@@ -46,28 +46,7 @@ func NewLiftingPanel(entity *gurps.Entity) *LiftingPanel {
 		Bottom: 1,
 		Right:  2,
 	})))
-	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
-		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
-		children := p.Children()
-		for i := 0; i < len(children); i += 2 {
-			var ink unison.Ink
-			if (i/2)&1 == 1 {
-				ink = unison.BandingColor
-			} else {
-				ink = unison.ContentColor
-			}
-			r := children[i].FrameRect()
-			r.X = rect.X
-			r.Width = rect.Width
-			if i == 0 {
-				r.Y--
-				r.Height++
-			} else if i == len(children)-2 {
-				r.Height++
-			}
-			gc.DrawRect(r, ink.Paint(gc, r, unison.Fill))
-		}
-	}
+	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) { drawBandedBackground(p, gc, rect, 0, 2) }
 	p.createRow(entity.BasicLift(), i18n.Text("Basic Lift"), i18n.Text("The weight that can be lifted overhead with one hand in one second"))
 	p.createRow(entity.OneHandedLift(), i18n.Text("One-Handed Lift"), i18n.Text("The weight that can be lifted overhead with one hand in two seconds"))
 	p.createRow(entity.TwoHandedLift(), i18n.Text("Two-Handed Lift"), i18n.Text("The weight that can be lifted overhead with both hands in four seconds"))

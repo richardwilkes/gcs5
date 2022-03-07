@@ -43,11 +43,10 @@ func NewBodyPanel(entity *gurps.Entity) *BodyPanel {
 	p.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
-		VSpan:  2,
+		VSpan:  3,
 	})
 	locations := gurps.SheetSettingsFor(entity).HitLocations
 	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: locations.Name}, unison.NewEmptyBorder(geom32.Insets{
-		Top:    1,
 		Left:   2,
 		Bottom: 1,
 		Right:  2,

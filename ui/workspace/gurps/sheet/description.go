@@ -49,6 +49,9 @@ func NewDescriptionPanel(entity *gurps.Entity) *DescriptionPanel {
 		Bottom: 1,
 		Right:  2,
 	})))
+	d.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
+		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
+	}
 	d.AddChild(d.createColumn1())
 	d.AddChild(d.createColumn2())
 	d.AddChild(d.createColumn3())

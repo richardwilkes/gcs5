@@ -41,34 +41,14 @@ func NewPointsPanel(entity *gurps.Entity) *PointsPanel {
 		VAlign: unison.FillAlignment,
 		VSpan:  2,
 	})
-	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: fmt.Sprintf(i18n.Text("%s PointsPanel"), p.entity.TotalPoints.String())}, unison.NewEmptyBorder(geom32.Insets{
+	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: fmt.Sprintf(i18n.Text("%s Points"),
+		p.entity.TotalPoints.String())}, unison.NewEmptyBorder(geom32.Insets{
 		Top:    1,
 		Left:   2,
 		Bottom: 1,
 		Right:  2,
 	})))
-	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
-		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
-		children := p.Children()
-		for i := 0; i < len(children); i += 2 {
-			var ink unison.Ink
-			if (i/2)&1 == 1 {
-				ink = unison.BandingColor
-			} else {
-				ink = unison.ContentColor
-			}
-			r := children[i].FrameRect()
-			r.X = rect.X
-			r.Width = rect.Width
-			if i == 0 {
-				r.Y--
-				r.Height++
-			} else if i == len(children)-2 {
-				r.Height++
-			}
-			gc.DrawRect(r, ink.Paint(gc, r, unison.Fill))
-		}
-	}
+	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) { drawBandedBackground(p, gc, rect, 0, 2) }
 
 	field := widget.NewNumericPageField(entity.UnspentPoints(), fixed.F64d4FromInt(-999999), fixed.F64d4FromInt(999999),
 		func(v fixed.F64d4) {

@@ -205,6 +205,10 @@ func NewNumericPageField(value, min, max fixed.F64d4, applier func(fixed.F64d4))
 	// Override to ignore fractional values
 	field.MinimumTextWidth = mathf32.Max(field.Font.SimpleWidth(min.Trunc().String()),
 		field.Font.SimpleWidth(max.Trunc().String()))
+	field.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+	})
 	return field
 }
 

@@ -49,6 +49,7 @@ type Sheet struct {
 	BodyPanel          *BodyPanel
 	EncumbrancePanel   *EncumbrancePanel
 	LiftingPanel       *LiftingPanel
+	DamagePanel        *DamagePanel
 }
 
 // NewSheet creates a new unison.Dockable for GURPS character sheet files.
@@ -218,13 +219,45 @@ func (d *Sheet) createSecondRow() *unison.Panel {
 	d.BodyPanel = NewBodyPanel(d.entity)
 	d.EncumbrancePanel = NewEncumbrancePanel(d.entity)
 	d.LiftingPanel = NewLiftingPanel(d.entity)
+	d.DamagePanel = NewDamagePanel(d.entity)
+
+	endWrapper := unison.NewPanel()
+	endWrapper.SetLayout(&unison.FlexLayout{
+		Columns:  1,
+		VSpacing: 1,
+	})
+	endWrapper.SetLayoutData(&unison.FlexLayoutData{
+		VSpan:  3,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.FillAlignment,
+		HGrab:  true,
+	})
+	endWrapper.AddChild(d.EncumbrancePanel)
+	endWrapper.AddChild(d.LiftingPanel)
 
 	p.AddChild(d.PrimaryAttrPanel)
 	p.AddChild(d.SecondaryAttrPanel)
 	p.AddChild(d.BodyPanel)
-	p.AddChild(d.EncumbrancePanel)
+	p.AddChild(endWrapper)
+	p.AddChild(d.DamagePanel)
 	p.AddChild(d.PointPoolsPanel)
-	p.AddChild(d.LiftingPanel)
 
 	return p
+}
+
+func drawBandedBackground(p unison.Paneler, gc *unison.Canvas, rect geom32.Rect, start, step int) {
+	gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
+	children := p.AsPanel().Children()
+	for i := start; i < len(children); i += step {
+		var ink unison.Ink
+		if ((i-start)/step)&1 == 1 {
+			ink = unison.BandingColor
+		} else {
+			ink = unison.ContentColor
+		}
+		r := children[i].FrameRect()
+		r.X = rect.X
+		r.Width = rect.Width
+		gc.DrawRect(r, ink.Paint(gc, r, unison.Fill))
+	}
 }

@@ -46,6 +46,9 @@ func NewMiscPanel(entity *gurps.Entity) *MiscPanel {
 		Bottom: 1,
 		Right:  2,
 	})))
+	m.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
+		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
+	}
 
 	m.AddChild(widget.NewPageLabelEnd(i18n.Text("Created")))
 	m.AddChild(widget.NewNonEditablePageField(entity.CreatedOn.String(), ""))

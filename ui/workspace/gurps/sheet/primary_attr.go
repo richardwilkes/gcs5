@@ -12,8 +12,15 @@
 package sheet
 
 import (
+	"fmt"
+
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/attribute"
+	"github.com/richardwilkes/gcs/model/theme"
+	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/log/jot"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
@@ -42,6 +49,31 @@ func NewPrimaryAttrPanel(entity *gurps.Entity) *PrimaryAttrPanel {
 		Bottom: 1,
 		Right:  2,
 	})))
+	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
+		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
+	}
+
+	for _, def := range gurps.SheetSettingsFor(entity).Attributes.List() {
+		if def.Type == attribute.Pool || !def.Primary() {
+			continue
+		}
+		attr, ok := entity.Attributes.Set[def.ID()]
+		if !ok {
+			jot.Warnf("unable to locate attribute data for '%s'", def.ID())
+			continue
+		}
+		pts := widget.NewNonEditablePageFieldEnd("["+attr.PointCost().String()+"]",
+			fmt.Sprintf(i18n.Text("Points spent on %s"), def.CombinedName()))
+		pts.Font = theme.PageFieldSecondaryFont
+		p.AddChild(pts)
+
+		field := widget.NewNumericPageField(attr.Current(), 0, attr.Maximum(), func(v fixed.F64d4) {
+			// TODO: Implement
+		})
+		p.AddChild(field)
+
+		p.AddChild(widget.NewPageLabel(def.CombinedName()))
+	}
 
 	return p
 }

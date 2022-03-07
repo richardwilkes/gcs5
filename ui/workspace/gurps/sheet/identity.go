@@ -46,6 +46,9 @@ func NewIdentityPanel(entity *gurps.Entity) *IdentityPanel {
 		Bottom: 1,
 		Right:  2,
 	})))
+	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
+		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
+	}
 
 	field := widget.NewStringPageField(entity.Profile.Name, func(v string) {
 		entity.Profile.Name = v
