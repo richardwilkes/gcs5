@@ -96,7 +96,7 @@ func (d *generalSettingsDockable) createPlayerAndDescFields(content *unison.Pane
 func (d *generalSettingsDockable) createInitialPointsFields(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Initial Points")))
 	d.pointsField = widget.NewNumericField(settings.Global().General.InitialPoints, gsettings.InitialPointsMin,
-		gsettings.InitialPointsMax, func(v fixed.F64d4) { settings.Global().General.InitialPoints = v })
+		gsettings.InitialPointsMax, false, func(v fixed.F64d4) { settings.Global().General.InitialPoints = v })
 	content.AddChild(d.pointsField)
 	d.includeUnspentPointsInTotalCheckbox = widget.NewCheckBox(i18n.Text("Include unspent points in total"),
 		settings.Global().General.IncludeUnspentPointsInTotal,
@@ -151,7 +151,7 @@ func (d *generalSettingsDockable) createImageResolutionField(content *unison.Pan
 func (d *generalSettingsDockable) createTooltipDelayField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Tooltip Delay")))
 	d.tooltipDelayField = widget.NewNumericField(settings.Global().General.TooltipDelay, gsettings.TooltipDelayMin,
-		gsettings.TooltipDelayMax, func(v fixed.F64d4) {
+		gsettings.TooltipDelayMax, false, func(v fixed.F64d4) {
 			s := settings.Global().General
 			s.TooltipDelay = v
 			s.UpdateToolTipTiming()
@@ -162,7 +162,7 @@ func (d *generalSettingsDockable) createTooltipDelayField(content *unison.Panel)
 func (d *generalSettingsDockable) createTooltipDismissalField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Tooltip Dismissal")))
 	d.tooltipDismissalField = widget.NewNumericField(settings.Global().General.TooltipDismissal,
-		gsettings.TooltipDismissalMin, gsettings.TooltipDismissalMax, func(v fixed.F64d4) {
+		gsettings.TooltipDismissalMin, gsettings.TooltipDismissalMax, false, func(v fixed.F64d4) {
 			s := settings.Global().General
 			s.TooltipDismissal = v
 			s.UpdateToolTipTiming()

@@ -195,16 +195,18 @@ func NewSignedIntegerPageField(value, min, max int, applier func(int)) *SignedIn
 }
 
 // NewNumericPageField creates a new numeric text entry field for a sheet page.
-func NewNumericPageField(value, min, max fixed.F64d4, applier func(fixed.F64d4)) *NumericField {
-	field := NewNumericField(value, min, max, applier)
+func NewNumericPageField(value, min, max fixed.F64d4, noMinWidth bool, applier func(fixed.F64d4)) *NumericField {
+	field := NewNumericField(value, min, max, noMinWidth, applier)
 	field.HAlign = unison.EndAlignment
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
 	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom32.Insets{Bottom: 1}, false)
 	field.SetBorder(field.UnfocusedBorder)
-	// Override to ignore fractional values
-	field.MinimumTextWidth = mathf32.Max(field.Font.SimpleWidth(min.Trunc().String()),
-		field.Font.SimpleWidth(max.Trunc().String()))
+	if !noMinWidth && min != fixed.F64d4Min && max != fixed.F64d4Max {
+		// Override to ignore fractional values
+		field.MinimumTextWidth = mathf32.Max(field.Font.SimpleWidth(min.Trunc().String()),
+			field.Font.SimpleWidth(max.Trunc().String()))
+	}
 	field.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,

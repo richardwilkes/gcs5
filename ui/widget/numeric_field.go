@@ -30,7 +30,7 @@ type NumericField struct {
 }
 
 // NewNumericField creates a new field that holds a fixed-point number.
-func NewNumericField(value, min, max fixed.F64d4, applier func(fixed.F64d4)) *NumericField {
+func NewNumericField(value, min, max fixed.F64d4, noMinWidth bool, applier func(fixed.F64d4)) *NumericField {
 	f := &NumericField{
 		Field:   unison.NewField(),
 		applier: applier,
@@ -41,8 +41,10 @@ func NewNumericField(value, min, max fixed.F64d4, applier func(fixed.F64d4)) *Nu
 	f.SetText(value.String())
 	f.ModifiedCallback = f.modified
 	f.ValidateCallback = f.validate
-	f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth((min.Trunc() + fixed.F64d4One - 1).String()),
-		f.Font.SimpleWidth((max.Trunc() + fixed.F64d4One - 1).String()))
+	if !noMinWidth && min != fixed.F64d4Min && max != fixed.F64d4Max {
+		f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth((min.Trunc() + fixed.F64d4One - 1).String()),
+			f.Font.SimpleWidth((max.Trunc() + fixed.F64d4One - 1).String()))
+	}
 	return f
 }
 
@@ -56,11 +58,11 @@ func (f *NumericField) validate() bool {
 		f.Tooltip = unison.NewTooltipWithText(i18n.Text("Invalid number"))
 		return false
 	}
-	if v < f.minimum {
+	if f.minimum != fixed.F64d4Min && v < f.minimum {
 		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Number must be at least %s"), f.minimum.String()))
 		return false
 	}
-	if v > f.maximum {
+	if f.maximum != fixed.F64d4Max && v > f.maximum {
 		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Number must be no more than %s"), f.maximum.String()))
 		return false
 	}
@@ -69,7 +71,9 @@ func (f *NumericField) validate() bool {
 }
 
 func (f *NumericField) modified() {
-	if v, err := fixed.F64d4FromString(f.trimmed()); err == nil && v >= f.minimum && v <= f.maximum {
+	if v, err := fixed.F64d4FromString(f.trimmed()); err == nil &&
+		(f.minimum == fixed.F64d4Min || v >= f.minimum) &&
+		(f.maximum == fixed.F64d4Max || v <= f.maximum) {
 		f.applier(v)
 	}
 }

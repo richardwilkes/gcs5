@@ -120,7 +120,7 @@ func (d *fontSettingsDockable) createFamilyField(index int) {
 
 func (d *fontSettingsDockable) createSizeField(index int) {
 	field := widget.NewNumericField(fixed.F64d4FromFloat32(theme.CurrentFonts[index].Font.Size()), fixed.F64d4One,
-		fixed.F64d4FromInt(999), func(v fixed.F64d4) {
+		fixed.F64d4FromInt(999), false, func(v fixed.F64d4) {
 			if d.noUpdate {
 				return
 			}

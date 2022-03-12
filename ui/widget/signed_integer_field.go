@@ -13,6 +13,7 @@ package widget
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -41,7 +42,9 @@ func NewSignedIntegerField(value, min, max int, applier func(int)) *SignedIntege
 	f.SetText(fmt.Sprintf("%+d", value))
 	f.ModifiedCallback = f.modified
 	f.ValidateCallback = f.validate
-	f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth(strconv.Itoa(min)), f.Font.SimpleWidth(strconv.Itoa(max)))
+	if min != math.MinInt && max != math.MaxInt {
+		f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth(strconv.Itoa(min)), f.Font.SimpleWidth(strconv.Itoa(max)))
+	}
 	return f
 }
 
@@ -55,11 +58,11 @@ func (f *SignedIntegerField) validate() bool {
 		f.Tooltip = unison.NewTooltipWithText(i18n.Text("Invalid integer"))
 		return false
 	}
-	if v < f.minimum {
+	if f.minimum != math.MinInt && v < f.minimum {
 		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Integer must be at least %d"), f.minimum))
 		return false
 	}
-	if v > f.maximum {
+	if f.maximum != math.MaxInt && v > f.maximum {
 		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Integer must be no more than %d"), f.maximum))
 		return false
 	}
@@ -68,7 +71,9 @@ func (f *SignedIntegerField) validate() bool {
 }
 
 func (f *SignedIntegerField) modified() {
-	if v, err := strconv.Atoi(f.trimmed()); err == nil && v >= f.minimum && v <= f.maximum {
+	if v, err := strconv.Atoi(f.trimmed()); err == nil &&
+		(f.minimum == math.MinInt || v >= f.minimum) &&
+		(f.maximum == math.MaxInt || v <= f.maximum) {
 		f.applier(v)
 	}
 }

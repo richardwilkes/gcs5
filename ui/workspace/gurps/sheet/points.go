@@ -50,7 +50,7 @@ func NewPointsPanel(entity *gurps.Entity) *PointsPanel {
 	})))
 	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) { drawBandedBackground(p, gc, rect, 0, 2) }
 
-	field := widget.NewNumericPageField(entity.UnspentPoints(), fixed.F64d4FromInt(-999999), fixed.F64d4FromInt(999999),
+	field := widget.NewNumericPageField(entity.UnspentPoints(), fixed.F64d4Min, fixed.F64d4Max, true,
 		func(v fixed.F64d4) {
 			if v != entity.UnspentPoints() {
 				entity.SetUnspentPoints(v)
@@ -61,7 +61,7 @@ func NewPointsPanel(entity *gurps.Entity) *PointsPanel {
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,
 	})
-	field.Tooltip = unison.NewTooltipWithText(i18n.Text("PointsPanel earned but not yet spent"))
+	field.Tooltip = unison.NewTooltipWithText(i18n.Text("Points earned but not yet spent"))
 	p.AddChild(field)
 	p.AddChild(widget.NewPageLabel(i18n.Text("Unspent")))
 

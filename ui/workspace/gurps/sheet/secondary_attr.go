@@ -68,7 +68,7 @@ func NewSecondaryAttrPanel(entity *gurps.Entity) *SecondaryAttrPanel {
 		pts.Font = theme.PageFieldSecondaryFont
 		p.AddChild(pts)
 
-		field := widget.NewNumericPageField(attr.Current(), 0, attr.Maximum(), func(v fixed.F64d4) {
+		field := widget.NewNumericPageField(attr.Current(), 0, attr.Maximum(), true, func(v fixed.F64d4) {
 			// TODO: Implement
 		})
 		p.AddChild(field)
