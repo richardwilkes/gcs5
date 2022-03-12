@@ -22,36 +22,43 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-// SignedIntegerField holds the data for a signed integer field.
+// SignedIntegerField holds the value for a signed integer field.
 type SignedIntegerField struct {
 	*unison.Field
-	applier func(v int)
-	value   int
+	applier func()
+	value   *int
 	minimum int
 	maximum int
 }
 
 // NewSignedIntegerField creates a new field that holds an integer and always displays its sign.
-func NewSignedIntegerField(value, min, max int, applier func(int)) *SignedIntegerField {
+func NewSignedIntegerField(value *int, min, max int) *SignedIntegerField {
 	f := &SignedIntegerField{
 		Field:   unison.NewField(),
+		value:   value,
 		minimum: min,
 		maximum: max,
 	}
 	f.Self = f
-	f.SetValue(value)
-	f.applier = applier
 	f.ModifiedCallback = f.modified
 	f.ValidateCallback = f.validate
 	if min != math.MinInt && max != math.MaxInt {
 		f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth(strconv.Itoa(min)), f.Font.SimpleWidth(strconv.Itoa(max)))
 	}
+	f.Sync()
+	return f
+}
+
+// NewSignedIntegerFieldWithApplier creates a new field that holds an integer number.
+func NewSignedIntegerFieldWithApplier(value *int, min, max int, applier func()) *SignedIntegerField {
+	f := NewSignedIntegerField(value, min, max)
+	f.applier = applier
 	return f
 }
 
 // Value returns the current value of the field.
 func (f *SignedIntegerField) Value() int {
-	return f.value
+	return *f.value
 }
 
 // SetValue sets the value of this field, marking the field and all of its parents as needing to be laid out again if the
@@ -62,7 +69,6 @@ func (f *SignedIntegerField) SetValue(value int) {
 	} else if f.maximum != math.MaxInt && value > f.maximum {
 		value = f.maximum
 	}
-	f.value = value
 	SetFieldValue(f.Field, fmt.Sprintf("%+d", value))
 }
 
@@ -92,9 +98,16 @@ func (f *SignedIntegerField) modified() {
 	if v, err := strconv.Atoi(f.trimmed()); err == nil &&
 		(f.minimum == math.MinInt || v >= f.minimum) &&
 		(f.maximum == math.MaxInt || v <= f.maximum) {
-		f.value = v
+		*f.value = v
 		if f.applier != nil {
-			f.applier(v)
+			f.applier()
 		}
+		MarkForLayoutWithinDockable(f)
+		MarkModified(f)
 	}
+}
+
+// Sync the field to the current value.
+func (f *SignedIntegerField) Sync() {
+	f.SetValue(*f.value)
 }

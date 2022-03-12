@@ -22,7 +22,7 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-// PercentageField holds the data for a percentage field.
+// PercentageField holds the value for a percentage field.
 type PercentageField struct {
 	*unison.Field
 	applier func(v int)

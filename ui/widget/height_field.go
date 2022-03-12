@@ -21,7 +21,7 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-// HeightField holds the data for a height field.
+// HeightField holds the value for a height field.
 type HeightField struct {
 	*unison.Field
 	entity  *gurps.Entity

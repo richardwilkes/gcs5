@@ -123,8 +123,8 @@ func NewPageLabelWithRandomizer(title, tooltip string, clickCallback func()) *un
 }
 
 // NewStringPageField creates a new text entry field for a sheet page.
-func NewStringPageField(value string, applier func(string)) *unison.Field {
-	field := NewStringField(value, applier)
+func NewStringPageField(data *string) *StringField {
+	field := NewStringField(data)
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
 	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom32.Insets{Bottom: 1}, false)
@@ -138,8 +138,8 @@ func NewStringPageField(value string, applier func(string)) *unison.Field {
 }
 
 // NewStringPageFieldNoGrab creates a new text entry field for a sheet page, but with HGrab set to false.
-func NewStringPageFieldNoGrab(value string, applier func(string)) *unison.Field {
-	field := NewStringField(value, applier)
+func NewStringPageFieldNoGrab(data *string) *StringField {
+	field := NewStringField(data)
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
 	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom32.Insets{Bottom: 1}, false)
@@ -180,8 +180,23 @@ func NewWeightPageField(entity *gurps.Entity, value, max measure.Weight, applier
 }
 
 // NewSignedIntegerPageField creates a new signed integer entry field for a sheet page.
-func NewSignedIntegerPageField(value, min, max int, applier func(int)) *SignedIntegerField {
-	field := NewSignedIntegerField(value, min, max, applier)
+func NewSignedIntegerPageField(value *int, min, max int) *SignedIntegerField {
+	field := NewSignedIntegerField(value, min, max)
+	field.HAlign = unison.EndAlignment
+	field.Font = theme.PageFieldPrimaryFont
+	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
+	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom32.Insets{Bottom: 1}, false)
+	field.SetBorder(field.UnfocusedBorder)
+	field.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+	})
+	return field
+}
+
+// NewSignedIntegerPageFieldWithApplier creates a new signed integer entry field for a sheet page.
+func NewSignedIntegerPageFieldWithApplier(value *int, min, max int, applier func()) *SignedIntegerField {
+	field := NewSignedIntegerFieldWithApplier(value, min, max, applier)
 	field.HAlign = unison.EndAlignment
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
@@ -195,8 +210,28 @@ func NewSignedIntegerPageField(value, min, max int, applier func(int)) *SignedIn
 }
 
 // NewNumericPageField creates a new numeric text entry field for a sheet page.
-func NewNumericPageField(value, min, max fixed.F64d4, noMinWidth bool, applier func(fixed.F64d4)) *NumericField {
-	field := NewNumericField(value, min, max, noMinWidth, applier)
+func NewNumericPageField(value *fixed.F64d4, min, max fixed.F64d4, noMinWidth bool) *NumericField {
+	field := NewNumericField(value, min, max, noMinWidth)
+	field.HAlign = unison.EndAlignment
+	field.Font = theme.PageFieldPrimaryFont
+	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
+	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom32.Insets{Bottom: 1}, false)
+	field.SetBorder(field.UnfocusedBorder)
+	if !noMinWidth && min != fixed.F64d4Min && max != fixed.F64d4Max {
+		// Override to ignore fractional values
+		field.MinimumTextWidth = mathf32.Max(field.Font.SimpleWidth(min.Trunc().String()),
+			field.Font.SimpleWidth(max.Trunc().String()))
+	}
+	field.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+	})
+	return field
+}
+
+// NewNumericPageFieldWithApplier creates a new numeric text entry field for a sheet page.
+func NewNumericPageFieldWithApplier(value *fixed.F64d4, min, max fixed.F64d4, noMinWidth bool, applier func()) *NumericField {
+	field := NewNumericFieldWithApplier(value, min, max, noMinWidth, applier)
 	field.HAlign = unison.EndAlignment
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)

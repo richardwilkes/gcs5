@@ -68,17 +68,21 @@ func NewPointPoolsPanel(entity *gurps.Entity) *PointPoolsPanel {
 		pts.Font = theme.PageFieldSecondaryFont
 		p.AddChild(pts)
 
-		field := widget.NewNumericPageField(attr.Current(), fixed.F64d4Min, attr.Maximum(), true, func(v fixed.F64d4) {
-			// TODO: Implement
+		current := attr.Current()
+		currentField := widget.NewNumericPageFieldWithApplier(&current, fixed.F64d4Min, attr.Maximum(), true, func() {
+			attr.Damage = attr.Maximum() - current
 		})
-		p.AddChild(field)
+		p.AddChild(currentField)
 
 		p.AddChild(widget.NewPageLabel(i18n.Text("of")))
 
-		field = widget.NewNumericPageField(attr.Maximum(), fixed.F64d4Min, attr.Maximum(), true, func(v fixed.F64d4) {
-			// TODO: Implement
+		maximum := attr.Maximum()
+		maximumField := widget.NewNumericPageFieldWithApplier(&maximum, fixed.F64d4Min, fixed.F64d4Max, true, func() {
+			attr.SetMaximum(maximum)
+			currentField.SetMaximum(maximum)
+			currentField.SetValue(currentField.Value())
 		})
-		p.AddChild(field)
+		p.AddChild(maximumField)
 
 		name := widget.NewPageLabel(def.Name)
 		if def.FullName != "" {

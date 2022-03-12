@@ -15,14 +15,33 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-// NewStringField creates a new string field.
-func NewStringField(value string, applier func(string)) *unison.Field {
-	f := unison.NewField()
-	f.SetText(value)
-	f.ModifiedCallback = func() { applier(f.Text()) }
+// StringField holds the value for a string field.
+type StringField struct {
+	*unison.Field
+	value *string
+}
+
+// NewStringField creates a new field for editing a string.
+func NewStringField(data *string) *StringField {
+	f := &StringField{
+		Field: unison.NewField(),
+		value: data,
+	}
+	f.Self = f
+	f.ModifiedCallback = func() {
+		*f.value = f.Text()
+		MarkForLayoutWithinDockable(f)
+		MarkModified(f)
+	}
+	f.Sync()
 	f.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
 	return f
+}
+
+// Sync the field to the current value.
+func (f *StringField) Sync() {
+	f.SetText(*f.value)
 }

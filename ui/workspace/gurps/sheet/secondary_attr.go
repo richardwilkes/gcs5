@@ -20,7 +20,6 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
@@ -68,9 +67,9 @@ func NewSecondaryAttrPanel(entity *gurps.Entity) *SecondaryAttrPanel {
 		pts.Font = theme.PageFieldSecondaryFont
 		p.AddChild(pts)
 
-		field := widget.NewNumericPageField(attr.Current(), 0, attr.Maximum(), true, func(v fixed.F64d4) {
-			// TODO: Implement
-		})
+		current := attr.Current()
+		field := widget.NewNumericPageFieldWithApplier(&current, 0, attr.Maximum(), true,
+			func() { attr.SetMaximum(current) })
 		p.AddChild(field)
 
 		p.AddChild(widget.NewPageLabel(def.CombinedName()))

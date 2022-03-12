@@ -119,15 +119,16 @@ func (d *fontSettingsDockable) createFamilyField(index int) {
 }
 
 func (d *fontSettingsDockable) createSizeField(index int) {
-	field := widget.NewNumericField(fixed.F64d4FromFloat32(theme.CurrentFonts[index].Font.Size()), fixed.F64d4One,
-		fixed.F64d4FromInt(999), false, func(v fixed.F64d4) {
-			if d.noUpdate {
-				return
-			}
-			fd := theme.CurrentFonts[index].Font.Descriptor()
-			fd.Size = v.AsFloat32()
-			d.applyFont(index, fd)
-		})
+	var field *widget.NumericField
+	value := fixed.F64d4FromFloat32(theme.CurrentFonts[index].Font.Size())
+	field = widget.NewNumericFieldWithApplier(&value, fixed.F64d4One, fixed.F64d4FromInt(999), false, func() {
+		if d.noUpdate {
+			return
+		}
+		fd := theme.CurrentFonts[index].Font.Descriptor()
+		fd.Size = field.Value().AsFloat32()
+		d.applyFont(index, fd)
+	})
 	field.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,

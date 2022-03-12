@@ -22,36 +22,35 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-// IntegerField holds the data for an integer field.
+// IntegerField holds the value for an integer field.
 type IntegerField struct {
 	*unison.Field
-	applier func(v int)
-	value   int
+	value   *int
 	minimum int
 	maximum int
 }
 
 // NewIntegerField creates a new field that holds an integer.
-func NewIntegerField(value, min, max int, applier func(int)) *IntegerField {
+func NewIntegerField(value *int, min, max int) *IntegerField {
 	f := &IntegerField{
 		Field:   unison.NewField(),
+		value:   value,
 		minimum: min,
 		maximum: max,
 	}
 	f.Self = f
-	f.SetValue(value)
-	f.applier = applier
 	f.ModifiedCallback = f.modified
 	f.ValidateCallback = f.validate
 	if min != math.MinInt && max != math.MaxInt {
 		f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth(strconv.Itoa(min)), f.Font.SimpleWidth(strconv.Itoa(max)))
 	}
+	f.Sync()
 	return f
 }
 
 // Value returns the current value of the field.
 func (f *IntegerField) Value() int {
-	return f.value
+	return *f.value
 }
 
 // SetValue sets the value of this field, marking the field and all of its parents as needing to be laid out again if the
@@ -62,7 +61,6 @@ func (f *IntegerField) SetValue(value int) {
 	} else if f.maximum != math.MaxInt && value > f.maximum {
 		value = f.maximum
 	}
-	f.value = value
 	SetFieldValue(f.Field, strconv.Itoa(value))
 }
 
@@ -92,9 +90,13 @@ func (f *IntegerField) modified() {
 	if v, err := strconv.Atoi(f.trimmed()); err == nil &&
 		(f.minimum == math.MinInt || v >= f.minimum) &&
 		(f.maximum == math.MaxInt || v <= f.maximum) {
-		f.value = v
-		if f.applier != nil {
-			f.applier(v)
-		}
+		*f.value = v
+		MarkForLayoutWithinDockable(f)
+		MarkModified(f)
 	}
+}
+
+// Sync the field to the current value.
+func (f *IntegerField) Sync() {
+	f.SetValue(*f.value)
 }

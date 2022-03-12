@@ -21,37 +21,51 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-// NumericField holds the data for a numeric field.
+// NumericField holds the value for a numeric field.
 type NumericField struct {
 	*unison.Field
-	applier func(v fixed.F64d4)
-	value   fixed.F64d4
-	minimum fixed.F64d4
-	maximum fixed.F64d4
+	applier    func()
+	value      *fixed.F64d4
+	minimum    fixed.F64d4
+	maximum    fixed.F64d4
+	noMinWidth bool
 }
 
 // NewNumericField creates a new field that holds a fixed-point number.
-func NewNumericField(value, min, max fixed.F64d4, noMinWidth bool, applier func(fixed.F64d4)) *NumericField {
+func NewNumericField(value *fixed.F64d4, min, max fixed.F64d4, noMinWidth bool) *NumericField {
 	f := &NumericField{
-		Field:   unison.NewField(),
-		minimum: min,
-		maximum: max,
+		Field:      unison.NewField(),
+		value:      value,
+		minimum:    min,
+		noMinWidth: noMinWidth,
 	}
 	f.Self = f
-	f.SetValue(value)
-	f.applier = applier
 	f.ModifiedCallback = f.modified
 	f.ValidateCallback = f.validate
-	if !noMinWidth && min != fixed.F64d4Min && max != fixed.F64d4Max {
-		f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth((min.Trunc() + fixed.F64d4One - 1).String()),
-			f.Font.SimpleWidth((max.Trunc() + fixed.F64d4One - 1).String()))
-	}
+	f.SetMaximum(max)
+	f.Sync()
 	return f
+}
+
+// NewNumericFieldWithApplier creates a new field that holds a fixed-point number.
+func NewNumericFieldWithApplier(value *fixed.F64d4, min, max fixed.F64d4, noMinWidth bool, applier func()) *NumericField {
+	f := NewNumericField(value, min, max, noMinWidth)
+	f.applier = applier
+	return f
+}
+
+// SetMaximum sets the maximum value allowed.
+func (f *NumericField) SetMaximum(maximum fixed.F64d4) {
+	f.maximum = maximum
+	if !f.noMinWidth && f.minimum != fixed.F64d4Min && f.maximum != fixed.F64d4Max {
+		f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth((f.minimum.Trunc() + fixed.F64d4One - 1).String()),
+			f.Font.SimpleWidth((f.maximum.Trunc() + fixed.F64d4One - 1).String()))
+	}
 }
 
 // Value returns the current value of the field.
 func (f *NumericField) Value() fixed.F64d4 {
-	return f.value
+	return *f.value
 }
 
 // SetValue sets the value of this field, marking the field and all of its parents as needing to be laid out again if the
@@ -62,8 +76,7 @@ func (f *NumericField) SetValue(value fixed.F64d4) {
 	} else if f.maximum != fixed.F64d4Max && value > f.maximum {
 		value = f.maximum
 	}
-	f.value = value
-	SetFieldValue(f.Field, value.String())
+	f.SetText(value.String())
 }
 
 func (f *NumericField) trimmed() string {
@@ -92,9 +105,16 @@ func (f *NumericField) modified() {
 	if v, err := fixed.F64d4FromString(f.trimmed()); err == nil &&
 		(f.minimum == fixed.F64d4Min || v >= f.minimum) &&
 		(f.maximum == fixed.F64d4Max || v <= f.maximum) {
-		f.value = v
+		*f.value = v
 		if f.applier != nil {
-			f.applier(v)
+			f.applier()
 		}
+		MarkForLayoutWithinDockable(f)
+		MarkModified(f)
 	}
+}
+
+// Sync the field to the current value.
+func (f *NumericField) Sync() {
+	f.SetValue(*f.value)
 }

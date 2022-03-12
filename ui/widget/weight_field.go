@@ -21,7 +21,7 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-// WeightField holds the data for a weight field.
+// WeightField holds the value for a weight field.
 type WeightField struct {
 	*unison.Field
 	entity  *gurps.Entity

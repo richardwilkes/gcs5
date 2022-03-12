@@ -245,35 +245,13 @@ func (s *Sheet) createSecondRow() *unison.Panel {
 	return p
 }
 
-// MarkModified updates the modification timestamp and marks the entity as modified.
-func MarkModified(p unison.Paneler) {
-	panel := p.AsPanel()
-	for panel != nil {
-		panel.NeedsLayout = true
-		if um, ok := panel.Self.(*Sheet); ok {
-			um.MiscPanel.MarkModified()
-			um.Sync()
-			break
-		}
-		panel = panel.Parent()
+// MarkModified implements widget.ModifiableRoot.
+func (s *Sheet) MarkModified() {
+	s.MiscPanel.UpdateModified()
+	widget.DeepSync(s)
+	if dc := unison.DockContainerFor(s); dc != nil {
+		dc.UpdateTitle(s)
 	}
-}
-
-// Sync the panel to the current data.
-func (s *Sheet) Sync() {
-	s.PortaitPanel.Sync()
-	s.IdentityPanel.Sync()
-	s.MiscPanel.Sync()
-	s.DescriptionPanel.Sync()
-	s.PointsPanel.Sync()
-	s.PrimaryAttrPanel.Sync()
-	s.SecondaryAttrPanel.Sync()
-	s.PointPoolsPanel.Sync()
-	s.BodyPanel.Sync()
-	s.EncumbrancePanel.Sync()
-	s.LiftingPanel.Sync()
-	s.DamagePanel.Sync()
-	// TODO: call update on any embedded lists
 }
 
 func drawBandedBackground(p unison.Paneler, gc *unison.Canvas, rect geom32.Rect, start, step int) {

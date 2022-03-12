@@ -50,29 +50,20 @@ func NewIdentityPanel(entity *gurps.Entity) *IdentityPanel {
 		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
 	}
 
-	field := widget.NewStringPageField(entity.Profile.Name, func(v string) {
-		entity.Profile.Name = v
-		MarkModified(p)
-	})
+	field := widget.NewStringPageField(&entity.Profile.Name)
 	p.AddChild(widget.NewPageLabelWithRandomizer(i18n.Text("Name"),
 		i18n.Text("Randomize the name using the current ancestry"), func() {
 			entity.Profile.Name = entity.Ancestry().RandomName(
 				ancestry.AvailableNameGenerators(settings.Global().Libraries()), entity.Profile.Gender)
-			SetTextAndMarkModified(field, entity.Profile.Name)
+			SetTextAndMarkModified(field.Field, entity.Profile.Name)
 		}))
 	p.AddChild(field)
 
 	p.AddChild(widget.NewPageLabelEnd(i18n.Text("Title")))
-	p.AddChild(widget.NewStringPageField(entity.Profile.Title, func(v string) {
-		entity.Profile.Title = v
-		MarkModified(p)
-	}))
+	p.AddChild(widget.NewStringPageField(&entity.Profile.Title))
 
 	p.AddChild(widget.NewPageLabelEnd(i18n.Text("Organization")))
-	p.AddChild(widget.NewStringPageField(entity.Profile.Organization, func(v string) {
-		entity.Profile.Organization = v
-		MarkModified(p)
-	}))
+	p.AddChild(widget.NewStringPageField(&entity.Profile.Organization))
 	return p
 }
 

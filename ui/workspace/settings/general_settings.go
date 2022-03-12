@@ -22,25 +22,24 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
 type generalSettingsDockable struct {
 	Dockable
-	nameField                           *unison.Field
+	nameField                           *widget.StringField
 	autoFillProfileCheckbox             *unison.CheckBox
 	pointsField                         *widget.NumericField
 	includeUnspentPointsInTotalCheckbox *unison.CheckBox
-	techLevelField                      *unison.Field
+	techLevelField                      *widget.StringField
 	calendarPopup                       *unison.PopupMenu
 	initialListScaleField               *widget.PercentageField
 	initialSheetScaleField              *widget.PercentageField
 	exportResolutionField               *widget.IntegerField
 	tooltipDelayField                   *widget.NumericField
 	tooltipDismissalField               *widget.NumericField
-	gCalcKeyField                       *unison.Field
+	gCalcKeyField                       *widget.StringField
 }
 
 // ShowGeneralSettings the General Settings window.
@@ -84,19 +83,18 @@ func (d *generalSettingsDockable) initContent(content *unison.Panel) {
 
 func (d *generalSettingsDockable) createPlayerAndDescFields(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Default Player Name")))
-	d.nameField = widget.NewStringField(settings.Global().General.DefaultPlayerName, func(s string) {
-		settings.Global().General.DefaultPlayerName = s
-	})
+	d.nameField = widget.NewStringField(&settings.Global().General.DefaultPlayerName)
 	content.AddChild(d.nameField)
 	d.autoFillProfileCheckbox = widget.NewCheckBox(i18n.Text("Fill in initial description"),
-		settings.Global().General.AutoFillProfile, func(checked bool) { settings.Global().General.AutoFillProfile = checked })
+		settings.Global().General.AutoFillProfile,
+		func(checked bool) { settings.Global().General.AutoFillProfile = checked })
 	content.AddChild(d.autoFillProfileCheckbox)
 }
 
 func (d *generalSettingsDockable) createInitialPointsFields(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Initial Points")))
-	d.pointsField = widget.NewNumericField(settings.Global().General.InitialPoints, gsettings.InitialPointsMin,
-		gsettings.InitialPointsMax, false, func(v fixed.F64d4) { settings.Global().General.InitialPoints = v })
+	d.pointsField = widget.NewNumericField(&settings.Global().General.InitialPoints, gsettings.InitialPointsMin,
+		gsettings.InitialPointsMax, false)
 	content.AddChild(d.pointsField)
 	d.includeUnspentPointsInTotalCheckbox = widget.NewCheckBox(i18n.Text("Include unspent points in total"),
 		settings.Global().General.IncludeUnspentPointsInTotal,
@@ -106,8 +104,7 @@ func (d *generalSettingsDockable) createInitialPointsFields(content *unison.Pane
 
 func (d *generalSettingsDockable) createTechLevelField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Default Tech Level")))
-	d.techLevelField = widget.NewStringField(settings.Global().General.DefaultTechLevel,
-		func(s string) { settings.Global().General.DefaultTechLevel = s })
+	d.techLevelField = widget.NewStringField(&settings.Global().General.DefaultTechLevel)
 	d.techLevelField.Tooltip = unison.NewTooltipWithText(gurps.TechLevelInfo)
 	content.AddChild(d.techLevelField)
 	content.AddChild(unison.NewPanel())
@@ -142,31 +139,22 @@ func (d *generalSettingsDockable) createScaleField(content *unison.Panel, label 
 
 func (d *generalSettingsDockable) createImageResolutionField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Image Export Resolution")))
-	d.exportResolutionField = widget.NewIntegerField(settings.Global().General.ImageResolution,
-		gsettings.ImageResolutionMin, gsettings.ImageResolutionMax,
-		func(v int) { settings.Global().General.ImageResolution = v })
+	d.exportResolutionField = widget.NewIntegerField(&settings.Global().General.ImageResolution,
+		gsettings.ImageResolutionMin, gsettings.ImageResolutionMax)
 	content.AddChild(widget.WrapWithSpan(2, d.exportResolutionField, widget.NewFieldTrailingLabel(i18n.Text("ppi"))))
 }
 
 func (d *generalSettingsDockable) createTooltipDelayField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Tooltip Delay")))
-	d.tooltipDelayField = widget.NewNumericField(settings.Global().General.TooltipDelay, gsettings.TooltipDelayMin,
-		gsettings.TooltipDelayMax, false, func(v fixed.F64d4) {
-			s := settings.Global().General
-			s.TooltipDelay = v
-			s.UpdateToolTipTiming()
-		})
+	d.tooltipDelayField = widget.NewNumericFieldWithApplier(&settings.Global().General.TooltipDelay,
+		gsettings.TooltipDelayMin, gsettings.TooltipDelayMax, false, settings.Global().General.UpdateToolTipTiming)
 	content.AddChild(widget.WrapWithSpan(2, d.tooltipDelayField, widget.NewFieldTrailingLabel(i18n.Text("seconds"))))
 }
 
 func (d *generalSettingsDockable) createTooltipDismissalField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Tooltip Dismissal")))
-	d.tooltipDismissalField = widget.NewNumericField(settings.Global().General.TooltipDismissal,
-		gsettings.TooltipDismissalMin, gsettings.TooltipDismissalMax, false, func(v fixed.F64d4) {
-			s := settings.Global().General
-			s.TooltipDismissal = v
-			s.UpdateToolTipTiming()
-		})
+	d.tooltipDismissalField = widget.NewNumericFieldWithApplier(&settings.Global().General.TooltipDismissal,
+		gsettings.TooltipDismissalMin, gsettings.TooltipDismissalMax, false, settings.Global().General.UpdateToolTipTiming)
 	content.AddChild(widget.WrapWithSpan(2, d.tooltipDismissalField, widget.NewFieldTrailingLabel(i18n.Text("seconds"))))
 }
 
@@ -180,9 +168,7 @@ func (d *generalSettingsDockable) createGCalcKeyField(content *unison.Panel) {
 		Size: geom32.NewSize(baseline, baseline),
 	}
 	button.ClickCallback = d.findGCalcKey
-	d.gCalcKeyField = widget.NewStringField(settings.Global().General.GCalcKey, func(s string) {
-		settings.Global().General.GCalcKey = s
-	})
+	d.gCalcKeyField = widget.NewStringField(&settings.Global().General.GCalcKey)
 	content.AddChild(widget.WrapWithSpan(2, d.gCalcKeyField, button))
 }
 

@@ -58,28 +58,15 @@ func NewMiscPanel(entity *gurps.Entity) *MiscPanel {
 	m.AddChild(m.modifiedField)
 
 	m.AddChild(widget.NewPageLabelEnd(i18n.Text("Player")))
-	m.AddChild(widget.NewStringPageFieldNoGrab(entity.Profile.PlayerName, func(v string) {
-		entity.Profile.PlayerName = v
-		MarkModified(m)
-	}))
+	m.AddChild(widget.NewStringPageFieldNoGrab(&entity.Profile.PlayerName))
 
 	return m
 }
 
-// MarkModified marks the sheet as modified.
-func (m *MiscPanel) MarkModified() {
+// UpdateModified updates the current modification timestamp.
+func (m *MiscPanel) UpdateModified() {
 	m.Modified = true
 	m.entity.ModifiedOn = jio.Now()
-	p := m.AsPanel()
-	for p != nil {
-		if d, ok := p.Self.(unison.Dockable); ok {
-			if dc := unison.DockContainerFor(m); dc != nil {
-				dc.UpdateTitle(d)
-			}
-			break
-		}
-		p = p.Parent()
-	}
 }
 
 // Sync the panel to the current data.
@@ -97,5 +84,5 @@ func SetTextAndMarkModified(field *unison.Field, text string) {
 	field.SelectAll()
 	field.RequestFocus()
 	field.Parent().MarkForLayoutAndRedraw()
-	MarkModified(field)
+	widget.MarkModified(field)
 }
