@@ -26,6 +26,7 @@ import (
 type SignedIntegerField struct {
 	*unison.Field
 	applier func(v int)
+	value   int
 	minimum int
 	maximum int
 }
@@ -34,18 +35,35 @@ type SignedIntegerField struct {
 func NewSignedIntegerField(value, min, max int, applier func(int)) *SignedIntegerField {
 	f := &SignedIntegerField{
 		Field:   unison.NewField(),
-		applier: applier,
 		minimum: min,
 		maximum: max,
 	}
 	f.Self = f
-	f.SetText(fmt.Sprintf("%+d", value))
+	f.SetValue(value)
+	f.applier = applier
 	f.ModifiedCallback = f.modified
 	f.ValidateCallback = f.validate
 	if min != math.MinInt && max != math.MaxInt {
 		f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth(strconv.Itoa(min)), f.Font.SimpleWidth(strconv.Itoa(max)))
 	}
 	return f
+}
+
+// Value returns the current value of the field.
+func (f *SignedIntegerField) Value() int {
+	return f.value
+}
+
+// SetValue sets the value of this field, marking the field and all of its parents as needing to be laid out again if the
+// value is not what is currently in the field.
+func (f *SignedIntegerField) SetValue(value int) {
+	if f.minimum != math.MinInt && value < f.minimum {
+		value = f.minimum
+	} else if f.maximum != math.MaxInt && value > f.maximum {
+		value = f.maximum
+	}
+	f.value = value
+	SetFieldValue(f.Field, fmt.Sprintf("%+d", value))
 }
 
 func (f *SignedIntegerField) trimmed() string {
@@ -74,6 +92,9 @@ func (f *SignedIntegerField) modified() {
 	if v, err := strconv.Atoi(f.trimmed()); err == nil &&
 		(f.minimum == math.MinInt || v >= f.minimum) &&
 		(f.maximum == math.MaxInt || v <= f.maximum) {
-		f.applier(v)
+		f.value = v
+		if f.applier != nil {
+			f.applier(v)
+		}
 	}
 }

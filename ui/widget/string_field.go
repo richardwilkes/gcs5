@@ -26,3 +26,25 @@ func NewStringField(value string, applier func(string)) *unison.Field {
 	})
 	return f
 }
+
+// SetFieldValue sets the value of this field, marking the field and all of its parents as needing to be laid out again
+// if the value is not what is currently in the field.
+func SetFieldValue(field *unison.Field, value string) {
+	if value != field.Text() {
+		field.SetText(value)
+		MarkForLayoutWithinDockable(field)
+	}
+}
+
+// MarkForLayoutWithinDockable sets the NeedsLayout flag on the provided panel and all of its parents up to the first
+// Dockable.
+func MarkForLayoutWithinDockable(panel unison.Paneler) {
+	p := panel.AsPanel()
+	for p != nil {
+		p.NeedsLayout = true
+		if _, ok := p.Self.(unison.Dockable); ok {
+			break
+		}
+		p = p.Parent()
+	}
+}

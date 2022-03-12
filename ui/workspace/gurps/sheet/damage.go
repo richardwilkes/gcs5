@@ -54,3 +54,8 @@ func NewDamagePanel(entity *gurps.Entity) *DamagePanel {
 
 	return p
 }
+
+// Sync the panel to the current data.
+func (p *DamagePanel) Sync() {
+	// TODO: Sync!
+}

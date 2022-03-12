@@ -35,12 +35,12 @@ type PercentageField struct {
 func NewPercentageField(value, min, max int, applier func(int)) *PercentageField {
 	f := &PercentageField{
 		Field:   unison.NewField(),
-		applier: applier,
 		minimum: min,
 		maximum: max,
 	}
 	f.Self = f
 	f.SetValue(value)
+	f.applier = applier
 	f.ModifiedCallback = f.modified
 	f.ValidateCallback = f.validate
 	f.RuneTypedCallback = f.runeTyped
@@ -53,10 +53,11 @@ func (f *PercentageField) Value() int {
 	return f.value
 }
 
-// SetValue sets the current value of the field. Will be limited to the minimum and maximum values.
+// SetValue sets the value of this field, marking the field and all of its parents as needing to be laid out again if the
+// value is not what is currently in the field.
 func (f *PercentageField) SetValue(value int) {
 	f.value = xmath.MinInt(xmath.MaxInt(value, f.minimum), f.maximum)
-	f.SetText(strconv.Itoa(f.value) + "%")
+	SetFieldValue(f.Field, strconv.Itoa(f.value)+"%")
 }
 
 func (f *PercentageField) validate() bool {
@@ -80,7 +81,9 @@ func (f *PercentageField) validate() bool {
 func (f *PercentageField) modified() {
 	if v, err := strconv.Atoi(f.trimmed()); err == nil && v >= f.minimum && v <= f.maximum {
 		f.value = v
-		f.applier(v)
+		if f.applier != nil {
+			f.applier(v)
+		}
 	}
 }
 

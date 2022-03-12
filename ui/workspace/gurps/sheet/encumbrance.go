@@ -150,3 +150,8 @@ func (p *EncumbrancePanel) addSeparator() {
 	})
 	p.AddChild(sep)
 }
+
+// Sync the panel to the current data.
+func (p *EncumbrancePanel) Sync() {
+	// TODO: Sync!
+}

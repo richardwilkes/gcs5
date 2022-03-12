@@ -79,3 +79,8 @@ func (p *PortraitPanel) drawSelf(gc *unison.Canvas, r geom32.Rect) {
 		img.DrawInRect(gc, r, nil, paint)
 	}
 }
+
+// Sync the panel to the current data.
+func (p *PortraitPanel) Sync() {
+	// Nothing to do
+}

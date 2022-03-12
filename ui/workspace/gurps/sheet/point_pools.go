@@ -99,3 +99,8 @@ func NewPointPoolsPanel(entity *gurps.Entity) *PointPoolsPanel {
 
 	return p
 }
+
+// Sync the panel to the current data.
+func (p *PointPoolsPanel) Sync() {
+	// TODO: Sync each attribute and points field
+}

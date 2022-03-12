@@ -119,19 +119,24 @@ func (a *Attribute) Maximum() fixed.F64d4 {
 	return max
 }
 
-// Current returns the current value. Only valid for pools.
-func (a *Attribute) Current() fixed.F64d4 {
-	return a.Maximum() - a.Damage
-}
-
-// SetCurrent sets the current value.
-func (a *Attribute) SetCurrent(value fixed.F64d4) {
-	if a.Current() == value {
+// SetMaximum sets the maximum value.
+func (a *Attribute) SetMaximum(value fixed.F64d4) {
+	if a.Maximum() == value {
 		return
 	}
 	if def := a.AttributeDef(); def != nil {
 		a.Adjustment = value - (def.BaseValue(a.Entity) + a.Bonus)
 	}
+}
+
+// Current returns the current value. Same as .Maximum() if not a pool.
+func (a *Attribute) Current() fixed.F64d4 {
+	max := a.Maximum()
+	def := a.AttributeDef()
+	if def == nil || def.Type != attribute.Pool {
+		return max
+	}
+	return max - a.Damage
 }
 
 // CurrentThreshold return the current PoolThreshold, if any.

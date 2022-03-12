@@ -24,7 +24,7 @@ import (
 type MiscPanel struct {
 	unison.Panel
 	entity        *gurps.Entity
-	ModifiedField *unison.Label
+	modifiedField *unison.Label
 	Modified      bool
 }
 
@@ -54,8 +54,8 @@ func NewMiscPanel(entity *gurps.Entity) *MiscPanel {
 	m.AddChild(widget.NewNonEditablePageField(entity.CreatedOn.String(), ""))
 
 	m.AddChild(widget.NewPageLabelEnd(i18n.Text("Modified")))
-	m.ModifiedField = widget.NewNonEditablePageField(entity.ModifiedOn.String(), "")
-	m.AddChild(m.ModifiedField)
+	m.modifiedField = widget.NewNonEditablePageField(entity.ModifiedOn.String(), "")
+	m.AddChild(m.modifiedField)
 
 	m.AddChild(widget.NewPageLabelEnd(i18n.Text("Player")))
 	m.AddChild(widget.NewStringPageFieldNoGrab(entity.Profile.PlayerName, func(v string) {
@@ -66,35 +66,28 @@ func NewMiscPanel(entity *gurps.Entity) *MiscPanel {
 	return m
 }
 
-func (m *MiscPanel) updateModified() {
+// MarkModified marks the sheet as modified.
+func (m *MiscPanel) MarkModified() {
 	m.Modified = true
 	m.entity.ModifiedOn = jio.Now()
-	text := m.entity.ModifiedOn.String()
-	if text != m.ModifiedField.Text {
-		m.ModifiedField.Text = text
-		m.ModifiedField.MarkForRedraw()
-		p := m.AsPanel()
-		for p != nil {
-			if d, ok := p.Self.(unison.Dockable); ok {
-				if dc := unison.DockContainerFor(m); dc != nil {
-					dc.UpdateTitle(d)
-				}
-				break
+	p := m.AsPanel()
+	for p != nil {
+		if d, ok := p.Self.(unison.Dockable); ok {
+			if dc := unison.DockContainerFor(m); dc != nil {
+				dc.UpdateTitle(d)
 			}
-			p = p.Parent()
+			break
 		}
+		p = p.Parent()
 	}
 }
 
-// MarkModified updates the modification timestamp and marks the entity as modified.
-func MarkModified(p unison.Paneler) {
-	panel := p.AsPanel()
-	for panel != nil {
-		if um, ok := panel.Self.(*Sheet); ok {
-			um.MiscPanel.updateModified()
-			break
-		}
-		panel = panel.Parent()
+// Sync the panel to the current data.
+func (m *MiscPanel) Sync() {
+	modifiedOn := m.entity.ModifiedOn.String()
+	if modifiedOn != m.modifiedField.Text {
+		m.modifiedField.Text = modifiedOn
+		widget.MarkForLayoutWithinDockable(m.modifiedField)
 	}
 }
 

@@ -25,6 +25,7 @@ import (
 type NumericField struct {
 	*unison.Field
 	applier func(v fixed.F64d4)
+	value   fixed.F64d4
 	minimum fixed.F64d4
 	maximum fixed.F64d4
 }
@@ -33,12 +34,12 @@ type NumericField struct {
 func NewNumericField(value, min, max fixed.F64d4, noMinWidth bool, applier func(fixed.F64d4)) *NumericField {
 	f := &NumericField{
 		Field:   unison.NewField(),
-		applier: applier,
 		minimum: min,
 		maximum: max,
 	}
 	f.Self = f
-	f.SetText(value.String())
+	f.SetValue(value)
+	f.applier = applier
 	f.ModifiedCallback = f.modified
 	f.ValidateCallback = f.validate
 	if !noMinWidth && min != fixed.F64d4Min && max != fixed.F64d4Max {
@@ -46,6 +47,23 @@ func NewNumericField(value, min, max fixed.F64d4, noMinWidth bool, applier func(
 			f.Font.SimpleWidth((max.Trunc() + fixed.F64d4One - 1).String()))
 	}
 	return f
+}
+
+// Value returns the current value of the field.
+func (f *NumericField) Value() fixed.F64d4 {
+	return f.value
+}
+
+// SetValue sets the value of this field, marking the field and all of its parents as needing to be laid out again if the
+// value is not what is currently in the field.
+func (f *NumericField) SetValue(value fixed.F64d4) {
+	if f.minimum != fixed.F64d4Min && value < f.minimum {
+		value = f.minimum
+	} else if f.maximum != fixed.F64d4Max && value > f.maximum {
+		value = f.maximum
+	}
+	f.value = value
+	SetFieldValue(f.Field, value.String())
 }
 
 func (f *NumericField) trimmed() string {
@@ -74,6 +92,9 @@ func (f *NumericField) modified() {
 	if v, err := fixed.F64d4FromString(f.trimmed()); err == nil &&
 		(f.minimum == fixed.F64d4Min || v >= f.minimum) &&
 		(f.maximum == fixed.F64d4Max || v <= f.maximum) {
-		f.applier(v)
+		f.value = v
+		if f.applier != nil {
+			f.applier(v)
+		}
 	}
 }

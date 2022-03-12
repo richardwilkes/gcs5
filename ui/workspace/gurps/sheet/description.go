@@ -210,3 +210,8 @@ func (d *DescriptionPanel) createColumn3() *unison.Panel {
 
 	return column
 }
+
+// Sync the panel to the current data.
+func (d *DescriptionPanel) Sync() {
+	// Nothing to do
+}

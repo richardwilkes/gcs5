@@ -130,3 +130,8 @@ func (p *BodyPanel) addSeparator() {
 	p.sepLayoutData = append(p.sepLayoutData, layoutData)
 	p.AddChild(sep)
 }
+
+// Sync the panel to the current data.
+func (p *BodyPanel) Sync() {
+	// TODO: Sync!
+}

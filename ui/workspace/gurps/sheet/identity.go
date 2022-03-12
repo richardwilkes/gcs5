@@ -75,3 +75,8 @@ func NewIdentityPanel(entity *gurps.Entity) *IdentityPanel {
 	}))
 	return p
 }
+
+// Sync the panel to the current data.
+func (p *IdentityPanel) Sync() {
+	// Nothing to do
+}

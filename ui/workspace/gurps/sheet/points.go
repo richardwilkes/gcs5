@@ -25,7 +25,9 @@ import (
 // PointsPanel holds the contents of the points block on the sheet.
 type PointsPanel struct {
 	unison.Panel
-	entity *gurps.Entity
+	entity       *gurps.Entity
+	pointsBorder *TitledBorder
+	unspent      *widget.NumericField
 }
 
 // NewPointsPanel creates a new points panel.
@@ -41,8 +43,8 @@ func NewPointsPanel(entity *gurps.Entity) *PointsPanel {
 		VAlign: unison.FillAlignment,
 		VSpan:  2,
 	})
-	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: fmt.Sprintf(i18n.Text("%s Points"),
-		p.entity.TotalPoints.String())}, unison.NewEmptyBorder(geom32.Insets{
+	p.pointsBorder = &TitledBorder{Title: fmt.Sprintf(i18n.Text("%s Points"), p.entity.TotalPoints.String())}
+	p.SetBorder(unison.NewCompoundBorder(p.pointsBorder, unison.NewEmptyBorder(geom32.Insets{
 		Top:    1,
 		Left:   2,
 		Bottom: 1,
@@ -50,19 +52,19 @@ func NewPointsPanel(entity *gurps.Entity) *PointsPanel {
 	})))
 	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) { drawBandedBackground(p, gc, rect, 0, 2) }
 
-	field := widget.NewNumericPageField(entity.UnspentPoints(), fixed.F64d4Min, fixed.F64d4Max, true,
+	p.unspent = widget.NewNumericPageField(entity.UnspentPoints(), fixed.F64d4Min, fixed.F64d4Max, true,
 		func(v fixed.F64d4) {
 			if v != entity.UnspentPoints() {
 				entity.SetUnspentPoints(v)
 				MarkModified(p)
 			}
 		})
-	field.SetLayoutData(&unison.FlexLayoutData{
+	p.unspent.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,
 	})
-	field.Tooltip = unison.NewTooltipWithText(i18n.Text("Points earned but not yet spent"))
-	p.AddChild(field)
+	p.unspent.Tooltip = unison.NewTooltipWithText(i18n.Text("Points earned but not yet spent"))
+	p.AddChild(p.unspent)
 	p.AddChild(widget.NewPageLabel(i18n.Text("Unspent")))
 
 	ad, disad, race, quirk := entity.AdvantagePoints()
@@ -89,4 +91,10 @@ func NewPointsPanel(entity *gurps.Entity) *PointsPanel {
 	p.AddChild(widget.NewPageLabel(i18n.Text("Spells")))
 
 	return p
+}
+
+// Sync the panel to the current data.
+func (p *PointsPanel) Sync() {
+	p.unspent.SetValue(p.entity.UnspentPoints())
+	p.pointsBorder.Title = fmt.Sprintf(i18n.Text("%s Points"), p.entity.TotalPoints.String())
 }

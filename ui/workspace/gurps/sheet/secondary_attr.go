@@ -78,3 +78,8 @@ func NewSecondaryAttrPanel(entity *gurps.Entity) *SecondaryAttrPanel {
 
 	return p
 }
+
+// Sync the panel to the current data.
+func (p *SecondaryAttrPanel) Sync() {
+	// TODO: Sync each attribute and points field
+}

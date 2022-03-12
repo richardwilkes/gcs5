@@ -47,13 +47,20 @@ func NewLiftingPanel(entity *gurps.Entity) *LiftingPanel {
 		Right:  2,
 	})))
 	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) { drawBandedBackground(p, gc, rect, 0, 2) }
-	p.createRow(entity.BasicLift(), i18n.Text("Basic Lift"), i18n.Text("The weight that can be lifted overhead with one hand in one second"))
-	p.createRow(entity.OneHandedLift(), i18n.Text("One-Handed Lift"), i18n.Text("The weight that can be lifted overhead with one hand in two seconds"))
-	p.createRow(entity.TwoHandedLift(), i18n.Text("Two-Handed Lift"), i18n.Text("The weight that can be lifted overhead with both hands in four seconds"))
-	p.createRow(entity.ShoveAndKnockOver(), i18n.Text("Shove & Knock Over"), i18n.Text("The weight of an object that can be shoved and knocked over"))
-	p.createRow(entity.RunningShoveAndKnockOver(), i18n.Text("Running Shove & Knock Over"), i18n.Text("The weight of an object that can be shoved and knocked over with a running start"))
-	p.createRow(entity.CarryOnBack(), i18n.Text("Carry On Back"), i18n.Text("The weight that can be carried slung across the back"))
-	p.createRow(entity.ShiftSlightly(), i18n.Text("Shift Slightly"), i18n.Text("The weight that can be shifted slightly on a floor"))
+	p.createRow(entity.BasicLift(), i18n.Text("Basic Lift"),
+		i18n.Text("The weight that can be lifted overhead with one hand in one second"))
+	p.createRow(entity.OneHandedLift(), i18n.Text("One-Handed Lift"),
+		i18n.Text("The weight that can be lifted overhead with one hand in two seconds"))
+	p.createRow(entity.TwoHandedLift(), i18n.Text("Two-Handed Lift"),
+		i18n.Text("The weight that can be lifted overhead with both hands in four seconds"))
+	p.createRow(entity.ShoveAndKnockOver(), i18n.Text("Shove & Knock Over"),
+		i18n.Text("The weight of an object that can be shoved and knocked over"))
+	p.createRow(entity.RunningShoveAndKnockOver(), i18n.Text("Running Shove & Knock Over"),
+		i18n.Text("The weight of an object that can be shoved and knocked over with a running start"))
+	p.createRow(entity.CarryOnBack(), i18n.Text("Carry On Back"),
+		i18n.Text("The weight that can be carried slung across the back"))
+	p.createRow(entity.ShiftSlightly(), i18n.Text("Shift Slightly"),
+		i18n.Text("The weight that can be shifted slightly on a floor"))
 	return p
 }
 
@@ -62,4 +69,9 @@ func (p *LiftingPanel) createRow(weight measure.Weight, title, tooltip string) {
 	label := widget.NewPageLabel(title)
 	label.Tooltip = unison.NewTooltipWithText(tooltip)
 	p.AddChild(label)
+}
+
+// Sync the panel to the current data.
+func (p *LiftingPanel) Sync() {
+	// TODO: Sync!
 }

@@ -59,38 +59,38 @@ func NewSheet(filePath string) (unison.Dockable, error) {
 		return nil, err
 	}
 
-	d := &Sheet{
+	s := &Sheet{
 		path:   filePath,
 		scroll: unison.NewScrollPanel(),
 		entity: entity,
 		pages:  unison.NewPanel(),
 	}
-	d.Self = d
-	d.SetLayout(&unison.FlexLayout{
+	s.Self = s
+	s.SetLayout(&unison.FlexLayout{
 		Columns: 1,
 		HAlign:  unison.FillAlignment,
 		VAlign:  unison.FillAlignment,
 	})
 
-	d.pages.SetLayout(&unison.FlexLayout{
+	s.pages.SetLayout(&unison.FlexLayout{
 		Columns:  1,
 		VSpacing: 1,
 	})
-	d.pages.AddChild(d.createFirstPage())
-	d.scroll.SetContent(d.pages, unison.UnmodifiedBehavior)
-	d.scroll.SetLayoutData(&unison.FlexLayoutData{
+	s.pages.AddChild(s.createFirstPage())
+	s.scroll.SetContent(s.pages, unison.UnmodifiedBehavior)
+	s.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 		VGrab:  true,
 	})
-	d.scroll.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
+	s.scroll.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
 		gc.DrawRect(rect, theme.PageVoidColor.Paint(gc, rect, unison.Fill))
 	}
 
 	scale := settings.Global().General.InitialSheetUIScale
-	d.scaleField = widget.NewPercentageField(scale, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, d.applyScale)
-	d.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
+	s.scaleField = widget.NewPercentageField(scale, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, s.applyScale)
+	s.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
 
 	toolbar := unison.NewPanel()
 	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, geom32.Insets{Bottom: 1}, false),
@@ -104,72 +104,72 @@ func NewSheet(filePath string) (unison.Dockable, error) {
 		HAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
-	toolbar.AddChild(d.scaleField)
+	toolbar.AddChild(s.scaleField)
 	toolbar.SetLayout(&unison.FlexLayout{
 		Columns:  len(toolbar.Children()),
 		HSpacing: unison.StdHSpacing,
 	})
 
-	d.AddChild(toolbar)
-	d.AddChild(d.scroll)
+	s.AddChild(toolbar)
+	s.AddChild(s.scroll)
 
-	d.applyScale(scale)
-	return d, nil
+	s.applyScale(scale)
+	return s, nil
 }
 
-func (d *Sheet) applyScale(scale int) {
-	d.pages.SetScale(float32(scale) / 100)
-	d.scroll.Sync()
+func (s *Sheet) applyScale(scale int) {
+	s.pages.SetScale(float32(scale) / 100)
+	s.scroll.Sync()
 }
 
 // TitleIcon implements workspace.FileBackedDockable
-func (d *Sheet) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
+func (s *Sheet) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
-		SVG:  library.FileInfoFor(d.path).SVG,
+		SVG:  library.FileInfoFor(s.path).SVG,
 		Size: suggestedSize,
 	}
 }
 
 // Title implements workspace.FileBackedDockable
-func (d *Sheet) Title() string {
-	return fs.BaseName(d.path)
+func (s *Sheet) Title() string {
+	return fs.BaseName(s.path)
 }
 
 // Tooltip implements workspace.FileBackedDockable
-func (d *Sheet) Tooltip() string {
-	return d.path
+func (s *Sheet) Tooltip() string {
+	return s.path
 }
 
 // BackingFilePath implements workspace.FileBackedDockable
-func (d *Sheet) BackingFilePath() string {
-	return d.path
+func (s *Sheet) BackingFilePath() string {
+	return s.path
 }
 
 // Modified implements workspace.FileBackedDockable
-func (d *Sheet) Modified() bool {
-	return d.MiscPanel.Modified
+func (s *Sheet) Modified() bool {
+	return s.MiscPanel.Modified
 }
 
 // MayAttemptClose implements unison.TabCloser
-func (d *Sheet) MayAttemptClose() bool {
+func (s *Sheet) MayAttemptClose() bool {
 	return true
 }
 
 // AttemptClose implements unison.TabCloser
-func (d *Sheet) AttemptClose() {
-	if dc := unison.DockContainerFor(d); dc != nil {
-		dc.Close(d)
+func (s *Sheet) AttemptClose() {
+	if dc := unison.DockContainerFor(s); dc != nil {
+		dc.Close(s)
 	}
 }
 
-func (d *Sheet) createFirstPage() *Page {
-	p := NewPage(d.entity)
-	p.AddChild(d.createFirstRow())
-	p.AddChild(d.createSecondRow())
+func (s *Sheet) createFirstPage() *Page {
+	p := NewPage(s.entity)
+	p.AddChild(s.createFirstRow())
+	p.AddChild(s.createSecondRow())
 	return p
 }
 
-func (d *Sheet) createFirstRow() *unison.Panel {
+func (s *Sheet) createFirstRow() *unison.Panel {
 	p := unison.NewPanel()
 	p.SetLayout(&unison.FlexLayout{
 		Columns:  4,
@@ -184,21 +184,21 @@ func (d *Sheet) createFirstRow() *unison.Panel {
 		HGrab:  true,
 	})
 
-	d.PortaitPanel = NewPortraitPanel(d.entity)
-	d.IdentityPanel = NewIdentityPanel(d.entity)
-	d.MiscPanel = NewMiscPanel(d.entity)
-	d.DescriptionPanel = NewDescriptionPanel(d.entity)
-	d.PointsPanel = NewPointsPanel(d.entity)
+	s.PortaitPanel = NewPortraitPanel(s.entity)
+	s.IdentityPanel = NewIdentityPanel(s.entity)
+	s.MiscPanel = NewMiscPanel(s.entity)
+	s.DescriptionPanel = NewDescriptionPanel(s.entity)
+	s.PointsPanel = NewPointsPanel(s.entity)
 
-	p.AddChild(d.PortaitPanel)
-	p.AddChild(d.IdentityPanel)
-	p.AddChild(d.MiscPanel)
-	p.AddChild(d.PointsPanel)
-	p.AddChild(d.DescriptionPanel)
+	p.AddChild(s.PortaitPanel)
+	p.AddChild(s.IdentityPanel)
+	p.AddChild(s.MiscPanel)
+	p.AddChild(s.PointsPanel)
+	p.AddChild(s.DescriptionPanel)
 	return p
 }
 
-func (d *Sheet) createSecondRow() *unison.Panel {
+func (s *Sheet) createSecondRow() *unison.Panel {
 	p := unison.NewPanel()
 	p.SetLayout(&unison.FlexLayout{
 		Columns:  4,
@@ -213,13 +213,13 @@ func (d *Sheet) createSecondRow() *unison.Panel {
 		HGrab:  true,
 	})
 
-	d.PrimaryAttrPanel = NewPrimaryAttrPanel(d.entity)
-	d.SecondaryAttrPanel = NewSecondaryAttrPanel(d.entity)
-	d.PointPoolsPanel = NewPointPoolsPanel(d.entity)
-	d.BodyPanel = NewBodyPanel(d.entity)
-	d.EncumbrancePanel = NewEncumbrancePanel(d.entity)
-	d.LiftingPanel = NewLiftingPanel(d.entity)
-	d.DamagePanel = NewDamagePanel(d.entity)
+	s.PrimaryAttrPanel = NewPrimaryAttrPanel(s.entity)
+	s.SecondaryAttrPanel = NewSecondaryAttrPanel(s.entity)
+	s.PointPoolsPanel = NewPointPoolsPanel(s.entity)
+	s.BodyPanel = NewBodyPanel(s.entity)
+	s.EncumbrancePanel = NewEncumbrancePanel(s.entity)
+	s.LiftingPanel = NewLiftingPanel(s.entity)
+	s.DamagePanel = NewDamagePanel(s.entity)
 
 	endWrapper := unison.NewPanel()
 	endWrapper.SetLayout(&unison.FlexLayout{
@@ -232,17 +232,48 @@ func (d *Sheet) createSecondRow() *unison.Panel {
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
-	endWrapper.AddChild(d.EncumbrancePanel)
-	endWrapper.AddChild(d.LiftingPanel)
+	endWrapper.AddChild(s.EncumbrancePanel)
+	endWrapper.AddChild(s.LiftingPanel)
 
-	p.AddChild(d.PrimaryAttrPanel)
-	p.AddChild(d.SecondaryAttrPanel)
-	p.AddChild(d.BodyPanel)
+	p.AddChild(s.PrimaryAttrPanel)
+	p.AddChild(s.SecondaryAttrPanel)
+	p.AddChild(s.BodyPanel)
 	p.AddChild(endWrapper)
-	p.AddChild(d.DamagePanel)
-	p.AddChild(d.PointPoolsPanel)
+	p.AddChild(s.DamagePanel)
+	p.AddChild(s.PointPoolsPanel)
 
 	return p
+}
+
+// MarkModified updates the modification timestamp and marks the entity as modified.
+func MarkModified(p unison.Paneler) {
+	panel := p.AsPanel()
+	for panel != nil {
+		panel.NeedsLayout = true
+		if um, ok := panel.Self.(*Sheet); ok {
+			um.MiscPanel.MarkModified()
+			um.Sync()
+			break
+		}
+		panel = panel.Parent()
+	}
+}
+
+// Sync the panel to the current data.
+func (s *Sheet) Sync() {
+	s.PortaitPanel.Sync()
+	s.IdentityPanel.Sync()
+	s.MiscPanel.Sync()
+	s.DescriptionPanel.Sync()
+	s.PointsPanel.Sync()
+	s.PrimaryAttrPanel.Sync()
+	s.SecondaryAttrPanel.Sync()
+	s.PointPoolsPanel.Sync()
+	s.BodyPanel.Sync()
+	s.EncumbrancePanel.Sync()
+	s.LiftingPanel.Sync()
+	s.DamagePanel.Sync()
+	// TODO: call update on any embedded lists
 }
 
 func drawBandedBackground(p unison.Paneler, gc *unison.Canvas, rect geom32.Rect, start, step int) {

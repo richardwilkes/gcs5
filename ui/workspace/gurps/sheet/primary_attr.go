@@ -67,13 +67,24 @@ func NewPrimaryAttrPanel(entity *gurps.Entity) *PrimaryAttrPanel {
 		pts.Font = theme.PageFieldSecondaryFont
 		p.AddChild(pts)
 
-		field := widget.NewNumericPageField(attr.Current(), 0, attr.Maximum(), true, func(v fixed.F64d4) {
-			// TODO: Implement
-		})
-		p.AddChild(field)
+		p.AddChild(p.createField(attr))
 
 		p.AddChild(widget.NewPageLabel(def.CombinedName()))
 	}
 
 	return p
+}
+
+func (p *PrimaryAttrPanel) createField(attr *gurps.Attribute) *widget.NumericField {
+	var field *widget.NumericField
+	field = widget.NewNumericPageField(attr.Maximum(), fixed.F64d4Min, fixed.F64d4Max, true, func(v fixed.F64d4) {
+		attr.SetMaximum(v)
+		MarkModified(field)
+	})
+	return field
+}
+
+// Sync the panel to the current data.
+func (p *PrimaryAttrPanel) Sync() {
+	// TODO: Sync each attribute and points field
 }
