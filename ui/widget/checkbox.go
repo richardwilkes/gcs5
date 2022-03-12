@@ -25,12 +25,3 @@ func NewCheckBox(text string, checked bool, applier func(bool)) *unison.CheckBox
 	cb.ClickCallback = func() { applier(cb.State == unison.OnCheckState) }
 	return cb
 }
-
-// SetCheckBoxState sets the checkbox state based on the value of checked.
-func SetCheckBoxState(checkbox *unison.CheckBox, checked bool) {
-	if checked {
-		checkbox.State = unison.OnCheckState
-	} else {
-		checkbox.State = unison.OffCheckState
-	}
-}
