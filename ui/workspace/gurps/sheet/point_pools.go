@@ -69,15 +69,14 @@ func NewPointPoolsPanel(entity *gurps.Entity) *PointPoolsPanel {
 		p.AddChild(pts)
 
 		current := attr.Current()
-		currentField := widget.NewNumericPageFieldWithApplier(&current, fixed.F64d4Min, attr.Maximum(), true, func() {
-			attr.Damage = attr.Maximum() - current
-		})
+		currentField := widget.NewNumericPageField(&current, fixed.F64d4Min, attr.Maximum(), true,
+			func() { attr.Damage = attr.Maximum() - current })
 		p.AddChild(currentField)
 
 		p.AddChild(widget.NewPageLabel(i18n.Text("of")))
 
 		maximum := attr.Maximum()
-		maximumField := widget.NewNumericPageFieldWithApplier(&maximum, fixed.F64d4Min, fixed.F64d4Max, true, func() {
+		maximumField := widget.NewNumericPageField(&maximum, fixed.F64d4Min, fixed.F64d4Max, true, func() {
 			attr.SetMaximum(maximum)
 			currentField.SetMaximum(maximum)
 			currentField.SetValue(currentField.Value())

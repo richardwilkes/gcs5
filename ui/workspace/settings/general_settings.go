@@ -94,7 +94,7 @@ func (d *generalSettingsDockable) createPlayerAndDescFields(content *unison.Pane
 func (d *generalSettingsDockable) createInitialPointsFields(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Initial Points")))
 	d.pointsField = widget.NewNumericField(&settings.Global().General.InitialPoints, gsettings.InitialPointsMin,
-		gsettings.InitialPointsMax, false)
+		gsettings.InitialPointsMax, false, nil)
 	content.AddChild(d.pointsField)
 	d.includeUnspentPointsInTotalCheckbox = widget.NewCheckBox(i18n.Text("Include unspent points in total"),
 		settings.Global().General.IncludeUnspentPointsInTotal,
@@ -140,21 +140,22 @@ func (d *generalSettingsDockable) createScaleField(content *unison.Panel, label 
 func (d *generalSettingsDockable) createImageResolutionField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Image Export Resolution")))
 	d.exportResolutionField = widget.NewIntegerField(&settings.Global().General.ImageResolution,
-		gsettings.ImageResolutionMin, gsettings.ImageResolutionMax)
+		gsettings.ImageResolutionMin, gsettings.ImageResolutionMax, false, nil)
 	content.AddChild(widget.WrapWithSpan(2, d.exportResolutionField, widget.NewFieldTrailingLabel(i18n.Text("ppi"))))
 }
 
 func (d *generalSettingsDockable) createTooltipDelayField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Tooltip Delay")))
-	d.tooltipDelayField = widget.NewNumericFieldWithApplier(&settings.Global().General.TooltipDelay,
-		gsettings.TooltipDelayMin, gsettings.TooltipDelayMax, false, settings.Global().General.UpdateToolTipTiming)
+	d.tooltipDelayField = widget.NewNumericField(&settings.Global().General.TooltipDelay, gsettings.TooltipDelayMin,
+		gsettings.TooltipDelayMax, false, settings.Global().General.UpdateToolTipTiming)
 	content.AddChild(widget.WrapWithSpan(2, d.tooltipDelayField, widget.NewFieldTrailingLabel(i18n.Text("seconds"))))
 }
 
 func (d *generalSettingsDockable) createTooltipDismissalField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Tooltip Dismissal")))
-	d.tooltipDismissalField = widget.NewNumericFieldWithApplier(&settings.Global().General.TooltipDismissal,
-		gsettings.TooltipDismissalMin, gsettings.TooltipDismissalMax, false, settings.Global().General.UpdateToolTipTiming)
+	d.tooltipDismissalField = widget.NewNumericField(&settings.Global().General.TooltipDismissal,
+		gsettings.TooltipDismissalMin, gsettings.TooltipDismissalMax, false,
+		settings.Global().General.UpdateToolTipTiming)
 	content.AddChild(widget.WrapWithSpan(2, d.tooltipDismissalField, widget.NewFieldTrailingLabel(i18n.Text("seconds"))))
 }
 

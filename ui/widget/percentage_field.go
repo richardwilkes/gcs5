@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath"
@@ -61,7 +62,7 @@ func (f *PercentageField) SetValue(value int) {
 }
 
 func (f *PercentageField) validate() bool {
-	v, err := strconv.Atoi(f.trimmed())
+	v, err := strconv.Atoi(f.trimmed(f.Text()))
 	if err != nil {
 		f.Tooltip = unison.NewTooltipWithText(i18n.Text("Invalid percentage"))
 		return false
@@ -79,7 +80,7 @@ func (f *PercentageField) validate() bool {
 }
 
 func (f *PercentageField) modified() {
-	if v, err := strconv.Atoi(f.trimmed()); err == nil && v >= f.minimum && v <= f.maximum {
+	if v, err := strconv.Atoi(f.trimmed(f.Text())); err == nil && v >= f.minimum && v <= f.maximum {
 		f.value = v
 		if f.applier != nil {
 			f.applier(v)
@@ -87,27 +88,22 @@ func (f *PercentageField) modified() {
 	}
 }
 
-func (f *PercentageField) trimmed() string {
-	return strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(f.Text()), "%"))
+func (f *PercentageField) trimmed(text string) string {
+	return strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(text), "%"))
 }
 
 func (f *PercentageField) runeTyped(ch rune) bool {
-	switch {
-	case ch >= '0' && ch <= '9':
-		return f.DefaultRuneTyped(ch)
-	case ch == '-' || ch == '_':
-		f.SetValue((f.Value()/10)*10 - 10)
-		return true
-	case ch == '=' || ch == '+':
-		f.SetValue((f.Value()/10)*10 + 10)
-		return true
-	case ch == '%':
-		if strings.Contains(f.SelectedText(), "%") || !strings.Contains(f.Text(), "%") {
-			return f.DefaultRuneTyped(ch)
+	if !unicode.IsControl(ch) {
+		if f.minimum >= 0 && ch == '-' {
+			unison.Beep()
+			return false
 		}
-		fallthrough
-	default:
-		unison.Beep()
-		return false
+		if text := f.trimmed(string(f.RunesIfPasted([]rune{ch}))); text != "-" {
+			if _, err := strconv.Atoi(text); err != nil {
+				unison.Beep()
+				return false
+			}
+		}
 	}
+	return f.DefaultRuneTyped(ch)
 }

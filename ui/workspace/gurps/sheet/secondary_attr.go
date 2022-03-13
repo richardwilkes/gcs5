@@ -43,12 +43,13 @@ func NewSecondaryAttrPanel(entity *gurps.Entity) *SecondaryAttrPanel {
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
 	})
-	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Secondary Attributes")}, unison.NewEmptyBorder(geom32.Insets{
-		Top:    1,
-		Left:   2,
-		Bottom: 1,
-		Right:  2,
-	})))
+	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Secondary Attributes")},
+		unison.NewEmptyBorder(geom32.Insets{
+			Top:    1,
+			Left:   2,
+			Bottom: 1,
+			Right:  2,
+		})))
 	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
 		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
 	}
@@ -68,8 +69,7 @@ func NewSecondaryAttrPanel(entity *gurps.Entity) *SecondaryAttrPanel {
 		p.AddChild(pts)
 
 		current := attr.Current()
-		field := widget.NewNumericPageFieldWithApplier(&current, 0, attr.Maximum(), true,
-			func() { attr.SetMaximum(current) })
+		field := widget.NewNumericPageField(&current, 0, attr.Maximum(), true, func() { attr.SetMaximum(current) })
 		p.AddChild(field)
 
 		p.AddChild(widget.NewPageLabel(def.CombinedName()))

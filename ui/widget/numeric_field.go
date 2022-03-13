@@ -13,7 +13,9 @@ package widget
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -32,9 +34,10 @@ type NumericField struct {
 }
 
 // NewNumericField creates a new field that holds a fixed-point number.
-func NewNumericField(value *fixed.F64d4, min, max fixed.F64d4, noMinWidth bool) *NumericField {
+func NewNumericField(value *fixed.F64d4, min, max fixed.F64d4, noMinWidth bool, applier func()) *NumericField {
 	f := &NumericField{
 		Field:      unison.NewField(),
+		applier:    applier,
 		value:      value,
 		minimum:    min,
 		noMinWidth: noMinWidth,
@@ -42,15 +45,9 @@ func NewNumericField(value *fixed.F64d4, min, max fixed.F64d4, noMinWidth bool) 
 	f.Self = f
 	f.ModifiedCallback = f.modified
 	f.ValidateCallback = f.validate
+	f.RuneTypedCallback = f.runeTyped
 	f.SetMaximum(max)
 	f.Sync()
-	return f
-}
-
-// NewNumericFieldWithApplier creates a new field that holds a fixed-point number.
-func NewNumericFieldWithApplier(value *fixed.F64d4, min, max fixed.F64d4, noMinWidth bool, applier func()) *NumericField {
-	f := NewNumericField(value, min, max, noMinWidth)
-	f.applier = applier
 	return f
 }
 
@@ -79,12 +76,12 @@ func (f *NumericField) SetValue(value fixed.F64d4) {
 	f.SetText(value.String())
 }
 
-func (f *NumericField) trimmed() string {
-	return strings.TrimSpace(f.Text())
+func (f *NumericField) trimmed(text string) string {
+	return strings.TrimSpace(text)
 }
 
 func (f *NumericField) validate() bool {
-	v, err := fixed.F64d4FromString(f.trimmed())
+	v, err := fixed.F64d4FromString(f.trimmed(f.Text()))
 	if err != nil {
 		f.Tooltip = unison.NewTooltipWithText(i18n.Text("Invalid number"))
 		return false
@@ -102,7 +99,7 @@ func (f *NumericField) validate() bool {
 }
 
 func (f *NumericField) modified() {
-	if v, err := fixed.F64d4FromString(f.trimmed()); err == nil &&
+	if v, err := fixed.F64d4FromString(f.trimmed(f.Text())); err == nil &&
 		(f.minimum == fixed.F64d4Min || v >= f.minimum) &&
 		(f.maximum == fixed.F64d4Max || v <= f.maximum) {
 		*f.value = v
@@ -116,5 +113,23 @@ func (f *NumericField) modified() {
 
 // Sync the field to the current value.
 func (f *NumericField) Sync() {
-	f.SetValue(*f.value)
+	if !f.Focused() {
+		f.SetValue(*f.value)
+	}
+}
+
+func (f *NumericField) runeTyped(ch rune) bool {
+	if !unicode.IsControl(ch) {
+		if f.minimum >= 0 && ch == '-' {
+			unison.Beep()
+			return false
+		}
+		if text := f.trimmed(string(f.RunesIfPasted([]rune{ch}))); text != "-" {
+			if _, err := strconv.Atoi(text); err != nil {
+				unison.Beep()
+				return false
+			}
+		}
+	}
+	return f.DefaultRuneTyped(ch)
 }

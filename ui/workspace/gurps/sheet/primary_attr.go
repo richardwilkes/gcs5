@@ -78,7 +78,7 @@ func NewPrimaryAttrPanel(entity *gurps.Entity) *PrimaryAttrPanel {
 func (p *PrimaryAttrPanel) createField(attr *gurps.Attribute) *widget.NumericField {
 	var field *widget.NumericField
 	maximum := attr.Maximum()
-	field = widget.NewNumericPageFieldWithApplier(&maximum, fixed.F64d4Min, fixed.F64d4Max, true,
+	field = widget.NewNumericPageField(&maximum, fixed.F64d4Min, fixed.F64d4Max, true,
 		func() { attr.SetMaximum(maximum) })
 	return field
 }

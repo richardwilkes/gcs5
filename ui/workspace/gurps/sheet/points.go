@@ -53,7 +53,7 @@ func NewPointsPanel(entity *gurps.Entity) *PointsPanel {
 	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) { drawBandedBackground(p, gc, rect, 0, 2) }
 
 	unspentPoints := entity.UnspentPoints()
-	p.unspent = widget.NewNumericPageFieldWithApplier(&unspentPoints, fixed.F64d4Min, fixed.F64d4Max, true,
+	p.unspent = widget.NewNumericPageField(&unspentPoints, fixed.F64d4Min, fixed.F64d4Max, true,
 		func() { entity.SetUnspentPoints(unspentPoints) })
 	p.unspent.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
