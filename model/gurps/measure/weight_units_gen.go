@@ -45,12 +45,12 @@ var (
 		string string
 	}{
 		{
-			key:    "#",
-			string: "#",
-		},
-		{
 			key:    "lb",
 			string: "lb",
+		},
+		{
+			key:    "#",
+			string: "#",
 		},
 		{
 			key:    "oz",
@@ -76,7 +76,7 @@ var (
 )
 
 // WeightUnits holds the weight unit type. Note that conversions to/from metric are done using the simplified GURPS
-// metric conversion of 1# = 0.5kg. For consistency, all metric weights are converted to kilograms, then to pounds,
+// metric conversion of 1 lb = 0.5 kg. For consistency, all metric weights are converted to kilograms, then to pounds,
 // rather than the variations at different weights that the GURPS rules suggest.
 type WeightUnits byte
 

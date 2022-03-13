@@ -39,19 +39,19 @@ func (enum LengthUnits) Format(length Length) string {
 		}
 		return buffer.String()
 	case Inch:
-		return fixed.F64d4(length).String() + enum.Key()
+		return fixed.F64d4(length).String() + " " + enum.Key()
 	case Feet:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt(12)).String() + enum.Key()
+		return fixed.F64d4(length).Div(fixed.F64d4FromInt(12)).String() + " " + enum.Key()
 	case Yard:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36)).String() + enum.Key()
+		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36)).String() + " " + enum.Key()
 	case Mile:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt(5280)).String() + enum.Key()
+		return fixed.F64d4(length).Div(fixed.F64d4FromInt(5280)).String() + " " + enum.Key()
 	case Centimeter:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36)).Mul(fixed.F64d4FromInt(100)).String() + enum.Key()
+		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36)).Mul(fixed.F64d4FromInt(100)).String() + " " + enum.Key()
 	case Kilometer:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36000)).String() + enum.Key()
+		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36000)).String() + " " + enum.Key()
 	case Meter:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36)).String() + enum.Key()
+		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36)).String() + " " + enum.Key()
 	default:
 		return FeetAndInches.Format(length)
 	}
