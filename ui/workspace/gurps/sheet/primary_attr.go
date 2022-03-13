@@ -53,6 +53,7 @@ func NewPrimaryAttrPanel(entity *gurps.Entity) *PrimaryAttrPanel {
 		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
 	}
 
+	// TODO: Need to CRC64 this so that we can swap out full data when attribute list changes
 	for _, def := range gurps.SheetSettingsFor(entity).Attributes.List() {
 		if def.Type == attribute.Pool || !def.Primary() {
 			continue
@@ -62,28 +63,30 @@ func NewPrimaryAttrPanel(entity *gurps.Entity) *PrimaryAttrPanel {
 			jot.Warnf("unable to locate attribute data for '%s'", def.ID())
 			continue
 		}
-		pts := widget.NewNonEditablePageFieldEnd("["+attr.PointCost().String()+"]",
-			fmt.Sprintf(i18n.Text("Points spent on %s"), def.CombinedName()))
-		pts.Font = theme.PageFieldSecondaryFont
-		p.AddChild(pts)
-
+		p.AddChild(p.createPointsField(attr))
 		p.AddChild(p.createField(attr))
-
 		p.AddChild(widget.NewPageLabel(def.CombinedName()))
 	}
 
 	return p
 }
 
-func (p *PrimaryAttrPanel) createField(attr *gurps.Attribute) *widget.NumericField {
-	var field *widget.NumericField
-	maximum := attr.Maximum()
-	field = widget.NewNumericPageField(&maximum, fixed.F64d4Min, fixed.F64d4Max, true,
-		func() { attr.SetMaximum(maximum) })
+func (p *PrimaryAttrPanel) createPointsField(attr *gurps.Attribute) *widget.NonEditablePageField {
+	field := widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		if text := "[" + attr.PointCost().String() + "]"; text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+		if def := attr.AttributeDef(); def != nil {
+			f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Points spent on %s"), def.CombinedName()))
+		}
+	})
+	field.Font = theme.PageFieldSecondaryFont
 	return field
 }
 
-// Sync the panel to the current data.
-func (p *PrimaryAttrPanel) Sync() {
-	// TODO: Sync each attribute and points field
+func (p *PrimaryAttrPanel) createField(attr *gurps.Attribute) *widget.NumericField {
+	maximum := attr.Maximum()
+	return widget.NewNumericPageField(&maximum, fixed.F64d4Min, fixed.F64d4Max, true,
+		func() { attr.SetMaximum(maximum) })
 }

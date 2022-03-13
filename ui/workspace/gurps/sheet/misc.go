@@ -23,9 +23,8 @@ import (
 // MiscPanel holds the contents of the miscellaneous block on the sheet.
 type MiscPanel struct {
 	unison.Panel
-	entity        *gurps.Entity
-	modifiedField *unison.Label
-	Modified      bool
+	entity   *gurps.Entity
+	Modified bool
 }
 
 // NewMiscPanel creates a new miscellaneous panel.
@@ -51,11 +50,20 @@ func NewMiscPanel(entity *gurps.Entity) *MiscPanel {
 	}
 
 	m.AddChild(widget.NewPageLabelEnd(i18n.Text("Created")))
-	m.AddChild(widget.NewNonEditablePageField(entity.CreatedOn.String(), ""))
+	m.AddChild(widget.NewNonEditablePageField(func(f *widget.NonEditablePageField) {
+		if text := entity.CreatedOn.String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}))
 
 	m.AddChild(widget.NewPageLabelEnd(i18n.Text("Modified")))
-	m.modifiedField = widget.NewNonEditablePageField(entity.ModifiedOn.String(), "")
-	m.AddChild(m.modifiedField)
+	m.AddChild(widget.NewNonEditablePageField(func(f *widget.NonEditablePageField) {
+		if text := entity.ModifiedOn.String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}))
 
 	m.AddChild(widget.NewPageLabelEnd(i18n.Text("Player")))
 	m.AddChild(widget.NewStringPageFieldNoGrab(&entity.Profile.PlayerName))
@@ -67,15 +75,6 @@ func NewMiscPanel(entity *gurps.Entity) *MiscPanel {
 func (m *MiscPanel) UpdateModified() {
 	m.Modified = true
 	m.entity.ModifiedOn = jio.Now()
-}
-
-// Sync the panel to the current data.
-func (m *MiscPanel) Sync() {
-	modifiedOn := m.entity.ModifiedOn.String()
-	if modifiedOn != m.modifiedField.Text {
-		m.modifiedField.Text = modifiedOn
-		widget.MarkForLayoutWithinDockable(m.modifiedField)
-	}
 }
 
 // SetTextAndMarkModified sets the field to the given text, selects it, requests focus, then calls MarkModified().

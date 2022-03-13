@@ -62,31 +62,62 @@ func NewPointsPanel(entity *gurps.Entity) *PointsPanel {
 	p.unspent.Tooltip = unison.NewTooltipWithText(i18n.Text("Points earned but not yet spent"))
 	p.AddChild(p.unspent)
 	p.AddChild(widget.NewPageLabel(i18n.Text("Unspent")))
-
-	ad, disad, race, quirk := entity.AdvantagePoints()
-	p.AddChild(widget.NewNonEditablePageFieldEnd(race.String(), i18n.Text("Total points spent on a racial package")))
-	p.AddChild(widget.NewPageLabel(i18n.Text("Race")))
-
-	p.AddChild(widget.NewNonEditablePageFieldEnd(entity.AttributePoints().String(),
-		i18n.Text("Total points spent on attributes")))
-	p.AddChild(widget.NewPageLabel(i18n.Text("Attributes")))
-
-	p.AddChild(widget.NewNonEditablePageFieldEnd(ad.String(), i18n.Text("Total points spent on advantages")))
-	p.AddChild(widget.NewPageLabel(i18n.Text("Advantages")))
-
-	p.AddChild(widget.NewNonEditablePageFieldEnd(disad.String(), i18n.Text("Total points spent on disadvantages")))
-	p.AddChild(widget.NewPageLabel(i18n.Text("Disadvantages")))
-
-	p.AddChild(widget.NewNonEditablePageFieldEnd(quirk.String(), i18n.Text("Total points spent on quirks")))
-	p.AddChild(widget.NewPageLabel(i18n.Text("Quirks")))
-
-	p.AddChild(widget.NewNonEditablePageFieldEnd(entity.SkillPoints().String(), i18n.Text("Total points spent on skills")))
-	p.AddChild(widget.NewPageLabel(i18n.Text("Skills")))
-
-	p.AddChild(widget.NewNonEditablePageFieldEnd(entity.SpellPoints().String(), i18n.Text("Total points spent on spells")))
-	p.AddChild(widget.NewPageLabel(i18n.Text("Spells")))
+	p.addPointsField(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		_, _, race, _ := p.entity.AdvantagePoints()
+		if text := race.String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}), i18n.Text("Race"), i18n.Text("Total points spent on a racial package"))
+	p.addPointsField(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		if text := p.entity.AttributePoints().String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}), i18n.Text("Attributes"), i18n.Text("Total points spent on attributes"))
+	p.addPointsField(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		ad, _, _, _ := p.entity.AdvantagePoints()
+		if text := ad.String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}), i18n.Text("Advantages"), i18n.Text("Total points spent on advantages"))
+	p.addPointsField(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		_, disad, _, _ := p.entity.AdvantagePoints()
+		if text := disad.String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}), i18n.Text("Disadvantages"), i18n.Text("Total points spent on disadvantages"))
+	p.addPointsField(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		_, _, _, quirk := p.entity.AdvantagePoints()
+		if text := quirk.String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}), i18n.Text("Quirks"), i18n.Text("Total points spent on quirks"))
+	p.addPointsField(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		if text := p.entity.SkillPoints().String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}), i18n.Text("Skills"), i18n.Text("Total points spent on skills"))
+	p.addPointsField(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		if text := p.entity.SpellPoints().String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}), i18n.Text("Spells"), i18n.Text("Total points spent on spells"))
 
 	return p
+}
+
+func (p *PointsPanel) addPointsField(field *widget.NonEditablePageField, title, tooltip string) {
+	field.Tooltip = unison.NewTooltipWithText(tooltip)
+	p.AddChild(field)
+	label := widget.NewPageLabel(title)
+	label.Tooltip = unison.NewTooltipWithText(tooltip)
+	p.AddChild(label)
 }
 
 // Sync the panel to the current data.

@@ -93,14 +93,7 @@ func NewEncumbrancePanel(entity *gurps.Entity) *EncumbrancePanel {
 			}
 		}
 		p.AddChild(marker)
-
-		level := widget.NewNonEditablePageFieldEnd(strconv.Itoa(int(enc)), "")
-		level.SetLayoutData(&unison.FlexLayoutData{
-			HAlign: unison.FillAlignment,
-			VAlign: unison.MiddleAlignment,
-		})
-		p.AddChild(level)
-
+		p.AddChild(p.createLevelField(enc))
 		name := widget.NewPageLabel(enc.String())
 		name.SetLayoutData(&unison.FlexLayoutData{
 			HAlign: unison.FillAlignment,
@@ -109,33 +102,65 @@ func NewEncumbrancePanel(entity *gurps.Entity) *EncumbrancePanel {
 		})
 		p.AddChild(name)
 		p.row = append(p.row, name)
-
 		if i == 0 {
 			p.addSeparator()
 		}
-
-		p.AddChild(widget.NewNonEditablePageFieldEnd(entity.MaximumCarry(enc).String(),
-			fmt.Sprintf(i18n.Text("The maximum load that can be carried and still remain within the %s encumbrance level"),
-				enc.String())))
-
+		p.AddChild(p.createMaxCarryField(enc))
 		if i == 0 {
 			p.addSeparator()
 		}
-
-		p.AddChild(widget.NewNonEditablePageFieldEnd(strconv.Itoa(entity.Move(enc)),
-			fmt.Sprintf(i18n.Text("The ground movement rate for the %s encumbrance level"), enc.String())))
-
+		p.AddChild(p.createMoveField(enc))
 		if i == 0 {
 			p.addSeparator()
 		}
-
-		dodge := widget.NewNonEditablePageFieldEnd(strconv.Itoa(entity.Dodge(enc)),
-			fmt.Sprintf(i18n.Text("The dodge for the %s encumbrance level"), enc.String()))
-		dodge.SetBorder(unison.NewEmptyBorder(geom32.Insets{Right: 4}))
-		p.AddChild(dodge)
+		p.AddChild(p.createDodgeField(enc))
 	}
 
 	return p
+}
+
+func (p *EncumbrancePanel) createLevelField(enc datafile.Encumbrance) *widget.NonEditablePageField {
+	field := widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {})
+	field.Text = strconv.Itoa(int(enc))
+	field.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
+	})
+	return field
+}
+
+func (p *EncumbrancePanel) createMaxCarryField(enc datafile.Encumbrance) *widget.NonEditablePageField {
+	field := widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		if text := p.entity.MaximumCarry(enc).String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	})
+	field.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("The maximum load that can be carried and still remain within the %s encumbrance level"), enc.String()))
+	return field
+}
+
+func (p *EncumbrancePanel) createMoveField(enc datafile.Encumbrance) *widget.NonEditablePageField {
+	field := widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		if text := strconv.Itoa(p.entity.Move(enc)); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	})
+	field.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("The ground movement rate for the %s encumbrance level"), enc.String()))
+	return field
+}
+
+func (p *EncumbrancePanel) createDodgeField(enc datafile.Encumbrance) *widget.NonEditablePageField {
+	field := widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		if text := strconv.Itoa(p.entity.Dodge(enc)); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	})
+	field.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("The dodge for the %s encumbrance level"), enc.String()))
+	field.SetBorder(unison.NewEmptyBorder(geom32.Insets{Right: 4}))
+	return field
 }
 
 func (p *EncumbrancePanel) addSeparator() {
@@ -149,9 +174,4 @@ func (p *EncumbrancePanel) addSeparator() {
 		VGrab:  true,
 	})
 	p.AddChild(sep)
-}
-
-// Sync the panel to the current data.
-func (p *EncumbrancePanel) Sync() {
-	// TODO: Sync!
 }

@@ -113,9 +113,7 @@ func (f *NumericField) modified() {
 
 // Sync the field to the current value.
 func (f *NumericField) Sync() {
-	if !f.Focused() {
-		f.SetValue(*f.value)
-	}
+	f.SetValue(*f.value)
 }
 
 func (f *NumericField) runeTyped(ch rune) bool {

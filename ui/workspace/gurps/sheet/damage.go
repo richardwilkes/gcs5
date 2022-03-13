@@ -46,16 +46,15 @@ func NewDamagePanel(entity *gurps.Entity) *DamagePanel {
 	})))
 	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) { drawBandedBackground(p, gc, rect, 0, 2) }
 
-	p.AddChild(widget.NewNonEditablePageFieldEnd(entity.Thrust().String(), ""))
+	p.AddChild(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		f.Text = p.entity.Thrust().String()
+	}))
 	p.AddChild(widget.NewPageLabel(i18n.Text("Basic Thrust")))
 
-	p.AddChild(widget.NewNonEditablePageFieldEnd(entity.Swing().String(), ""))
+	p.AddChild(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		f.Text = p.entity.Swing().String()
+	}))
 	p.AddChild(widget.NewPageLabel(i18n.Text("Basic Swing")))
 
 	return p
-}
-
-// Sync the panel to the current data.
-func (p *DamagePanel) Sync() {
-	// TODO: Sync!
 }

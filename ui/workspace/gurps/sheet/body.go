@@ -30,6 +30,7 @@ type BodyPanel struct {
 	entity        *gurps.Entity
 	row           []unison.Paneler
 	sepLayoutData []*unison.FlexLayoutData
+	crc           uint64
 }
 
 // NewBodyPanel creates a new body panel.
@@ -46,6 +47,7 @@ func NewBodyPanel(entity *gurps.Entity) *BodyPanel {
 		VSpan:  3,
 	})
 	locations := gurps.SheetSettingsFor(entity).HitLocations
+	p.crc = locations.CRC64()
 	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: locations.Name}, unison.NewEmptyBorder(geom32.Insets{
 		Left:   2,
 		Bottom: 1,
@@ -70,22 +72,23 @@ func NewBodyPanel(entity *gurps.Entity) *BodyPanel {
 			gc.DrawRect(r, ink.Paint(gc, r, unison.Fill))
 		}
 	}
+	p.addContent(locations)
+	return p
+}
 
+func (p *BodyPanel) addContent(locations *gurps.BodyType) {
+	p.RemoveAllChildren()
 	p.AddChild(widget.NewPageHeader(i18n.Text("Roll"), 1))
 	p.AddChild(unison.NewPanel())
 	p.AddChild(widget.NewPageHeader(i18n.Text("Location"), 2))
 	p.AddChild(unison.NewPanel())
 	p.AddChild(widget.NewPageHeader(i18n.Text("DR"), 1))
-
 	p.row = nil
 	p.sepLayoutData = nil
 	p.addTable(locations, 0)
-
 	for _, one := range p.sepLayoutData {
 		one.VSpan = len(p.row)
 	}
-
-	return p
 }
 
 func (p *BodyPanel) addTable(bodyType *gurps.BodyType, depth int) {
@@ -100,21 +103,35 @@ func (p *BodyPanel) addTable(bodyType *gurps.BodyType, depth int) {
 		name := widget.NewPageLabel(prefix + location.TableName)
 		p.row = append(p.row, name)
 		p.AddChild(name)
-		p.AddChild(widget.NewNonEditablePageFieldEnd(fmt.Sprintf("%+d", location.HitPenalty), ""))
+		p.AddChild(p.createHitPenaltyField(location))
 
 		if i == 0 {
 			p.addSeparator()
 		}
 
-		var tooltip xio.ByteBuffer
-		dr := location.DisplayDR(p.entity, &tooltip)
-		p.AddChild(widget.NewNonEditablePageFieldCenter(dr,
-			fmt.Sprintf(i18n.Text("The DR covering the %s hit location%s"), location.TableName, tooltip.String())))
+		p.AddChild(p.createDRField(location))
 
 		if location.SubTable != nil {
 			p.addTable(location.SubTable, depth+1)
 		}
 	}
+}
+
+func (p *BodyPanel) createHitPenaltyField(location *gurps.HitLocation) unison.Paneler {
+	return widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		f.Text = fmt.Sprintf("%+d", location.HitPenalty)
+		widget.MarkForLayoutWithinDockable(f)
+	})
+}
+
+func (p *BodyPanel) createDRField(location *gurps.HitLocation) unison.Paneler {
+	return widget.NewNonEditablePageFieldCenter(func(f *widget.NonEditablePageField) {
+		var tooltip xio.ByteBuffer
+		f.Text = location.DisplayDR(p.entity, &tooltip)
+		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("The DR covering the %s hit location%s"),
+			location.TableName, tooltip.String()))
+		widget.MarkForLayoutWithinDockable(f)
+	})
 }
 
 func (p *BodyPanel) addSeparator() {
@@ -133,5 +150,10 @@ func (p *BodyPanel) addSeparator() {
 
 // Sync the panel to the current data.
 func (p *BodyPanel) Sync() {
-	// TODO: Sync!
+	locations := gurps.SheetSettingsFor(p.entity).HitLocations
+	if crc := locations.CRC64(); crc != p.crc {
+		p.crc = crc
+		p.addContent(locations)
+		widget.MarkForLayoutWithinDockable(p)
+	}
 }

@@ -13,7 +13,6 @@ package sheet
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
-	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
@@ -47,31 +46,57 @@ func NewLiftingPanel(entity *gurps.Entity) *LiftingPanel {
 		Right:  2,
 	})))
 	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) { drawBandedBackground(p, gc, rect, 0, 2) }
-	p.createRow(entity.BasicLift(), i18n.Text("Basic Lift"),
-		i18n.Text("The weight that can be lifted overhead with one hand in one second"))
-	p.createRow(entity.OneHandedLift(), i18n.Text("One-Handed Lift"),
-		i18n.Text("The weight that can be lifted overhead with one hand in two seconds"))
-	p.createRow(entity.TwoHandedLift(), i18n.Text("Two-Handed Lift"),
+	p.addFieldAndLabel(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		if text := p.entity.BasicLift().String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}), i18n.Text("Basic Lift"), i18n.Text("The weight that can be lifted overhead with one hand in one second"))
+	p.addFieldAndLabel(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		if text := p.entity.OneHandedLift().String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}), i18n.Text("One-Handed Lift"), i18n.Text("The weight that can be lifted overhead with one hand in two seconds"))
+	p.addFieldAndLabel(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		if text := p.entity.TwoHandedLift().String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}), i18n.Text("Two-Handed Lift"),
 		i18n.Text("The weight that can be lifted overhead with both hands in four seconds"))
-	p.createRow(entity.ShoveAndKnockOver(), i18n.Text("Shove & Knock Over"),
-		i18n.Text("The weight of an object that can be shoved and knocked over"))
-	p.createRow(entity.RunningShoveAndKnockOver(), i18n.Text("Running Shove & Knock Over"),
+	p.addFieldAndLabel(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		if text := p.entity.ShoveAndKnockOver().String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}), i18n.Text("Shove & Knock Over"), i18n.Text("The weight of an object that can be shoved and knocked over"))
+	p.addFieldAndLabel(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		if text := p.entity.RunningShoveAndKnockOver().String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}), i18n.Text("Running Shove & Knock Over"),
 		i18n.Text("The weight of an object that can be shoved and knocked over with a running start"))
-	p.createRow(entity.CarryOnBack(), i18n.Text("Carry On Back"),
-		i18n.Text("The weight that can be carried slung across the back"))
-	p.createRow(entity.ShiftSlightly(), i18n.Text("Shift Slightly"),
-		i18n.Text("The weight that can be shifted slightly on a floor"))
+	p.addFieldAndLabel(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		if text := p.entity.CarryOnBack().String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}), i18n.Text("Carry On Back"), i18n.Text("The weight that can be carried slung across the back"))
+	p.addFieldAndLabel(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
+		if text := p.entity.ShiftSlightly().String(); text != f.Text {
+			f.Text = text
+			widget.MarkForLayoutWithinDockable(f)
+		}
+	}), i18n.Text("Shift Slightly"), i18n.Text("The weight that can be shifted slightly on a floor"))
 	return p
 }
 
-func (p *LiftingPanel) createRow(weight measure.Weight, title, tooltip string) {
-	p.AddChild(widget.NewNonEditablePageFieldEnd(weight.String(), tooltip))
+func (p *LiftingPanel) addFieldAndLabel(field *widget.NonEditablePageField, title, tooltip string) {
+	field.Tooltip = unison.NewTooltipWithText(tooltip)
+	p.AddChild(field)
 	label := widget.NewPageLabel(title)
 	label.Tooltip = unison.NewTooltipWithText(tooltip)
 	p.AddChild(label)
-}
-
-// Sync the panel to the current data.
-func (p *LiftingPanel) Sync() {
-	// TODO: Sync!
 }

@@ -13,7 +13,9 @@ package gurps
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
+	"hash"
 	"strconv"
 	"strings"
 
@@ -201,4 +203,21 @@ func (h *HitLocation) updateRollRange(start int) int {
 		h.SubTable.updateRollRanges()
 	}
 	return start + h.Slots
+}
+
+func (h *HitLocation) crc64(hsh hash.Hash64) {
+	hsh.Write([]byte(h.LocID))
+	hsh.Write([]byte(h.ChoiceName))
+	hsh.Write([]byte(h.TableName))
+	var buffer [8]byte
+	binary.LittleEndian.PutUint64(buffer[:], uint64(h.Slots))
+	hsh.Write(buffer[:])
+	binary.LittleEndian.PutUint64(buffer[:], uint64(h.HitPenalty))
+	hsh.Write(buffer[:])
+	binary.LittleEndian.PutUint64(buffer[:], uint64(h.DRBonus))
+	hsh.Write(buffer[:])
+	hsh.Write([]byte(h.Description))
+	if h.SubTable != nil {
+		h.SubTable.crc64(hsh)
+	}
 }
