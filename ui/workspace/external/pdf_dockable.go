@@ -71,8 +71,9 @@ type PDFDockable struct {
 // NewPDFDockable creates a new unison.Dockable for PDF files.
 func NewPDFDockable(filePath string) (unison.Dockable, error) {
 	d := &PDFDockable{
-		path:  filePath,
-		scale: 100,
+		path:     filePath,
+		scale:    100,
+		noUpdate: true,
 	}
 	d.Self = d
 	var err error
@@ -154,11 +155,10 @@ func NewPDFDockable(filePath string) (unison.Dockable, error) {
 	ofLabel.Font = unison.DefaultFieldTheme.Font
 	ofLabel.Text = fmt.Sprintf(i18n.Text("of %d"), d.pdf.PageCount())
 
-	d.scaleField = widget.NewPercentageField(d.scale, minPDFDockableScale, maxPDFDockableScale, func(v int) {
+	d.scaleField = widget.NewPercentageField(&d.scale, minPDFDockableScale, maxPDFDockableScale, func() {
 		if d.noUpdate {
 			return
 		}
-		d.scale = v
 		d.LoadPage(d.pdf.MostRecentPageNumber())
 	})
 	d.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
@@ -219,6 +219,7 @@ func NewPDFDockable(filePath string) (unison.Dockable, error) {
 	d.AddChild(toolbar)
 	d.AddChild(d.scroll)
 
+	d.noUpdate = false
 	d.LoadPage(0)
 
 	return d, nil

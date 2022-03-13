@@ -87,11 +87,11 @@ func (f *IntegerField) validate() bool {
 		return false
 	}
 	if f.minimum != math.MinInt && v < f.minimum {
-		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Integer must be at least %d"), f.minimum))
+		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Integer must be at least %s"), f.formatted(f.minimum)))
 		return false
 	}
 	if f.maximum != math.MaxInt && v > f.maximum {
-		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Integer must be no more than %d"), f.maximum))
+		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Integer must be no more than %s"), f.formatted(f.maximum)))
 		return false
 	}
 	f.Tooltip = nil

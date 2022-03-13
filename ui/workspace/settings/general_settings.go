@@ -132,7 +132,9 @@ func (d *generalSettingsDockable) createCalendarPopup(content *unison.Panel) {
 
 func (d *generalSettingsDockable) createScaleField(content *unison.Panel, label string, initialScale int, f func(int)) *widget.PercentageField {
 	content.AddChild(widget.NewFieldLeadingLabel(label))
-	field := widget.NewPercentageField(initialScale, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, f)
+	field := widget.NewPercentageField(&initialScale, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, func() {
+		f(initialScale)
+	})
 	content.AddChild(widget.WrapWithSpan(2, field))
 	return field
 }

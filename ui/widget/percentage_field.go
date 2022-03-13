@@ -13,12 +13,12 @@ package widget
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"unicode"
 
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/mathf32"
 	"github.com/richardwilkes/unison"
 )
@@ -26,39 +26,60 @@ import (
 // PercentageField holds the value for a percentage field.
 type PercentageField struct {
 	*unison.Field
-	applier func(v int)
-	value   int
-	minimum int
-	maximum int
+	applier       func()
+	value         *int
+	minimum       int
+	maximum       int
+	marksModified bool
 }
 
 // NewPercentageField creates a new field that holds a percentage (where 100 == 100%).
-func NewPercentageField(value, min, max int, applier func(int)) *PercentageField {
+func NewPercentageField(value *int, min, max int, applier func()) *PercentageField {
 	f := &PercentageField{
-		Field:   unison.NewField(),
-		minimum: min,
-		maximum: max,
+		Field:         unison.NewField(),
+		applier:       applier,
+		value:         value,
+		minimum:       min,
+		maximum:       max,
+		marksModified: true,
 	}
 	f.Self = f
-	f.SetValue(value)
-	f.applier = applier
 	f.ModifiedCallback = f.modified
 	f.ValidateCallback = f.validate
 	f.RuneTypedCallback = f.runeTyped
-	f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth(strconv.Itoa(min)+"%"), f.Font.SimpleWidth(strconv.Itoa(max)+"%"))
+	if min != math.MinInt && max != math.MaxInt {
+		f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth(f.formatted(min)), f.Font.SimpleWidth(f.formatted(max)))
+	}
+	f.Sync()
 	return f
+}
+
+// SetMarksModified sets whether this field will attempt to mark its ModifiableRoot as modified. Default is true.
+func (f *PercentageField) SetMarksModified(marksModified bool) {
+	f.marksModified = marksModified
+}
+
+func (f *PercentageField) formatted(value int) string {
+	return strconv.Itoa(value) + "%"
 }
 
 // Value returns the current value of the field.
 func (f *PercentageField) Value() int {
-	return f.value
+	return *f.value
 }
 
-// SetValue sets the value of this field, marking the field and all of its parents as needing to be laid out again if the
-// value is not what is currently in the field.
+// SetValue sets the value of this field, applying any constraints.
 func (f *PercentageField) SetValue(value int) {
-	f.value = xmath.MinInt(xmath.MaxInt(value, f.minimum), f.maximum)
-	SetFieldValue(f.Field, strconv.Itoa(f.value)+"%")
+	if f.minimum != math.MinInt && value < f.minimum {
+		value = f.minimum
+	} else if f.maximum != math.MaxInt && value > f.maximum {
+		value = f.maximum
+	}
+	SetFieldValue(f.Field, f.formatted(value))
+}
+
+func (f *PercentageField) trimmed(text string) string {
+	return strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(text), "%"))
 }
 
 func (f *PercentageField) validate() bool {
@@ -68,11 +89,11 @@ func (f *PercentageField) validate() bool {
 		return false
 	}
 	if v < f.minimum {
-		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Percentage must be at least %d%%"), f.minimum))
+		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Percentage must be at least %s"), f.formatted(f.minimum)))
 		return false
 	}
 	if v > f.maximum {
-		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Percentage must be no more than %d%%"), f.maximum))
+		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Percentage must be no more than %s"), f.formatted(f.maximum)))
 		return false
 	}
 	f.Tooltip = nil
@@ -80,16 +101,23 @@ func (f *PercentageField) validate() bool {
 }
 
 func (f *PercentageField) modified() {
-	if v, err := strconv.Atoi(f.trimmed(f.Text())); err == nil && v >= f.minimum && v <= f.maximum {
-		f.value = v
+	if v, err := strconv.Atoi(f.trimmed(f.Text())); err == nil &&
+		(f.minimum == math.MinInt || v >= f.minimum) &&
+		(f.maximum == math.MaxInt || v <= f.maximum) {
+		*f.value = v
 		if f.applier != nil {
-			f.applier(v)
+			f.applier()
+		}
+		MarkForLayoutWithinDockable(f)
+		if f.marksModified {
+			MarkModified(f)
 		}
 	}
 }
 
-func (f *PercentageField) trimmed(text string) string {
-	return strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(text), "%"))
+// Sync the field to the current value.
+func (f *PercentageField) Sync() {
+	f.SetValue(*f.value)
 }
 
 func (f *PercentageField) runeTyped(ch rune) bool {

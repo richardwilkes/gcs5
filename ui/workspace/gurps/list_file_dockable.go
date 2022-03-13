@@ -107,8 +107,8 @@ func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHead
 	d.sizeToFitButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Sets the width of each column to fit its contents"))
 	d.sizeToFitButton.ClickCallback = d.sizeToFit
 
-	scale := settings.Global().General.InitialListUIScale
-	d.scaleField = widget.NewPercentageField(scale, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, d.applyScale)
+	d.scaleField = widget.NewPercentageField(&settings.Global().General.InitialListUIScale, gsettings.InitialUIScaleMin,
+		gsettings.InitialUIScaleMax, d.applyScale)
 	d.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
 
 	d.backButton = unison.NewSVGButton(res.BackSVG)
@@ -175,12 +175,12 @@ func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHead
 	d.AddChild(toolbar)
 	d.AddChild(d.scroll)
 
-	d.applyScale(scale)
+	d.applyScale()
 	return d
 }
 
-func (d *ListFileDockable) applyScale(scale int) {
-	s := float32(scale) / 100
+func (d *ListFileDockable) applyScale() {
+	s := float32(settings.Global().General.InitialListUIScale) / 100
 	d.tableHeader.SetScale(s)
 	d.table.SetScale(s)
 	d.scroll.Sync()

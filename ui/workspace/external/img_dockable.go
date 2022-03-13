@@ -81,14 +81,15 @@ func NewImageDockable(filePath string) (unison.Dockable, error) {
 	})
 	d.scroll.SetContent(d.imgPanel, unison.FillBehavior)
 
-	d.scaleField = widget.NewPercentageField(d.scale, minImageDockableScale, maxImageDockableScale, func(v int) {
+	scale := d.scale
+	d.scaleField = widget.NewPercentageField(&scale, minImageDockableScale, maxImageDockableScale, func() {
 		viewRect := d.scroll.ContentView().ContentRect(false)
 		center := d.imgPanel.PointFromRoot(d.scroll.ContentView().PointToRoot(viewRect.Center()))
 		center.X /= float32(d.scale) / 100
-		center.X *= float32(v) / 100
+		center.X *= float32(scale) / 100
 		center.Y /= float32(d.scale) / 100
-		center.Y *= float32(v) / 100
-		d.scale = v
+		center.Y *= float32(scale) / 100
+		d.scale = scale
 		d.scroll.MarkForLayoutAndRedraw()
 		d.scroll.ValidateLayout()
 		viewRect.X = center.X - viewRect.Width/2

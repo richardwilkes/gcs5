@@ -88,8 +88,9 @@ func NewSheet(filePath string) (unison.Dockable, error) {
 		gc.DrawRect(rect, theme.PageVoidColor.Paint(gc, rect, unison.Fill))
 	}
 
-	scale := settings.Global().General.InitialSheetUIScale
-	s.scaleField = widget.NewPercentageField(scale, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, s.applyScale)
+	s.scaleField = widget.NewPercentageField(&settings.Global().General.InitialSheetUIScale,
+		gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, s.applyScale)
+	s.scaleField.SetMarksModified(false)
 	s.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
 
 	toolbar := unison.NewPanel()
@@ -113,12 +114,12 @@ func NewSheet(filePath string) (unison.Dockable, error) {
 	s.AddChild(toolbar)
 	s.AddChild(s.scroll)
 
-	s.applyScale(scale)
+	s.applyScale()
 	return s, nil
 }
 
-func (s *Sheet) applyScale(scale int) {
-	s.pages.SetScale(float32(scale) / 100)
+func (s *Sheet) applyScale() {
+	s.pages.SetScale(float32(settings.Global().General.InitialSheetUIScale) / 100)
 	s.scroll.Sync()
 }
 
