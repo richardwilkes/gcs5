@@ -46,7 +46,7 @@ func LengthFromString(text string) Length {
 }
 
 func (l Length) String() string {
-	return strconv.FormatFloat(l.Length, 'f', -1, 64) + l.Units.Key()
+	return strconv.FormatFloat(l.Length, 'f', -1, 64) + " " + l.Units.Key()
 }
 
 // Pixels returns the number of 72-pixels-per-inch pixels this represents.

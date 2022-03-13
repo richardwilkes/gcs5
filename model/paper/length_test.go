@@ -19,14 +19,14 @@ import (
 )
 
 func TestRealLengthConversion(t *testing.T) {
-	assert.Equal(t, `0.25in`, paper.Length{Length: 0.25, Units: paper.Inch}.String())
+	assert.Equal(t, `0.25 in`, paper.Length{Length: 0.25, Units: paper.Inch}.String())
 	assert.Equal(t, float32(18), paper.Length{Length: 0.25, Units: paper.Inch}.Pixels())
-	assert.Equal(t, `1in`, paper.Length{Length: 1, Units: paper.Inch}.String())
+	assert.Equal(t, `1 in`, paper.Length{Length: 1, Units: paper.Inch}.String())
 	assert.Equal(t, float32(72), paper.Length{Length: 1, Units: paper.Inch}.Pixels())
-	assert.Equal(t, `15in`, paper.Length{Length: 15, Units: paper.Inch}.String())
+	assert.Equal(t, `15 in`, paper.Length{Length: 15, Units: paper.Inch}.String())
 	assert.Equal(t, float32(1080), paper.Length{Length: 15, Units: paper.Inch}.Pixels())
-	assert.Equal(t, "1cm", paper.Length{Length: 1, Units: paper.Centimeter}.String())
+	assert.Equal(t, "1 cm", paper.Length{Length: 1, Units: paper.Centimeter}.String())
 	assert.Equal(t, float32(28.3464566929), paper.Length{Length: 1, Units: paper.Centimeter}.Pixels())
-	assert.Equal(t, "1mm", paper.Length{Length: 1, Units: paper.Millimeter}.String())
+	assert.Equal(t, "1 mm", paper.Length{Length: 1, Units: paper.Millimeter}.String())
 	assert.Equal(t, float32(2.8346456693), paper.Length{Length: 1, Units: paper.Millimeter}.Pixels())
 }

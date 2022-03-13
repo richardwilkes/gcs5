@@ -21,8 +21,8 @@ import (
 func TestGURPSLengthConversion(t *testing.T) {
 	assert.Equal(t, `1"`, measure.FeetAndInches.Format(measure.LengthFromInt(1, measure.Inch)))
 	assert.Equal(t, `1'3"`, measure.FeetAndInches.Format(measure.LengthFromInt(15, measure.Inch)))
-	assert.Equal(t, "2.5cm", measure.Centimeter.Format(measure.LengthFromStringForced("2.5", measure.Centimeter)))
-	assert.Equal(t, "37.5cm", measure.Centimeter.Format(measure.LengthFromStringForced("37.5", measure.Centimeter)))
+	assert.Equal(t, "2.5 cm", measure.Centimeter.Format(measure.LengthFromStringForced("2.5", measure.Centimeter)))
+	assert.Equal(t, "37.5 cm", measure.Centimeter.Format(measure.LengthFromStringForced("37.5", measure.Centimeter)))
 
 	w, err := measure.LengthFromString("1", measure.Inch)
 	assert.NoError(t, err)
@@ -35,8 +35,8 @@ func TestGURPSLengthConversion(t *testing.T) {
 	assert.Equal(t, "96'", measure.FeetAndInches.Format(w))
 	w, err = measure.LengthFromString("0.5m", measure.Inch)
 	assert.NoError(t, err)
-	assert.Equal(t, "50cm", measure.Centimeter.Format(w))
+	assert.Equal(t, "50 cm", measure.Centimeter.Format(w))
 	w, err = measure.LengthFromString("1cm", measure.Inch)
 	assert.NoError(t, err)
-	assert.Equal(t, "1cm", measure.Centimeter.Format(w))
+	assert.Equal(t, "1 cm", measure.Centimeter.Format(w))
 }

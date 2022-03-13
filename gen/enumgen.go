@@ -811,19 +811,19 @@ func main() {
 	processSourceTemplate(enumTmpl, &enumInfo{
 		Pkg:        "model/gurps/measure",
 		Name:       "weight_units",
-		Desc:       "holds the weight unit type. Note that conversions to/from metric are done using the simplified GURPS metric conversion of 1# = 0.5kg. For consistency, all metric weights are converted to kilograms, then to pounds, rather than the variations at different weights that the GURPS rules suggest",
+		Desc:       "holds the weight unit type. Note that conversions to/from metric are done using the simplified GURPS metric conversion of 1 lb = 0.5kg. For consistency, all metric weights are converted to kilograms, then to pounds, rather than the variations at different weights that the GURPS rules suggest",
 		StandAlone: true,
 		Values: []enumValue{
 			{
 				Name:       "Pound",
-				Key:        "#",
-				String:     "#",
+				Key:        "lb",
+				String:     "lb",
 				NoLocalize: true,
 			},
 			{
 				Name:       "PoundAlt",
-				Key:        "lb",
-				String:     "lb",
+				Key:        "#",
+				String:     "#",
 				NoLocalize: true,
 			},
 			{
