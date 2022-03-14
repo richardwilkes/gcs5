@@ -106,6 +106,7 @@ func NewPageLabelWithRandomizer(title, tooltip string, clickCallback func()) *un
 	b.DrawableOnlyVMargin = 1
 	b.DrawableOnlyHMargin = 1
 	b.HideBase = true
+	b.SetFocusable(false)
 	baseline := theme.PageLabelPrimaryFont.Baseline()
 	size := geom32.NewSize(baseline, baseline)
 	b.Drawable = &unison.DrawableSVG{
