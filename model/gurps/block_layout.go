@@ -17,30 +17,31 @@ import (
 	"github.com/richardwilkes/json"
 )
 
+// Valid block layout keys
 const (
-	blockLayoutReactionsKey            = "reactions"
-	blockLayoutConditionalModifiersKey = "conditional_modifiers"
-	blockLayoutMeleeKey                = "melee"
-	blockLayoutRangedKey               = "ranged"
-	blockLayoutAdvantagesKey           = "advantages"
-	blockLayoutSkillsKey               = "skills"
-	blockLayoutSpellsKey               = "spells"
-	blockLayoutEquipmentKey            = "equipment"
-	blockLayoutOtherEquipmentKey       = "other_equipment"
-	blockLayoutNotesKey                = "notes"
+	BlockLayoutReactionsKey            = "reactions"
+	BlockLayoutConditionalModifiersKey = "conditional_modifiers"
+	BlockLayoutMeleeKey                = "melee"
+	BlockLayoutRangedKey               = "ranged"
+	BlockLayoutAdvantagesKey           = "advantages"
+	BlockLayoutSkillsKey               = "skills"
+	BlockLayoutSpellsKey               = "spells"
+	BlockLayoutEquipmentKey            = "equipment"
+	BlockLayoutOtherEquipmentKey       = "other_equipment"
+	BlockLayoutNotesKey                = "notes"
 )
 
 var allBlockLayoutKeys = []string{
-	blockLayoutReactionsKey,
-	blockLayoutConditionalModifiersKey,
-	blockLayoutMeleeKey,
-	blockLayoutRangedKey,
-	blockLayoutAdvantagesKey,
-	blockLayoutSkillsKey,
-	blockLayoutSpellsKey,
-	blockLayoutEquipmentKey,
-	blockLayoutOtherEquipmentKey,
-	blockLayoutNotesKey,
+	BlockLayoutReactionsKey,
+	BlockLayoutConditionalModifiersKey,
+	BlockLayoutMeleeKey,
+	BlockLayoutRangedKey,
+	BlockLayoutAdvantagesKey,
+	BlockLayoutSkillsKey,
+	BlockLayoutSpellsKey,
+	BlockLayoutEquipmentKey,
+	BlockLayoutOtherEquipmentKey,
+	BlockLayoutNotesKey,
 }
 
 // BlockLayout holds the sheet's block layout.
@@ -81,6 +82,32 @@ func (b *BlockLayout) EnsureValidity() {
 	b.Layout = layout
 }
 
+// Decompose breaks the layout down into its component parts.
+func (b *BlockLayout) Decompose() [][]string {
+	var layout [][]string
+	remaining := b.CreateFullKeySet()
+	for _, line := range b.Layout {
+		var parts []string
+		for _, part := range strings.Split(strings.ToLower(strings.TrimSpace(line)), " ") {
+			if remaining[part] {
+				delete(remaining, part)
+				parts = append(parts, part)
+			}
+		}
+		if len(parts) != 0 {
+			layout = append(layout, parts)
+		}
+	}
+	if len(remaining) != 0 {
+		for _, k := range allBlockLayoutKeys {
+			if remaining[k] {
+				layout = append(layout, []string{k})
+			}
+		}
+	}
+	return layout
+}
+
 // MarshalJSON implements json.Marshaler.
 func (b *BlockLayout) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&b.Layout)
@@ -109,14 +136,14 @@ func (b *BlockLayout) Clone() *BlockLayout {
 // Reset returns the BlockLayout to factory settings.
 func (b *BlockLayout) Reset() {
 	b.Layout = []string{
-		blockLayoutReactionsKey + " " + blockLayoutConditionalModifiersKey,
-		blockLayoutMeleeKey,
-		blockLayoutRangedKey,
-		blockLayoutAdvantagesKey + " " + blockLayoutSkillsKey,
-		blockLayoutSpellsKey,
-		blockLayoutEquipmentKey,
-		blockLayoutOtherEquipmentKey,
-		blockLayoutNotesKey,
+		BlockLayoutReactionsKey + " " + BlockLayoutConditionalModifiersKey,
+		BlockLayoutMeleeKey,
+		BlockLayoutRangedKey,
+		BlockLayoutAdvantagesKey + " " + BlockLayoutSkillsKey,
+		BlockLayoutSpellsKey,
+		BlockLayoutEquipmentKey,
+		BlockLayoutOtherEquipmentKey,
+		BlockLayoutNotesKey,
 	}
 }
 

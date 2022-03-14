@@ -88,7 +88,7 @@ func NewEncumbrancePanel(entity *gurps.Entity) *EncumbrancePanel {
 		if enc == current {
 			baseline := marker.Font.Baseline()
 			marker.Drawable = &unison.DrawableSVG{
-				SVG:  res.ScaleSVG,
+				SVG:  res.WeightSVG,
 				Size: geom32.Size{Width: baseline, Height: baseline},
 			}
 		}

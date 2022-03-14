@@ -171,6 +171,52 @@ func (s *Sheet) createFirstPage() *Page {
 	p := NewPage(s.entity)
 	p.AddChild(s.createFirstRow())
 	p.AddChild(s.createSecondRow())
+
+	// Add the various outline blocks, based on the layout preference.
+	var lastFlexData *unison.FlexLayoutData
+	for _, row := range s.entity.SheetSettings.BlockLayout.Decompose() {
+		rowPanel := unison.NewPanel()
+		rowPanel.SetLayout(&unison.FlexLayout{
+			Columns:      len(row),
+			HSpacing:     1,
+			HAlign:       unison.FillAlignment,
+			VAlign:       unison.FillAlignment,
+			EqualColumns: true,
+		})
+		lastFlexData = &unison.FlexLayoutData{
+			HAlign: unison.FillAlignment,
+			VAlign: unison.StartAlignment,
+			HGrab:  true,
+		}
+		rowPanel.SetLayoutData(lastFlexData)
+		for _, col := range row {
+			switch col {
+			case gurps.BlockLayoutReactionsKey:
+				rowPanel.AddChild(NewReactionsPageList(s.entity))
+			case gurps.BlockLayoutConditionalModifiersKey:
+				rowPanel.AddChild(NewConditionalModifiersPageList(s.entity))
+			case gurps.BlockLayoutMeleeKey:
+				rowPanel.AddChild(NewMeleeWeaponsPageList(s.entity))
+			case gurps.BlockLayoutRangedKey:
+				rowPanel.AddChild(NewRangedWeaponsPageList(s.entity))
+			case gurps.BlockLayoutAdvantagesKey:
+				rowPanel.AddChild(NewAdvantagesPageList(s.entity))
+			case gurps.BlockLayoutSkillsKey:
+				rowPanel.AddChild(NewSkillsPageList(s.entity))
+			case gurps.BlockLayoutSpellsKey:
+				rowPanel.AddChild(NewSpellsPageList(s.entity))
+			case gurps.BlockLayoutEquipmentKey:
+				rowPanel.AddChild(NewCarriedEquipmentPageList(s.entity))
+			case gurps.BlockLayoutOtherEquipmentKey:
+				rowPanel.AddChild(NewOtherEquipmentPageList(s.entity))
+			case gurps.BlockLayoutNotesKey:
+				rowPanel.AddChild(NewNotesPageList(s.entity))
+			}
+		}
+		p.AddChild(rowPanel)
+	}
+	lastFlexData.VAlign = unison.FillAlignment
+	lastFlexData.VGrab = true
 	return p
 }
 
