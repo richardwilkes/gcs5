@@ -36,6 +36,7 @@ type Sheet struct {
 	path               string
 	scroll             *unison.ScrollPanel
 	entity             *gurps.Entity
+	scale              int
 	scaleField         *widget.PercentageField
 	pages              *unison.Panel
 	PortaitPanel       *PortraitPanel
@@ -63,6 +64,7 @@ func NewSheet(filePath string) (unison.Dockable, error) {
 		path:   filePath,
 		scroll: unison.NewScrollPanel(),
 		entity: entity,
+		scale:  settings.Global().General.InitialSheetUIScale,
 		pages:  unison.NewPanel(),
 	}
 	s.Self = s
@@ -88,8 +90,10 @@ func NewSheet(filePath string) (unison.Dockable, error) {
 		gc.DrawRect(rect, theme.PageVoidColor.Paint(gc, rect, unison.Fill))
 	}
 
-	s.scaleField = widget.NewPercentageField(&settings.Global().General.InitialSheetUIScale,
-		gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, s.applyScale)
+	s.scaleField = widget.NewPercentageField(func() int { return s.scale }, func(v int) {
+		s.scale = v
+		s.applyScale()
+	}, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax)
 	s.scaleField.SetMarksModified(false)
 	s.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
 
@@ -119,7 +123,7 @@ func NewSheet(filePath string) (unison.Dockable, error) {
 }
 
 func (s *Sheet) applyScale() {
-	s.pages.SetScale(float32(settings.Global().General.InitialSheetUIScale) / 100)
+	s.pages.SetScale(float32(s.scale) / 100)
 	s.scroll.Sync()
 }
 

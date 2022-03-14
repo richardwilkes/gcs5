@@ -48,11 +48,13 @@ func NewDamagePanel(entity *gurps.Entity) *DamagePanel {
 
 	p.AddChild(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
 		f.Text = p.entity.Thrust().String()
+		widget.MarkForLayoutWithinDockable(f)
 	}))
 	p.AddChild(widget.NewPageLabel(i18n.Text("Basic Thrust")))
 
 	p.AddChild(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
 		f.Text = p.entity.Swing().String()
+		widget.MarkForLayoutWithinDockable(f)
 	}))
 	p.AddChild(widget.NewPageLabel(i18n.Text("Basic Swing")))
 

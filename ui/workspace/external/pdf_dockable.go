@@ -155,12 +155,13 @@ func NewPDFDockable(filePath string) (unison.Dockable, error) {
 	ofLabel.Font = unison.DefaultFieldTheme.Font
 	ofLabel.Text = fmt.Sprintf(i18n.Text("of %d"), d.pdf.PageCount())
 
-	d.scaleField = widget.NewPercentageField(&d.scale, minPDFDockableScale, maxPDFDockableScale, func() {
+	d.scaleField = widget.NewPercentageField(func() int { return d.scale }, func(v int) {
 		if d.noUpdate {
 			return
 		}
+		d.scale = v
 		d.LoadPage(d.pdf.MostRecentPageNumber())
-	})
+	}, minPDFDockableScale, maxPDFDockableScale)
 	d.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
 
 	d.searchField = widget.NewSearchField()
@@ -274,10 +275,7 @@ func (d *PDFDockable) pageLoaded() {
 		d.pageNumberField.Parent().MarkForLayoutAndRedraw()
 	}
 
-	if d.scaleField.Value() != d.scale {
-		d.scaleField.SetValue(d.scale)
-		d.scaleField.Parent().MarkForLayoutAndRedraw()
-	}
+	d.scaleField.Set(d.scale)
 
 	matchText := "-"
 	if d.searchField.Text() != "" {
@@ -402,7 +400,7 @@ func (d *PDFDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bool
 	if d.scale != scale {
 		d.scale = scale
 		d.noUpdate = true
-		d.scaleField.SetValue(d.scale)
+		d.scaleField.Set(scale)
 		d.noUpdate = false
 		d.LoadPage(d.pdf.MostRecentPageNumber())
 	}

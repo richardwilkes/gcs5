@@ -29,6 +29,7 @@ import (
 type PointPoolsPanel struct {
 	unison.Panel
 	entity *gurps.Entity
+	crc    uint64
 }
 
 // NewPointPoolsPanel creates a new point pools panel.
@@ -53,32 +54,42 @@ func NewPointPoolsPanel(entity *gurps.Entity) *PointPoolsPanel {
 	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
 		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
 	}
+	attrs := gurps.SheetSettingsFor(p.entity).Attributes
+	p.crc = attrs.CRC64()
+	p.rebuild(attrs)
+	return p
+}
 
-	// TODO: Need to CRC64 this so that we can swap out full data when attribute list changes
-	for _, def := range gurps.SheetSettingsFor(entity).Attributes.List() {
+func (p *PointPoolsPanel) rebuild(attrs *gurps.AttributeDefs) {
+	p.RemoveAllChildren()
+	for _, def := range attrs.List() {
 		if def.Type != attribute.Pool {
 			continue
 		}
-		attr, ok := entity.Attributes.Set[def.ID()]
+		attr, ok := p.entity.Attributes.Set[def.ID()]
 		if !ok {
 			jot.Warnf("unable to locate attribute data for '%s'", def.ID())
 			continue
 		}
 		p.AddChild(p.createPointsField(attr))
 
-		current := attr.Current()
-		currentField := widget.NewNumericPageField(&current, fixed.F64d4Min, attr.Maximum(), true,
-			func() { attr.Damage = attr.Maximum() - current })
+		var currentField *widget.NumericField
+		currentField = widget.NewNumericPageField(func() fixed.F64d4 {
+			if currentField != nil {
+				currentField.SetMaximum(attr.Maximum())
+			}
+			return attr.Current()
+		}, func(v fixed.F64d4) { attr.Damage = (attr.Maximum() - v).Max(0) }, fixed.F64d4Min, attr.Maximum(), true)
 		p.AddChild(currentField)
 
 		p.AddChild(widget.NewPageLabel(i18n.Text("of")))
 
-		maximum := attr.Maximum()
-		maximumField := widget.NewNumericPageField(&maximum, fixed.F64d4Min, fixed.F64d4Max, true, func() {
-			attr.SetMaximum(maximum)
-			currentField.SetMaximum(maximum)
-			currentField.SetValue(currentField.Value())
-		})
+		maximumField := widget.NewNumericPageField(func() fixed.F64d4 { return attr.Maximum() },
+			func(v fixed.F64d4) {
+				attr.SetMaximum(v)
+				currentField.SetMaximum(v)
+				currentField.Sync()
+			}, fixed.F64d4Min, fixed.F64d4Max, true)
 		p.AddChild(maximumField)
 
 		name := widget.NewPageLabel(def.Name)
@@ -97,8 +108,6 @@ func NewPointPoolsPanel(entity *gurps.Entity) *PointPoolsPanel {
 			p.AddChild(unison.NewPanel())
 		}
 	}
-
-	return p
 }
 
 func (p *PointPoolsPanel) createPointsField(attr *gurps.Attribute) *widget.NonEditablePageField {
@@ -113,4 +122,14 @@ func (p *PointPoolsPanel) createPointsField(attr *gurps.Attribute) *widget.NonEd
 	})
 	field.Font = theme.PageFieldSecondaryFont
 	return field
+}
+
+// Sync the panel to the current data.
+func (p *PointPoolsPanel) Sync() {
+	attrs := gurps.SheetSettingsFor(p.entity).Attributes
+	if crc := attrs.CRC64(); crc != p.crc {
+		p.crc = crc
+		p.rebuild(attrs)
+		widget.MarkForLayoutWithinDockable(p)
+	}
 }

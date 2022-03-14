@@ -123,8 +123,8 @@ func NewPageLabelWithRandomizer(title, tooltip string, clickCallback func()) *un
 }
 
 // NewStringPageField creates a new text entry field for a sheet page.
-func NewStringPageField(data *string) *StringField {
-	field := NewStringField(data)
+func NewStringPageField(get func() string, set func(string)) *StringField {
+	field := NewStringField(get, set)
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
 	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom32.Insets{Bottom: 1}, false)
@@ -138,8 +138,8 @@ func NewStringPageField(data *string) *StringField {
 }
 
 // NewStringPageFieldNoGrab creates a new text entry field for a sheet page, but with HGrab set to false.
-func NewStringPageFieldNoGrab(data *string) *StringField {
-	field := NewStringField(data)
+func NewStringPageFieldNoGrab(get func() string, set func(string)) *StringField {
+	field := NewStringField(get, set)
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
 	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom32.Insets{Bottom: 1}, false)
@@ -180,8 +180,8 @@ func NewWeightPageField(entity *gurps.Entity, value, max measure.Weight, applier
 }
 
 // NewIntegerPageField creates a new integer entry field for a sheet page.
-func NewIntegerPageField(value *int, min, max int, showSign bool, applier func()) *IntegerField {
-	field := NewIntegerField(value, min, max, showSign, applier)
+func NewIntegerPageField(get func() int, set func(int), min, max int, showSign bool) *IntegerField {
+	field := NewIntegerField(get, set, min, max, showSign)
 	field.HAlign = unison.EndAlignment
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)
@@ -195,8 +195,8 @@ func NewIntegerPageField(value *int, min, max int, showSign bool, applier func()
 }
 
 // NewNumericPageField creates a new numeric text entry field for a sheet page.
-func NewNumericPageField(value *fixed.F64d4, min, max fixed.F64d4, noMinWidth bool, applier func()) *NumericField {
-	field := NewNumericField(value, min, max, noMinWidth, applier)
+func NewNumericPageField(get func() fixed.F64d4, set func(fixed.F64d4), min, max fixed.F64d4, noMinWidth bool) *NumericField {
+	field := NewNumericField(get, set, min, max, noMinWidth)
 	field.HAlign = unison.EndAlignment
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom32.Insets{Bottom: 1}, false)

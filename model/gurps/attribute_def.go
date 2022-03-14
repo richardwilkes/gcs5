@@ -12,6 +12,8 @@
 package gurps
 
 import (
+	"encoding/binary"
+	"hash"
 	"strconv"
 	"strings"
 
@@ -105,4 +107,22 @@ func (a *AttributeDef) ComputeCost(entity *Entity, value, costReduction fixed.F6
 		cost = cost.Mul(fxp.Hundred - costReduction).Div(fxp.Hundred)
 	}
 	return cost.Round()
+}
+
+func (a *AttributeDef) crc64(h hash.Hash64) {
+	h.Write([]byte(a.DefID))
+	h.Write([]byte{byte(a.Type)})
+	h.Write([]byte(a.Name))
+	h.Write([]byte(a.FullName))
+	h.Write([]byte(a.AttributeBase))
+	var buffer [8]byte
+	binary.LittleEndian.PutUint64(buffer[:], uint64(a.CostPerPoint))
+	h.Write(buffer[:])
+	binary.LittleEndian.PutUint64(buffer[:], uint64(a.CostAdjPercentPerSM))
+	h.Write(buffer[:])
+	binary.LittleEndian.PutUint64(buffer[:], uint64(len(a.Thresholds)))
+	h.Write(buffer[:])
+	for _, one := range a.Thresholds {
+		one.crc64(h)
+	}
 }

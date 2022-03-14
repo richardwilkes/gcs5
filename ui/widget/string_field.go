@@ -18,18 +18,20 @@ import (
 // StringField holds the value for a string field.
 type StringField struct {
 	*unison.Field
-	value *string
+	get func() string
+	set func(string)
 }
 
 // NewStringField creates a new field for editing a string.
-func NewStringField(data *string) *StringField {
+func NewStringField(get func() string, set func(string)) *StringField {
 	f := &StringField{
 		Field: unison.NewField(),
-		value: data,
+		get:   get,
+		set:   set,
 	}
 	f.Self = f
 	f.ModifiedCallback = func() {
-		*f.value = f.Text()
+		f.set(f.Text())
 		MarkForLayoutWithinDockable(f)
 		MarkModified(f)
 	}
@@ -43,5 +45,5 @@ func NewStringField(data *string) *StringField {
 
 // Sync the field to the current value.
 func (f *StringField) Sync() {
-	f.SetText(*f.value)
+	f.SetText(f.get())
 }

@@ -75,7 +75,8 @@ func createColumn() *unison.Panel {
 func (d *DescriptionPanel) createColumn1() *unison.Panel {
 	column := createColumn()
 
-	genderField := widget.NewStringPageField(&d.entity.Profile.Gender)
+	genderField := widget.NewStringPageField(func() string { return d.entity.Profile.Gender },
+		func(s string) { d.entity.Profile.Gender = s })
 	column.AddChild(widget.NewPageLabelWithRandomizer(i18n.Text("Gender"),
 		i18n.Text("Randomize the gender using the current ancestry"), func() {
 			d.entity.Profile.Gender = d.entity.Ancestry().RandomGender(d.entity.Profile.Gender)
@@ -83,7 +84,8 @@ func (d *DescriptionPanel) createColumn1() *unison.Panel {
 		}))
 	column.AddChild(genderField)
 
-	ageField := widget.NewStringPageField(&d.entity.Profile.Age)
+	ageField := widget.NewStringPageField(func() string { return d.entity.Profile.Age },
+		func(s string) { d.entity.Profile.Age = s })
 	column.AddChild(widget.NewPageLabelWithRandomizer(i18n.Text("Age"),
 		i18n.Text("Randomize the age using the current ancestry"), func() {
 			age, _ := strconv.Atoi(d.entity.Profile.Age) //nolint:errcheck // A default of 0 is ok here on error
@@ -92,7 +94,8 @@ func (d *DescriptionPanel) createColumn1() *unison.Panel {
 		}))
 	column.AddChild(ageField)
 
-	birthdayField := widget.NewStringPageField(&d.entity.Profile.Birthday)
+	birthdayField := widget.NewStringPageField(func() string { return d.entity.Profile.Birthday },
+		func(s string) { d.entity.Profile.Birthday = s })
 	column.AddChild(widget.NewPageLabelWithRandomizer(i18n.Text("Birthday"),
 		i18n.Text("Randomize the birthday using the current calendar"), func() {
 			global := settings.Global()
@@ -102,7 +105,8 @@ func (d *DescriptionPanel) createColumn1() *unison.Panel {
 	column.AddChild(birthdayField)
 
 	column.AddChild(widget.NewPageLabelEnd(i18n.Text("Religion")))
-	column.AddChild(widget.NewStringPageField(&d.entity.Profile.Religion))
+	column.AddChild(widget.NewStringPageField(func() string { return d.entity.Profile.Religion },
+		func(s string) { d.entity.Profile.Religion = s }))
 
 	return column
 }
@@ -133,13 +137,14 @@ func (d *DescriptionPanel) createColumn2() *unison.Panel {
 	column.AddChild(weightField)
 
 	column.AddChild(widget.NewPageLabelEnd(i18n.Text("Size")))
-	sm := d.entity.Profile.AdjustedSizeModifier()
-	field := widget.NewIntegerPageField(&sm, -99, 99, true, func() { d.entity.Profile.SetAdjustedSizeModifier(sm) })
+	field := widget.NewIntegerPageField(func() int { return d.entity.Profile.AdjustedSizeModifier() },
+		func(v int) { d.entity.Profile.SetAdjustedSizeModifier(v) }, -99, 99, true)
 	field.HAlign = unison.StartAlignment
 	column.AddChild(field)
 
 	column.AddChild(widget.NewPageLabelEnd(i18n.Text("TL")))
-	column.AddChild(widget.NewStringPageField(&d.entity.Profile.TechLevel))
+	column.AddChild(widget.NewStringPageField(func() string { return d.entity.Profile.TechLevel },
+		func(s string) { d.entity.Profile.TechLevel = s }))
 
 	return column
 }
@@ -147,7 +152,8 @@ func (d *DescriptionPanel) createColumn2() *unison.Panel {
 func (d *DescriptionPanel) createColumn3() *unison.Panel {
 	column := createColumn()
 
-	hairField := widget.NewStringPageField(&d.entity.Profile.Hair)
+	hairField := widget.NewStringPageField(func() string { return d.entity.Profile.Hair },
+		func(s string) { d.entity.Profile.Hair = s })
 	column.AddChild(widget.NewPageLabelWithRandomizer(i18n.Text("Hair"),
 		i18n.Text("Randomize the hair using the current ancestry"), func() {
 			d.entity.Profile.Hair = d.entity.Ancestry().RandomHair(d.entity.Profile.Gender, d.entity.Profile.Hair)
@@ -155,7 +161,8 @@ func (d *DescriptionPanel) createColumn3() *unison.Panel {
 		}))
 	column.AddChild(hairField)
 
-	eyesField := widget.NewStringPageField(&d.entity.Profile.Eyes)
+	eyesField := widget.NewStringPageField(func() string { return d.entity.Profile.Eyes },
+		func(s string) { d.entity.Profile.Eyes = s })
 	column.AddChild(widget.NewPageLabelWithRandomizer(i18n.Text("Eyes"),
 		i18n.Text("Randomize the eyes using the current ancestry"), func() {
 			d.entity.Profile.Eyes = d.entity.Ancestry().RandomEyes(d.entity.Profile.Gender, d.entity.Profile.Eyes)
@@ -163,7 +170,8 @@ func (d *DescriptionPanel) createColumn3() *unison.Panel {
 		}))
 	column.AddChild(eyesField)
 
-	skinField := widget.NewStringPageField(&d.entity.Profile.Skin)
+	skinField := widget.NewStringPageField(func() string { return d.entity.Profile.Skin },
+		func(s string) { d.entity.Profile.Skin = s })
 	column.AddChild(widget.NewPageLabelWithRandomizer(i18n.Text("Skin"),
 		i18n.Text("Randomize the skin using the current ancestry"), func() {
 			d.entity.Profile.Skin = d.entity.Ancestry().RandomSkin(d.entity.Profile.Gender, d.entity.Profile.Skin)
@@ -171,7 +179,8 @@ func (d *DescriptionPanel) createColumn3() *unison.Panel {
 		}))
 	column.AddChild(skinField)
 
-	handField := widget.NewStringPageField(&d.entity.Profile.Handedness)
+	handField := widget.NewStringPageField(func() string { return d.entity.Profile.Handedness },
+		func(s string) { d.entity.Profile.Handedness = s })
 	column.AddChild(widget.NewPageLabelWithRandomizer(i18n.Text("Hand"),
 		i18n.Text("Randomize the handedness using the current ancestry"), func() {
 			d.entity.Profile.Handedness = d.entity.Ancestry().RandomHandedness(d.entity.Profile.Gender, d.entity.Profile.Handedness)
@@ -180,9 +189,4 @@ func (d *DescriptionPanel) createColumn3() *unison.Panel {
 	column.AddChild(handField)
 
 	return column
-}
-
-// Sync the panel to the current data.
-func (d *DescriptionPanel) Sync() {
-	// Nothing to do
 }

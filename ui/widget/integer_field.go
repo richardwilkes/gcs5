@@ -26,19 +26,19 @@ import (
 // IntegerField holds the value for an integer field.
 type IntegerField struct {
 	*unison.Field
-	applier  func()
-	value    *int
+	get      func() int
+	set      func(int)
 	minimum  int
 	maximum  int
 	showSign bool
 }
 
 // NewIntegerField creates a new field that holds an integer.
-func NewIntegerField(value *int, min, max int, showSign bool, applier func()) *IntegerField {
+func NewIntegerField(get func() int, set func(int), min, max int, showSign bool) *IntegerField {
 	f := &IntegerField{
 		Field:    unison.NewField(),
-		applier:  applier,
-		value:    value,
+		get:      get,
+		set:      set,
 		minimum:  min,
 		maximum:  max,
 		showSign: showSign,
@@ -59,21 +59,6 @@ func (f *IntegerField) formatted(value int) string {
 		return fmt.Sprintf("%+d", value)
 	}
 	return strconv.Itoa(value)
-}
-
-// Value returns the current value of the field.
-func (f *IntegerField) Value() int {
-	return *f.value
-}
-
-// SetValue sets the value of this field, applying any constraints.
-func (f *IntegerField) SetValue(value int) {
-	if f.minimum != math.MinInt && value < f.minimum {
-		value = f.minimum
-	} else if f.maximum != math.MaxInt && value > f.maximum {
-		value = f.maximum
-	}
-	SetFieldValue(f.Field, f.formatted(value))
 }
 
 func (f *IntegerField) trimmed(text string) string {
@@ -102,18 +87,23 @@ func (f *IntegerField) modified() {
 	if v, err := strconv.Atoi(f.trimmed(f.Text())); err == nil &&
 		(f.minimum == math.MinInt || v >= f.minimum) &&
 		(f.maximum == math.MaxInt || v <= f.maximum) {
-		*f.value = v
-		if f.applier != nil {
-			f.applier()
+		if f.get() != v {
+			f.set(v)
+			MarkForLayoutWithinDockable(f)
+			MarkModified(f)
 		}
-		MarkForLayoutWithinDockable(f)
-		MarkModified(f)
 	}
 }
 
 // Sync the field to the current value.
 func (f *IntegerField) Sync() {
-	f.SetValue(*f.value)
+	value := f.get()
+	if f.minimum != math.MinInt && value < f.minimum {
+		value = f.minimum
+	} else if f.maximum != math.MaxInt && value > f.maximum {
+		value = f.maximum
+	}
+	SetFieldValue(f.Field, f.formatted(value))
 }
 
 func (f *IntegerField) runeTyped(ch rune) bool {

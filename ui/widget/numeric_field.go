@@ -26,19 +26,19 @@ import (
 // NumericField holds the value for a numeric field.
 type NumericField struct {
 	*unison.Field
-	applier    func()
-	value      *fixed.F64d4
+	get        func() fixed.F64d4
+	set        func(fixed.F64d4)
 	minimum    fixed.F64d4
 	maximum    fixed.F64d4
 	noMinWidth bool
 }
 
 // NewNumericField creates a new field that holds a fixed-point number.
-func NewNumericField(value *fixed.F64d4, min, max fixed.F64d4, noMinWidth bool, applier func()) *NumericField {
+func NewNumericField(get func() fixed.F64d4, set func(fixed.F64d4), min, max fixed.F64d4, noMinWidth bool) *NumericField {
 	f := &NumericField{
 		Field:      unison.NewField(),
-		applier:    applier,
-		value:      value,
+		get:        get,
+		set:        set,
 		minimum:    min,
 		noMinWidth: noMinWidth,
 	}
@@ -58,22 +58,6 @@ func (f *NumericField) SetMaximum(maximum fixed.F64d4) {
 		f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth((f.minimum.Trunc() + fixed.F64d4One - 1).String()),
 			f.Font.SimpleWidth((f.maximum.Trunc() + fixed.F64d4One - 1).String()))
 	}
-}
-
-// Value returns the current value of the field.
-func (f *NumericField) Value() fixed.F64d4 {
-	return *f.value
-}
-
-// SetValue sets the value of this field, marking the field and all of its parents as needing to be laid out again if the
-// value is not what is currently in the field.
-func (f *NumericField) SetValue(value fixed.F64d4) {
-	if f.minimum != fixed.F64d4Min && value < f.minimum {
-		value = f.minimum
-	} else if f.maximum != fixed.F64d4Max && value > f.maximum {
-		value = f.maximum
-	}
-	f.SetText(value.String())
 }
 
 func (f *NumericField) trimmed(text string) string {
@@ -102,18 +86,23 @@ func (f *NumericField) modified() {
 	if v, err := fixed.F64d4FromString(f.trimmed(f.Text())); err == nil &&
 		(f.minimum == fixed.F64d4Min || v >= f.minimum) &&
 		(f.maximum == fixed.F64d4Max || v <= f.maximum) {
-		*f.value = v
-		if f.applier != nil {
-			f.applier()
+		if f.get() != v {
+			f.set(v)
+			MarkForLayoutWithinDockable(f)
+			MarkModified(f)
 		}
-		MarkForLayoutWithinDockable(f)
-		MarkModified(f)
 	}
 }
 
 // Sync the field to the current value.
 func (f *NumericField) Sync() {
-	f.SetValue(*f.value)
+	value := f.get()
+	if f.minimum != fixed.F64d4Min && value < f.minimum {
+		value = f.minimum
+	} else if f.maximum != fixed.F64d4Max && value > f.maximum {
+		value = f.maximum
+	}
+	SetFieldValue(f.Field, value.String())
 }
 
 func (f *NumericField) runeTyped(ch rune) bool {

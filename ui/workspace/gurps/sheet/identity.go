@@ -50,24 +50,22 @@ func NewIdentityPanel(entity *gurps.Entity) *IdentityPanel {
 		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
 	}
 
-	field := widget.NewStringPageField(&entity.Profile.Name)
+	field := widget.NewStringPageField(func() string { return p.entity.Profile.Name },
+		func(s string) { p.entity.Profile.Name = s })
 	p.AddChild(widget.NewPageLabelWithRandomizer(i18n.Text("Name"),
 		i18n.Text("Randomize the name using the current ancestry"), func() {
-			entity.Profile.Name = entity.Ancestry().RandomName(
-				ancestry.AvailableNameGenerators(settings.Global().Libraries()), entity.Profile.Gender)
-			SetTextAndMarkModified(field.Field, entity.Profile.Name)
+			p.entity.Profile.Name = entity.Ancestry().RandomName(
+				ancestry.AvailableNameGenerators(settings.Global().Libraries()), p.entity.Profile.Gender)
+			SetTextAndMarkModified(field.Field, p.entity.Profile.Name)
 		}))
 	p.AddChild(field)
 
 	p.AddChild(widget.NewPageLabelEnd(i18n.Text("Title")))
-	p.AddChild(widget.NewStringPageField(&entity.Profile.Title))
+	p.AddChild(widget.NewStringPageField(func() string { return p.entity.Profile.Title },
+		func(s string) { p.entity.Profile.Title = s }))
 
 	p.AddChild(widget.NewPageLabelEnd(i18n.Text("Organization")))
-	p.AddChild(widget.NewStringPageField(&entity.Profile.Organization))
+	p.AddChild(widget.NewStringPageField(func() string { return p.entity.Profile.Organization },
+		func(s string) { p.entity.Profile.Organization = s }))
 	return p
-}
-
-// Sync the panel to the current data.
-func (p *IdentityPanel) Sync() {
-	// Nothing to do
 }

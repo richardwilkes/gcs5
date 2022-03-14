@@ -81,21 +81,20 @@ func NewImageDockable(filePath string) (unison.Dockable, error) {
 	})
 	d.scroll.SetContent(d.imgPanel, unison.FillBehavior)
 
-	scale := d.scale
-	d.scaleField = widget.NewPercentageField(&scale, minImageDockableScale, maxImageDockableScale, func() {
+	d.scaleField = widget.NewPercentageField(func() int { return d.scale }, func(v int) {
 		viewRect := d.scroll.ContentView().ContentRect(false)
 		center := d.imgPanel.PointFromRoot(d.scroll.ContentView().PointToRoot(viewRect.Center()))
 		center.X /= float32(d.scale) / 100
-		center.X *= float32(scale) / 100
+		center.X *= float32(v) / 100
 		center.Y /= float32(d.scale) / 100
-		center.Y *= float32(scale) / 100
-		d.scale = scale
+		center.Y *= float32(v) / 100
+		d.scale = v
 		d.scroll.MarkForLayoutAndRedraw()
 		d.scroll.ValidateLayout()
 		viewRect.X = center.X - viewRect.Width/2
 		viewRect.Y = center.Y - viewRect.Height/2
 		d.imgPanel.ScrollRectIntoView(viewRect)
-	})
+	}, minImageDockableScale, maxImageDockableScale)
 	d.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
 
 	typeLabel := unison.NewLabel()
@@ -172,7 +171,7 @@ func (d *ImageDockable) mouseWheel(_, delta geom32.Point, mod unison.Modifiers) 
 	} else if scale > maxImageDockableScale {
 		scale = maxImageDockableScale
 	}
-	d.scaleField.SetValue(scale)
+	d.scaleField.Set(scale)
 	return true
 }
 
@@ -219,7 +218,7 @@ func (d *ImageDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bo
 		return false
 	}
 	if d.scale != scale {
-		d.scaleField.SetValue(scale)
+		d.scaleField.Set(scale)
 	}
 	return true
 }

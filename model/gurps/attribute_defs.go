@@ -14,6 +14,9 @@ package gurps
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
+	"hash"
+	"hash/crc64"
 	"io/fs"
 	"sort"
 
@@ -152,4 +155,20 @@ func (a *AttributeDefs) List() []*AttributeDef {
 	}
 	sort.Slice(list, func(i, j int) bool { return list[i].Order < list[j].Order })
 	return list
+}
+
+// CRC64 calculates a CRC-64 for this data.
+func (a *AttributeDefs) CRC64() uint64 {
+	h := crc64.New(crc64.MakeTable(crc64.ECMA))
+	a.crc64(h)
+	return h.Sum64()
+}
+
+func (a *AttributeDefs) crc64(h hash.Hash64) {
+	var buffer [8]byte
+	binary.LittleEndian.PutUint64(buffer[:], uint64(len(a.Set)))
+	h.Write(buffer[:])
+	for _, one := range a.List() {
+		one.crc64(h)
+	}
 }

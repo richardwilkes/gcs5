@@ -29,6 +29,7 @@ import (
 type PrimaryAttrPanel struct {
 	unison.Panel
 	entity *gurps.Entity
+	crc    uint64
 }
 
 // NewPrimaryAttrPanel creates a new primary attributes panel.
@@ -52,23 +53,28 @@ func NewPrimaryAttrPanel(entity *gurps.Entity) *PrimaryAttrPanel {
 	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
 		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
 	}
+	attrs := gurps.SheetSettingsFor(p.entity).Attributes
+	p.crc = attrs.CRC64()
+	p.rebuild(attrs)
+	return p
+}
 
-	// TODO: Need to CRC64 this so that we can swap out full data when attribute list changes
-	for _, def := range gurps.SheetSettingsFor(entity).Attributes.List() {
+func (p *PrimaryAttrPanel) rebuild(attrs *gurps.AttributeDefs) {
+	p.RemoveAllChildren()
+	for _, def := range attrs.List() {
 		if def.Type == attribute.Pool || !def.Primary() {
 			continue
 		}
-		attr, ok := entity.Attributes.Set[def.ID()]
+		attr, ok := p.entity.Attributes.Set[def.ID()]
 		if !ok {
 			jot.Warnf("unable to locate attribute data for '%s'", def.ID())
 			continue
 		}
 		p.AddChild(p.createPointsField(attr))
-		p.AddChild(p.createField(attr))
+		p.AddChild(widget.NewNumericPageField(func() fixed.F64d4 { return attr.Maximum() },
+			func(v fixed.F64d4) { attr.SetMaximum(v) }, fixed.F64d4Min, fixed.F64d4Max, true))
 		p.AddChild(widget.NewPageLabel(def.CombinedName()))
 	}
-
-	return p
 }
 
 func (p *PrimaryAttrPanel) createPointsField(attr *gurps.Attribute) *widget.NonEditablePageField {
@@ -85,8 +91,12 @@ func (p *PrimaryAttrPanel) createPointsField(attr *gurps.Attribute) *widget.NonE
 	return field
 }
 
-func (p *PrimaryAttrPanel) createField(attr *gurps.Attribute) *widget.NumericField {
-	maximum := attr.Maximum()
-	return widget.NewNumericPageField(&maximum, fixed.F64d4Min, fixed.F64d4Max, true,
-		func() { attr.SetMaximum(maximum) })
+// Sync the panel to the current data.
+func (p *PrimaryAttrPanel) Sync() {
+	attrs := gurps.SheetSettingsFor(p.entity).Attributes
+	if crc := attrs.CRC64(); crc != p.crc {
+		p.crc = crc
+		p.rebuild(attrs)
+		widget.MarkForLayoutWithinDockable(p)
+	}
 }

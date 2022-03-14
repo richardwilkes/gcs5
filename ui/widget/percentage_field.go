@@ -26,19 +26,19 @@ import (
 // PercentageField holds the value for a percentage field.
 type PercentageField struct {
 	*unison.Field
-	applier       func()
-	value         *int
+	get           func() int
+	set           func(int)
 	minimum       int
 	maximum       int
 	marksModified bool
 }
 
 // NewPercentageField creates a new field that holds a percentage (where 100 == 100%).
-func NewPercentageField(value *int, min, max int, applier func()) *PercentageField {
+func NewPercentageField(get func() int, set func(int), min, max int) *PercentageField {
 	f := &PercentageField{
 		Field:         unison.NewField(),
-		applier:       applier,
-		value:         value,
+		get:           get,
+		set:           set,
 		minimum:       min,
 		maximum:       max,
 		marksModified: true,
@@ -59,23 +59,13 @@ func (f *PercentageField) SetMarksModified(marksModified bool) {
 	f.marksModified = marksModified
 }
 
+// Set the field value.
+func (f *PercentageField) Set(value int) {
+	SetFieldValue(f.Field, f.formatted(value))
+}
+
 func (f *PercentageField) formatted(value int) string {
 	return strconv.Itoa(value) + "%"
-}
-
-// Value returns the current value of the field.
-func (f *PercentageField) Value() int {
-	return *f.value
-}
-
-// SetValue sets the value of this field, applying any constraints.
-func (f *PercentageField) SetValue(value int) {
-	if f.minimum != math.MinInt && value < f.minimum {
-		value = f.minimum
-	} else if f.maximum != math.MaxInt && value > f.maximum {
-		value = f.maximum
-	}
-	SetFieldValue(f.Field, f.formatted(value))
 }
 
 func (f *PercentageField) trimmed(text string) string {
@@ -104,20 +94,25 @@ func (f *PercentageField) modified() {
 	if v, err := strconv.Atoi(f.trimmed(f.Text())); err == nil &&
 		(f.minimum == math.MinInt || v >= f.minimum) &&
 		(f.maximum == math.MaxInt || v <= f.maximum) {
-		*f.value = v
-		if f.applier != nil {
-			f.applier()
-		}
-		MarkForLayoutWithinDockable(f)
-		if f.marksModified {
-			MarkModified(f)
+		if f.get() != v {
+			f.set(v)
+			MarkForLayoutWithinDockable(f)
+			if f.marksModified {
+				MarkModified(f)
+			}
 		}
 	}
 }
 
 // Sync the field to the current value.
 func (f *PercentageField) Sync() {
-	f.SetValue(*f.value)
+	value := f.get()
+	if f.minimum != math.MinInt && value < f.minimum {
+		value = f.minimum
+	} else if f.maximum != math.MaxInt && value > f.maximum {
+		value = f.maximum
+	}
+	f.Set(value)
 }
 
 func (f *PercentageField) runeTyped(ch rune) bool {

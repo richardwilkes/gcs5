@@ -51,7 +51,7 @@ func NewMiscPanel(entity *gurps.Entity) *MiscPanel {
 
 	m.AddChild(widget.NewPageLabelEnd(i18n.Text("Created")))
 	m.AddChild(widget.NewNonEditablePageField(func(f *widget.NonEditablePageField) {
-		if text := entity.CreatedOn.String(); text != f.Text {
+		if text := m.entity.CreatedOn.String(); text != f.Text {
 			f.Text = text
 			widget.MarkForLayoutWithinDockable(f)
 		}
@@ -59,14 +59,15 @@ func NewMiscPanel(entity *gurps.Entity) *MiscPanel {
 
 	m.AddChild(widget.NewPageLabelEnd(i18n.Text("Modified")))
 	m.AddChild(widget.NewNonEditablePageField(func(f *widget.NonEditablePageField) {
-		if text := entity.ModifiedOn.String(); text != f.Text {
+		if text := m.entity.ModifiedOn.String(); text != f.Text {
 			f.Text = text
 			widget.MarkForLayoutWithinDockable(f)
 		}
 	}))
 
 	m.AddChild(widget.NewPageLabelEnd(i18n.Text("Player")))
-	m.AddChild(widget.NewStringPageFieldNoGrab(&entity.Profile.PlayerName))
+	m.AddChild(widget.NewStringPageFieldNoGrab(func() string { return m.entity.Profile.PlayerName },
+		func(s string) { m.entity.Profile.PlayerName = s }))
 
 	return m
 }
