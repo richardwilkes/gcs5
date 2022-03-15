@@ -5,7 +5,7 @@ trap 'echo -e "\033[33;5mBuild failed on build.sh:$LINENO\033[0m"' ERR
 
 EXE_PATH="GCS.app/Contents/MacOS/gcs"
 COPYRIGHT_YEARS=2019-$(date "+%Y")
-GOLANGCI_LINT_VERSION=1.43.0
+GOLANGCI_LINT_VERSION=1.44.2
 
 # Process args
 for arg in "$@"; do

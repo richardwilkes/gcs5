@@ -31,8 +31,10 @@ github.com/richardwilkes/pdf v0.0.0-20220115194011-2380c98780aa/go.mod h1:aN1tva
 github.com/richardwilkes/rpgtools v1.4.1 h1:uoQKvM64owkU5gKYAlqZuWDvIfKcs8OCVRsXRPu1i2o=
 github.com/richardwilkes/rpgtools v1.4.1/go.mod h1:w4bCZ1a0YGKPzSA/Yr3XinTMVLlYOKEnrormltb1r9s=
 github.com/richardwilkes/toolbox v1.60.0/go.mod h1:kP6cWRrfXgv7laMDlJj+MJnvrukwLC62FNm4WJkSi58=
-github.com/richardwilkes/toolbox v1.64.0 h1:QRz3QjFvMGl15pKx9/hSRfl1WLMoax4teQ/sn5SIuVo=
-github.com/richardwilkes/toolbox v1.64.0/go.mod h1:FlouieHowiQj+VmmcX69R1FinfQWhkKUI70m1zL4PBs=
+github.com/richardwilkes/toolbox v1.64.1 h1:NppUf3oRW3v+o6YYhKm7OG+eBRAwHPDrga0zv1KOKhA=
+github.com/richardwilkes/toolbox v1.64.1/go.mod h1:FlouieHowiQj+VmmcX69R1FinfQWhkKUI70m1zL4PBs=
+github.com/richardwilkes/unison v0.9.0 h1:0Qe0NFJssw5SKc9tc4SpEP3yZVM0RYzWLqJzWOKBNGU=
+github.com/richardwilkes/unison v0.9.0/go.mod h1:znVjI6bFC72rgKkGM77ZySH+/w9BzhLLjxrG3vkx/zk=
 github.com/rogpeppe/go-internal v1.6.1/go.mod h1:xXDCJY+GAPziupqXw64V24skbSoqbTEfhy4qGm1nDQc=
 github.com/rogpeppe/go-internal v1.8.0 h1:FCbCCtXNOY3UtUuHUYaghJg4y7Fd14rXifAYUAtL9R8=
 github.com/rogpeppe/go-internal v1.8.0/go.mod h1:WmiCO8CzOY8rg0OYDC4/i/2WRWAB6poM+XZ2dLUbcbE=
