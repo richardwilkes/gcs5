@@ -13,6 +13,7 @@ package sheet
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -20,7 +21,14 @@ import (
 // NewConditionalModifiersPageList creates the conditional modifiers page list.
 func NewConditionalModifiersPageList(entity *gurps.Entity) *PageList {
 	return NewPageList(entity, []unison.TableColumnHeader{
-		NewPageListHeader(i18n.Text("Modifier"), ""),
-		NewPageListHeader(i18n.Text("Condition"), ""),
+		tbl.NewHeader(i18n.Text("Modifier"), "", true),
+		tbl.NewHeader(i18n.Text("Condition"), "", true),
+	}, func(table *unison.Table) []unison.TableRowData {
+		//rows := make([]unison.TableRowData, 0, len(entity.Spells))
+		//for _, one := range entity.Spells {
+		//	rows = append(rows, NewAdvantagePageNode(table, nil, one))
+		//}
+		//return rows
+		return nil
 	})
 }

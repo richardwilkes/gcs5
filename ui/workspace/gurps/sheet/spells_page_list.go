@@ -13,6 +13,7 @@ package sheet
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -20,16 +21,23 @@ import (
 // NewSpellsPageList creates the spells page list.
 func NewSpellsPageList(entity *gurps.Entity) *PageList {
 	return NewPageList(entity, []unison.TableColumnHeader{
-		NewPageListHeader(i18n.Text("Spell"), ""),
-		NewPageListHeader(i18n.Text("Resist"), ""),
-		NewPageListHeader(i18n.Text("Class"), ""),
-		NewPageListHeader(i18n.Text("Cost"), ""),
-		NewPageListHeader(i18n.Text("Maintain"), ""),
-		NewPageListHeader(i18n.Text("Time"), ""),
-		NewPageListHeader(i18n.Text("Duration"), ""),
-		NewPageListHeader(i18n.Text("SL"), i18n.Text("Skill Level")),
-		NewPageListHeader(i18n.Text("RSL"), i18n.Text("Relative Skill Level")),
-		NewPageListHeader(i18n.Text("Pts"), i18n.Text("Points")),
-		NewPageReferenceHeader(),
+		tbl.NewHeader(i18n.Text("Spell"), "", true),
+		tbl.NewHeader(i18n.Text("Resist"), "", true),
+		tbl.NewHeader(i18n.Text("Class"), "", true),
+		tbl.NewHeader(i18n.Text("Cost"), "", true),
+		tbl.NewHeader(i18n.Text("Maintain"), "", true),
+		tbl.NewHeader(i18n.Text("Time"), "", true),
+		tbl.NewHeader(i18n.Text("Duration"), "", true),
+		tbl.NewHeader(i18n.Text("SL"), i18n.Text("Skill Level"), true),
+		tbl.NewHeader(i18n.Text("RSL"), i18n.Text("Relative Skill Level"), true),
+		tbl.NewHeader(i18n.Text("Pts"), i18n.Text("Points"), true),
+		tbl.NewPageRefHeader(true),
+	}, func(table *unison.Table) []unison.TableRowData {
+		//rows := make([]unison.TableRowData, 0, len(entity.Spells))
+		//for _, one := range entity.Spells {
+		//	rows = append(rows, NewSpellPageNode(table, nil, one))
+		//}
+		//return rows
+		return nil
 	})
 }

@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -31,7 +32,7 @@ const (
 
 var (
 	_ unison.TableRowData = &AdvantageModifierNode{}
-	_ Matcher             = &AdvantageModifierNode{}
+	_ tbl.Matcher         = &AdvantageModifierNode{}
 )
 
 // AdvantageModifierNode holds an advantage modifier in the advantage modifier list.
@@ -40,7 +41,7 @@ type AdvantageModifierNode struct {
 	parent    *AdvantageModifierNode
 	modifier  *gurps.AdvantageModifier
 	children  []unison.TableRowData
-	cellCache []*cellCache
+	cellCache []*tbl.CellCache
 }
 
 // NewAdvantageModifierListDockable creates a new unison.Dockable for advantage modifier list files.
@@ -50,10 +51,10 @@ func NewAdvantageModifierListDockable(filePath string) (unison.Dockable, error) 
 		return nil, err
 	}
 	return NewListFileDockable(filePath, []unison.TableColumnHeader{
-		unison.NewTableColumnHeader(i18n.Text("Modifier")),
-		unison.NewTableColumnHeader(i18n.Text("Cost Modifier")),
-		unison.NewTableColumnHeader(i18n.Text("Category")),
-		newPageReferenceHeader(),
+		tbl.NewHeader(i18n.Text("Modifier"), "", false),
+		tbl.NewHeader(i18n.Text("Cost Modifier"), "", false),
+		tbl.NewHeader(i18n.Text("Category"), "", false),
+		tbl.NewPageRefHeader(false),
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(modifiers))
 		for _, one := range modifiers {
@@ -69,7 +70,7 @@ func NewAdvantageModifierNode(table *unison.Table, parent *AdvantageModifierNode
 		table:     table,
 		parent:    parent,
 		modifier:  modifier,
-		cellCache: make([]*cellCache, advantageModifierColumnCount),
+		cellCache: make([]*tbl.CellCache, advantageModifierColumnCount),
 	}
 	return n
 }
@@ -123,15 +124,15 @@ func (n *AdvantageModifierNode) CellDataForSort(index int) string {
 func (n *AdvantageModifierNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 	width := n.table.CellWidth(row, col)
 	data := n.CellDataForSort(col)
-	if n.cellCache[col].matches(width, data) {
+	if n.cellCache[col].Matches(width, data) {
 		color := unison.DefaultLabelTheme.OnBackgroundInk
 		if selected {
 			color = unison.OnSelectionColor
 		}
-		for _, child := range n.cellCache[col].panel.Children() {
+		for _, child := range n.cellCache[col].Panel.Children() {
 			child.Self.(*unison.Label).LabelTheme.OnBackgroundInk = color
 		}
-		return n.cellCache[col].panel
+		return n.cellCache[col].Panel
 	}
 	p := &unison.Panel{}
 	p.Self = p
@@ -139,21 +140,21 @@ func (n *AdvantageModifierNode) ColumnCell(row, col int, selected bool) unison.P
 	p.SetLayout(layout)
 	switch col {
 	case advantageModifierDescriptionColumn:
-		createAndAddCellLabel(p, width, n.modifier.Name, unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddCellLabel(p, width, n.modifier.Name, unison.DefaultLabelTheme.Font, selected)
 		if text := n.modifier.SecondaryText(); strings.TrimSpace(text) != "" {
 			desc := unison.DefaultLabelTheme.Font.Descriptor()
 			desc.Size--
-			createAndAddCellLabel(p, width, text, desc.Font(), selected)
+			tbl.CreateAndAddCellLabel(p, width, text, desc.Font(), selected)
 		}
 	case advantageModifierReferenceColumn:
-		createAndAddPageRefCellLabel(p, n.CellDataForSort(col), n.modifier.Name, unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddPageRefCellLabel(p, n.CellDataForSort(col), n.modifier.Name, unison.DefaultLabelTheme.Font, selected)
 	default:
-		createAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
 	}
-	n.cellCache[col] = &cellCache{
-		width: width,
-		data:  data,
-		panel: p,
+	n.cellCache[col] = &tbl.CellCache{
+		Width: width,
+		Data:  data,
+		Panel: p,
 	}
 	return p
 }

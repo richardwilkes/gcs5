@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -38,7 +39,7 @@ const (
 
 var (
 	_ unison.TableRowData = &SpellNode{}
-	_ Matcher             = &SpellNode{}
+	_ tbl.Matcher         = &SpellNode{}
 )
 
 // SpellNode holds a spell in the spell list.
@@ -47,7 +48,7 @@ type SpellNode struct {
 	parent    *SpellNode
 	spell     *gurps.Spell
 	children  []unison.TableRowData
-	cellCache []*cellCache
+	cellCache []*tbl.CellCache
 }
 
 // NewSpellListDockable creates a new unison.Dockable for spell list files.
@@ -56,28 +57,18 @@ func NewSpellListDockable(filePath string) (unison.Dockable, error) {
 	if err != nil {
 		return nil, err
 	}
-	resistHdr := unison.NewTableColumnHeader(i18n.Text("Resist"))
-	resistHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("Resistance"))
-	diffHdr := unison.NewTableColumnHeader(i18n.Text("Diff"))
-	diffHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("Difficulty"))
-	costHdr := unison.NewTableColumnHeader(i18n.Text("Cost"))
-	costHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("The mana cost to cast the spell"))
-	maintainHdr := unison.NewTableColumnHeader(i18n.Text("Maintain"))
-	maintainHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("The mana cost to maintain the spell"))
-	timeHdr := unison.NewTableColumnHeader(i18n.Text("Time"))
-	timeHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("The time required to cast the spell"))
 	return NewListFileDockable(filePath, []unison.TableColumnHeader{
-		unison.NewTableColumnHeader(i18n.Text("Spell")),
-		resistHdr,
-		unison.NewTableColumnHeader(i18n.Text("Class")),
-		unison.NewTableColumnHeader(i18n.Text("College")),
-		costHdr,
-		maintainHdr,
-		timeHdr,
-		unison.NewTableColumnHeader(i18n.Text("Duration")),
-		diffHdr,
-		unison.NewTableColumnHeader(i18n.Text("Category")),
-		newPageReferenceHeader(),
+		tbl.NewHeader(i18n.Text("Spell"), "", false),
+		tbl.NewHeader(i18n.Text("Resist"), i18n.Text("Resistance"), false),
+		tbl.NewHeader(i18n.Text("Class"), "", false),
+		tbl.NewHeader(i18n.Text("College"), "", false),
+		tbl.NewHeader(i18n.Text("Diff"), i18n.Text("Difficulty"), false),
+		tbl.NewHeader(i18n.Text("Maintain"), i18n.Text("The mana cost to maintain the spell"), false),
+		tbl.NewHeader(i18n.Text("Time"), i18n.Text("The time required to cast the spell"), false),
+		tbl.NewHeader(i18n.Text("Duration"), "", false),
+		tbl.NewHeader(i18n.Text("Cost"), i18n.Text("The mana cost to cast the spell"), false),
+		tbl.NewHeader(i18n.Text("Category"), "", false),
+		tbl.NewPageRefHeader(false),
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(spells))
 		for _, one := range spells {
@@ -93,7 +84,7 @@ func NewSpellNode(table *unison.Table, parent *SpellNode, spell *gurps.Spell) *S
 		table:     table,
 		parent:    parent,
 		spell:     spell,
-		cellCache: make([]*cellCache, spellColumnCount),
+		cellCache: make([]*tbl.CellCache, spellColumnCount),
 	}
 	return n
 }
@@ -182,36 +173,36 @@ func (n *SpellNode) CellDataForSort(index int) string {
 func (n *SpellNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 	width := n.table.CellWidth(row, col)
 	data := n.CellDataForSort(col)
-	if n.cellCache[col].matches(width, data) {
+	if n.cellCache[col].Matches(width, data) {
 		color := unison.DefaultLabelTheme.OnBackgroundInk
 		if selected {
 			color = unison.OnSelectionColor
 		}
-		for _, child := range n.cellCache[col].panel.Children() {
+		for _, child := range n.cellCache[col].Panel.Children() {
 			child.Self.(*unison.Label).LabelTheme.OnBackgroundInk = color
 		}
-		return n.cellCache[col].panel
+		return n.cellCache[col].Panel
 	}
 	p := &unison.Panel{}
 	p.Self = p
 	p.SetLayout(&unison.FlexLayout{Columns: 1})
 	switch col {
 	case spellDescriptionColumn:
-		createAndAddCellLabel(p, width, n.spell.Description(), unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddCellLabel(p, width, n.spell.Description(), unison.DefaultLabelTheme.Font, selected)
 		if text := n.spell.SecondaryText(); strings.TrimSpace(text) != "" {
 			desc := unison.DefaultLabelTheme.Font.Descriptor()
 			desc.Size--
-			createAndAddCellLabel(p, width, text, desc.Font(), selected)
+			tbl.CreateAndAddCellLabel(p, width, text, desc.Font(), selected)
 		}
 	case spellReferenceColumn:
-		createAndAddPageRefCellLabel(p, n.CellDataForSort(col), n.spell.Name, unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddPageRefCellLabel(p, n.CellDataForSort(col), n.spell.Name, unison.DefaultLabelTheme.Font, selected)
 	default:
-		createAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
 	}
-	n.cellCache[col] = &cellCache{
-		width: width,
-		data:  data,
-		panel: p,
+	n.cellCache[col] = &tbl.CellCache{
+		Width: width,
+		Data:  data,
+		Panel: p,
 	}
 	return p
 }

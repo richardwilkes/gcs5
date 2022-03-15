@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -31,7 +32,7 @@ const (
 
 var (
 	_ unison.TableRowData = &NoteNode{}
-	_ Matcher             = &NoteNode{}
+	_ tbl.Matcher         = &NoteNode{}
 )
 
 // NoteNode holds a note in the note list.
@@ -40,7 +41,7 @@ type NoteNode struct {
 	parent    *NoteNode
 	note      *gurps.Note
 	children  []unison.TableRowData
-	cellCache []*cellCache
+	cellCache []*tbl.CellCache
 }
 
 // NewNoteListDockable creates a new unison.Dockable for note list files.
@@ -50,10 +51,10 @@ func NewNoteListDockable(filePath string) (unison.Dockable, error) {
 		return nil, err
 	}
 	return NewListFileDockable(filePath, []unison.TableColumnHeader{
-		unison.NewTableColumnHeader(i18n.Text("Note")),
-		unison.NewTableColumnHeader(i18n.Text("When")),
-		unison.NewTableColumnHeader(i18n.Text("Category")),
-		newPageReferenceHeader(),
+		tbl.NewHeader(i18n.Text("Note"), "", false),
+		tbl.NewHeader(i18n.Text("When"), "", false),
+		tbl.NewHeader(i18n.Text("Category"), "", false),
+		tbl.NewPageRefHeader(false),
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(notes))
 		for _, one := range notes {
@@ -69,7 +70,7 @@ func NewNoteNode(table *unison.Table, parent *NoteNode, note *gurps.Note) *NoteN
 		table:     table,
 		parent:    parent,
 		note:      note,
-		cellCache: make([]*cellCache, noteColumnCount),
+		cellCache: make([]*tbl.CellCache, noteColumnCount),
 	}
 	return n
 }
@@ -115,29 +116,29 @@ func (n *NoteNode) CellDataForSort(index int) string {
 func (n *NoteNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 	width := n.table.CellWidth(row, col)
 	data := n.CellDataForSort(col)
-	if n.cellCache[col].matches(width, data) {
+	if n.cellCache[col].Matches(width, data) {
 		color := unison.DefaultLabelTheme.OnBackgroundInk
 		if selected {
 			color = unison.OnSelectionColor
 		}
-		for _, child := range n.cellCache[col].panel.Children() {
+		for _, child := range n.cellCache[col].Panel.Children() {
 			child.Self.(*unison.Label).LabelTheme.OnBackgroundInk = color
 		}
-		return n.cellCache[col].panel
+		return n.cellCache[col].Panel
 	}
 	p := &unison.Panel{}
 	p.Self = p
 	p.SetLayout(&unison.FlexLayout{Columns: 1})
 	switch col {
 	case noteReferenceColumn:
-		createAndAddPageRefCellLabel(p, n.CellDataForSort(col), "", unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddPageRefCellLabel(p, n.CellDataForSort(col), "", unison.DefaultLabelTheme.Font, selected)
 	default:
-		createAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
 	}
-	n.cellCache[col] = &cellCache{
-		width: width,
-		data:  data,
-		panel: p,
+	n.cellCache[col] = &tbl.CellCache{
+		Width: width,
+		Data:  data,
+		Panel: p,
 	}
 	return p
 }

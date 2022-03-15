@@ -20,6 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio/fs"
@@ -27,13 +28,6 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
-
-// Matcher defines the methods that rows that can participate in searching must implement.
-type Matcher interface {
-	// Match should look for the text in the object and return true if it is present. Note that calls to this method
-	// should always pass in text that has already been run through strings.ToLower().
-	Match(text string) bool
-}
 
 // ListFileDockable holds the view for a file that contains a (potentially hierarchical) list of data.
 type ListFileDockable struct {
@@ -284,7 +278,7 @@ func (d *ListFileDockable) searchModified() {
 }
 
 func (d *ListFileDockable) search(text string, row unison.TableRowData) {
-	if matcher, ok := row.(Matcher); ok {
+	if matcher, ok := row.(tbl.Matcher); ok {
 		if matcher.Match(text) {
 			d.searchResult = append(d.searchResult, row)
 		}

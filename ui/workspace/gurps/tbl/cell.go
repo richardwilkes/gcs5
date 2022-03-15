@@ -9,30 +9,18 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package tbl
 
 import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/theme"
-	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/workspace/settings"
-	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
-type cellCache struct {
-	width float32
-	data  string
-	panel *unison.Panel
-}
-
-func (c *cellCache) matches(width float32, data string) bool {
-	return c != nil && c.panel != nil && c.width == width && c.data == data
-}
-
-func createAndAddCellLabel(parent *unison.Panel, width float32, text string, f unison.Font, selected bool) {
+func CreateAndAddCellLabel(parent *unison.Panel, width float32, text string, f unison.Font, selected bool) {
 	decoration := &unison.TextDecoration{Font: f}
 	var lines []*unison.Text
 	if width > 0 {
@@ -51,19 +39,7 @@ func createAndAddCellLabel(parent *unison.Panel, width float32, text string, f u
 	}
 }
 
-func newPageReferenceHeader() unison.TableColumnHeader {
-	header := unison.NewTableColumnHeader("")
-	header.Tooltip = unison.NewTooltipWithText(i18n.Text(`A reference to the book and page the item appears on
-e.g. B22 would refer to "Basic Set", page 22`))
-	baseline := header.Font.Baseline()
-	header.Drawable = &unison.DrawableSVG{
-		SVG:  res.BookmarkSVG,
-		Size: geom32.NewSize(baseline, baseline),
-	}
-	return header
-}
-
-func createAndAddPageRefCellLabel(parent *unison.Panel, text, highlight string, f unison.Font, selected bool) {
+func CreateAndAddPageRefCellLabel(parent *unison.Panel, text, highlight string, f unison.Font, selected bool) {
 	label := unison.NewLabel()
 	label.Font = f
 	if selected {

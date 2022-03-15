@@ -18,9 +18,8 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps"
-	"github.com/richardwilkes/gcs/res"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
@@ -38,7 +37,7 @@ const (
 
 var (
 	_ unison.TableRowData = &EquipmentNode{}
-	_ Matcher             = &EquipmentNode{}
+	_ tbl.Matcher         = &EquipmentNode{}
 )
 
 // EquipmentNode holds equipment in the equipment list.
@@ -47,7 +46,7 @@ type EquipmentNode struct {
 	parent    *EquipmentNode
 	equipment *gurps.Equipment
 	children  []unison.TableRowData
-	cellCache []*cellCache
+	cellCache []*tbl.CellCache
 }
 
 // NewEquipmentListDockable creates a new unison.Dockable for equipment list files.
@@ -56,28 +55,15 @@ func NewEquipmentListDockable(filePath string) (unison.Dockable, error) {
 	if err != nil {
 		return nil, err
 	}
-	tlHdr := unison.NewTableColumnHeader(i18n.Text("TL"))
-	tlHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("Tech Level"))
-	lcHdr := unison.NewTableColumnHeader(i18n.Text("LC"))
-	lcHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("Legality Class"))
-	costHdr := unison.NewTableColumnHeader(i18n.Text("$"))
-	costHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("Cost"))
-	weightHdr := unison.NewTableColumnHeader("")
-	baseline := weightHdr.Font.Baseline()
-	weightHdr.Drawable = &unison.DrawableSVG{
-		SVG:  res.WeightSVG,
-		Size: geom32.NewSize(baseline, baseline),
-	}
-	weightHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("Weight"))
 	return NewListFileDockable(filePath, []unison.TableColumnHeader{
-		unison.NewTableColumnHeader(i18n.Text("Equipment")),
-		unison.NewTableColumnHeader(i18n.Text("Uses")),
-		tlHdr,
-		lcHdr,
-		costHdr,
-		weightHdr,
-		unison.NewTableColumnHeader(i18n.Text("Category")),
-		newPageReferenceHeader(),
+		tbl.NewHeader(i18n.Text("Equipment"), "", false),
+		tbl.NewHeader(i18n.Text("Uses"), "", false),
+		tbl.NewHeader(i18n.Text("TL"), i18n.Text("Tech Level"), false),
+		tbl.NewHeader(i18n.Text("LC"), i18n.Text("Legality Class"), false),
+		tbl.NewMoneyHeader(false),
+		tbl.NewWeightHeader(false),
+		tbl.NewHeader(i18n.Text("Category"), "", false),
+		tbl.NewPageRefHeader(false),
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(eqp))
 		for _, one := range eqp {
@@ -93,7 +79,7 @@ func NewEquipmentNode(table *unison.Table, parent *EquipmentNode, eqp *gurps.Equ
 		table:     table,
 		parent:    parent,
 		equipment: eqp,
-		cellCache: make([]*cellCache, equipmentColumnCount),
+		cellCache: make([]*tbl.CellCache, equipmentColumnCount),
 	}
 	return n
 }
@@ -155,15 +141,15 @@ func (n *EquipmentNode) CellDataForSort(index int) string {
 func (n *EquipmentNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 	width := n.table.CellWidth(row, col)
 	data := n.CellDataForSort(col)
-	if n.cellCache[col].matches(width, data) {
+	if n.cellCache[col].Matches(width, data) {
 		color := unison.DefaultLabelTheme.OnBackgroundInk
 		if selected {
 			color = unison.OnSelectionColor
 		}
-		for _, child := range n.cellCache[col].panel.Children() {
+		for _, child := range n.cellCache[col].Panel.Children() {
 			child.Self.(*unison.Label).LabelTheme.OnBackgroundInk = color
 		}
-		return n.cellCache[col].panel
+		return n.cellCache[col].Panel
 	}
 	p := &unison.Panel{}
 	p.Self = p
@@ -171,24 +157,24 @@ func (n *EquipmentNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 	p.SetLayout(layout)
 	switch col {
 	case equipmentDescriptionColumn:
-		createAndAddCellLabel(p, width, n.equipment.Description(), unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddCellLabel(p, width, n.equipment.Description(), unison.DefaultLabelTheme.Font, selected)
 		if text := n.equipment.SecondaryText(); strings.TrimSpace(text) != "" {
 			desc := unison.DefaultLabelTheme.Font.Descriptor()
 			desc.Size--
-			createAndAddCellLabel(p, width, text, desc.Font(), selected)
+			tbl.CreateAndAddCellLabel(p, width, text, desc.Font(), selected)
 		}
 	case equipmentUsesColumn, equipmentTLColumn, equipmentLCColumn, equipmentCostColumn, equipmentWeightColumn:
-		createAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
 		layout.HAlign = unison.EndAlignment
 	case equipmentReferenceColumn:
-		createAndAddPageRefCellLabel(p, n.CellDataForSort(col), n.equipment.Name, unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddPageRefCellLabel(p, n.CellDataForSort(col), n.equipment.Name, unison.DefaultLabelTheme.Font, selected)
 	default:
-		createAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
 	}
-	n.cellCache[col] = &cellCache{
-		width: width,
-		data:  data,
-		panel: p,
+	n.cellCache[col] = &tbl.CellCache{
+		Width: width,
+		Data:  data,
+		Panel: p,
 	}
 	return p
 }

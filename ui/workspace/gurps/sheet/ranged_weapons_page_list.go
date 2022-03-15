@@ -13,6 +13,7 @@ package sheet
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -20,16 +21,23 @@ import (
 // NewRangedWeaponsPageList creates the ranged weapons page list.
 func NewRangedWeaponsPageList(entity *gurps.Entity) *PageList {
 	return NewPageList(entity, []unison.TableColumnHeader{
-		NewPageListHeader(i18n.Text("Ranged Weapon"), ""),
-		NewPageListHeader(i18n.Text("Usage"), ""),
-		NewPageListHeader(i18n.Text("Lvl"), ""),
-		NewPageListHeader(i18n.Text("Acc"), ""),
-		NewPageListHeader(i18n.Text("Damage"), ""),
-		NewPageListHeader(i18n.Text("Range"), ""),
-		NewPageListHeader(i18n.Text("RoF"), ""),
-		NewPageListHeader(i18n.Text("Shots"), ""),
-		NewPageListHeader(i18n.Text("Bulk"), ""),
-		NewPageListHeader(i18n.Text("Rcl"), ""),
-		NewPageListHeader(i18n.Text("ST"), ""),
+		tbl.NewHeader(i18n.Text("Ranged Weapon"), "", true),
+		tbl.NewHeader(i18n.Text("Usage"), "", true),
+		tbl.NewHeader(i18n.Text("Lvl"), "", true),
+		tbl.NewHeader(i18n.Text("Acc"), "", true),
+		tbl.NewHeader(i18n.Text("Damage"), "", true),
+		tbl.NewHeader(i18n.Text("Range"), "", true),
+		tbl.NewHeader(i18n.Text("RoF"), "", true),
+		tbl.NewHeader(i18n.Text("Shots"), "", true),
+		tbl.NewHeader(i18n.Text("Bulk"), "", true),
+		tbl.NewHeader(i18n.Text("Rcl"), "", true),
+		tbl.NewHeader(i18n.Text("ST"), "", true),
+	}, func(table *unison.Table) []unison.TableRowData {
+		//rows := make([]unison.TableRowData, 0, len(entity.Spells))
+		//for _, one := range entity.Spells {
+		//	rows = append(rows, NewAdvantagePageNode(table, nil, one))
+		//}
+		//return rows
+		return nil
 	})
 }

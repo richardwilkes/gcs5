@@ -13,6 +13,7 @@ package sheet
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -20,7 +21,14 @@ import (
 // NewNotesPageList creates the notes page list.
 func NewNotesPageList(entity *gurps.Entity) *PageList {
 	return NewPageList(entity, []unison.TableColumnHeader{
-		NewPageListHeader(i18n.Text("Note"), ""),
-		NewPageReferenceHeader(),
+		tbl.NewHeader(i18n.Text("Note"), "", true),
+		tbl.NewPageRefHeader(true),
+	}, func(table *unison.Table) []unison.TableRowData {
+		//rows := make([]unison.TableRowData, 0, len(entity.Spells))
+		//for _, one := range entity.Spells {
+		//	rows = append(rows, NewAdvantagePageNode(table, nil, one))
+		//}
+		//return rows
+		return nil
 	})
 }

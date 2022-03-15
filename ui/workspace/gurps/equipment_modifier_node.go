@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -33,7 +34,7 @@ const (
 
 var (
 	_ unison.TableRowData = &EquipmentModifierNode{}
-	_ Matcher             = &EquipmentModifierNode{}
+	_ tbl.Matcher         = &EquipmentModifierNode{}
 )
 
 // EquipmentModifierNode holds an equipment modifier in the equipment modifier list.
@@ -42,7 +43,7 @@ type EquipmentModifierNode struct {
 	parent    *EquipmentModifierNode
 	modifier  *gurps.EquipmentModifier
 	children  []unison.TableRowData
-	cellCache []*cellCache
+	cellCache []*tbl.CellCache
 }
 
 // NewEquipmentModifierListDockable creates a new unison.Dockable for equipment modifier list files.
@@ -51,15 +52,13 @@ func NewEquipmentModifierListDockable(filePath string) (unison.Dockable, error) 
 	if err != nil {
 		return nil, err
 	}
-	tlHdr := unison.NewTableColumnHeader(i18n.Text("TL"))
-	tlHdr.Tooltip = unison.NewTooltipWithText(i18n.Text("Tech Level"))
 	return NewListFileDockable(filePath, []unison.TableColumnHeader{
-		unison.NewTableColumnHeader(i18n.Text("Modifier")),
-		tlHdr,
-		unison.NewTableColumnHeader(i18n.Text("Cost Adjustment")),
-		unison.NewTableColumnHeader(i18n.Text("Weight Adjustment")),
-		unison.NewTableColumnHeader(i18n.Text("Category")),
-		newPageReferenceHeader(),
+		tbl.NewHeader(i18n.Text("Modifier"), "", false),
+		tbl.NewHeader(i18n.Text("TL"), i18n.Text("Tech Level"), false),
+		tbl.NewHeader(i18n.Text("Cost Adjustment"), "", false),
+		tbl.NewHeader(i18n.Text("Weight Adjustment"), "", false),
+		tbl.NewHeader(i18n.Text("Category"), "", false),
+		tbl.NewPageRefHeader(false),
 	}, func(table *unison.Table) []unison.TableRowData {
 		rows := make([]unison.TableRowData, 0, len(modifiers))
 		for _, one := range modifiers {
@@ -75,7 +74,7 @@ func NewEquipmentModifierNode(table *unison.Table, parent *EquipmentModifierNode
 		table:     table,
 		parent:    parent,
 		modifier:  modifier,
-		cellCache: make([]*cellCache, equipmentModifierColumnCount),
+		cellCache: make([]*tbl.CellCache, equipmentModifierColumnCount),
 	}
 	return n
 }
@@ -139,15 +138,15 @@ func (n *EquipmentModifierNode) CellDataForSort(index int) string {
 func (n *EquipmentModifierNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 	width := n.table.CellWidth(row, col)
 	data := n.CellDataForSort(col)
-	if n.cellCache[col].matches(width, data) {
+	if n.cellCache[col].Matches(width, data) {
 		color := unison.DefaultLabelTheme.OnBackgroundInk
 		if selected {
 			color = unison.OnSelectionColor
 		}
-		for _, child := range n.cellCache[col].panel.Children() {
+		for _, child := range n.cellCache[col].Panel.Children() {
 			child.Self.(*unison.Label).LabelTheme.OnBackgroundInk = color
 		}
-		return n.cellCache[col].panel
+		return n.cellCache[col].Panel
 	}
 	p := &unison.Panel{}
 	p.Self = p
@@ -155,21 +154,21 @@ func (n *EquipmentModifierNode) ColumnCell(row, col int, selected bool) unison.P
 	p.SetLayout(layout)
 	switch col {
 	case equipmentModifierDescriptionColumn:
-		createAndAddCellLabel(p, width, n.modifier.Name, unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddCellLabel(p, width, n.modifier.Name, unison.DefaultLabelTheme.Font, selected)
 		if text := n.modifier.SecondaryText(); strings.TrimSpace(text) != "" {
 			desc := unison.DefaultLabelTheme.Font.Descriptor()
 			desc.Size--
-			createAndAddCellLabel(p, width, text, desc.Font(), selected)
+			tbl.CreateAndAddCellLabel(p, width, text, desc.Font(), selected)
 		}
 	case equipmentModifierReferenceColumn:
-		createAndAddPageRefCellLabel(p, n.CellDataForSort(col), n.modifier.Name, unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddPageRefCellLabel(p, n.CellDataForSort(col), n.modifier.Name, unison.DefaultLabelTheme.Font, selected)
 	default:
-		createAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
 	}
-	n.cellCache[col] = &cellCache{
-		width: width,
-		data:  data,
-		panel: p,
+	n.cellCache[col] = &tbl.CellCache{
+		Width: width,
+		Data:  data,
+		Panel: p,
 	}
 	return p
 }

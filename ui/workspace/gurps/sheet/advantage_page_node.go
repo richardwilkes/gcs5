@@ -9,14 +9,13 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package sheet
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -25,50 +24,42 @@ import (
 const (
 	advantageDescriptionColumn = iota
 	advantagePointsColumn
-	advantageTypeColumn
-	advantageCategoryColumn
 	advantageReferenceColumn
 	advantageColumnCount
 )
 
 var (
-	_ unison.TableRowData = &AdvantageNode{}
-	_ tbl.Matcher         = &AdvantageNode{}
+	_ unison.TableRowData = &AdvantagePageNode{}
+	_ tbl.Matcher         = &AdvantagePageNode{}
 )
 
-// AdvantageNode holds an advantage in the advantage list.
-type AdvantageNode struct {
+// AdvantagePageNode holds an advantage in the advantage page list.
+type AdvantagePageNode struct {
 	table     *unison.Table
-	parent    *AdvantageNode
+	parent    *AdvantagePageNode
 	advantage *gurps.Advantage
 	children  []unison.TableRowData
 	cellCache []*tbl.CellCache
 }
 
-// NewAdvantageListDockable creates a new unison.Dockable for advantage list files.
-func NewAdvantageListDockable(filePath string) (unison.Dockable, error) {
-	advantages, err := gurps.NewAdvantagesFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
-	if err != nil {
-		return nil, err
-	}
-	return NewListFileDockable(filePath, []unison.TableColumnHeader{
-		tbl.NewHeader(i18n.Text("Advantage / Disadvantage"), i18n.Text("Points"), false),
-		tbl.NewHeader(i18n.Text("Pts"), "", false),
-		tbl.NewHeader(i18n.Text("Type"), "", false),
-		tbl.NewHeader(i18n.Text("Category"), "", false),
-		tbl.NewPageRefHeader(false),
+// NewAdvantagesPageList creates the advantages page list.
+func NewAdvantagesPageList(entity *gurps.Entity) *PageList {
+	return NewPageList(entity, []unison.TableColumnHeader{
+		tbl.NewHeader(i18n.Text("Advantage / Disadvantage"), "", true),
+		tbl.NewHeader(i18n.Text("Pts"), i18n.Text("Points"), true),
+		tbl.NewPageRefHeader(true),
 	}, func(table *unison.Table) []unison.TableRowData {
-		rows := make([]unison.TableRowData, 0, len(advantages))
-		for _, one := range advantages {
-			rows = append(rows, NewAdvantageNode(table, nil, one))
+		rows := make([]unison.TableRowData, 0, len(entity.Advantages))
+		for _, one := range entity.Advantages {
+			rows = append(rows, NewAdvantagePageNode(table, nil, one))
 		}
 		return rows
-	}), nil
+	})
 }
 
-// NewAdvantageNode creates a new AdvantageNode.
-func NewAdvantageNode(table *unison.Table, parent *AdvantageNode, advantage *gurps.Advantage) *AdvantageNode {
-	n := &AdvantageNode{
+// NewAdvantagePageNode creates a new AdvantagePageNode.
+func NewAdvantagePageNode(table *unison.Table, parent *AdvantagePageNode, advantage *gurps.Advantage) *AdvantagePageNode {
+	n := &AdvantagePageNode{
 		table:     table,
 		parent:    parent,
 		advantage: advantage,
@@ -78,28 +69,28 @@ func NewAdvantageNode(table *unison.Table, parent *AdvantageNode, advantage *gur
 }
 
 // ParentRow returns the parent row, or nil if this is a root node.
-func (n *AdvantageNode) ParentRow() unison.TableRowData {
+func (n *AdvantagePageNode) ParentRow() unison.TableRowData {
 	return n.parent
 }
 
 // CanHaveChildRows always returns true.
-func (n *AdvantageNode) CanHaveChildRows() bool {
+func (n *AdvantagePageNode) CanHaveChildRows() bool {
 	return n.advantage.Container()
 }
 
 // ChildRows returns the children of this node.
-func (n *AdvantageNode) ChildRows() []unison.TableRowData {
+func (n *AdvantagePageNode) ChildRows() []unison.TableRowData {
 	if n.advantage.Container() && n.children == nil {
 		n.children = make([]unison.TableRowData, len(n.advantage.Children))
 		for i, one := range n.advantage.Children {
-			n.children[i] = NewAdvantageNode(n.table, n, one)
+			n.children[i] = NewAdvantagePageNode(n.table, n, one)
 		}
 	}
 	return n.children
 }
 
 // CellDataForSort returns the string that represents the data in the specified cell.
-func (n *AdvantageNode) CellDataForSort(index int) string {
+func (n *AdvantagePageNode) CellDataForSort(index int) string {
 	switch index {
 	case advantageDescriptionColumn:
 		text := n.advantage.Description()
@@ -110,10 +101,6 @@ func (n *AdvantageNode) CellDataForSort(index int) string {
 		return text
 	case advantagePointsColumn:
 		return n.advantage.AdjustedPoints().String()
-	case advantageTypeColumn:
-		return n.advantage.TypeAsText()
-	case advantageCategoryColumn:
-		return strings.Join(n.advantage.Categories, ", ")
 	case advantageReferenceColumn:
 		return n.advantage.PageRef
 	default:
@@ -122,7 +109,7 @@ func (n *AdvantageNode) CellDataForSort(index int) string {
 }
 
 // ColumnCell returns the cell for the given column index.
-func (n *AdvantageNode) ColumnCell(row, col int, selected bool) unison.Paneler {
+func (n *AdvantagePageNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 	width := n.table.CellWidth(row, col)
 	data := n.CellDataForSort(col)
 	if n.cellCache[col].Matches(width, data) {
@@ -141,19 +128,17 @@ func (n *AdvantageNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 	p.SetLayout(layout)
 	switch col {
 	case advantageDescriptionColumn:
-		tbl.CreateAndAddCellLabel(p, width, n.advantage.Description(), unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddCellLabel(p, width, n.advantage.Description(), theme.PageFieldPrimaryFont, selected)
 		if text := n.advantage.SecondaryText(); strings.TrimSpace(text) != "" {
-			desc := unison.DefaultLabelTheme.Font.Descriptor()
-			desc.Size--
-			tbl.CreateAndAddCellLabel(p, width, text, desc.Font(), selected)
+			tbl.CreateAndAddCellLabel(p, width, text, theme.PageFieldSecondaryFont, selected)
 		}
 	case advantagePointsColumn:
-		tbl.CreateAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddCellLabel(p, width, n.CellDataForSort(col), theme.PageFieldPrimaryFont, selected)
 		layout.HAlign = unison.EndAlignment
 	case advantageReferenceColumn:
-		tbl.CreateAndAddPageRefCellLabel(p, n.CellDataForSort(col), n.advantage.Name, unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddPageRefCellLabel(p, n.CellDataForSort(col), n.advantage.Name, theme.PageFieldPrimaryFont, selected)
 	default:
-		tbl.CreateAndAddCellLabel(p, width, n.CellDataForSort(col), unison.DefaultLabelTheme.Font, selected)
+		tbl.CreateAndAddCellLabel(p, width, n.CellDataForSort(col), theme.PageFieldPrimaryFont, selected)
 	}
 	n.cellCache[col] = &tbl.CellCache{
 		Width: width,
@@ -164,12 +149,12 @@ func (n *AdvantageNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 }
 
 // IsOpen returns true if this node should display its children.
-func (n *AdvantageNode) IsOpen() bool {
+func (n *AdvantagePageNode) IsOpen() bool {
 	return n.advantage.Container() && n.advantage.Open
 }
 
 // SetOpen sets the current open state for this node.
-func (n *AdvantageNode) SetOpen(open bool) {
+func (n *AdvantagePageNode) SetOpen(open bool) {
 	if n.advantage.Container() && open != n.advantage.Open {
 		n.advantage.Open = open
 		n.table.SyncToModel()
@@ -177,20 +162,9 @@ func (n *AdvantageNode) SetOpen(open bool) {
 }
 
 // Match implements Matcher.
-func (n *AdvantageNode) Match(text string) bool {
+func (n *AdvantagePageNode) Match(text string) bool {
 	return strings.Contains(strings.ToLower(n.advantage.Description()), text) ||
 		strings.Contains(strings.ToLower(n.advantage.SecondaryText()), text) ||
 		strings.Contains(strings.ToLower(n.advantage.AdjustedPoints().String()), text) ||
-		strings.Contains(strings.ToLower(n.advantage.TypeAsText()), text) ||
-		strings.Contains(strings.ToLower(n.advantage.PageRef), text) ||
-		stringSliceContains(n.advantage.Categories, text)
-}
-
-func stringSliceContains(strs []string, text string) bool {
-	for _, s := range strs {
-		if strings.Contains(strings.ToLower(s), text) {
-			return true
-		}
-	}
-	return false
+		strings.Contains(strings.ToLower(n.advantage.PageRef), text)
 }
