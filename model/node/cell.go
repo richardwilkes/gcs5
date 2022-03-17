@@ -20,6 +20,7 @@ type CellData struct {
 	Alignment unison.Alignment
 	Primary   string
 	Secondary string
+	Tooltip   string
 }
 
 // ForSort returns a string that can be used to sort or search against for this data.

@@ -13,6 +13,7 @@ package sheet
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -31,48 +32,61 @@ type PageList struct {
 
 // NewAdvantagesPageList creates the advantages page list.
 func NewAdvantagesPageList(entity *gurps.Entity) *PageList {
-	return NewPageList(tbl.NewAdvantageTableHeaders(true), 0, tbl.NewAdvantageRowData(entity.Advantages, true))
+	return newPageList(tbl.NewAdvantageTableHeaders(true), 0, tbl.NewAdvantageRowData(entity.Advantages, true))
 }
 
 // NewCarriedEquipmentPageList creates the carried equipment page list.
 func NewCarriedEquipmentPageList(entity *gurps.Entity) *PageList {
-	return NewPageList(tbl.NewEquipmentTableHeaders(entity, true, true), 2,
+	return newPageList(tbl.NewEquipmentTableHeaders(entity, true, true), 2,
 		tbl.NewEquipmentRowData(entity.CarriedEquipment, true, true))
 }
 
 // NewOtherEquipmentPageList creates the other equipment page list.
 func NewOtherEquipmentPageList(entity *gurps.Entity) *PageList {
-	return NewPageList(tbl.NewEquipmentTableHeaders(entity, true, false), 1,
+	return newPageList(tbl.NewEquipmentTableHeaders(entity, true, false), 1,
 		tbl.NewEquipmentRowData(entity.OtherEquipment, true, false))
 }
 
 // NewSkillsPageList creates the skills page list.
 func NewSkillsPageList(entity *gurps.Entity) *PageList {
-	return NewPageList(tbl.NewSkillTableHeaders(true), 0, tbl.NewSkillRowData(entity.Skills, true))
+	return newPageList(tbl.NewSkillTableHeaders(true), 0, tbl.NewSkillRowData(entity.Skills, true))
 }
 
 // NewSpellsPageList creates the spells page list.
 func NewSpellsPageList(entity *gurps.Entity) *PageList {
-	return NewPageList(tbl.NewSpellTableHeaders(true), 0, tbl.NewSpellRowData(entity.Spells, true))
+	return newPageList(tbl.NewSpellTableHeaders(true), 0, tbl.NewSpellRowData(entity.Spells, true))
 }
 
 // NewNotesPageList creates the notes page list.
 func NewNotesPageList(entity *gurps.Entity) *PageList {
-	return NewPageList(tbl.NewNoteTableHeaders(true), 0, tbl.NewNoteRowData(entity.Notes, true))
+	return newPageList(tbl.NewNoteTableHeaders(true), 0, tbl.NewNoteRowData(entity.Notes, true))
 }
 
 // NewConditionalModifiersPageList creates the conditional modifiers page list.
 func NewConditionalModifiersPageList(entity *gurps.Entity) *PageList {
-	return NewPageList(tbl.NewConditionalModifierTableHeaders(i18n.Text("Condition")), -1, tbl.NewConditionalModifierRowData(entity.ConditionalModifiers()))
+	return newPageList(tbl.NewConditionalModifierTableHeaders(i18n.Text("Condition")), -1,
+		tbl.NewConditionalModifierRowData(entity.ConditionalModifiers()))
 }
 
 // NewReactionsPageList creates the reaction modifiers page list.
 func NewReactionsPageList(entity *gurps.Entity) *PageList {
-	return NewPageList(tbl.NewConditionalModifierTableHeaders(i18n.Text("Reaction")), -1, tbl.NewConditionalModifierRowData(entity.Reactions()))
+	return newPageList(tbl.NewConditionalModifierTableHeaders(i18n.Text("Reaction")), -1,
+		tbl.NewConditionalModifierRowData(entity.Reactions()))
 }
 
-// NewPageList creates a new list for a sheet page.
-func NewPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex int, topLevelRows func(table *unison.Table) []unison.TableRowData) *PageList {
+// NewMeleeWeaponsPageList creates the melee weapons page list.
+func NewMeleeWeaponsPageList(entity *gurps.Entity) *PageList {
+	return newPageList(tbl.NewWeaponTableHeaders(true), -1,
+		tbl.NewWeaponRowData(entity.EquippedWeapons(weapon.Melee), true))
+}
+
+// NewRangedWeaponsPageList creates the ranged weapons page list.
+func NewRangedWeaponsPageList(entity *gurps.Entity) *PageList {
+	return newPageList(tbl.NewWeaponTableHeaders(false), -1,
+		tbl.NewWeaponRowData(entity.EquippedWeapons(weapon.Ranged), false))
+}
+
+func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex int, topLevelRows func(table *unison.Table) []unison.TableRowData) *PageList {
 	p := &PageList{
 		table: unison.NewTable(),
 	}

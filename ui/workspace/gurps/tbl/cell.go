@@ -50,6 +50,9 @@ func CellFromCellData(c *node.CellData, width float32, forPage, selected bool) *
 	case node.PageRef:
 		addPageRefLabel(p, c.Primary, c.Secondary, font, selected)
 	}
+	if c.Tooltip != "" {
+		p.Tooltip = unison.NewTooltipWithText(c.Tooltip)
+	}
 	return p
 }
 

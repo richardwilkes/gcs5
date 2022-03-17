@@ -25,12 +25,33 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
+	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
+)
+
+var _ node.Node = &Weapon{}
+
+// Columns that can be used with the weapon method .CellData()
+const (
+	WeaponDescriptionColumn = iota
+	WeaponUsageColumn
+	WeaponSLColumn
+	WeaponParryColumn
+	WeaponBlockColumn
+	WeaponDamageColumn
+	WeaponReachColumn
+	WeaponSTColumn
+	WeaponAccColumn
+	WeaponRangeColumn
+	WeaponRoFColumn
+	WeaponShotsColumn
+	WeaponBulkColumn
+	WeaponRecoilColumn
 )
 
 // WeaponOwner defines the methods required of a Weapon owner.
@@ -521,4 +542,61 @@ func (w *Weapon) ApplyNameableKeys(m map[string]string) {
 	for _, one := range w.Defaults {
 		one.ApplyNameableKeys(m)
 	}
+}
+
+// Container returns true if this is a container.
+func (w *Weapon) Container() bool {
+	return false
+}
+
+// Open returns true if this node is currently open.
+func (w *Weapon) Open() bool {
+	return false
+}
+
+// SetOpen sets the current open state for this node.
+func (w *Weapon) SetOpen(_ bool) {
+}
+
+// NodeChildren returns the children of this node, if any.
+func (w *Weapon) NodeChildren() []node.Node {
+	return nil
+}
+
+// CellData returns the cell data information for the given column.
+func (w *Weapon) CellData(column int, data *node.CellData) {
+	var buffer xio.ByteBuffer
+	data.Type = node.Text
+	switch column {
+	case WeaponDescriptionColumn:
+		data.Primary = w.String()
+		data.Secondary = w.Notes()
+	case WeaponUsageColumn:
+		data.Primary = w.Usage
+	case WeaponSLColumn:
+		data.Primary = w.SkillLevel(&buffer).String()
+	case WeaponParryColumn:
+		data.Primary = w.ResolvedParry(&buffer)
+	case WeaponBlockColumn:
+		data.Primary = w.ResolvedBlock(&buffer)
+	case WeaponDamageColumn:
+		data.Primary = w.Damage.ResolvedDamage(&buffer)
+	case WeaponReachColumn:
+		data.Primary = w.Reach
+	case WeaponSTColumn:
+		data.Primary = w.MinimumStrength
+	case WeaponAccColumn:
+		data.Primary = w.Accuracy
+	case WeaponRangeColumn:
+		data.Primary = w.ResolvedRange()
+	case WeaponRoFColumn:
+		data.Primary = w.RateOfFire
+	case WeaponShotsColumn:
+		data.Primary = w.Shots
+	case WeaponBulkColumn:
+		data.Primary = w.Bulk
+	case WeaponRecoilColumn:
+		data.Primary = w.Recoil
+	}
+	data.Tooltip = buffer.String()
 }
