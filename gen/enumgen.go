@@ -858,6 +858,23 @@ func main() {
 			},
 		},
 	})
+	processSourceTemplate(enumTmpl, &enumInfo{
+		Pkg:        "model/node",
+		Name:       "cell_type",
+		Desc:       "holds the type of table cell",
+		StandAlone: true,
+		Values: []enumValue{
+			{
+				Key: "text",
+			},
+			{
+				Key: "toggle",
+			},
+			{
+				Key: "page_ref",
+			},
+		},
+	})
 }
 
 func removeExistingGenFiles() {

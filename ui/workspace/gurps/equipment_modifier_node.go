@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -138,7 +139,7 @@ func (n *EquipmentModifierNode) CellDataForSort(index int) string {
 func (n *EquipmentModifierNode) ColumnCell(row, col int, selected bool) unison.Paneler {
 	width := n.table.CellWidth(row, col)
 	data := n.CellDataForSort(col)
-	if n.cellCache[col].Matches(width, data) {
+	if n.cellCache[col].MatchesOld(width, data) {
 		color := unison.DefaultLabelTheme.OnBackgroundInk
 		if selected {
 			color = unison.OnSelectionColor
@@ -167,7 +168,7 @@ func (n *EquipmentModifierNode) ColumnCell(row, col int, selected bool) unison.P
 	}
 	n.cellCache[col] = &tbl.CellCache{
 		Width: width,
-		Data:  data,
+		Data:  node.CellData{Primary: data},
 		Panel: p,
 	}
 	return p

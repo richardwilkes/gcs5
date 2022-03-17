@@ -26,11 +26,26 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/unison"
+)
+
+var _ node.Node = &Skill{}
+
+// Columns that can be used with the skill method .CellData()
+const (
+	SkillDescriptionColumn = iota
+	SkillDifficultyColumn
+	SkillCategoryColumn
+	SkillReferenceColumn
+	SkillLevelColumn
+	SkillRelativeLevelColumn
+	SkillPointsColumn
 )
 
 // SkillItem holds the Skill data that only exists in non-containers.
@@ -197,6 +212,71 @@ func (s *Skill) UnmarshalJSON(data []byte) error {
 // Container returns true if this is a container.
 func (s *Skill) Container() bool {
 	return strings.HasSuffix(s.Type, commonContainerKeyPostfix)
+}
+
+// Open returns true if this node is currently open.
+func (s *Skill) Open() bool {
+	if s.Container() {
+		return s.SkillContainer.Open
+	}
+	return false
+}
+
+// SetOpen sets the current open state for this node.
+func (s *Skill) SetOpen(open bool) {
+	if s.Container() {
+		s.SkillContainer.Open = open
+	}
+}
+
+// NodeChildren returns the children of this node, if any.
+func (s *Skill) NodeChildren() []node.Node {
+	if s.Container() {
+		children := make([]node.Node, len(s.Children))
+		for i, child := range s.Children {
+			children[i] = child
+		}
+		return children
+	}
+	return nil
+}
+
+// CellData returns the cell data information for the given column.
+func (s *Skill) CellData(column int, data *node.CellData) {
+	switch column {
+	case SkillDescriptionColumn:
+		data.Type = node.Text
+		data.Primary = s.Description()
+		data.Secondary = s.SecondaryText()
+	case SkillDifficultyColumn:
+		if !s.Container() {
+			data.Type = node.Text
+			data.Primary = s.Difficulty.Description(s.Entity)
+		}
+	case SkillCategoryColumn:
+		data.Type = node.Text
+		data.Primary = strings.Join(s.Categories, ", ")
+	case SkillReferenceColumn:
+		data.Type = node.PageRef
+		data.Primary = s.PageRef
+		data.Secondary = s.Name
+	case SkillLevelColumn:
+		if !s.Container() {
+			data.Type = node.Text
+			data.Primary = s.LevelAsString()
+			data.Alignment = unison.EndAlignment
+		}
+	case SkillRelativeLevelColumn:
+		if !s.Container() {
+			data.Type = node.Text
+			data.Primary = s.AdjustedRelativeLevel().String()
+			data.Alignment = unison.EndAlignment
+		}
+	case SkillPointsColumn:
+		data.Type = node.Text
+		data.Primary = s.AdjustedPoints().String()
+		data.Alignment = unison.EndAlignment
+	}
 }
 
 // Depth returns the number of parents this node has.

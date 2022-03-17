@@ -14,11 +14,63 @@ package tbl
 import (
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/workspace/settings"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
+
+func CellFromCellData(c *node.CellData, width float32, forPage, selected bool) *unison.Panel {
+	p := unison.NewPanel()
+	p.SetLayout(&unison.FlexLayout{
+		Columns: 1,
+		HAlign:  c.Alignment,
+	})
+	var font unison.Font
+	if forPage {
+		font = theme.PageFieldPrimaryFont
+	} else {
+		font = unison.FieldFont
+	}
+	switch c.Type {
+	case node.Text:
+		addCellLabel(c, p, width, c.Primary, font, selected)
+		if c.Secondary != "" {
+			if forPage {
+				font = theme.PageFieldSecondaryFont
+			} else {
+				font = theme.FieldSecondaryFont
+			}
+			addCellLabel(c, p, width, c.Secondary, font, selected)
+		}
+	case node.Toggle:
+		// TODO: Implement!
+	case node.PageRef:
+		CreateAndAddPageRefCellLabel(p, c.Primary, c.Secondary, font, selected)
+	}
+	return p
+}
+
+func addCellLabel(c *node.CellData, parent *unison.Panel, width float32, text string, f unison.Font, selected bool) {
+	decoration := &unison.TextDecoration{Font: f}
+	var lines []*unison.Text
+	if width > 0 {
+		lines = unison.NewTextWrappedLines(text, decoration, width)
+	} else {
+		lines = unison.NewTextLines(text, decoration)
+	}
+	for _, line := range lines {
+		label := unison.NewLabel()
+		label.Text = line.String()
+		label.Font = f
+		label.HAlign = c.Alignment
+		if selected {
+			label.LabelTheme.OnBackgroundInk = unison.OnSelectionColor
+		}
+		parent.AddChild(label)
+	}
+}
 
 func CreateAndAddCellLabel(parent *unison.Panel, width float32, text string, f unison.Font, selected bool) {
 	decoration := &unison.TextDecoration{Font: f}

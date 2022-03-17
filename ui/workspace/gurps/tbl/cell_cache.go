@@ -11,14 +11,21 @@
 
 package tbl
 
-import "github.com/richardwilkes/unison"
+import (
+	"github.com/richardwilkes/gcs/model/node"
+	"github.com/richardwilkes/unison"
+)
 
 type CellCache struct {
-	Width float32
-	Data  string
 	Panel *unison.Panel
+	Data  node.CellData
+	Width float32
 }
 
-func (c *CellCache) Matches(width float32, data string) bool {
-	return c != nil && c.Panel != nil && c.Width == width && c.Data == data
+func (c *CellCache) Matches(width float32, data *node.CellData) bool {
+	return c != nil && c.Panel != nil && c.Width == width && c.Data == *data
+}
+
+func (c *CellCache) MatchesOld(width float32, data string) bool {
+	return c != nil && c.Panel != nil && c.Width == width && c.Data.Primary == data
 }
