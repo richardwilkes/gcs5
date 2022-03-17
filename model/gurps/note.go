@@ -19,8 +19,17 @@ import (
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
+)
+
+var _ node.Node = &Note{}
+
+// Columns that can be used with the note method .CellData()
+const (
+	NoteTextColumn = iota
+	NoteReferenceColumn
 )
 
 const noteTypeKey = "note"
@@ -116,6 +125,46 @@ func (n *Note) UnmarshalJSON(data []byte) error {
 // Container returns true if this is a container.
 func (n *Note) Container() bool {
 	return strings.HasSuffix(n.Type, commonContainerKeyPostfix)
+}
+
+// Open returns true if this node is currently open.
+func (n *Note) Open() bool {
+	if n.Container() {
+		return n.NoteContainer.Open
+	}
+	return false
+}
+
+// SetOpen sets the current open state for this node.
+func (n *Note) SetOpen(open bool) {
+	if n.Container() {
+		n.NoteContainer.Open = open
+	}
+}
+
+// NodeChildren returns the children of this node, if any.
+func (n *Note) NodeChildren() []node.Node {
+	if n.Container() {
+		children := make([]node.Node, len(n.Children))
+		for i, child := range n.Children {
+			children[i] = child
+		}
+		return children
+	}
+	return nil
+}
+
+// CellData returns the cell data information for the given column.
+func (n *Note) CellData(column int, data *node.CellData) {
+	switch column {
+	case NoteTextColumn:
+		data.Type = node.Text
+		data.Primary = n.Text
+	case NoteReferenceColumn:
+		data.Type = node.PageRef
+		data.Primary = n.PageRef
+		data.Secondary = n.Text
+	}
 }
 
 // Depth returns the number of parents this node has.

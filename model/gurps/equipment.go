@@ -14,6 +14,7 @@ package gurps
 import (
 	"context"
 	"io/fs"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -23,16 +24,38 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/unison"
 )
 
 var (
 	_ WeaponOwner = &Equipment{}
-	// TechLevelInfo holds the general TL age list
-	TechLevelInfo = i18n.Text(`TL0: Stone Age (Prehistory)
+	_ node.Node   = &Equipment{}
+)
+
+// Columns that can be used with the equipment method .CellData()
+const (
+	EquipmentEquippedColumn = iota
+	EquipmentQuantityColumn
+	EquipmentDescriptionColumn
+	EquipmentUsesColumn
+	EquipmentMaxUsesColumn
+	EquipmentTLColumn
+	EquipmentLCColumn
+	EquipmentCostColumn
+	EquipmentExtendedCostColumn
+	EquipmentWeightColumn
+	EquipmentExtendedWeightColumn
+	EquipmentCategoryColumn
+	EquipmentReferenceColumn
+)
+
+// TechLevelInfo holds the general TL age list
+var TechLevelInfo = i18n.Text(`TL0: Stone Age (Prehistory)
 TL1: Bronze Age (3500 B.C.+)
 TL2: Iron Age (1200 B.C.+)
 TL3: Medieval (600 A.D.+)
@@ -45,7 +68,6 @@ TL9: Microtech Age (2025+?)
 TL10: Robotic Age (2070+?)
 TL11: Age of Exotic Matter
 TL12: Anything Goes`)
-)
 
 const equipmentTypeKey = "equipment"
 
@@ -197,6 +219,94 @@ func (e *Equipment) UnmarshalJSON(data []byte) error {
 // Container returns true if this is a container.
 func (e *Equipment) Container() bool {
 	return strings.HasSuffix(e.Type, commonContainerKeyPostfix)
+}
+
+// Open returns true if this node is currently open.
+func (e *Equipment) Open() bool {
+	if e.Container() {
+		return e.EquipmentContainer.Open
+	}
+	return false
+}
+
+// SetOpen sets the current open state for this node.
+func (e *Equipment) SetOpen(open bool) {
+	if e.Container() {
+		e.EquipmentContainer.Open = open
+	}
+}
+
+// NodeChildren returns the children of this node, if any.
+func (e *Equipment) NodeChildren() []node.Node {
+	if e.Container() {
+		children := make([]node.Node, len(e.Children))
+		for i, child := range e.Children {
+			children[i] = child
+		}
+		return children
+	}
+	return nil
+}
+
+// CellData returns the cell data information for the given column.
+func (e *Equipment) CellData(column int, data *node.CellData) {
+	switch column {
+	case EquipmentEquippedColumn:
+		data.Type = node.Toggle
+		data.Checked = e.Equipped
+		data.Alignment = unison.MiddleAlignment
+	case EquipmentQuantityColumn:
+		data.Type = node.Text
+		data.Primary = e.Quantity.String()
+		data.Alignment = unison.EndAlignment
+	case EquipmentDescriptionColumn:
+		data.Type = node.Text
+		data.Primary = e.Description()
+		data.Secondary = e.SecondaryText()
+	case EquipmentUsesColumn:
+		if e.MaxUses > 0 {
+			data.Type = node.Text
+			data.Primary = strconv.Itoa(e.Uses)
+			data.Alignment = unison.EndAlignment
+		}
+	case EquipmentMaxUsesColumn:
+		if e.MaxUses > 0 {
+			data.Type = node.Text
+			data.Primary = strconv.Itoa(e.MaxUses)
+			data.Alignment = unison.EndAlignment
+		}
+	case EquipmentTLColumn:
+		data.Type = node.Text
+		data.Primary = e.TechLevel
+		data.Alignment = unison.EndAlignment
+	case EquipmentLCColumn:
+		data.Type = node.Text
+		data.Primary = e.LegalityClass
+		data.Alignment = unison.EndAlignment
+	case EquipmentCostColumn:
+		data.Type = node.Text
+		data.Primary = e.AdjustedValue().String()
+		data.Alignment = unison.EndAlignment
+	case EquipmentExtendedCostColumn:
+		data.Type = node.Text
+		data.Primary = e.ExtendedValue().String()
+		data.Alignment = unison.EndAlignment
+	case EquipmentWeightColumn:
+		data.Type = node.Text
+		data.Primary = e.AdjustedWeight(false, SheetSettingsFor(e.Entity).DefaultWeightUnits).String()
+		data.Alignment = unison.EndAlignment
+	case EquipmentExtendedWeightColumn:
+		data.Type = node.Text
+		data.Primary = e.ExtendedWeight(false, SheetSettingsFor(e.Entity).DefaultWeightUnits).String()
+		data.Alignment = unison.EndAlignment
+	case EquipmentCategoryColumn:
+		data.Type = node.Text
+		data.Primary = strings.Join(e.Categories, ", ")
+	case EquipmentReferenceColumn:
+		data.Type = node.PageRef
+		data.Primary = e.PageRef
+		data.Secondary = e.Name
+	}
 }
 
 // Depth returns the number of parents this node has.

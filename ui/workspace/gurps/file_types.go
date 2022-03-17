@@ -24,11 +24,11 @@ func RegisterFileTypes() {
 	registerGCSFileInfo(".gct", res.GCSTemplate, NewTemplateDockable)
 	registerGCSFileInfo(".adq", res.GCSAdvantages, NewAdvantageTableDockable)
 	registerGCSFileInfo(".adm", res.GCSAdvantageModifiers, NewAdvantageModifierListDockable)
-	registerGCSFileInfo(".eqp", res.GCSEquipment, NewEquipmentListDockable)
+	registerGCSFileInfo(".eqp", res.GCSEquipment, NewEquipmentTableDockable)
 	registerGCSFileInfo(".eqm", res.GCSEquipmentModifiers, NewEquipmentModifierListDockable)
 	registerGCSFileInfo(".skl", res.GCSSkills, NewSkillTableDockable)
 	registerGCSFileInfo(".spl", res.GCSSpells, NewSpellTableDockable)
-	registerGCSFileInfo(".not", res.GCSNotes, NewNoteListDockable)
+	registerGCSFileInfo(".not", res.GCSNotes, NewNoteTableDockable)
 }
 
 func registerGCSFileInfo(ext string, svg *unison.SVG, loader func(filePath string) (unison.Dockable, error)) {

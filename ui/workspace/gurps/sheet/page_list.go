@@ -33,6 +33,18 @@ func NewAdvantagesPageList(entity *gurps.Entity) *PageList {
 	return NewPageList(entity, tbl.NewAdvantageTableHeaders(true), tbl.NewAdvantageRowData(entity.Advantages, true))
 }
 
+// NewCarriedEquipmentPageList creates the carried equipment page list.
+func NewCarriedEquipmentPageList(entity *gurps.Entity) *PageList {
+	return NewPageList(entity, tbl.NewEquipmentTableHeaders(entity, true, true),
+		tbl.NewEquipmentRowData(entity.CarriedEquipment, true, true))
+}
+
+// NewOtherEquipmentPageList creates the other equipment page list.
+func NewOtherEquipmentPageList(entity *gurps.Entity) *PageList {
+	return NewPageList(entity, tbl.NewEquipmentTableHeaders(entity, true, false),
+		tbl.NewEquipmentRowData(entity.OtherEquipment, true, false))
+}
+
 // NewSkillsPageList creates the skills page list.
 func NewSkillsPageList(entity *gurps.Entity) *PageList {
 	return NewPageList(entity, tbl.NewSkillTableHeaders(true), tbl.NewSkillRowData(entity.Skills, true))
@@ -41,6 +53,11 @@ func NewSkillsPageList(entity *gurps.Entity) *PageList {
 // NewSpellsPageList creates the spells page list.
 func NewSpellsPageList(entity *gurps.Entity) *PageList {
 	return NewPageList(entity, tbl.NewSpellTableHeaders(true), tbl.NewSpellRowData(entity.Spells, true))
+}
+
+// NewNotesPageList creates the notes page list.
+func NewNotesPageList(entity *gurps.Entity) *PageList {
+	return NewPageList(entity, tbl.NewNoteTableHeaders(true), tbl.NewNoteRowData(entity.Notes, true))
 }
 
 // NewPageList creates a new list for a sheet page.
@@ -55,11 +72,8 @@ func NewPageList(entity *gurps.Entity, columnHeaders []unison.TableColumnHeader,
 		VAlign: unison.StartAlignment,
 		HGrab:  true,
 	})
-	p.SetBorder(unison.NewLineBorder(theme.HeaderColor, 0, geom32.Insets{
-		Left:   1,
-		Bottom: 1,
-		Right:  1,
-	}, false))
+	p.SetBorder(unison.NewLineBorder(theme.HeaderColor, 0, geom32.NewUniformInsets(1), false))
+	p.table.DividerInk = theme.HeaderColor
 	p.table.MinimumRowHeight = theme.PageFieldPrimaryFont.LineHeight()
 	p.table.Padding.Top = 0
 	p.table.Padding.Bottom = 0
@@ -78,6 +92,9 @@ func NewPageList(entity *gurps.Entity, columnHeaders []unison.TableColumnHeader,
 	})
 	p.tableHeader = unison.NewTableHeader(p.table, columnHeaders...)
 	p.tableHeader.BackgroundInk = theme.HeaderColor
+	p.tableHeader.DividerInk = theme.HeaderColor
+	p.tableHeader.HeaderBorder = unison.NewLineBorder(theme.HeaderColor, 0, geom32.Insets{Bottom: 1}, false)
+	p.tableHeader.SetBorder(p.tableHeader.HeaderBorder)
 	p.tableHeader.Less = func(s1, s2 string) bool {
 		if n1, err := fixed.F64d4FromString(s1); err == nil {
 			var n2 fixed.F64d4
