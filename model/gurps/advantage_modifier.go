@@ -22,10 +22,21 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
+)
+
+var _ node.Node = &AdvantageModifier{}
+
+// Columns that can be used with the advantage modifier method .CellData()
+const (
+	AdvantageModifierDescriptionColumn = iota
+	AdvantageModifierCostColumn
+	AdvantageModifierCategoryColumn
+	AdvantageModifierReferenceColumn
 )
 
 const advantageModifierTypeKey = "modifier"
@@ -142,6 +153,55 @@ func (a *AdvantageModifier) UnmarshalJSON(data []byte) error {
 // Container returns true if this is a container.
 func (a *AdvantageModifier) Container() bool {
 	return strings.HasSuffix(a.Type, commonContainerKeyPostfix)
+}
+
+// Open returns true if this node is currently open.
+func (a *AdvantageModifier) Open() bool {
+	if a.Container() {
+		return a.AdvantageModifierContainer.Open
+	}
+	return false
+}
+
+// SetOpen sets the current open state for this node.
+func (a *AdvantageModifier) SetOpen(open bool) {
+	if a.Container() {
+		a.AdvantageModifierContainer.Open = open
+	}
+}
+
+// NodeChildren returns the children of this node, if any.
+func (a *AdvantageModifier) NodeChildren() []node.Node {
+	if a.Container() {
+		children := make([]node.Node, len(a.Children))
+		for i, child := range a.Children {
+			children[i] = child
+		}
+		return children
+	}
+	return nil
+}
+
+// CellData returns the cell data information for the given column.
+func (a *AdvantageModifier) CellData(column int, data *node.CellData) {
+	switch column {
+	case AdvantageModifierDescriptionColumn:
+		data.Type = node.Text
+		data.Primary = a.Name
+		data.Secondary = a.SecondaryText()
+	case AdvantageModifierCostColumn:
+		if !a.Container() {
+			data.Type = node.Text
+			data.Primary = a.CostDescription()
+		}
+	case AdvantageModifierCategoryColumn:
+		data.Type = node.Text
+		data.Primary = strings.Join(a.Categories, ", ")
+	case AdvantageModifierReferenceColumn:
+		data.Type = node.PageRef
+		data.Primary = a.PageRef
+		data.Secondary = a.Name
+	}
 }
 
 // OwningEntity returns the owning Entity.

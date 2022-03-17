@@ -12,8 +12,18 @@
 package gurps
 
 import (
+	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/unison"
+)
+
+var _ node.Node = &ConditionalModifier{}
+
+// Columns that can be used with the conditional modifier method .CellData()
+const (
+	ConditionalModifierValueColumn = iota
+	ConditionalModifierDescriptionColumn
 )
 
 // ConditionalModifier holds data for a reaction or conditional modifier.
@@ -33,30 +43,62 @@ func NewReaction(source, from string, amt fixed.F64d4) *ConditionalModifier {
 }
 
 // Add another source.
-func (r *ConditionalModifier) Add(source string, amt fixed.F64d4) {
-	r.Amounts = append(r.Amounts, amt)
-	r.Sources = append(r.Sources, source)
+func (m *ConditionalModifier) Add(source string, amt fixed.F64d4) {
+	m.Amounts = append(m.Amounts, amt)
+	m.Sources = append(m.Sources, source)
 }
 
 // Total returns the total of all amounts.
-func (r *ConditionalModifier) Total() fixed.F64d4 {
+func (m *ConditionalModifier) Total() fixed.F64d4 {
 	var total fixed.F64d4
-	for _, amt := range r.Amounts {
+	for _, amt := range m.Amounts {
 		total += amt
 	}
 	return total
 }
 
 // Less returns true if this should be sorted above the other.
-func (r *ConditionalModifier) Less(other *ConditionalModifier) bool {
-	if txt.NaturalLess(r.From, other.From, true) {
+func (m *ConditionalModifier) Less(other *ConditionalModifier) bool {
+	if txt.NaturalLess(m.From, other.From, true) {
 		return true
 	}
-	if r.From != other.From {
+	if m.From != other.From {
 		return false
 	}
-	if r.Total() < other.Total() {
+	if m.Total() < other.Total() {
 		return true
 	}
 	return false
+}
+
+// Container returns true if this is a container.
+func (m *ConditionalModifier) Container() bool {
+	return false
+}
+
+// Open returns true if this node is currently open.
+func (m *ConditionalModifier) Open() bool {
+	return false
+}
+
+// SetOpen sets the current open state for this node.
+func (m *ConditionalModifier) SetOpen(open bool) {
+}
+
+// NodeChildren returns the children of this node, if any.
+func (m *ConditionalModifier) NodeChildren() []node.Node {
+	return nil
+}
+
+// CellData returns the cell data information for the given column.
+func (m *ConditionalModifier) CellData(column int, data *node.CellData) {
+	switch column {
+	case ConditionalModifierValueColumn:
+		data.Type = node.Text
+		data.Primary = m.Total().StringWithSign()
+		data.Alignment = unison.EndAlignment
+	case ConditionalModifierDescriptionColumn:
+		data.Type = node.Text
+		data.Primary = m.From
+	}
 }

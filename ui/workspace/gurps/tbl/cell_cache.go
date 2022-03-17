@@ -27,7 +27,3 @@ type CellCache struct {
 func (c *CellCache) Matches(width float32, data *node.CellData) bool {
 	return c != nil && c.Panel != nil && c.Width == width && c.Data == *data
 }
-
-func (c *CellCache) MatchesOld(width float32, data string) bool {
-	return c != nil && c.Panel != nil && c.Width == width && c.Data.Primary == data
-}

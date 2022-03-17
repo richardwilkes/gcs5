@@ -48,7 +48,7 @@ func CellFromCellData(c *node.CellData, width float32, forPage, selected bool) *
 	case node.Toggle:
 		// TODO: Implement!
 	case node.PageRef:
-		CreateAndAddPageRefCellLabel(p, c.Primary, c.Secondary, font, selected)
+		addPageRefLabel(p, c.Primary, c.Secondary, font, selected)
 	}
 	return p
 }
@@ -73,26 +73,7 @@ func addCellLabel(c *node.CellData, parent *unison.Panel, width float32, text st
 	}
 }
 
-func CreateAndAddCellLabel(parent *unison.Panel, width float32, text string, f unison.Font, selected bool) {
-	decoration := &unison.TextDecoration{Font: f}
-	var lines []*unison.Text
-	if width > 0 {
-		lines = unison.NewTextWrappedLines(text, decoration, width)
-	} else {
-		lines = unison.NewTextLines(text, decoration)
-	}
-	for _, line := range lines {
-		label := unison.NewLabel()
-		label.Text = line.String()
-		label.Font = f
-		if selected {
-			label.LabelTheme.OnBackgroundInk = unison.OnSelectionColor
-		}
-		parent.AddChild(label)
-	}
-}
-
-func CreateAndAddPageRefCellLabel(parent *unison.Panel, text, highlight string, f unison.Font, selected bool) {
+func addPageRefLabel(parent *unison.Panel, text, highlight string, f unison.Font, selected bool) {
 	label := unison.NewLabel()
 	label.Font = f
 	if selected {

@@ -15,6 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
@@ -58,6 +59,16 @@ func NewSpellsPageList(entity *gurps.Entity) *PageList {
 // NewNotesPageList creates the notes page list.
 func NewNotesPageList(entity *gurps.Entity) *PageList {
 	return NewPageList(tbl.NewNoteTableHeaders(true), 0, tbl.NewNoteRowData(entity.Notes, true))
+}
+
+// NewConditionalModifiersPageList creates the conditional modifiers page list.
+func NewConditionalModifiersPageList(entity *gurps.Entity) *PageList {
+	return NewPageList(tbl.NewConditionalModifierTableHeaders(i18n.Text("Condition")), -1, tbl.NewConditionalModifierRowData(entity.ConditionalModifiers()))
+}
+
+// NewReactionsPageList creates the reaction modifiers page list.
+func NewReactionsPageList(entity *gurps.Entity) *PageList {
+	return NewPageList(tbl.NewConditionalModifierTableHeaders(i18n.Text("Reaction")), -1, tbl.NewConditionalModifierRowData(entity.Reactions()))
 }
 
 // NewPageList creates a new list for a sheet page.

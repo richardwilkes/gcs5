@@ -62,6 +62,15 @@ func NewAdvantageTableDockable(filePath string) (unison.Dockable, error) {
 	return NewTableDockable(filePath, tbl.NewAdvantageTableHeaders(false), tbl.NewAdvantageRowData(advantages, false)), nil
 }
 
+// NewAdvantageModifierTableDockable creates a new unison.Dockable for advantage modifier list files.
+func NewAdvantageModifierTableDockable(filePath string) (unison.Dockable, error) {
+	modifiers, err := gurps.NewAdvantageModifiersFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
+	if err != nil {
+		return nil, err
+	}
+	return NewTableDockable(filePath, tbl.NewAdvantageModifierTableHeaders(), tbl.NewAdvantageModifierRowData(modifiers)), nil
+}
+
 // NewEquipmentTableDockable creates a new unison.Dockable for equipment list files.
 func NewEquipmentTableDockable(filePath string) (unison.Dockable, error) {
 	equipment, err := gurps.NewEquipmentFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
@@ -70,6 +79,15 @@ func NewEquipmentTableDockable(filePath string) (unison.Dockable, error) {
 	}
 	return NewTableDockable(filePath, tbl.NewEquipmentTableHeaders(nil, false, false),
 		tbl.NewEquipmentRowData(equipment, false, false)), nil
+}
+
+// NewEquipmentModifierTableDockable creates a new unison.Dockable for equipment modifier list files.
+func NewEquipmentModifierTableDockable(filePath string) (unison.Dockable, error) {
+	modifiers, err := gurps.NewEquipmentModifiersFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
+	if err != nil {
+		return nil, err
+	}
+	return NewTableDockable(filePath, tbl.NewEquipmentModifierTableHeaders(), tbl.NewEquipmentModifierRowData(modifiers)), nil
 }
 
 // NewSkillTableDockable creates a new unison.Dockable for skill list files.
@@ -368,13 +386,4 @@ func (d *TableDockable) adjustForMatch() {
 		d.matchesLabel.Text = "-"
 	}
 	d.matchesLabel.Parent().MarkForLayoutAndRedraw()
-}
-
-func stringSliceContains(strs []string, text string) bool {
-	for _, s := range strs {
-		if strings.Contains(strings.ToLower(s), text) {
-			return true
-		}
-	}
-	return false
 }

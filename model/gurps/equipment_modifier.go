@@ -24,10 +24,23 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
+)
+
+var _ node.Node = &EquipmentModifier{}
+
+// Columns that can be used with the equipment modifier method .CellData()
+const (
+	EquipmentModifierDescriptionColumn = iota
+	EquipmentModifierTechLevelColumn
+	EquipmentModifierCostColumn
+	EquipmentModifierWeightColumn
+	EquipmentModifierCategoryColumn
+	EquipmentModifierReferenceColumn
 )
 
 const equipmentModifierTypeKey = "modifier"
@@ -145,6 +158,65 @@ func (e *EquipmentModifier) UnmarshalJSON(data []byte) error {
 // Container returns true if this is a container.
 func (e *EquipmentModifier) Container() bool {
 	return strings.HasSuffix(e.Type, commonContainerKeyPostfix)
+}
+
+// Open returns true if this node is currently open.
+func (e *EquipmentModifier) Open() bool {
+	if e.Container() {
+		return e.EquipmentModifierContainer.Open
+	}
+	return false
+}
+
+// SetOpen sets the current open state for this node.
+func (e *EquipmentModifier) SetOpen(open bool) {
+	if e.Container() {
+		e.EquipmentModifierContainer.Open = open
+	}
+}
+
+// NodeChildren returns the children of this node, if any.
+func (e *EquipmentModifier) NodeChildren() []node.Node {
+	if e.Container() {
+		children := make([]node.Node, len(e.Children))
+		for i, child := range e.Children {
+			children[i] = child
+		}
+		return children
+	}
+	return nil
+}
+
+// CellData returns the cell data information for the given column.
+func (e *EquipmentModifier) CellData(column int, data *node.CellData) {
+	switch column {
+	case EquipmentModifierDescriptionColumn:
+		data.Type = node.Text
+		data.Primary = e.Name
+		data.Secondary = e.SecondaryText()
+	case EquipmentModifierTechLevelColumn:
+		if !e.Container() {
+			data.Type = node.Text
+			data.Primary = e.TechLevel
+		}
+	case EquipmentModifierCostColumn:
+		if !e.Container() {
+			data.Type = node.Text
+			data.Primary = e.CostDescription()
+		}
+	case EquipmentModifierWeightColumn:
+		if !e.Container() {
+			data.Type = node.Text
+			data.Primary = e.WeightDescription()
+		}
+	case EquipmentModifierCategoryColumn:
+		data.Type = node.Text
+		data.Primary = strings.Join(e.Categories, ", ")
+	case EquipmentModifierReferenceColumn:
+		data.Type = node.PageRef
+		data.Primary = e.PageRef
+		data.Secondary = e.Name
+	}
 }
 
 // OwningEntity returns the owning Entity.
