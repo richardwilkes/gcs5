@@ -50,7 +50,7 @@ func NewNoteListDockable(filePath string) (unison.Dockable, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewListFileDockable(filePath, []unison.TableColumnHeader{
+	return NewTableDockable(filePath, []unison.TableColumnHeader{
 		tbl.NewHeader(i18n.Text("Note"), "", false),
 		tbl.NewHeader(i18n.Text("When"), "", false),
 		tbl.NewHeader(i18n.Text("Category"), "", false),

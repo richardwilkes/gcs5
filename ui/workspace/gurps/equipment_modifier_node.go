@@ -52,7 +52,7 @@ func NewEquipmentModifierListDockable(filePath string) (unison.Dockable, error) 
 	if err != nil {
 		return nil, err
 	}
-	return NewListFileDockable(filePath, []unison.TableColumnHeader{
+	return NewTableDockable(filePath, []unison.TableColumnHeader{
 		tbl.NewHeader(i18n.Text("Modifier"), "", false),
 		tbl.NewHeader(i18n.Text("TL"), i18n.Text("Tech Level"), false),
 		tbl.NewHeader(i18n.Text("Cost Adjustment"), "", false),

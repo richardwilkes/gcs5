@@ -57,7 +57,7 @@ func NewSpellListDockable(filePath string) (unison.Dockable, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewListFileDockable(filePath, []unison.TableColumnHeader{
+	return NewTableDockable(filePath, []unison.TableColumnHeader{
 		tbl.NewHeader(i18n.Text("Spell"), "", false),
 		tbl.NewHeader(i18n.Text("Resist"), i18n.Text("Resistance"), false),
 		tbl.NewHeader(i18n.Text("Class"), "", false),

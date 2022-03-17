@@ -22,11 +22,11 @@ import (
 func RegisterFileTypes() {
 	registerExportableGCSFileInfo(".gcs", res.GCSSheet, sheet.NewSheet)
 	registerGCSFileInfo(".gct", res.GCSTemplate, NewTemplateDockable)
-	registerGCSFileInfo(".adq", res.GCSAdvantages, NewAdvantageListDockable)
+	registerGCSFileInfo(".adq", res.GCSAdvantages, NewAdvantageTableDockable)
 	registerGCSFileInfo(".adm", res.GCSAdvantageModifiers, NewAdvantageModifierListDockable)
 	registerGCSFileInfo(".eqp", res.GCSEquipment, NewEquipmentListDockable)
 	registerGCSFileInfo(".eqm", res.GCSEquipmentModifiers, NewEquipmentModifierListDockable)
-	registerGCSFileInfo(".skl", res.GCSSkills, NewSkillListDockable)
+	registerGCSFileInfo(".skl", res.GCSSkills, NewSkillTableDockable)
 	registerGCSFileInfo(".spl", res.GCSSpells, NewSpellListDockable)
 	registerGCSFileInfo(".not", res.GCSNotes, NewNoteListDockable)
 }

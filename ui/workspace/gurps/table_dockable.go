@@ -13,8 +13,11 @@ package gurps
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/gurps"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
@@ -29,8 +32,8 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-// ListFileDockable holds the view for a file that contains a (potentially hierarchical) list of data.
-type ListFileDockable struct {
+// TableDockable holds the view for a file that contains a (potentially hierarchical) list of data.
+type TableDockable struct {
 	unison.Panel
 	path            string
 	lockButton      *unison.Button
@@ -50,9 +53,27 @@ type ListFileDockable struct {
 	locked          bool
 }
 
-// NewListFileDockable creates a new ListFileDockable for list data files.
-func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHeader, topLevelRows func(table *unison.Table) []unison.TableRowData) *ListFileDockable {
-	d := &ListFileDockable{
+// NewAdvantageTableDockable creates a new unison.Dockable for advantage list files.
+func NewAdvantageTableDockable(filePath string) (unison.Dockable, error) {
+	advantages, err := gurps.NewAdvantagesFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
+	if err != nil {
+		return nil, err
+	}
+	return NewTableDockable(filePath, tbl.NewAdvantageTableHeaders(false), tbl.NewAdvantageRowData(advantages, false)), nil
+}
+
+// NewSkillTableDockable creates a new unison.Dockable for skill list files.
+func NewSkillTableDockable(filePath string) (unison.Dockable, error) {
+	skills, err := gurps.NewSkillsFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
+	if err != nil {
+		return nil, err
+	}
+	return NewTableDockable(filePath, tbl.NewSkillTableHeaders(false), tbl.NewSkillRowData(skills, false)), nil
+}
+
+// NewTableDockable creates a new TableDockable for list data files.
+func NewTableDockable(filePath string, columnHeaders []unison.TableColumnHeader, topLevelRows func(table *unison.Table) []unison.TableRowData) *TableDockable {
+	d := &TableDockable{
 		path:   filePath,
 		scroll: unison.NewScrollPanel(),
 		table:  unison.NewTable(),
@@ -177,7 +198,7 @@ func NewListFileDockable(filePath string, columnHeaders []unison.TableColumnHead
 	return d
 }
 
-func (d *ListFileDockable) applyScale() {
+func (d *TableDockable) applyScale() {
 	s := float32(d.scale) / 100
 	d.tableHeader.SetScale(s)
 	d.table.SetScale(s)
@@ -185,7 +206,7 @@ func (d *ListFileDockable) applyScale() {
 }
 
 // TitleIcon implements workspace.FileBackedDockable
-func (d *ListFileDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
+func (d *TableDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
 		Size: suggestedSize,
@@ -193,38 +214,38 @@ func (d *ListFileDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable 
 }
 
 // Title implements workspace.FileBackedDockable
-func (d *ListFileDockable) Title() string {
+func (d *TableDockable) Title() string {
 	return fs.BaseName(d.path)
 }
 
 // Tooltip implements workspace.FileBackedDockable
-func (d *ListFileDockable) Tooltip() string {
+func (d *TableDockable) Tooltip() string {
 	return d.path
 }
 
 // BackingFilePath implements workspace.FileBackedDockable
-func (d *ListFileDockable) BackingFilePath() string {
+func (d *TableDockable) BackingFilePath() string {
 	return d.path
 }
 
 // Modified implements workspace.FileBackedDockable
-func (d *ListFileDockable) Modified() bool {
+func (d *TableDockable) Modified() bool {
 	return false
 }
 
 // MayAttemptClose implements unison.TabCloser
-func (d *ListFileDockable) MayAttemptClose() bool {
+func (d *TableDockable) MayAttemptClose() bool {
 	return true
 }
 
 // AttemptClose implements unison.TabCloser
-func (d *ListFileDockable) AttemptClose() {
+func (d *TableDockable) AttemptClose() {
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.Close(d)
 	}
 }
 
-func (d *ListFileDockable) toggleLock() {
+func (d *TableDockable) toggleLock() {
 	d.locked = !d.locked
 	if dsvg, ok := d.lockButton.Drawable.(*unison.DrawableSVG); ok {
 		if d.locked {
@@ -238,7 +259,7 @@ func (d *ListFileDockable) toggleLock() {
 	d.lockButton.MarkForRedraw()
 }
 
-func (d *ListFileDockable) toggleHierarchy() {
+func (d *TableDockable) toggleHierarchy() {
 	first := true
 	open := false
 	for _, row := range d.table.TopLevelRows() {
@@ -262,12 +283,12 @@ func setRowOpen(row unison.TableRowData, open bool) {
 	}
 }
 
-func (d *ListFileDockable) sizeToFit() {
+func (d *TableDockable) sizeToFit() {
 	d.table.SizeColumnsToFit(true)
 	d.table.MarkForRedraw()
 }
 
-func (d *ListFileDockable) searchModified() {
+func (d *TableDockable) searchModified() {
 	d.searchIndex = 0
 	d.searchResult = nil
 	text := strings.ToLower(d.searchField.Text())
@@ -277,7 +298,7 @@ func (d *ListFileDockable) searchModified() {
 	d.adjustForMatch()
 }
 
-func (d *ListFileDockable) search(text string, row unison.TableRowData) {
+func (d *TableDockable) search(text string, row unison.TableRowData) {
 	if matcher, ok := row.(tbl.Matcher); ok {
 		if matcher.Match(text) {
 			d.searchResult = append(d.searchResult, row)
@@ -290,21 +311,21 @@ func (d *ListFileDockable) search(text string, row unison.TableRowData) {
 	}
 }
 
-func (d *ListFileDockable) previousMatch() {
+func (d *TableDockable) previousMatch() {
 	if d.searchIndex > 0 {
 		d.searchIndex--
 		d.adjustForMatch()
 	}
 }
 
-func (d *ListFileDockable) nextMatch() {
+func (d *TableDockable) nextMatch() {
 	if d.searchIndex < len(d.searchResult)-1 {
 		d.searchIndex++
 		d.adjustForMatch()
 	}
 }
 
-func (d *ListFileDockable) adjustForMatch() {
+func (d *TableDockable) adjustForMatch() {
 	d.backButton.SetEnabled(d.searchIndex != 0)
 	d.forwardButton.SetEnabled(len(d.searchResult) != 0 && d.searchIndex != len(d.searchResult)-1)
 	if len(d.searchResult) != 0 {
@@ -319,4 +340,13 @@ func (d *ListFileDockable) adjustForMatch() {
 		d.matchesLabel.Text = "-"
 	}
 	d.matchesLabel.Parent().MarkForLayoutAndRedraw()
+}
+
+func stringSliceContains(strs []string, text string) bool {
+	for _, s := range strs {
+		if strings.Contains(strings.ToLower(s), text) {
+			return true
+		}
+	}
+	return false
 }
