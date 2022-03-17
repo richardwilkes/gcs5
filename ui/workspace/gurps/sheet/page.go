@@ -43,7 +43,6 @@ func NewPage(entity *gurps.Entity) *Page {
 	}
 	p.Self = p
 	p.SetBorder(unison.NewEmptyBorder(p.insets()))
-	p.SetSizer(p.pageSizer)
 	p.SetLayout(p)
 	p.DrawCallback = p.drawSelf
 	return p
@@ -52,6 +51,8 @@ func NewPage(entity *gurps.Entity) *Page {
 // LayoutSizes implements unison.Layout
 func (p *Page) LayoutSizes(_ *unison.Panel, _ geom32.Size) (min, pref, max geom32.Size) {
 	pref = p.prefSize()
+	_, size, _ := p.flex.LayoutSizes(p.AsPanel(), geom32.Size{Width: pref.Width})
+	pref.Height = size.Height
 	return pref, pref, pref
 }
 
@@ -81,14 +82,10 @@ func (p *Page) insets() geom32.Insets {
 	return insets
 }
 
-func (p *Page) pageSizer(_ geom32.Size) (min, pref, max geom32.Size) {
-	pref = p.prefSize()
-	return pref, pref, pref
-}
-
 func (p *Page) drawSelf(gc *unison.Canvas, _ geom32.Rect) {
 	insets := p.insets()
-	r := geom32.Rect{Size: p.prefSize()}
+	_, prefSize, _ := p.LayoutSizes(nil, geom32.Size{})
+	r := geom32.Rect{Size: prefSize}
 	gc.DrawRect(r, theme.PageColor.Paint(gc, r, unison.Fill))
 	r.X += insets.Left
 	r.Width -= insets.Left + insets.Right

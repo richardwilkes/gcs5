@@ -14,6 +14,7 @@ package sheet
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/theme"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
@@ -25,6 +26,16 @@ type PageList struct {
 	unison.Panel
 	tableHeader *unison.TableHeader
 	table       *unison.Table
+}
+
+// NewAdvantagesPageList creates the advantages page list.
+func NewAdvantagesPageList(entity *gurps.Entity) *PageList {
+	return NewPageList(entity, tbl.NewAdvantageTableHeaders(true), tbl.NewAdvantageRowData(entity.Advantages, true))
+}
+
+// NewSkillsPageList creates the skills page list.
+func NewSkillsPageList(entity *gurps.Entity) *PageList {
+	return NewPageList(entity, tbl.NewSkillTableHeaders(true), tbl.NewSkillRowData(entity.Skills, true))
 }
 
 // NewPageList creates a new list for a sheet page.
@@ -39,6 +50,11 @@ func NewPageList(entity *gurps.Entity, columnHeaders []unison.TableColumnHeader,
 		VAlign: unison.StartAlignment,
 		HGrab:  true,
 	})
+	p.SetBorder(unison.NewLineBorder(theme.HeaderColor, 0, geom32.Insets{
+		Left:   1,
+		Bottom: 1,
+		Right:  1,
+	}, false))
 	p.table.MinimumRowHeight = theme.PageFieldPrimaryFont.LineHeight()
 	p.table.Padding.Top = 0
 	p.table.Padding.Bottom = 0

@@ -24,6 +24,7 @@ import (
 
 // Additional fonts over and above what unison provides by default.
 var (
+	FieldSecondaryFont      = &unison.IndirectFont{Font: unison.FieldFont.Face().Font(unison.FieldFont.Size() - 1)}
 	PageFieldPrimaryFont    = &unison.IndirectFont{Font: unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.MediumFontWeight, unison.StandardSpacing, unison.NoSlant).Font(7)}
 	PageFieldSecondaryFont  = &unison.IndirectFont{Font: unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.NormalFontWeight, unison.StandardSpacing, unison.NoSlant).Font(6)}
 	PageLabelPrimaryFont    = &unison.IndirectFont{Font: unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.NormalFontWeight, unison.StandardSpacing, unison.NoSlant).Font(7)}
@@ -41,6 +42,7 @@ var (
 		{ID: "system.small.emphasized", Title: i18n.Text("System (Small, Emphasized)"), Font: unison.EmphasizedSmallSystemFont},
 		{ID: "label", Title: i18n.Text("Label"), Font: unison.LabelFont},
 		{ID: "field", Title: i18n.Text("Field"), Font: unison.FieldFont},
+		{ID: "field.secondary", Title: i18n.Text("Secondary Fields"), Font: FieldSecondaryFont},
 		{ID: "keyboard", Title: i18n.Text("Keyboard"), Font: unison.KeyboardFont},
 		{ID: "page.field.primary", Title: i18n.Text("Page Primary Fields"), Font: PageFieldPrimaryFont},
 		{ID: "page.field.secondary", Title: i18n.Text("Page Secondary Fields"), Font: PageFieldSecondaryFont},
