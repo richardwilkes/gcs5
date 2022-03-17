@@ -32,61 +32,61 @@ type PageList struct {
 
 // NewAdvantagesPageList creates the advantages page list.
 func NewAdvantagesPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewAdvantageTableHeaders(true), 0, tbl.NewAdvantageRowData(entity.Advantages, true))
+	return newPageList(tbl.NewAdvantageTableHeaders(true), 0, 0, tbl.NewAdvantageRowData(entity.Advantages, true))
 }
 
 // NewCarriedEquipmentPageList creates the carried equipment page list.
 func NewCarriedEquipmentPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewEquipmentTableHeaders(entity, true, true), 2,
+	return newPageList(tbl.NewEquipmentTableHeaders(entity, true, true), 2, 2,
 		tbl.NewEquipmentRowData(entity.CarriedEquipment, true, true))
 }
 
 // NewOtherEquipmentPageList creates the other equipment page list.
 func NewOtherEquipmentPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewEquipmentTableHeaders(entity, true, false), 1,
+	return newPageList(tbl.NewEquipmentTableHeaders(entity, true, false), 1, 1,
 		tbl.NewEquipmentRowData(entity.OtherEquipment, true, false))
 }
 
 // NewSkillsPageList creates the skills page list.
 func NewSkillsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewSkillTableHeaders(true), 0, tbl.NewSkillRowData(entity.Skills, true))
+	return newPageList(tbl.NewSkillTableHeaders(true), 0, 0, tbl.NewSkillRowData(entity.Skills, true))
 }
 
 // NewSpellsPageList creates the spells page list.
 func NewSpellsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewSpellTableHeaders(true), 0, tbl.NewSpellRowData(entity.Spells, true))
+	return newPageList(tbl.NewSpellTableHeaders(true), 0, 0, tbl.NewSpellRowData(entity.Spells, true))
 }
 
 // NewNotesPageList creates the notes page list.
 func NewNotesPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewNoteTableHeaders(true), 0, tbl.NewNoteRowData(entity.Notes, true))
+	return newPageList(tbl.NewNoteTableHeaders(true), 0, 0, tbl.NewNoteRowData(entity.Notes, true))
 }
 
 // NewConditionalModifiersPageList creates the conditional modifiers page list.
 func NewConditionalModifiersPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewConditionalModifierTableHeaders(i18n.Text("Condition")), -1,
+	return newPageList(tbl.NewConditionalModifierTableHeaders(i18n.Text("Condition")), -1, 1,
 		tbl.NewConditionalModifierRowData(entity.ConditionalModifiers()))
 }
 
 // NewReactionsPageList creates the reaction modifiers page list.
 func NewReactionsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewConditionalModifierTableHeaders(i18n.Text("Reaction")), -1,
+	return newPageList(tbl.NewConditionalModifierTableHeaders(i18n.Text("Reaction")), -1, 1,
 		tbl.NewConditionalModifierRowData(entity.Reactions()))
 }
 
 // NewMeleeWeaponsPageList creates the melee weapons page list.
 func NewMeleeWeaponsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewWeaponTableHeaders(true), -1,
+	return newPageList(tbl.NewWeaponTableHeaders(true), -1, 0,
 		tbl.NewWeaponRowData(entity.EquippedWeapons(weapon.Melee), true))
 }
 
 // NewRangedWeaponsPageList creates the ranged weapons page list.
 func NewRangedWeaponsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewWeaponTableHeaders(false), -1,
+	return newPageList(tbl.NewWeaponTableHeaders(false), -1, 0,
 		tbl.NewWeaponRowData(entity.EquippedWeapons(weapon.Ranged), false))
 }
 
-func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex int, topLevelRows func(table *unison.Table) []unison.TableRowData) *PageList {
+func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex, excessWidthIndex int, topLevelRows func(table *unison.Table) []unison.TableRowData) *PageList {
 	p := &PageList{
 		table: unison.NewTable(),
 	}
@@ -94,8 +94,9 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex 
 	p.SetLayout(&unison.FlexLayout{Columns: 1})
 	p.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
-		VAlign: unison.StartAlignment,
+		VAlign: unison.FillAlignment,
 		HGrab:  true,
+		VGrab:  true,
 	})
 	p.SetBorder(unison.NewLineBorder(theme.HeaderColor, 0, geom32.NewUniformInsets(1), false))
 	p.table.DividerInk = theme.HeaderColor
@@ -104,6 +105,7 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex 
 	p.table.Padding.Bottom = 0
 	p.table.HierarchyColumnIndex = hierarchyColumnIndex
 	p.table.HierarchyIndent = theme.PageFieldPrimaryFont.LineHeight()
+	p.table.PreventUserColumnResize = true
 	p.table.ColumnSizes = make([]unison.ColumnSize, len(columnHeaders))
 	for i := range p.table.ColumnSizes {
 		_, pref, _ := columnHeaders[i].AsPanel().Sizes(geom32.Size{})
@@ -116,7 +118,11 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex 
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
+		VGrab:  true,
 	})
+	p.table.FrameChangeCallback = func() {
+		p.table.SizeColumnsToFitWithExcessIn(excessWidthIndex)
+	}
 	p.tableHeader = unison.NewTableHeader(p.table, columnHeaders...)
 	p.tableHeader.BackgroundInk = theme.HeaderColor
 	p.tableHeader.DividerInk = theme.HeaderColor
@@ -136,8 +142,29 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex 
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
+	p.tableHeader.DrawCallback = func(gc *unison.Canvas, dirty geom32.Rect) {
+		sortedOn := -1
+		for i, hdr := range p.tableHeader.ColumnHeaders {
+			if hdr.SortState().Order == 0 {
+				sortedOn = i
+				break
+			}
+		}
+		if sortedOn != -1 {
+			gc.DrawRect(dirty, p.tableHeader.BackgroundInk.Paint(gc, dirty, unison.Fill))
+			r := p.tableHeader.ColumnFrame(sortedOn)
+			r.X -= p.table.Padding.Left
+			r.Width += p.table.Padding.Left + p.table.Padding.Right
+			gc.DrawRect(r, theme.MarkerColor.Paint(gc, r, unison.Fill))
+			save := p.tableHeader.BackgroundInk
+			p.tableHeader.BackgroundInk = unison.Transparent
+			p.tableHeader.DefaultDraw(gc, dirty)
+			p.tableHeader.BackgroundInk = save
+		} else {
+			p.tableHeader.DefaultDraw(gc, dirty)
+		}
+	}
 	p.table.SetTopLevelRows(topLevelRows(p.table))
-	p.table.SizeColumnsToFit(true)
 	p.AddChild(p.tableHeader)
 	p.AddChild(p.table)
 	return p

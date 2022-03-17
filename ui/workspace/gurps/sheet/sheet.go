@@ -174,10 +174,10 @@ func (s *Sheet) createFirstPage() *Page {
 
 	// Add the various outline blocks, based on the layout preference.
 	var lastFlexData *unison.FlexLayoutData
-	for _, row := range s.entity.SheetSettings.BlockLayout.Decompose() {
+	for _, col := range s.entity.SheetSettings.BlockLayout.Decompose() {
 		rowPanel := unison.NewPanel()
 		rowPanel.SetLayout(&unison.FlexLayout{
-			Columns:      len(row),
+			Columns:      len(col),
 			HSpacing:     1,
 			HAlign:       unison.FillAlignment,
 			VAlign:       unison.FillAlignment,
@@ -189,8 +189,8 @@ func (s *Sheet) createFirstPage() *Page {
 			HGrab:  true,
 		}
 		rowPanel.SetLayoutData(lastFlexData)
-		for _, col := range row {
-			switch col {
+		for _, c := range col {
+			switch c {
 			case gurps.BlockLayoutReactionsKey:
 				rowPanel.AddChild(NewReactionsPageList(s.entity))
 			case gurps.BlockLayoutConditionalModifiersKey:

@@ -20,9 +20,9 @@ import (
 var (
 	spellListColMap = map[int]int{
 		0:  gurps.SpellDescriptionColumn,
-		1:  gurps.SpellResistColumn,
-		2:  gurps.SpellClassColumn,
-		3:  gurps.SpellCollegeColumn,
+		1:  gurps.SpellCollegeColumn,
+		2:  gurps.SpellResistColumn,
+		3:  gurps.SpellClassColumn,
 		4:  gurps.SpellCastCostColumn,
 		5:  gurps.SpellMaintainCostColumn,
 		6:  gurps.SpellCastTimeColumn,
@@ -32,19 +32,13 @@ var (
 		10: gurps.SpellReferenceColumn,
 	}
 	spellPageColMap = map[int]int{
-		0:  gurps.SpellDescriptionColumn,
-		1:  gurps.SpellResistColumn,
-		2:  gurps.SpellClassColumn,
-		3:  gurps.SpellCollegeColumn,
-		4:  gurps.SpellCastCostColumn,
-		5:  gurps.SpellMaintainCostColumn,
-		6:  gurps.SpellCastTimeColumn,
-		7:  gurps.SpellDurationColumn,
-		8:  gurps.SpellDifficultyColumn,
-		9:  gurps.SpellLevelColumn,
-		10: gurps.SpellRelativeLevelColumn,
-		11: gurps.SpellPointsColumn,
-		12: gurps.SpellReferenceColumn,
+		0: gurps.SpellDescriptionForPageColumn,
+		1: gurps.SpellCollegeColumn,
+		2: gurps.SpellDifficultyColumn,
+		3: gurps.SpellLevelColumn,
+		4: gurps.SpellRelativeLevelColumn,
+		5: gurps.SpellPointsColumn,
+		6: gurps.SpellReferenceColumn,
 	}
 )
 
@@ -53,13 +47,19 @@ func NewSpellTableHeaders(forPage bool) []unison.TableColumnHeader {
 	var headers []unison.TableColumnHeader
 	headers = append(headers,
 		NewHeader(i18n.Text("Spell"), "", forPage),
-		NewHeader(i18n.Text("Resist"), i18n.Text("Resistance"), forPage),
-		NewHeader(i18n.Text("Class"), "", forPage),
 		NewHeader(i18n.Text("College"), "", forPage),
-		NewHeader(i18n.Text("Cost"), i18n.Text("The mana cost to cast the spell"), forPage),
-		NewHeader(i18n.Text("Maintain"), i18n.Text("The mana cost to maintain the spell"), forPage),
-		NewHeader(i18n.Text("Time"), i18n.Text("The time required to cast the spell"), forPage),
-		NewHeader(i18n.Text("Duration"), "", forPage),
+	)
+	if !forPage {
+		headers = append(headers,
+			NewHeader(i18n.Text("Resist"), i18n.Text("Resistance"), forPage),
+			NewHeader(i18n.Text("Class"), "", forPage),
+			NewHeader(i18n.Text("Cost"), i18n.Text("The mana cost to cast the spell"), forPage),
+			NewHeader(i18n.Text("Maintain"), i18n.Text("The mana cost to maintain the spell"), forPage),
+			NewHeader(i18n.Text("Time"), i18n.Text("The time required to cast the spell"), forPage),
+			NewHeader(i18n.Text("Duration"), "", forPage),
+		)
+	}
+	headers = append(headers,
 		NewHeader(i18n.Text("Diff"), i18n.Text("Difficulty"), forPage),
 	)
 	if forPage {
@@ -73,9 +73,7 @@ func NewSpellTableHeaders(forPage bool) []unison.TableColumnHeader {
 			NewHeader(i18n.Text("Category"), "", false),
 		)
 	}
-	return append(headers,
-		NewPageRefHeader(forPage),
-	)
+	return append(headers, NewPageRefHeader(forPage))
 }
 
 // NewSpellRowData creates a new table data provider function for spells.

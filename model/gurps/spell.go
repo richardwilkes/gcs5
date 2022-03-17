@@ -53,6 +53,7 @@ const (
 	SpellLevelColumn
 	SpellRelativeLevelColumn
 	SpellPointsColumn
+	SpellDescriptionForPageColumn
 )
 
 // SpellItem holds the Spell data that only exists in non-containers.
@@ -322,6 +323,37 @@ func (s *Spell) CellData(column int, data *node.CellData) {
 		data.Type = node.Text
 		data.Primary = s.AdjustedPoints().String()
 		data.Alignment = unison.EndAlignment
+	case SpellDescriptionForPageColumn:
+		data.Type = node.Text
+		data.Primary = s.Description()
+		data.Secondary = s.SecondaryText()
+		if !s.Container() {
+			var buffer strings.Builder
+			addPartToBuffer(&buffer, i18n.Text("Resistance"), s.Resist)
+			addPartToBuffer(&buffer, i18n.Text("Class"), s.Class)
+			addPartToBuffer(&buffer, i18n.Text("Cost"), s.CastingCost)
+			addPartToBuffer(&buffer, i18n.Text("Maintain"), s.MaintenanceCost)
+			addPartToBuffer(&buffer, i18n.Text("Time"), s.CastingTime)
+			addPartToBuffer(&buffer, i18n.Text("Duration"), s.Duration)
+			if buffer.Len() != 0 {
+				if data.Secondary == "" {
+					data.Secondary = buffer.String()
+				} else {
+					data.Secondary += "\n" + buffer.String()
+				}
+			}
+		}
+	}
+}
+
+func addPartToBuffer(buffer *strings.Builder, label, content string) {
+	if content != "" && content != "-" {
+		if buffer.Len() != 0 {
+			buffer.WriteString("; ")
+		}
+		buffer.WriteString(label)
+		buffer.WriteString(": ")
+		buffer.WriteString(content)
 	}
 }
 

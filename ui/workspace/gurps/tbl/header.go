@@ -21,21 +21,25 @@ import (
 )
 
 // NewHeader creates a new list header.
-func NewHeader(title, tooltip string, forPage bool) *unison.DefaultTableColumnHeader {
-	header := unison.NewTableColumnHeader(title)
+func NewHeader(title, tooltip string, forPage bool) unison.TableColumnHeader {
 	if forPage {
-		header.Font = theme.PageLabelPrimaryFont
-		header.OnBackgroundInk = theme.OnHeaderColor
+		return NewPageTableColumnHeader(title, tooltip)
 	}
-	if tooltip != "" {
-		header.Tooltip = unison.NewTooltipWithText(tooltip)
-	}
-	return header
+	return unison.NewTableColumnHeader(title, tooltip)
 }
 
 // NewSVGHeader creates a new list header with an SVG image as its content rather than text.
-func NewSVGHeader(svg *unison.SVG, tooltip string, forPage bool) *unison.DefaultTableColumnHeader {
-	header := NewHeader("", tooltip, forPage)
+func NewSVGHeader(svg *unison.SVG, tooltip string, forPage bool) unison.TableColumnHeader {
+	if forPage {
+		header := NewPageTableColumnHeader("", tooltip)
+		baseline := header.Font.Baseline()
+		header.Drawable = &unison.DrawableSVG{
+			SVG:  svg,
+			Size: geom32.NewSize(baseline, baseline),
+		}
+		return header
+	}
+	header := unison.NewTableColumnHeader("", tooltip)
 	baseline := header.Font.Baseline()
 	header.Drawable = &unison.DrawableSVG{
 		SVG:  svg,
@@ -45,8 +49,18 @@ func NewSVGHeader(svg *unison.SVG, tooltip string, forPage bool) *unison.Default
 }
 
 // NewSVGPairHeader creates a new list header with a pair of SVG images as its content rather than text.
-func NewSVGPairHeader(leftSVG, rightSVG *unison.SVG, tooltip string, forPage bool) *unison.DefaultTableColumnHeader {
-	header := NewHeader("", tooltip, forPage)
+func NewSVGPairHeader(leftSVG, rightSVG *unison.SVG, tooltip string, forPage bool) unison.TableColumnHeader {
+	if forPage {
+		header := NewPageTableColumnHeader("", tooltip)
+		baseline := header.Font.Baseline()
+		header.Drawable = &widget.DrawableSVGPair{
+			Left:  leftSVG,
+			Right: rightSVG,
+			Size:  geom32.NewSize(baseline*2+4, baseline),
+		}
+		return header
+	}
+	header := unison.NewTableColumnHeader("", tooltip)
 	baseline := header.Font.Baseline()
 	header.Drawable = &widget.DrawableSVGPair{
 		Left:  leftSVG,
@@ -57,28 +71,28 @@ func NewSVGPairHeader(leftSVG, rightSVG *unison.SVG, tooltip string, forPage boo
 }
 
 // NewPageRefHeader creates a new page reference header.
-func NewPageRefHeader(forPage bool) *unison.DefaultTableColumnHeader {
+func NewPageRefHeader(forPage bool) unison.TableColumnHeader {
 	return NewSVGHeader(res.BookmarkSVG,
 		i18n.Text(`A reference to the book and page the item appears on e.g. B22 would refer to "Basic Set", page 22`),
 		forPage)
 }
 
 // NewEquippedHeader creates a new equipped header.
-func NewEquippedHeader(forPage bool) *unison.DefaultTableColumnHeader {
+func NewEquippedHeader(forPage bool) unison.TableColumnHeader {
 	return NewSVGHeader(res.CircledCheckSVG,
 		i18n.Text(`Whether this piece of equipment is equipped or just carried. Items that are not equipped do not apply any features they may normally contribute to the character.`),
 		forPage)
 }
 
 // NewMoneyHeader creates a new money header.
-func NewMoneyHeader(forPage bool) *unison.DefaultTableColumnHeader {
+func NewMoneyHeader(forPage bool) unison.TableColumnHeader {
 	return NewSVGHeader(res.CoinsSVG,
 		i18n.Text(`The value of one of these pieces of equipment`),
 		forPage)
 }
 
 // NewExtendedMoneyHeader creates a new extended money page header.
-func NewExtendedMoneyHeader(forPage bool) *unison.DefaultTableColumnHeader {
+func NewExtendedMoneyHeader(forPage bool) unison.TableColumnHeader {
 	return NewSVGPairHeader(res.StackSVG, res.CoinsSVG,
 		i18n.Text(`The value of all of these pieces of equipment, plus the value of any contained equipment`), forPage)
 }
@@ -94,4 +108,93 @@ func NewWeightHeader(forPage bool) unison.TableColumnHeader {
 func NewExtendedWeightHeader(forPage bool) unison.TableColumnHeader {
 	return NewSVGPairHeader(res.StackSVG, res.WeightSVG,
 		i18n.Text(`The weight of all of these pieces of equipment, plus the weight of any contained equipment`), forPage)
+}
+
+// PageTableColumnHeaderTheme holds the theme values for PageTableColumnHeaders. Modifying this data will not alter
+// existing PageTableColumnHeaders, but will alter any PageTableColumnHeaders created in the future.
+var PageTableColumnHeaderTheme = unison.LabelTheme{
+	Font:            theme.PageLabelPrimaryFont,
+	OnBackgroundInk: theme.OnHeaderColor,
+	Gap:             3,
+	HAlign:          unison.MiddleAlignment,
+	VAlign:          unison.MiddleAlignment,
+	Side:            unison.LeftSide,
+}
+
+var _ unison.TableColumnHeader = &PageTableColumnHeader{}
+
+// PageTableColumnHeader provides a default page table column header panel.
+type PageTableColumnHeader struct {
+	unison.Label
+	sortState unison.SortState
+}
+
+// NewPageTableColumnHeader creates a new page table column header panel with the given title.
+func NewPageTableColumnHeader(title, tooltip string) *PageTableColumnHeader {
+	h := &PageTableColumnHeader{
+		Label: unison.Label{
+			LabelTheme: PageTableColumnHeaderTheme,
+			Text:       title,
+		},
+		sortState: unison.SortState{
+			Order:     -1,
+			Ascending: true,
+			Sortable:  true,
+		},
+	}
+
+	h.Self = h
+	h.SetSizer(h.DefaultSizes)
+	h.DrawCallback = h.DefaultDraw
+	h.MouseUpCallback = h.DefaultMouseUp
+	if tooltip != "" {
+		h.Tooltip = unison.NewTooltipWithText(tooltip)
+	}
+	return h
+}
+
+// DefaultSizes provides the default sizing.
+func (h *PageTableColumnHeader) DefaultSizes(hint geom32.Size) (min, pref, max geom32.Size) {
+	pref = unison.LabelSize(h.Text, h.Font, h.Drawable, h.Side, h.Gap)
+	if b := h.Border(); b != nil {
+		pref.AddInsets(b.Insets())
+	}
+	pref.GrowToInteger()
+	pref.ConstrainForHint(hint)
+	return pref, pref, pref
+}
+
+// DefaultDraw provides the default drawing.
+func (h *PageTableColumnHeader) DefaultDraw(canvas *unison.Canvas, dirty geom32.Rect) {
+	r := h.ContentRect(false)
+	fg := h.OnBackgroundInk
+	if h.sortState.Order == 0 {
+		canvas.DrawRect(dirty, theme.MarkerColor.Paint(canvas, dirty, unison.Fill))
+		fg = theme.OnMarkerColor
+	}
+	unison.DrawLabel(canvas, r, h.HAlign, h.VAlign, h.Text, h.Font, fg, h.Drawable, h.Side, h.Gap, !h.Enabled())
+}
+
+// SortState returns the current SortState.
+func (h *PageTableColumnHeader) SortState() unison.SortState {
+	return h.sortState
+}
+
+// SetSortState sets the SortState.
+func (h *PageTableColumnHeader) SetSortState(state unison.SortState) {
+	if h.sortState != state {
+		h.sortState = state
+		h.MarkForRedraw()
+	}
+}
+
+// DefaultMouseUp provides the default mouse up handling.
+func (h *PageTableColumnHeader) DefaultMouseUp(where geom32.Point, button int, mod unison.Modifiers) bool {
+	if h.sortState.Sortable && h.ContentRect(false).ContainsPoint(where) {
+		if header, ok := h.Parent().Self.(*unison.TableHeader); ok {
+			header.SortOn(h)
+			header.ApplySort()
+		}
+	}
+	return true
 }
