@@ -71,6 +71,15 @@ func NewSkillTableDockable(filePath string) (unison.Dockable, error) {
 	return NewTableDockable(filePath, tbl.NewSkillTableHeaders(false), tbl.NewSkillRowData(skills, false)), nil
 }
 
+// NewSpellTableDockable creates a new unison.Dockable for spell list files.
+func NewSpellTableDockable(filePath string) (unison.Dockable, error) {
+	spells, err := gurps.NewSpellsFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
+	if err != nil {
+		return nil, err
+	}
+	return NewTableDockable(filePath, tbl.NewSpellTableHeaders(false), tbl.NewSpellRowData(spells, false)), nil
+}
+
 // NewTableDockable creates a new TableDockable for list data files.
 func NewTableDockable(filePath string, columnHeaders []unison.TableColumnHeader, topLevelRows func(table *unison.Table) []unison.TableRowData) *TableDockable {
 	d := &TableDockable{

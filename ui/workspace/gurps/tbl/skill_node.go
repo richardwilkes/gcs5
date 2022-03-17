@@ -33,6 +33,7 @@ var (
 	}
 )
 
+// NewSkillTableHeaders creates a new set of table column headers for skills.
 func NewSkillTableHeaders(forPage bool) []unison.TableColumnHeader {
 	var headers []unison.TableColumnHeader
 	headers = append(headers,
@@ -55,6 +56,7 @@ func NewSkillTableHeaders(forPage bool) []unison.TableColumnHeader {
 	)
 }
 
+// NewSkillRowData creates a new table data provider function for skills.
 func NewSkillRowData(topLevelData []*gurps.Skill, forPage bool) func(table *unison.Table) []unison.TableRowData {
 	return func(table *unison.Table) []unison.TableRowData {
 		var colMap map[int]int

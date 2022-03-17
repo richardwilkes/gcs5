@@ -38,6 +38,11 @@ func NewSkillsPageList(entity *gurps.Entity) *PageList {
 	return NewPageList(entity, tbl.NewSkillTableHeaders(true), tbl.NewSkillRowData(entity.Skills, true))
 }
 
+// NewSpellsPageList creates the spells page list.
+func NewSpellsPageList(entity *gurps.Entity) *PageList {
+	return NewPageList(entity, tbl.NewSpellTableHeaders(true), tbl.NewSpellRowData(entity.Spells, true))
+}
+
 // NewPageList creates a new list for a sheet page.
 func NewPageList(entity *gurps.Entity, columnHeaders []unison.TableColumnHeader, topLevelRows func(table *unison.Table) []unison.TableRowData) *PageList {
 	p := &PageList{

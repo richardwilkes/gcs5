@@ -33,6 +33,7 @@ func NewHeader(title, tooltip string, forPage bool) *unison.DefaultTableColumnHe
 	return header
 }
 
+// NewSVGHeader creates a new list header with an SVG image as its content rather than text.
 func NewSVGHeader(svg *unison.SVG, tooltip string, forPage bool) *unison.DefaultTableColumnHeader {
 	header := NewHeader("", tooltip, forPage)
 	baseline := header.Font.Baseline()
@@ -43,6 +44,7 @@ func NewSVGHeader(svg *unison.SVG, tooltip string, forPage bool) *unison.Default
 	return header
 }
 
+// NewSVGPairHeader creates a new list header with a pair of SVG images as its content rather than text.
 func NewSVGPairHeader(leftSVG, rightSVG *unison.SVG, tooltip string, forPage bool) *unison.DefaultTableColumnHeader {
 	header := NewHeader("", tooltip, forPage)
 	baseline := header.Font.Baseline()

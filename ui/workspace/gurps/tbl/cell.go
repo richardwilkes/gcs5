@@ -21,6 +21,7 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+// CellFromCellData creates a new panel for the given cell data.
 func CellFromCellData(c *node.CellData, width float32, forPage, selected bool) *unison.Panel {
 	p := unison.NewPanel()
 	p.SetLayout(&unison.FlexLayout{

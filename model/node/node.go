@@ -11,6 +11,7 @@
 
 package node
 
+// Node defines the methods required of nodes in our tables.
 type Node interface {
 	Container() bool
 	NodeChildren() []Node

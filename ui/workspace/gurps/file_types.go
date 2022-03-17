@@ -27,7 +27,7 @@ func RegisterFileTypes() {
 	registerGCSFileInfo(".eqp", res.GCSEquipment, NewEquipmentListDockable)
 	registerGCSFileInfo(".eqm", res.GCSEquipmentModifiers, NewEquipmentModifierListDockable)
 	registerGCSFileInfo(".skl", res.GCSSkills, NewSkillTableDockable)
-	registerGCSFileInfo(".spl", res.GCSSpells, NewSpellListDockable)
+	registerGCSFileInfo(".spl", res.GCSSpells, NewSpellTableDockable)
 	registerGCSFileInfo(".not", res.GCSNotes, NewNoteListDockable)
 }
 

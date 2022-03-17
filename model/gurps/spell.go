@@ -26,11 +26,33 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/unison"
+)
+
+var _ node.Node = &Spell{}
+
+// Columns that can be used with the spell method .CellData()
+const (
+	SpellDescriptionColumn = iota
+	SpellResistColumn
+	SpellClassColumn
+	SpellCollegeColumn
+	SpellCastCostColumn
+	SpellMaintainCostColumn
+	SpellCastTimeColumn
+	SpellDurationColumn
+	SpellDifficultyColumn
+	SpellCategoryColumn
+	SpellReferenceColumn
+	SpellLevelColumn
+	SpellRelativeLevelColumn
+	SpellPointsColumn
 )
 
 // SpellItem holds the Spell data that only exists in non-containers.
@@ -201,6 +223,106 @@ func (s *Spell) UnmarshalJSON(data []byte) error {
 // Container returns true if this is a container.
 func (s *Spell) Container() bool {
 	return strings.HasSuffix(s.Type, commonContainerKeyPostfix)
+}
+
+// Open returns true if this node is currently open.
+func (s *Spell) Open() bool {
+	if s.Container() {
+		return s.SpellContainer.Open
+	}
+	return false
+}
+
+// SetOpen sets the current open state for this node.
+func (s *Spell) SetOpen(open bool) {
+	if s.Container() {
+		s.SpellContainer.Open = open
+	}
+}
+
+// NodeChildren returns the children of this node, if any.
+func (s *Spell) NodeChildren() []node.Node {
+	if s.Container() {
+		children := make([]node.Node, len(s.Children))
+		for i, child := range s.Children {
+			children[i] = child
+		}
+		return children
+	}
+	return nil
+}
+
+// CellData returns the cell data information for the given column.
+func (s *Spell) CellData(column int, data *node.CellData) {
+	switch column {
+	case SpellDescriptionColumn:
+		data.Type = node.Text
+		data.Primary = s.Description()
+		data.Secondary = s.SecondaryText()
+	case SpellResistColumn:
+		if !s.Container() {
+			data.Type = node.Text
+			data.Primary = s.Resist
+		}
+	case SpellClassColumn:
+		if !s.Container() {
+			data.Type = node.Text
+			data.Primary = s.Class
+		}
+	case SpellCollegeColumn:
+		if !s.Container() {
+			data.Type = node.Text
+			data.Primary = strings.Join(s.College, ", ")
+		}
+	case SpellCastCostColumn:
+		if !s.Container() {
+			data.Type = node.Text
+			data.Primary = s.CastingCost
+		}
+	case SpellMaintainCostColumn:
+		if !s.Container() {
+			data.Type = node.Text
+			data.Primary = s.MaintenanceCost
+		}
+	case SpellCastTimeColumn:
+		if !s.Container() {
+			data.Type = node.Text
+			data.Primary = s.CastingTime
+		}
+	case SpellDurationColumn:
+		if !s.Container() {
+			data.Type = node.Text
+			data.Primary = s.Duration
+		}
+	case SpellDifficultyColumn:
+		if !s.Container() {
+			data.Type = node.Text
+			data.Primary = s.Difficulty.Description(s.Entity)
+		}
+	case SpellCategoryColumn:
+		data.Type = node.Text
+		data.Primary = strings.Join(s.Categories, ", ")
+	case SpellReferenceColumn:
+		data.Type = node.PageRef
+		data.Primary = s.PageRef
+		data.Secondary = s.Name
+	case SpellLevelColumn:
+		if !s.Container() {
+			data.Type = node.Text
+			data.Primary = s.LevelAsString()
+			data.Alignment = unison.EndAlignment
+		}
+	case SpellRelativeLevelColumn:
+		if !s.Container() {
+			data.Type = node.Text
+			data.Primary = s.AdjustedRelativeLevel().String()
+			data.Alignment = unison.EndAlignment
+		}
+	case SpellPointsColumn:
+		data.Type = node.Text
+		data.Primary = s.AdjustedPoints().String()
+		data.Alignment = unison.EndAlignment
+	}
 }
 
 // Depth returns the number of parents this node has.

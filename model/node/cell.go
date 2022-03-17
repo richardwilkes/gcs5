@@ -13,6 +13,7 @@ package node
 
 import "github.com/richardwilkes/unison"
 
+// CellData holds data for creating a cell's visual representation.
 type CellData struct {
 	Type      CellType
 	Checked   bool
@@ -21,6 +22,7 @@ type CellData struct {
 	Secondary string
 }
 
+// ForSort returns a string that can be used to sort or search against for this data.
 func (c *CellData) ForSort() string {
 	switch c.Type {
 	case Text:

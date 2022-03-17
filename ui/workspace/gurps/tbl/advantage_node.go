@@ -32,6 +32,7 @@ var (
 	}
 )
 
+// NewAdvantageTableHeaders creates a new set of table column headers for advantages.
 func NewAdvantageTableHeaders(forPage bool) []unison.TableColumnHeader {
 	var headers []unison.TableColumnHeader
 	headers = append(headers,
@@ -47,6 +48,7 @@ func NewAdvantageTableHeaders(forPage bool) []unison.TableColumnHeader {
 	return append(headers, NewPageRefHeader(forPage))
 }
 
+// NewAdvantageRowData creates a new table data provider function for advantages.
 func NewAdvantageRowData(topLevelData []*gurps.Advantage, forPage bool) func(table *unison.Table) []unison.TableRowData {
 	return func(table *unison.Table) []unison.TableRowData {
 		var colMap map[int]int
