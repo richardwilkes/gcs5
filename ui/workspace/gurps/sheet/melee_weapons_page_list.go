@@ -20,7 +20,7 @@ import (
 
 // NewMeleeWeaponsPageList creates the melee weapons page list.
 func NewMeleeWeaponsPageList(entity *gurps.Entity) *PageList {
-	return NewPageList(entity, []unison.TableColumnHeader{
+	return NewPageList([]unison.TableColumnHeader{
 		tbl.NewHeader(i18n.Text("Melee Weapon"), "", true),
 		tbl.NewHeader(i18n.Text("Usage"), "", true),
 		tbl.NewHeader(i18n.Text("Lvl"), "", true),
@@ -29,7 +29,7 @@ func NewMeleeWeaponsPageList(entity *gurps.Entity) *PageList {
 		tbl.NewHeader(i18n.Text("Damage"), "", true),
 		tbl.NewHeader(i18n.Text("Reach"), "", true),
 		tbl.NewHeader(i18n.Text("ST"), "", true),
-	}, func(table *unison.Table) []unison.TableRowData {
+	}, 0, func(table *unison.Table) []unison.TableRowData {
 		//rows := make([]unison.TableRowData, 0, len(entity.Spells))
 		//for _, one := range entity.Spells {
 		//	rows = append(rows, NewAdvantagePageNode(table, nil, one))

@@ -20,10 +20,10 @@ import (
 
 // NewConditionalModifiersPageList creates the conditional modifiers page list.
 func NewConditionalModifiersPageList(entity *gurps.Entity) *PageList {
-	return NewPageList(entity, []unison.TableColumnHeader{
+	return NewPageList([]unison.TableColumnHeader{
 		tbl.NewHeader(i18n.Text("Modifier"), "", true),
 		tbl.NewHeader(i18n.Text("Condition"), "", true),
-	}, func(table *unison.Table) []unison.TableRowData {
+	}, 0, func(table *unison.Table) []unison.TableRowData {
 		//rows := make([]unison.TableRowData, 0, len(entity.Spells))
 		//for _, one := range entity.Spells {
 		//	rows = append(rows, NewAdvantagePageNode(table, nil, one))
