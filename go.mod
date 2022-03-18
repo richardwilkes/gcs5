@@ -1,6 +1,6 @@
 module github.com/richardwilkes/gcs
 
-go 1.17
+go 1.18
 
 require (
 	github.com/google/uuid v1.3.0
@@ -23,5 +23,6 @@ require (
 	github.com/yookoala/realpath v1.0.0 // indirect
 	golang.org/x/image v0.0.0-20220302094943-723b81ca9867 // indirect
 	golang.org/x/sys v0.0.0-20220317061510-51cd9980dadf // indirect
+	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

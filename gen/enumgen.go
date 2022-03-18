@@ -15,6 +15,8 @@ import (
 
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const (
@@ -964,7 +966,7 @@ func (e *enumInfo) NeedI18N() bool {
 
 func (e *enumValue) StringValue() string {
 	if e.String == "" {
-		return strings.Title(strings.ReplaceAll(e.Key, "_", " "))
+		return cases.Title(language.AmericanEnglish).String(strings.ReplaceAll(e.Key, "_", " "))
 	}
 	return e.String
 }
