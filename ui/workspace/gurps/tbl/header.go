@@ -155,24 +155,20 @@ func NewPageTableColumnHeader(title, tooltip string) *PageTableColumnHeader {
 
 // DefaultSizes provides the default sizing.
 func (h *PageTableColumnHeader) DefaultSizes(hint geom32.Size) (min, pref, max geom32.Size) {
-	pref = unison.LabelSize(h.Text, h.Font, h.Drawable, h.Side, h.Gap)
-	if b := h.Border(); b != nil {
-		pref.AddInsets(b.Insets())
-	}
-	pref.GrowToInteger()
-	pref.ConstrainForHint(hint)
-	return pref, pref, pref
+	return h.Label.DefaultSizes(hint)
 }
 
 // DefaultDraw provides the default drawing.
 func (h *PageTableColumnHeader) DefaultDraw(canvas *unison.Canvas, dirty geom32.Rect) {
-	r := h.ContentRect(false)
-	fg := h.OnBackgroundInk
 	if h.sortState.Order == 0 {
 		canvas.DrawRect(dirty, theme.MarkerColor.Paint(canvas, dirty, unison.Fill))
-		fg = theme.OnMarkerColor
+		save := h.OnBackgroundInk
+		h.OnBackgroundInk = theme.OnMarkerColor
+		h.Label.DefaultDraw(canvas, dirty)
+		h.OnBackgroundInk = save
+	} else {
+		h.Label.DefaultDraw(canvas, dirty)
 	}
-	unison.DrawLabel(canvas, r, h.HAlign, h.VAlign, h.Text, h.Font, fg, h.Drawable, h.Side, h.Gap, !h.Enabled())
 }
 
 // SortState returns the current SortState.

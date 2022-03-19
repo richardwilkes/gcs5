@@ -94,13 +94,15 @@ func addPageRefLabel(parent *unison.Panel, text, highlight string, f unison.Font
 	if label.Text != "" {
 		const isLinkKey = "is_link"
 		label.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
-			c := label.OnBackgroundInk
 			if _, exists := label.ClientData()[isLinkKey]; exists {
-				c = theme.OnLinkColor
 				gc.DrawRect(rect, theme.LinkColor.Paint(gc, rect, unison.Fill))
+				save := label.OnBackgroundInk
+				label.OnBackgroundInk = theme.OnLinkColor
+				label.DefaultDraw(gc, rect)
+				label.OnBackgroundInk = save
+			} else {
+				label.DefaultDraw(gc, rect)
 			}
-			unison.DrawLabel(gc, label.ContentRect(false), label.HAlign, label.VAlign, label.Text, label.Font, c,
-				label.Drawable, label.Side, label.Gap, !label.Enabled())
 		}
 		parent.MouseEnterCallback = func(where geom32.Point, mod unison.Modifiers) bool {
 			label.ClientData()[isLinkKey] = true
