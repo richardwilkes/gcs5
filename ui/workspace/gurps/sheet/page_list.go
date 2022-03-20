@@ -76,6 +76,8 @@ func NewSkillsPageList(entity *gurps.Entity) *PageList {
 		tbl.NewSkillRowData(func() []*gurps.Skill { return entity.Skills }, true))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
+	p.installIncrementSkillHandler()
+	p.installDecrementSkillHandler()
 	return p
 }
 
@@ -85,6 +87,8 @@ func NewSpellsPageList(entity *gurps.Entity) *PageList {
 		tbl.NewSpellRowData(func() []*gurps.Spell { return entity.Spells }, true))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
+	p.installIncrementSkillHandler()
+	p.installDecrementSkillHandler()
 	return p
 }
 
@@ -438,6 +442,90 @@ func (p *PageList) installDecrementUsesHandler() {
 			}
 		}
 		if updated {
+			widget.MarkModified(p)
+		}
+	})
+}
+
+func (p *PageList) installIncrementSkillHandler() {
+	p.installPerformHandlers(menus.IncrementSkillLevelItemID, func() bool {
+		for _, row := range p.table.SelectedRows(false) {
+			if n, ok := row.(*tbl.Node); ok {
+				switch item := n.Data().(type) {
+				case *gurps.Skill:
+					if !item.Container() {
+						return true
+					}
+				case *gurps.Spell:
+					if !item.Container() {
+						return true
+					}
+				}
+			}
+		}
+		return false
+	}, func() {
+		var entity *gurps.Entity
+		for _, row := range p.table.SelectedRows(false) {
+			if n, ok := row.(*tbl.Node); ok {
+				switch item := n.Data().(type) {
+				case *gurps.Skill:
+					if !item.Container() {
+						item.IncrementSkillLevel()
+						entity = item.Entity
+					}
+				case *gurps.Spell:
+					if !item.Container() {
+						item.IncrementSkillLevel()
+						entity = item.Entity
+					}
+				}
+			}
+		}
+		if entity != nil {
+			entity.Recalculate()
+			widget.MarkModified(p)
+		}
+	})
+}
+
+func (p *PageList) installDecrementSkillHandler() {
+	p.installPerformHandlers(menus.DecrementSkillLevelItemID, func() bool {
+		for _, row := range p.table.SelectedRows(false) {
+			if n, ok := row.(*tbl.Node); ok {
+				switch item := n.Data().(type) {
+				case *gurps.Skill:
+					if !item.Container() && item.Points > 0 {
+						return true
+					}
+				case *gurps.Spell:
+					if !item.Container() && item.Points > 0 {
+						return true
+					}
+				}
+			}
+		}
+		return false
+	}, func() {
+		var entity *gurps.Entity
+		for _, row := range p.table.SelectedRows(false) {
+			if n, ok := row.(*tbl.Node); ok {
+				switch item := n.Data().(type) {
+				case *gurps.Skill:
+					if !item.Container() {
+						item.DecrementSkillLevel()
+						entity = item.Entity
+					}
+				case *gurps.Spell:
+					if !item.Container() {
+						item.DecrementSkillLevel()
+						entity = item.Entity
+					}
+				}
+			}
+		}
+		if entity != nil {
+			entity.Recalculate()
 			widget.MarkModified(p)
 		}
 	})

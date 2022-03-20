@@ -469,6 +469,57 @@ func (s *Skill) Level() fixed.F64d4 {
 	return s.calculateLevel().Level
 }
 
+// IncrementSkillLevel adds enough points to increment the skill level to the next level.
+func (s *Skill) IncrementSkillLevel() {
+	if !s.Container() {
+		basePoints := s.Points.Trunc() + fixed.F64d4One
+		maxPoints := basePoints
+		if s.Difficulty.Difficulty == skill.Wildcard {
+			maxPoints += fxp.Twelve
+		} else {
+			maxPoints += fxp.Four
+		}
+		oldLevel := s.Level()
+		for points := basePoints; points < maxPoints; points += fixed.F64d4One {
+			s.Points = points
+			if s.Level() > oldLevel {
+				break
+			}
+		}
+	}
+}
+
+// DecrementSkillLevel removes enough points to decrement the skill level to the previous level.
+func (s *Skill) DecrementSkillLevel() {
+	if !s.Container() && s.Points > 0 {
+		basePoints := s.Points.Trunc()
+		minPoints := basePoints
+		if s.Difficulty.Difficulty == skill.Wildcard {
+			minPoints -= fxp.Twelve
+		} else {
+			minPoints -= fxp.Four
+		}
+		minPoints = minPoints.Max(0)
+		oldLevel := s.Level()
+		for points := basePoints; points >= minPoints; points -= fixed.F64d4One {
+			s.Points = points
+			if s.Level() < oldLevel {
+				break
+			}
+		}
+		if s.Points > 0 {
+			oldLevel = s.Level()
+			for s.Points > 0 {
+				s.Points -= fixed.F64d4One
+				if s.Level() != oldLevel {
+					s.Points += fixed.F64d4One
+					break
+				}
+			}
+		}
+	}
+}
+
 func (s *Skill) calculateLevel() skill.Level {
 	var tooltip xio.ByteBuffer
 	pts := s.Points

@@ -316,7 +316,7 @@ func (s *Spell) CellData(column int, data *node.CellData) {
 	case SpellRelativeLevelColumn:
 		if !s.Container() {
 			data.Type = node.Text
-			data.Primary = s.AdjustedRelativeLevel().String()
+			data.Primary = s.AdjustedRelativeLevelAsString()
 			data.Alignment = unison.EndAlignment
 		}
 	case SpellPointsColumn:
@@ -384,12 +384,24 @@ func (s *Spell) RelativeLevel() string {
 	}
 }
 
+// AdjustedRelativeLevelAsString returns the relative skill level as a string.
+func (s *Spell) AdjustedRelativeLevelAsString() string {
+	if s.Container() {
+		return ""
+	}
+	level := s.AdjustedRelativeLevel()
+	if level == fixed.F64d4Min {
+		return "-"
+	}
+	return level.Trunc().String()
+}
+
 // AdjustedRelativeLevel returns the relative skill level.
 func (s *Spell) AdjustedRelativeLevel() fixed.F64d4 {
 	if s.Container() {
 		return fixed.F64d4Min
 	}
-	if s.Entity != nil && s.LevelData.Level > 0 {
+	if s.Entity != nil && s.Level() > 0 {
 		return s.LevelData.RelativeLevel
 	}
 	// TODO: Old code had a case for templates... but can't see that being exercised in the actual display anywhere
@@ -425,6 +437,57 @@ func (s *Spell) Level() fixed.F64d4 {
 		return s.calculateRitualMagicLevel().Level
 	}
 	return s.calculateLevel().Level
+}
+
+// IncrementSkillLevel adds enough points to increment the skill level to the next level.
+func (s *Spell) IncrementSkillLevel() {
+	if !s.Container() {
+		basePoints := s.Points.Trunc() + fixed.F64d4One
+		maxPoints := basePoints
+		if s.Difficulty.Difficulty == skill.Wildcard {
+			maxPoints += fxp.Twelve
+		} else {
+			maxPoints += fxp.Four
+		}
+		oldLevel := s.Level()
+		for points := basePoints; points < maxPoints; points += fixed.F64d4One {
+			s.Points = points
+			if s.Level() > oldLevel {
+				break
+			}
+		}
+	}
+}
+
+// DecrementSkillLevel removes enough points to decrement the skill level to the previous level.
+func (s *Spell) DecrementSkillLevel() {
+	if !s.Container() && s.Points > 0 {
+		basePoints := s.Points.Trunc()
+		minPoints := basePoints
+		if s.Difficulty.Difficulty == skill.Wildcard {
+			minPoints -= fxp.Twelve
+		} else {
+			minPoints -= fxp.Four
+		}
+		minPoints = minPoints.Max(0)
+		oldLevel := s.Level()
+		for points := basePoints; points >= minPoints; points -= fixed.F64d4One {
+			s.Points = points
+			if s.Level() < oldLevel {
+				break
+			}
+		}
+		if s.Points > 0 {
+			oldLevel = s.Level()
+			for s.Points > 0 {
+				s.Points -= fixed.F64d4One
+				if s.Level() != oldLevel {
+					s.Points += fixed.F64d4One
+					break
+				}
+			}
+		}
+	}
 }
 
 func (s *Spell) calculateLevel() skill.Level {

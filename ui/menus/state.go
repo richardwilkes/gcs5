@@ -86,7 +86,8 @@ var IncreaseSkillLevel = &unison.Action{
 	ID:              IncrementSkillLevelItemID,
 	Title:           i18n.Text("Increase Skill Level"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeySlash, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // DecreaseSkillLevel decrements the uses of the skill level.
@@ -94,7 +95,8 @@ var DecreaseSkillLevel = &unison.Action{
 	ID:              DecrementSkillLevelItemID,
 	Title:           i18n.Text("Decrease Skill Level"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyPeriod, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // IncreaseTechLevel increments the uses of the tech level.
