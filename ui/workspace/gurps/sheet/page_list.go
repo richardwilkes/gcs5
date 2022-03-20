@@ -12,6 +12,7 @@
 package sheet
 
 import (
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/model/node"
@@ -56,6 +57,8 @@ func NewCarriedEquipmentPageList(entity *gurps.Entity) *PageList {
 	p.installDecrementHandler()
 	p.installIncrementUsesHandler()
 	p.installDecrementUsesHandler()
+	p.installIncrementTechLevelHandler()
+	p.installDecrementTechLevelHandler()
 	return p
 }
 
@@ -67,6 +70,8 @@ func NewOtherEquipmentPageList(entity *gurps.Entity) *PageList {
 	p.installDecrementHandler()
 	p.installIncrementUsesHandler()
 	p.installDecrementUsesHandler()
+	p.installIncrementTechLevelHandler()
+	p.installDecrementTechLevelHandler()
 	return p
 }
 
@@ -78,6 +83,8 @@ func NewSkillsPageList(entity *gurps.Entity) *PageList {
 	p.installDecrementHandler()
 	p.installIncrementSkillHandler()
 	p.installDecrementSkillHandler()
+	p.installIncrementTechLevelHandler()
+	p.installDecrementTechLevelHandler()
 	return p
 }
 
@@ -520,6 +527,108 @@ func (p *PageList) installDecrementSkillHandler() {
 					if !item.Container() {
 						item.DecrementSkillLevel()
 						entity = item.Entity
+					}
+				}
+			}
+		}
+		if entity != nil {
+			entity.Recalculate()
+			widget.MarkModified(p)
+		}
+	})
+}
+
+func (p *PageList) installIncrementTechLevelHandler() {
+	p.installPerformHandlers(menus.IncrementTechLevelItemID, func() bool {
+		for _, row := range p.table.SelectedRows(false) {
+			if n, ok := row.(*tbl.Node); ok {
+				switch item := n.Data().(type) {
+				case *gurps.Equipment:
+					return true
+				case *gurps.Skill:
+					if !item.Container() && item.TechLevel != nil {
+						return true
+					}
+				case *gurps.Spell:
+					if !item.Container() && item.TechLevel != nil {
+						return true
+					}
+				}
+			}
+		}
+		return false
+	}, func() {
+		var entity *gurps.Entity
+		var changed bool
+		for _, row := range p.table.SelectedRows(false) {
+			if n, ok := row.(*tbl.Node); ok {
+				switch item := n.Data().(type) {
+				case *gurps.Equipment:
+					if item.TechLevel, changed = gurps.AdjustTechLevel(item.TechLevel, fixed.F64d4One); changed {
+						entity = item.Entity
+					}
+				case *gurps.Skill:
+					if !item.Container() && item.TechLevel != nil {
+						if *item.TechLevel, changed = gurps.AdjustTechLevel(*item.TechLevel, fixed.F64d4One); changed {
+							entity = item.Entity
+						}
+					}
+				case *gurps.Spell:
+					if !item.Container() && item.TechLevel != nil {
+						if *item.TechLevel, changed = gurps.AdjustTechLevel(*item.TechLevel, fixed.F64d4One); changed {
+							entity = item.Entity
+						}
+					}
+				}
+			}
+		}
+		if entity != nil {
+			entity.Recalculate()
+			widget.MarkModified(p)
+		}
+	})
+}
+
+func (p *PageList) installDecrementTechLevelHandler() {
+	p.installPerformHandlers(menus.DecrementTechLevelItemID, func() bool {
+		for _, row := range p.table.SelectedRows(false) {
+			if n, ok := row.(*tbl.Node); ok {
+				switch item := n.Data().(type) {
+				case *gurps.Equipment:
+					return true
+				case *gurps.Skill:
+					if !item.Container() && item.TechLevel != nil {
+						return true
+					}
+				case *gurps.Spell:
+					if !item.Container() && item.TechLevel != nil {
+						return true
+					}
+				}
+			}
+		}
+		return false
+	}, func() {
+		var entity *gurps.Entity
+		var changed bool
+		for _, row := range p.table.SelectedRows(false) {
+			if n, ok := row.(*tbl.Node); ok {
+				switch item := n.Data().(type) {
+				case *gurps.Equipment:
+					if item.TechLevel, changed = gurps.AdjustTechLevel(item.TechLevel, fxp.NegOne); changed {
+						entity = item.Entity
+					}
+				case *gurps.Skill:
+					if !item.Container() && item.TechLevel != nil {
+						if *item.TechLevel, changed = gurps.AdjustTechLevel(*item.TechLevel, fxp.NegOne); changed {
+							entity = item.Entity
+						}
+					}
+				case *gurps.Spell:
+					if !item.Container() && item.TechLevel != nil {
+						if *item.TechLevel, changed = gurps.AdjustTechLevel(*item.TechLevel, fxp.NegOne); changed {
+							entity = item.Entity
+						}
 					}
 				}
 			}

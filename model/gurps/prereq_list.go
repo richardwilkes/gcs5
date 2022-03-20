@@ -18,7 +18,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
 var _ Prereq = &PrereqList{}
@@ -78,14 +77,14 @@ func (p *PrereqList) ApplyNameableKeys(m map[string]string) {
 
 // Satisfied implements Prereq.
 func (p *PrereqList) Satisfied(entity *Entity, exclude interface{}, buffer *xio.ByteBuffer, prefix string) bool {
-	if p.WhenEnabled && !p.WhenTLCriteria.Compare.Matches(p.WhenTLCriteria.Qualifier,
-		fixed.F64d4FromStringForced(strings.Map(func(r rune) rune {
-			if r == '.' || (r >= '0' && r <= '9') {
-				return r
-			}
-			return -1
-		}, entity.Profile.TechLevel))) {
-		return true
+	if p.WhenEnabled {
+		tl, _, _ := ExtractTechLevel(entity.Profile.TechLevel)
+		if tl < 0 {
+			tl = 0
+		}
+		if !p.WhenTLCriteria.Compare.Matches(p.WhenTLCriteria.Qualifier, tl) {
+			return true
+		}
 	}
 	count := 0
 	var local *xio.ByteBuffer

@@ -104,7 +104,8 @@ var IncreaseTechLevel = &unison.Action{
 	ID:              IncrementTechLevelItemID,
 	Title:           i18n.Text("Increase Tech Level"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyCloseBracket, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // DecreaseTechLevel decrements the uses of the tech level.
@@ -112,7 +113,8 @@ var DecreaseTechLevel = &unison.Action{
 	ID:              DecrementTechLevelItemID,
 	Title:           i18n.Text("Decrease Tech Level"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyOpenBracket, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // SwapDefaults swaps the defaults of the selected skill.
