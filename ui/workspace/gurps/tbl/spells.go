@@ -77,7 +77,7 @@ func NewSpellTableHeaders(forPage bool) []unison.TableColumnHeader {
 }
 
 // NewSpellRowData creates a new table data provider function for spells.
-func NewSpellRowData(topLevelData []*gurps.Spell, forPage bool) func(table *unison.Table) []unison.TableRowData {
+func NewSpellRowData(topLevelRowsProvider func() []*gurps.Spell, forPage bool) func(table *unison.Table) []unison.TableRowData {
 	return func(table *unison.Table) []unison.TableRowData {
 		var colMap map[int]int
 		if forPage {
@@ -85,8 +85,9 @@ func NewSpellRowData(topLevelData []*gurps.Spell, forPage bool) func(table *unis
 		} else {
 			colMap = spellListColMap
 		}
-		rows := make([]unison.TableRowData, 0, len(topLevelData))
-		for _, one := range topLevelData {
+		data := topLevelRowsProvider()
+		rows := make([]unison.TableRowData, 0, len(data))
+		for _, one := range data {
 			rows = append(rows, NewNode(table, nil, colMap, one, forPage))
 		}
 		return rows

@@ -49,10 +49,11 @@ func NewAdvantageModifierTableHeaders() []unison.TableColumnHeader {
 }
 
 // NewAdvantageModifierRowData creates a new table data provider function for advantage modifiers.
-func NewAdvantageModifierRowData(topLevelData []*gurps.AdvantageModifier) func(table *unison.Table) []unison.TableRowData {
+func NewAdvantageModifierRowData(topLevelRowsProvider func() []*gurps.AdvantageModifier) func(table *unison.Table) []unison.TableRowData {
 	return func(table *unison.Table) []unison.TableRowData {
-		rows := make([]unison.TableRowData, 0, len(topLevelData))
-		for _, one := range topLevelData {
+		data := topLevelRowsProvider()
+		rows := make([]unison.TableRowData, 0, len(data))
+		for _, one := range data {
 			rows = append(rows, NewNode(table, nil, advantageModifierColMap, one, false))
 		}
 		return rows
@@ -72,10 +73,11 @@ func NewEquipmentModifierTableHeaders() []unison.TableColumnHeader {
 }
 
 // NewEquipmentModifierRowData creates a new table data provider function for equipment modifiers.
-func NewEquipmentModifierRowData(topLevelData []*gurps.EquipmentModifier) func(table *unison.Table) []unison.TableRowData {
+func NewEquipmentModifierRowData(topLevelRowsProvider func() []*gurps.EquipmentModifier) func(table *unison.Table) []unison.TableRowData {
 	return func(table *unison.Table) []unison.TableRowData {
-		rows := make([]unison.TableRowData, 0, len(topLevelData))
-		for _, one := range topLevelData {
+		data := topLevelRowsProvider()
+		rows := make([]unison.TableRowData, 0, len(data))
+		for _, one := range data {
 			rows = append(rows, NewNode(table, nil, equipmentModifierColMap, one, false))
 		}
 		return rows
@@ -91,10 +93,16 @@ func NewConditionalModifierTableHeaders(descTitle string) []unison.TableColumnHe
 }
 
 // NewConditionalModifierRowData creates a new table data provider function for conditional modifiers.
-func NewConditionalModifierRowData(topLevelData []*gurps.ConditionalModifier) func(table *unison.Table) []unison.TableRowData {
+func NewConditionalModifierRowData(entity *gurps.Entity, reactions bool) func(table *unison.Table) []unison.TableRowData {
 	return func(table *unison.Table) []unison.TableRowData {
-		rows := make([]unison.TableRowData, 0, len(topLevelData))
-		for _, one := range topLevelData {
+		var data []*gurps.ConditionalModifier
+		if reactions {
+			data = entity.Reactions()
+		} else {
+			data = entity.ConditionalModifiers()
+		}
+		rows := make([]unison.TableRowData, 0, len(data))
+		for _, one := range data {
 			rows = append(rows, NewNode(table, nil, conditionalModifierColMap, one, true))
 		}
 		return rows

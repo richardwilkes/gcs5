@@ -57,7 +57,7 @@ func NewSkillTableHeaders(forPage bool) []unison.TableColumnHeader {
 }
 
 // NewSkillRowData creates a new table data provider function for skills.
-func NewSkillRowData(topLevelData []*gurps.Skill, forPage bool) func(table *unison.Table) []unison.TableRowData {
+func NewSkillRowData(topLevelRowsProvider func() []*gurps.Skill, forPage bool) func(table *unison.Table) []unison.TableRowData {
 	return func(table *unison.Table) []unison.TableRowData {
 		var colMap map[int]int
 		if forPage {
@@ -65,8 +65,9 @@ func NewSkillRowData(topLevelData []*gurps.Skill, forPage bool) func(table *unis
 		} else {
 			colMap = skillListColMap
 		}
-		rows := make([]unison.TableRowData, 0, len(topLevelData))
-		for _, one := range topLevelData {
+		data := topLevelRowsProvider()
+		rows := make([]unison.TableRowData, 0, len(data))
+		for _, one := range data {
 			rows = append(rows, NewNode(table, nil, colMap, one, forPage))
 		}
 		return rows

@@ -31,10 +31,11 @@ func NewNoteTableHeaders(forPage bool) []unison.TableColumnHeader {
 }
 
 // NewNoteRowData creates a new table data provider function for notes.
-func NewNoteRowData(topLevelData []*gurps.Note, forPage bool) func(table *unison.Table) []unison.TableRowData {
+func NewNoteRowData(topLevelRowsProvider func() []*gurps.Note, forPage bool) func(table *unison.Table) []unison.TableRowData {
 	return func(table *unison.Table) []unison.TableRowData {
-		rows := make([]unison.TableRowData, 0, len(topLevelData))
-		for _, one := range topLevelData {
+		data := topLevelRowsProvider()
+		rows := make([]unison.TableRowData, 0, len(data))
+		for _, one := range data {
 			rows = append(rows, NewNode(table, nil, noteColMap, one, forPage))
 		}
 		return rows

@@ -26,69 +26,75 @@ import (
 // PageList holds a list for a sheet page.
 type PageList struct {
 	unison.Panel
-	tableHeader *unison.TableHeader
-	table       *unison.Table
+	tableHeader          *unison.TableHeader
+	table                *unison.Table
+	topLevelRowsCallback func(table *unison.Table) []unison.TableRowData
 }
 
 // NewAdvantagesPageList creates the advantages page list.
 func NewAdvantagesPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewAdvantageTableHeaders(true), 0, 0, tbl.NewAdvantageRowData(entity.Advantages, true))
+	return newPageList(tbl.NewAdvantageTableHeaders(true), 0, 0,
+		tbl.NewAdvantageRowData(func() []*gurps.Advantage { return entity.Advantages }, true))
 }
 
 // NewCarriedEquipmentPageList creates the carried equipment page list.
 func NewCarriedEquipmentPageList(entity *gurps.Entity) *PageList {
 	return newPageList(tbl.NewEquipmentTableHeaders(entity, true, true), 2, 2,
-		tbl.NewEquipmentRowData(entity.CarriedEquipment, true, true))
+		tbl.NewEquipmentRowData(func() []*gurps.Equipment { return entity.CarriedEquipment }, true, true))
 }
 
 // NewOtherEquipmentPageList creates the other equipment page list.
 func NewOtherEquipmentPageList(entity *gurps.Entity) *PageList {
 	return newPageList(tbl.NewEquipmentTableHeaders(entity, true, false), 1, 1,
-		tbl.NewEquipmentRowData(entity.OtherEquipment, true, false))
+		tbl.NewEquipmentRowData(func() []*gurps.Equipment { return entity.OtherEquipment }, true, false))
 }
 
 // NewSkillsPageList creates the skills page list.
 func NewSkillsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewSkillTableHeaders(true), 0, 0, tbl.NewSkillRowData(entity.Skills, true))
+	return newPageList(tbl.NewSkillTableHeaders(true), 0, 0,
+		tbl.NewSkillRowData(func() []*gurps.Skill { return entity.Skills }, true))
 }
 
 // NewSpellsPageList creates the spells page list.
 func NewSpellsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewSpellTableHeaders(true), 0, 0, tbl.NewSpellRowData(entity.Spells, true))
+	return newPageList(tbl.NewSpellTableHeaders(true), 0, 0,
+		tbl.NewSpellRowData(func() []*gurps.Spell { return entity.Spells }, true))
 }
 
 // NewNotesPageList creates the notes page list.
 func NewNotesPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewNoteTableHeaders(true), 0, 0, tbl.NewNoteRowData(entity.Notes, true))
+	return newPageList(tbl.NewNoteTableHeaders(true), 0, 0,
+		tbl.NewNoteRowData(func() []*gurps.Note { return entity.Notes }, true))
 }
 
 // NewConditionalModifiersPageList creates the conditional modifiers page list.
 func NewConditionalModifiersPageList(entity *gurps.Entity) *PageList {
 	return newPageList(tbl.NewConditionalModifierTableHeaders(i18n.Text("Condition")), -1, 1,
-		tbl.NewConditionalModifierRowData(entity.ConditionalModifiers()))
+		tbl.NewConditionalModifierRowData(entity, false))
 }
 
 // NewReactionsPageList creates the reaction modifiers page list.
 func NewReactionsPageList(entity *gurps.Entity) *PageList {
 	return newPageList(tbl.NewConditionalModifierTableHeaders(i18n.Text("Reaction")), -1, 1,
-		tbl.NewConditionalModifierRowData(entity.Reactions()))
+		tbl.NewConditionalModifierRowData(entity, true))
 }
 
 // NewMeleeWeaponsPageList creates the melee weapons page list.
 func NewMeleeWeaponsPageList(entity *gurps.Entity) *PageList {
 	return newPageList(tbl.NewWeaponTableHeaders(true), -1, 0,
-		tbl.NewWeaponRowData(entity.EquippedWeapons(weapon.Melee), true))
+		tbl.NewWeaponRowData(func() []*gurps.Weapon { return entity.EquippedWeapons(weapon.Melee) }, true))
 }
 
 // NewRangedWeaponsPageList creates the ranged weapons page list.
 func NewRangedWeaponsPageList(entity *gurps.Entity) *PageList {
 	return newPageList(tbl.NewWeaponTableHeaders(false), -1, 0,
-		tbl.NewWeaponRowData(entity.EquippedWeapons(weapon.Ranged), false))
+		tbl.NewWeaponRowData(func() []*gurps.Weapon { return entity.EquippedWeapons(weapon.Ranged) }, false))
 }
 
 func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex, excessWidthIndex int, topLevelRows func(table *unison.Table) []unison.TableRowData) *PageList {
 	p := &PageList{
-		table: unison.NewTable(),
+		table:                unison.NewTable(),
+		topLevelRowsCallback: topLevelRows,
 	}
 	p.Self = p
 	p.SetLayout(&unison.FlexLayout{Columns: 1})
@@ -164,8 +170,13 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 			p.tableHeader.DefaultDraw(gc, dirty)
 		}
 	}
-	p.table.SetTopLevelRows(topLevelRows(p.table))
+	p.table.SetTopLevelRows(p.topLevelRowsCallback(p.table))
 	p.AddChild(p.tableHeader)
 	p.AddChild(p.table)
 	return p
+}
+
+// Sync the underlying data.
+func (p *PageList) Sync() {
+	p.table.SetTopLevelRows(p.topLevelRowsCallback(p.table))
 }

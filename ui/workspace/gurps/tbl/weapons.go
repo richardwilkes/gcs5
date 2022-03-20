@@ -77,7 +77,7 @@ func NewWeaponTableHeaders(melee bool) []unison.TableColumnHeader {
 }
 
 // NewWeaponRowData creates a new table data provider function for weapons.
-func NewWeaponRowData(topLevelData []*gurps.Weapon, melee bool) func(table *unison.Table) []unison.TableRowData {
+func NewWeaponRowData(topLevelRowProvider func() []*gurps.Weapon, melee bool) func(table *unison.Table) []unison.TableRowData {
 	return func(table *unison.Table) []unison.TableRowData {
 		var colMap map[int]int
 		if melee {
@@ -85,8 +85,9 @@ func NewWeaponRowData(topLevelData []*gurps.Weapon, melee bool) func(table *unis
 		} else {
 			colMap = rangedWeaponColMap
 		}
-		rows := make([]unison.TableRowData, 0, len(topLevelData))
-		for _, one := range topLevelData {
+		data := topLevelRowProvider()
+		rows := make([]unison.TableRowData, 0, len(data))
+		for _, one := range data {
 			rows = append(rows, NewNode(table, nil, colMap, one, true))
 		}
 		return rows

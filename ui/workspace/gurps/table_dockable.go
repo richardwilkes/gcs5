@@ -59,7 +59,8 @@ func NewAdvantageTableDockable(filePath string) (unison.Dockable, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewTableDockable(filePath, tbl.NewAdvantageTableHeaders(false), tbl.NewAdvantageRowData(advantages, false)), nil
+	return NewTableDockable(filePath, tbl.NewAdvantageTableHeaders(false),
+		tbl.NewAdvantageRowData(func() []*gurps.Advantage { return advantages }, false)), nil
 }
 
 // NewAdvantageModifierTableDockable creates a new unison.Dockable for advantage modifier list files.
@@ -68,7 +69,8 @@ func NewAdvantageModifierTableDockable(filePath string) (unison.Dockable, error)
 	if err != nil {
 		return nil, err
 	}
-	return NewTableDockable(filePath, tbl.NewAdvantageModifierTableHeaders(), tbl.NewAdvantageModifierRowData(modifiers)), nil
+	return NewTableDockable(filePath, tbl.NewAdvantageModifierTableHeaders(),
+		tbl.NewAdvantageModifierRowData(func() []*gurps.AdvantageModifier { return modifiers })), nil
 }
 
 // NewEquipmentTableDockable creates a new unison.Dockable for equipment list files.
@@ -78,7 +80,7 @@ func NewEquipmentTableDockable(filePath string) (unison.Dockable, error) {
 		return nil, err
 	}
 	return NewTableDockable(filePath, tbl.NewEquipmentTableHeaders(nil, false, false),
-		tbl.NewEquipmentRowData(equipment, false, false)), nil
+		tbl.NewEquipmentRowData(func() []*gurps.Equipment { return equipment }, false, false)), nil
 }
 
 // NewEquipmentModifierTableDockable creates a new unison.Dockable for equipment modifier list files.
@@ -87,7 +89,8 @@ func NewEquipmentModifierTableDockable(filePath string) (unison.Dockable, error)
 	if err != nil {
 		return nil, err
 	}
-	return NewTableDockable(filePath, tbl.NewEquipmentModifierTableHeaders(), tbl.NewEquipmentModifierRowData(modifiers)), nil
+	return NewTableDockable(filePath, tbl.NewEquipmentModifierTableHeaders(),
+		tbl.NewEquipmentModifierRowData(func() []*gurps.EquipmentModifier { return modifiers })), nil
 }
 
 // NewSkillTableDockable creates a new unison.Dockable for skill list files.
@@ -96,7 +99,8 @@ func NewSkillTableDockable(filePath string) (unison.Dockable, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewTableDockable(filePath, tbl.NewSkillTableHeaders(false), tbl.NewSkillRowData(skills, false)), nil
+	return NewTableDockable(filePath, tbl.NewSkillTableHeaders(false),
+		tbl.NewSkillRowData(func() []*gurps.Skill { return skills }, false)), nil
 }
 
 // NewSpellTableDockable creates a new unison.Dockable for spell list files.
@@ -105,7 +109,8 @@ func NewSpellTableDockable(filePath string) (unison.Dockable, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewTableDockable(filePath, tbl.NewSpellTableHeaders(false), tbl.NewSpellRowData(spells, false)), nil
+	return NewTableDockable(filePath, tbl.NewSpellTableHeaders(false),
+		tbl.NewSpellRowData(func() []*gurps.Spell { return spells }, false)), nil
 }
 
 // NewNoteTableDockable creates a new unison.Dockable for note list files.
@@ -114,7 +119,8 @@ func NewNoteTableDockable(filePath string) (unison.Dockable, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewTableDockable(filePath, tbl.NewNoteTableHeaders(false), tbl.NewNoteRowData(notes, false)), nil
+	return NewTableDockable(filePath, tbl.NewNoteTableHeaders(false),
+		tbl.NewNoteRowData(func() []*gurps.Note { return notes }, false)), nil
 }
 
 // NewTableDockable creates a new TableDockable for list data files.

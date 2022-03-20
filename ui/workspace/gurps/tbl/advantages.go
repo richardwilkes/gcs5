@@ -49,7 +49,7 @@ func NewAdvantageTableHeaders(forPage bool) []unison.TableColumnHeader {
 }
 
 // NewAdvantageRowData creates a new table data provider function for advantages.
-func NewAdvantageRowData(topLevelData []*gurps.Advantage, forPage bool) func(table *unison.Table) []unison.TableRowData {
+func NewAdvantageRowData(topLevelRowsProvider func() []*gurps.Advantage, forPage bool) func(table *unison.Table) []unison.TableRowData {
 	return func(table *unison.Table) []unison.TableRowData {
 		var colMap map[int]int
 		if forPage {
@@ -57,8 +57,9 @@ func NewAdvantageRowData(topLevelData []*gurps.Advantage, forPage bool) func(tab
 		} else {
 			colMap = advantageListColMap
 		}
-		rows := make([]unison.TableRowData, 0, len(topLevelData))
-		for _, one := range topLevelData {
+		data := topLevelRowsProvider()
+		rows := make([]unison.TableRowData, 0, len(data))
+		for _, one := range data {
 			rows = append(rows, NewNode(table, nil, colMap, one, forPage))
 		}
 		return rows

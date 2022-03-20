@@ -92,7 +92,7 @@ func NewEquipmentTableHeaders(entity *gurps.Entity, forPage, carried bool) []uni
 
 // NewEquipmentRowData creates a new table data provider function for equipment. 'carried' is only relevant if 'forPage'
 // is true.
-func NewEquipmentRowData(topLevelData []*gurps.Equipment, forPage, carried bool) func(table *unison.Table) []unison.TableRowData {
+func NewEquipmentRowData(topLevelRowsProvider func() []*gurps.Equipment, forPage, carried bool) func(table *unison.Table) []unison.TableRowData {
 	return func(table *unison.Table) []unison.TableRowData {
 		var colMap map[int]int
 		if forPage {
@@ -104,8 +104,9 @@ func NewEquipmentRowData(topLevelData []*gurps.Equipment, forPage, carried bool)
 		} else {
 			colMap = equipmentListColMap
 		}
-		rows := make([]unison.TableRowData, 0, len(topLevelData))
-		for _, one := range topLevelData {
+		data := topLevelRowsProvider()
+		rows := make([]unison.TableRowData, 0, len(data))
+		for _, one := range data {
 			rows = append(rows, NewNode(table, nil, colMap, one, forPage))
 		}
 		return rows
