@@ -16,9 +16,12 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/gcs/model/theme"
+	"github.com/richardwilkes/gcs/ui/menus"
+	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
+	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
@@ -30,36 +33,57 @@ type PageList struct {
 	tableHeader          *unison.TableHeader
 	table                *unison.Table
 	topLevelRowsCallback func(table *unison.Table) []unison.TableRowData
+	canPerformMap        map[int]func() bool
+	performMap           map[int]func()
 }
 
 // NewAdvantagesPageList creates the advantages page list.
 func NewAdvantagesPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewAdvantageTableHeaders(true), 0, 0,
+	p := newPageList(tbl.NewAdvantageTableHeaders(true), 0, 0,
 		tbl.NewAdvantageRowData(func() []*gurps.Advantage { return entity.Advantages }, true))
+	p.installIncrementHandler()
+	p.installDecrementHandler()
+	return p
 }
 
 // NewCarriedEquipmentPageList creates the carried equipment page list.
 func NewCarriedEquipmentPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewEquipmentTableHeaders(entity, true, true), 2, 2,
+	p := newPageList(tbl.NewEquipmentTableHeaders(entity, true, true), 2, 2,
 		tbl.NewEquipmentRowData(func() []*gurps.Equipment { return entity.CarriedEquipment }, true, true))
+	p.installIncrementHandler()
+	p.installDecrementHandler()
+	p.installIncrementUsesHandler()
+	p.installDecrementUsesHandler()
+	return p
 }
 
 // NewOtherEquipmentPageList creates the other equipment page list.
 func NewOtherEquipmentPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewEquipmentTableHeaders(entity, true, false), 1, 1,
+	p := newPageList(tbl.NewEquipmentTableHeaders(entity, true, false), 1, 1,
 		tbl.NewEquipmentRowData(func() []*gurps.Equipment { return entity.OtherEquipment }, true, false))
+	p.installIncrementHandler()
+	p.installDecrementHandler()
+	p.installIncrementUsesHandler()
+	p.installDecrementUsesHandler()
+	return p
 }
 
 // NewSkillsPageList creates the skills page list.
 func NewSkillsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewSkillTableHeaders(true), 0, 0,
+	p := newPageList(tbl.NewSkillTableHeaders(true), 0, 0,
 		tbl.NewSkillRowData(func() []*gurps.Skill { return entity.Skills }, true))
+	p.installIncrementHandler()
+	p.installDecrementHandler()
+	return p
 }
 
 // NewSpellsPageList creates the spells page list.
 func NewSpellsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewSpellTableHeaders(true), 0, 0,
+	p := newPageList(tbl.NewSpellTableHeaders(true), 0, 0,
 		tbl.NewSpellRowData(func() []*gurps.Spell { return entity.Spells }, true))
+	p.installIncrementHandler()
+	p.installDecrementHandler()
+	return p
 }
 
 // NewNotesPageList creates the notes page list.
@@ -96,6 +120,8 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 	p := &PageList{
 		table:                unison.NewTable(),
 		topLevelRowsCallback: topLevelRows,
+		canPerformMap:        make(map[int]func() bool),
+		performMap:           make(map[int]func()),
 	}
 	p.Self = p
 	p.SetLayout(&unison.FlexLayout{Columns: 1})
@@ -127,8 +153,23 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 		HGrab:  true,
 		VGrab:  true,
 	})
+	p.table.MouseDownCallback = func(where geom32.Point, button, clickCount int, mod unison.Modifiers) bool {
+		p.table.RequestFocus()
+		return p.table.DefaultMouseDown(where, button, clickCount, mod)
+	}
 	p.table.FrameChangeCallback = func() {
 		p.table.SizeColumnsToFitWithExcessIn(excessWidthIndex)
+	}
+	p.table.CanPerformCmdCallback = func(_ interface{}, id int) bool {
+		if f, ok := p.canPerformMap[id]; ok {
+			return f()
+		}
+		return false
+	}
+	p.table.PerformCmdCallback = func(_ interface{}, id int) {
+		if f, ok := p.performMap[id]; ok {
+			f()
+		}
 	}
 	p.tableHeader = unison.NewTableHeader(p.table, columnHeaders...)
 	p.tableHeader.BackgroundInk = theme.HeaderColor
@@ -175,6 +216,195 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 	p.AddChild(p.tableHeader)
 	p.AddChild(p.table)
 	return p
+}
+
+func (p *PageList) installPerformHandlers(id int, can func() bool, do func()) {
+	p.canPerformMap[id] = can
+	p.performMap[id] = do
+}
+
+func (p *PageList) installIncrementHandler() {
+	p.installPerformHandlers(menus.IncrementItemID, func() bool {
+		for _, row := range p.table.SelectedRows() {
+			if n, ok := row.(*tbl.Node); ok {
+				switch item := n.Data().(type) {
+				case *gurps.Advantage:
+					if item.IsLeveled() {
+						return true
+					}
+				case *gurps.Equipment:
+					return true
+				case *gurps.Skill:
+					if !item.Container() {
+						return true
+					}
+				case *gurps.Spell:
+					if !item.Container() {
+						return true
+					}
+				}
+			}
+		}
+		return false
+	}, func() {
+		var entity *gurps.Entity
+		for _, row := range p.table.SelectedRows() {
+			if n, ok := row.(*tbl.Node); ok {
+				switch item := n.Data().(type) {
+				case *gurps.Advantage:
+					if item.IsLeveled() {
+						levels := increment(*item.Levels)
+						item.Levels = &levels
+						entity = item.Entity
+					}
+				case *gurps.Equipment:
+					item.Quantity = increment(item.Quantity)
+					entity = item.Entity
+				case *gurps.Skill:
+					if !item.Container() {
+						item.Points = increment(item.Points)
+						entity = item.Entity
+					}
+				case *gurps.Spell:
+					if !item.Container() {
+						item.Points = increment(item.Points)
+						entity = item.Entity
+					}
+				}
+			}
+		}
+		if entity != nil {
+			entity.Recalculate()
+			widget.MarkModified(p)
+		}
+	})
+}
+
+func (p *PageList) installDecrementHandler() {
+	p.installPerformHandlers(menus.DecrementItemID, func() bool {
+		for _, row := range p.table.SelectedRows() {
+			if n, ok := row.(*tbl.Node); ok {
+				switch item := n.Data().(type) {
+				case *gurps.Advantage:
+					if item.IsLeveled() && *item.Levels > 0 {
+						return true
+					}
+				case *gurps.Equipment:
+					if item.Quantity > 0 {
+						return true
+					}
+				case *gurps.Skill:
+					if !item.Container() && item.Points > 0 {
+						return true
+					}
+				case *gurps.Spell:
+					if !item.Container() && item.Points > 0 {
+						return true
+					}
+				}
+			}
+		}
+		return false
+	}, func() {
+		var entity *gurps.Entity
+		for _, row := range p.table.SelectedRows() {
+			if n, ok := row.(*tbl.Node); ok {
+				switch item := n.Data().(type) {
+				case *gurps.Advantage:
+					if item.IsLeveled() {
+						levels := decrement(*item.Levels)
+						item.Levels = &levels
+						entity = item.Entity
+					}
+				case *gurps.Equipment:
+					item.Quantity = decrement(item.Quantity).Max(0)
+					entity = item.Entity
+				case *gurps.Skill:
+					if !item.Container() {
+						item.Points = decrement(item.Points).Max(0)
+						entity = item.Entity
+					}
+				case *gurps.Spell:
+					if !item.Container() {
+						item.Points = decrement(item.Points).Max(0)
+						entity = item.Entity
+					}
+				}
+			}
+		}
+		if entity != nil {
+			entity.Recalculate()
+			widget.MarkModified(p)
+		}
+	})
+}
+
+func increment(value fixed.F64d4) fixed.F64d4 {
+	return value.Trunc() + fixed.F64d4One
+}
+
+func decrement(value fixed.F64d4) fixed.F64d4 {
+	v := value.Trunc()
+	if v == value {
+		v -= fixed.F64d4One
+	}
+	return v
+}
+
+func (p *PageList) installIncrementUsesHandler() {
+	p.installPerformHandlers(menus.IncrementUsesItemID, func() bool {
+		for _, row := range p.table.SelectedRows() {
+			if n, ok := row.(*tbl.Node); ok {
+				var e *gurps.Equipment
+				if e, ok = n.Data().(*gurps.Equipment); ok && e.Uses < e.MaxUses {
+					return true
+				}
+			}
+		}
+		return false
+	}, func() {
+		updated := false
+		for _, row := range p.table.SelectedRows() {
+			if n, ok := row.(*tbl.Node); ok {
+				var e *gurps.Equipment
+				if e, ok = n.Data().(*gurps.Equipment); ok && e.Uses < e.MaxUses {
+					e.Uses = xmath.MinInt(e.Uses+1, e.MaxUses)
+					updated = true
+				}
+			}
+		}
+		if updated {
+			widget.MarkModified(p)
+		}
+	})
+}
+
+func (p *PageList) installDecrementUsesHandler() {
+	p.installPerformHandlers(menus.DecrementUsesItemID, func() bool {
+		for _, row := range p.table.SelectedRows() {
+			if n, ok := row.(*tbl.Node); ok {
+				var e *gurps.Equipment
+				if e, ok = n.Data().(*gurps.Equipment); ok && e.MaxUses > 0 && e.Uses > 0 {
+					return true
+				}
+			}
+		}
+		return false
+	}, func() {
+		updated := false
+		for _, row := range p.table.SelectedRows() {
+			if n, ok := row.(*tbl.Node); ok {
+				var e *gurps.Equipment
+				if e, ok = n.Data().(*gurps.Equipment); ok && e.MaxUses > 0 && e.Uses > 0 {
+					e.Uses = xmath.MaxInt(e.Uses-1, 0)
+					updated = true
+				}
+			}
+		}
+		if updated {
+			widget.MarkModified(p)
+		}
+	})
 }
 
 // Sync the underlying data.

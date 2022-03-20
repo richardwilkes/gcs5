@@ -36,7 +36,7 @@ func createStateMenu(f unison.MenuFactory) unison.Menu {
 	return m
 }
 
-// ToggleState switches the focus to the search widget.
+// ToggleState switches the state of the selected item(s).
 var ToggleState = &unison.Action{
 	ID:              ToggleStateItemID,
 	Title:           i18n.Text("Toggle State"),
@@ -49,7 +49,8 @@ var Increment = &unison.Action{
 	ID:              IncrementItemID,
 	Title:           i18n.Text("Increment"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyEqual, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // Decrement the points of the selection.
@@ -57,7 +58,8 @@ var Decrement = &unison.Action{
 	ID:              DecrementItemID,
 	Title:           i18n.Text("Decrement"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyMinus, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // IncreaseUses increments the uses of the selection.
@@ -65,7 +67,8 @@ var IncreaseUses = &unison.Action{
 	ID:              IncrementUsesItemID,
 	Title:           i18n.Text("Increase Uses"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyUp, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // DecreaseUses decrements the uses of the selection.
@@ -73,7 +76,8 @@ var DecreaseUses = &unison.Action{
 	ID:              DecrementUsesItemID,
 	Title:           i18n.Text("Decrease Uses"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyDown, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // IncreaseSkillLevel increments the uses of the skill level.
