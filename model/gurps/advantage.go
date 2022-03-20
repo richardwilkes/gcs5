@@ -228,7 +228,7 @@ func (a *Advantage) CellData(column int, data *node.CellData) {
 	switch column {
 	case AdvantageDescriptionColumn:
 		data.Type = node.Text
-		data.Primary = a.Description()
+		data.Primary = a.String()
 		data.Secondary = a.SecondaryText()
 	case AdvantagePointsColumn:
 		data.Type = node.Text
