@@ -31,25 +31,29 @@ var (
 		7: gurps.EquipmentReferenceColumn,
 	}
 	carriedEquipmentPageColMap = map[int]int{
-		0: gurps.EquipmentEquippedColumn,
-		1: gurps.EquipmentQuantityColumn,
-		2: gurps.EquipmentDescriptionColumn,
-		3: gurps.EquipmentUsesColumn,
-		4: gurps.EquipmentCostColumn,
-		5: gurps.EquipmentWeightColumn,
-		6: gurps.EquipmentExtendedCostColumn,
-		7: gurps.EquipmentExtendedWeightColumn,
-		8: gurps.EquipmentReferenceColumn,
+		0:  gurps.EquipmentEquippedColumn,
+		1:  gurps.EquipmentQuantityColumn,
+		2:  gurps.EquipmentDescriptionColumn,
+		3:  gurps.EquipmentUsesColumn,
+		4:  gurps.EquipmentTLColumn,
+		5:  gurps.EquipmentLCColumn,
+		6:  gurps.EquipmentCostColumn,
+		7:  gurps.EquipmentWeightColumn,
+		8:  gurps.EquipmentExtendedCostColumn,
+		9:  gurps.EquipmentExtendedWeightColumn,
+		10: gurps.EquipmentReferenceColumn,
 	}
 	otherEquipmentPageColMap = map[int]int{
 		0: gurps.EquipmentQuantityColumn,
 		1: gurps.EquipmentDescriptionColumn,
 		2: gurps.EquipmentUsesColumn,
-		3: gurps.EquipmentCostColumn,
-		4: gurps.EquipmentWeightColumn,
-		5: gurps.EquipmentExtendedCostColumn,
-		6: gurps.EquipmentExtendedWeightColumn,
-		7: gurps.EquipmentReferenceColumn,
+		3: gurps.EquipmentTLColumn,
+		4: gurps.EquipmentLCColumn,
+		5: gurps.EquipmentCostColumn,
+		6: gurps.EquipmentWeightColumn,
+		7: gurps.EquipmentExtendedCostColumn,
+		8: gurps.EquipmentExtendedWeightColumn,
+		9: gurps.EquipmentReferenceColumn,
 	}
 )
 
@@ -71,6 +75,8 @@ func NewEquipmentTableHeaders(entity *gurps.Entity, forPage, carried bool) []uni
 		}
 		headers = append(headers,
 			NewHeader(i18n.Text("Uses"), i18n.Text("The number of uses remaining"), true),
+			NewHeader(i18n.Text("TL"), i18n.Text("Tech Level"), true),
+			NewHeader(i18n.Text("LC"), i18n.Text("Legality Class"), true),
 			NewMoneyHeader(true),
 			NewWeightHeader(true),
 			NewExtendedMoneyHeader(true),
