@@ -213,7 +213,7 @@ func (n *Node) createToggleCell(c *node.CellData, selected bool) unison.Paneler 
 	check.MouseDownCallback = func(where geom32.Point, button, clickCount int, mod unison.Modifiers) bool {
 		c.Checked = !c.Checked
 		// Currently, there is only one thing, carried equipment, that generates a toggle field and that only generates
-		// a single cell, so I'm going to hard-code that into this logic. If we get more, we'll have to find a better
+		// a single cell, so we're going to hard-code that into this logic. If we get more, we'll have to find a better
 		// approach.
 		if equipment, ok := n.data.(*gurps.Equipment); ok {
 			equipment.Equipped = c.Checked

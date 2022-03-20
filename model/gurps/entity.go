@@ -162,6 +162,15 @@ func (e *Entity) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &e.EntityData); err != nil {
 		return err
 	}
+	if e.SheetSettings == nil {
+		e.SheetSettings = SettingsProvider.SheetSettings().Clone(e)
+	}
+	if e.Profile == nil {
+		e.Profile = &Profile{}
+	}
+	if e.Attributes == nil {
+		e.Attributes = NewAttributes(e)
+	}
 	e.Recalculate()
 	return nil
 }
