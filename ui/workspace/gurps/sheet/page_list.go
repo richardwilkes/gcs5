@@ -14,6 +14,7 @@ package sheet
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
+	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -178,5 +179,33 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 
 // Sync the underlying data.
 func (p *PageList) Sync() {
+	rows := p.table.SelectedRows()
+	selection := make(map[node.Node]bool, len(rows))
+	for _, row := range rows {
+		if n, ok := row.(*tbl.Node); ok {
+			selection[n.Data()] = true
+		}
+	}
 	p.table.SetTopLevelRows(p.topLevelRowsCallback(p.table))
+	if len(selection) != 0 {
+		_, indexes := p.collectRowMappings(0, make([]int, 0, len(selection)), selection, p.table.TopLevelRows())
+		if len(indexes) != 0 {
+			p.table.SelectByIndex(indexes...)
+		}
+	}
+}
+
+func (p *PageList) collectRowMappings(index int, indexes []int, selection map[node.Node]bool, rows []unison.TableRowData) (updatedIndex int, updatedIndexes []int) {
+	for _, row := range rows {
+		if n, ok := row.(*tbl.Node); ok {
+			if selection[n.Data()] {
+				indexes = append(indexes, index)
+			}
+		}
+		index++
+		if row.IsOpen() {
+			index, indexes = p.collectRowMappings(index, indexes, selection, row.ChildRows())
+		}
+	}
+	return index, indexes
 }

@@ -62,6 +62,11 @@ func (n *Node) CanHaveChildRows() bool {
 	return n.data.Container()
 }
 
+// Data returns the underlying data object.
+func (n *Node) Data() node.Node {
+	return n.data
+}
+
 // ChildRows returns the children of this node.
 func (n *Node) ChildRows() []unison.TableRowData {
 	if n.data.Container() && n.children == nil {
