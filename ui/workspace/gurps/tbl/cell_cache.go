@@ -18,7 +18,7 @@ import (
 
 // CellCache holds data for a table row's cell to reduce the need to constantly recreate them.
 type CellCache struct {
-	Panel *unison.Panel
+	Panel unison.Paneler
 	Data  node.CellData
 	Width float32
 }
