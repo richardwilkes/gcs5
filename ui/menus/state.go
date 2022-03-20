@@ -41,7 +41,8 @@ var ToggleState = &unison.Action{
 	ID:              ToggleStateItemID,
 	Title:           i18n.Text("Toggle State"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyApostrophe, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // Increment the points of the selection.

@@ -41,6 +41,7 @@ type PageList struct {
 func NewAdvantagesPageList(entity *gurps.Entity) *PageList {
 	p := newPageList(tbl.NewAdvantageTableHeaders(true), 0, 0,
 		tbl.NewAdvantageRowData(func() []*gurps.Advantage { return entity.Advantages }, true))
+	p.installToggleStateHandler()
 	p.installIncrementHandler()
 	p.installDecrementHandler()
 	return p
@@ -50,6 +51,7 @@ func NewAdvantagesPageList(entity *gurps.Entity) *PageList {
 func NewCarriedEquipmentPageList(entity *gurps.Entity) *PageList {
 	p := newPageList(tbl.NewEquipmentTableHeaders(entity, true, true), 2, 2,
 		tbl.NewEquipmentRowData(func() []*gurps.Equipment { return entity.CarriedEquipment }, true, true))
+	p.installToggleStateHandler()
 	p.installIncrementHandler()
 	p.installDecrementHandler()
 	p.installIncrementUsesHandler()
@@ -223,9 +225,43 @@ func (p *PageList) installPerformHandlers(id int, can func() bool, do func()) {
 	p.performMap[id] = do
 }
 
+func (p *PageList) installToggleStateHandler() {
+	p.installPerformHandlers(menus.ToggleStateItemID, func() bool {
+		for _, row := range p.table.SelectedRows(false) {
+			if n, ok := row.(*tbl.Node); ok {
+				switch n.Data().(type) {
+				case *gurps.Advantage:
+					return true
+				case *gurps.Equipment:
+					return true
+				}
+			}
+		}
+		return false
+	}, func() {
+		var entity *gurps.Entity
+		for _, row := range p.table.SelectedRows(false) {
+			if n, ok := row.(*tbl.Node); ok {
+				switch item := n.Data().(type) {
+				case *gurps.Advantage:
+					item.Disabled = !item.Disabled
+					entity = item.Entity
+				case *gurps.Equipment:
+					item.Equipped = !item.Equipped
+					entity = item.Entity
+				}
+			}
+		}
+		if entity != nil {
+			entity.Recalculate()
+			widget.MarkModified(p)
+		}
+	})
+}
+
 func (p *PageList) installIncrementHandler() {
 	p.installPerformHandlers(menus.IncrementItemID, func() bool {
-		for _, row := range p.table.SelectedRows() {
+		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				switch item := n.Data().(type) {
 				case *gurps.Advantage:
@@ -248,7 +284,7 @@ func (p *PageList) installIncrementHandler() {
 		return false
 	}, func() {
 		var entity *gurps.Entity
-		for _, row := range p.table.SelectedRows() {
+		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				switch item := n.Data().(type) {
 				case *gurps.Advantage:
@@ -282,7 +318,7 @@ func (p *PageList) installIncrementHandler() {
 
 func (p *PageList) installDecrementHandler() {
 	p.installPerformHandlers(menus.DecrementItemID, func() bool {
-		for _, row := range p.table.SelectedRows() {
+		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				switch item := n.Data().(type) {
 				case *gurps.Advantage:
@@ -307,7 +343,7 @@ func (p *PageList) installDecrementHandler() {
 		return false
 	}, func() {
 		var entity *gurps.Entity
-		for _, row := range p.table.SelectedRows() {
+		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				switch item := n.Data().(type) {
 				case *gurps.Advantage:
@@ -353,7 +389,7 @@ func decrement(value fixed.F64d4) fixed.F64d4 {
 
 func (p *PageList) installIncrementUsesHandler() {
 	p.installPerformHandlers(menus.IncrementUsesItemID, func() bool {
-		for _, row := range p.table.SelectedRows() {
+		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				var e *gurps.Equipment
 				if e, ok = n.Data().(*gurps.Equipment); ok && e.Uses < e.MaxUses {
@@ -364,7 +400,7 @@ func (p *PageList) installIncrementUsesHandler() {
 		return false
 	}, func() {
 		updated := false
-		for _, row := range p.table.SelectedRows() {
+		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				var e *gurps.Equipment
 				if e, ok = n.Data().(*gurps.Equipment); ok && e.Uses < e.MaxUses {
@@ -381,7 +417,7 @@ func (p *PageList) installIncrementUsesHandler() {
 
 func (p *PageList) installDecrementUsesHandler() {
 	p.installPerformHandlers(menus.DecrementUsesItemID, func() bool {
-		for _, row := range p.table.SelectedRows() {
+		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				var e *gurps.Equipment
 				if e, ok = n.Data().(*gurps.Equipment); ok && e.MaxUses > 0 && e.Uses > 0 {
@@ -392,7 +428,7 @@ func (p *PageList) installDecrementUsesHandler() {
 		return false
 	}, func() {
 		updated := false
-		for _, row := range p.table.SelectedRows() {
+		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				var e *gurps.Equipment
 				if e, ok = n.Data().(*gurps.Equipment); ok && e.MaxUses > 0 && e.Uses > 0 {
@@ -409,7 +445,7 @@ func (p *PageList) installDecrementUsesHandler() {
 
 // Sync the underlying data.
 func (p *PageList) Sync() {
-	rows := p.table.SelectedRows()
+	rows := p.table.SelectedRows(false)
 	selection := make(map[node.Node]bool, len(rows))
 	for _, row := range rows {
 		if n, ok := row.(*tbl.Node); ok {
