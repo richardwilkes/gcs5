@@ -124,19 +124,14 @@ func (n *Navigator) Modified() bool {
 }
 
 func (n *Navigator) handleSelectionDoubleClick() {
-	for _, row := range n.table.SelectedRows() {
+	for _, row := range n.table.SelectedRows(false) {
 		n.openRow(row)
 	}
 }
 
 func (n *Navigator) openRow(row unison.TableRowData) {
-	switch t := row.(type) {
-	case *LibraryNode, *DirectoryNode:
-		for _, child := range t.ChildRows() {
-			n.openRow(child)
-		}
-	case *FileNode:
-		OpenFile(n.Window(), path.Join(t.library.Path(), t.path))
+	if node, ok := row.(*FileNode); ok {
+		OpenFile(n.Window(), path.Join(node.library.Path(), node.path))
 	}
 }
 
