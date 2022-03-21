@@ -89,7 +89,7 @@ cp bundle/*.icns "GCS.app/Contents/Resources/"
 LINK_FLAGS="-X 'github.com/richardwilkes/toolbox/cmdline.AppVersion=$VERSION'"
 LINK_FLAGS="$LINK_FLAGS -X 'github.com/richardwilkes/toolbox/cmdline.BuildNumber=$BUILD_NUMBER'"
 LINK_FLAGS="$LINK_FLAGS -X 'github.com/richardwilkes/toolbox/cmdline.GitVersion=$GIT_VERSION'"
-go build -o "$EXE_PATH" -v -ldflags=all="$LINK_FLAGS" ./main.go
+go build -o "$EXE_PATH" -v -ldflags=all="$LINK_FLAGS" .
 sed -e "s/SHORT_APP_VERSION/$($EXE_PATH -v)/" -e "s/LONG_APP_VERSION/$($EXE_PATH -V)/" -e "s/COPYRIGHT_YEARS/$COPYRIGHT_YEARS/" bundle/Info.plist >"GCS.app/Contents/Info.plist"
 touch "GCS.app" # Allows the Finder to notice changes
 

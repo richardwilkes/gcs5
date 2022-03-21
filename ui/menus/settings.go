@@ -14,7 +14,7 @@ package menus
 import (
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/settings"
-	settings2 "github.com/richardwilkes/gcs/ui/workspace/settings"
+	uisettings "github.com/richardwilkes/gcs/ui/workspace/settings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -99,33 +99,33 @@ var DefaultBodyTypeSettings = &unison.Action{
 var GeneralSettings = &unison.Action{
 	ID:              constants.GeneralSettingsItemID,
 	Title:           i18n.Text("General Settings…"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { settings2.ShowGeneralSettings() },
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) { uisettings.ShowGeneralSettings() },
 }
 
 // PageRefMappings opens the page reference mappings.
 var PageRefMappings = &unison.Action{
 	ID:              constants.PageRefMappingsItemID,
 	Title:           i18n.Text("Page Reference Mappings…"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { settings2.ShowPageRefMappings() },
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) { uisettings.ShowPageRefMappings() },
 }
 
 // ColorSettings opens the color settings.
 var ColorSettings = &unison.Action{
 	ID:              constants.ColorSettingsItemID,
 	Title:           i18n.Text("Colors…"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { settings2.ShowColorSettings() },
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) { uisettings.ShowColorSettings() },
 }
 
 // FontSettings opens the font settings.
 var FontSettings = &unison.Action{
 	ID:              constants.FontSettingsItemID,
 	Title:           i18n.Text("Fonts…"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { settings2.ShowFontSettings() },
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) { uisettings.ShowFontSettings() },
 }
 
 // MenuKeySettings opens the menu key settings.
 var MenuKeySettings = &unison.Action{
 	ID:              constants.MenuKeySettingsItemID,
 	Title:           i18n.Text("Menu Keys…"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { settings2.ShowMenuKeySettings() },
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) { uisettings.ShowMenuKeySettings() },
 }

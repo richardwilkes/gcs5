@@ -161,7 +161,7 @@ var NewAdvantageModifier = &unison.Action{
 // NewAdvantageContainerModifier creates a new advantage container modifier.
 var NewAdvantageContainerModifier = &unison.Action{
 	ID:              constants.NewAdvantageContainerModifierItemID,
-	Title:           i18n.Text("New Advantage Container Modifier"),
+	Title:           i18n.Text("New Advantage Modifier Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
@@ -264,7 +264,7 @@ var NewEquipmentModifier = &unison.Action{
 // NewEquipmentContainerModifier creates a new equipment container modifier.
 var NewEquipmentContainerModifier = &unison.Action{
 	ID:              constants.NewEquipmentContainerModifierItemID,
-	Title:           i18n.Text("New Equipment Container Modifier"),
+	Title:           i18n.Text("New Equipment Modifier Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
@@ -312,7 +312,7 @@ var CopyToTemplate = &unison.Action{
 // ApplyTemplate applies the foremost template to the foremost character sheet.
 var ApplyTemplate = &unison.Action{
 	ID:              constants.ApplyTemplateItemID,
-	Title:           i18n.Text("Apply Template To Character Sheet"),
+	Title:           i18n.Text("Apply Template to Character Sheet"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyA, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
 }
