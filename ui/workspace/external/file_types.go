@@ -29,18 +29,20 @@ func RegisterFileTypes() {
 
 func registerImageFileInfo(ext string) {
 	library.FileInfo{
-		Extension: ext,
-		SVG:       res.ImageFileSVG,
-		Load:      NewImageDockable,
-		IsImage:   true,
+		Extension:             ext,
+		ExtensionsToGroupWith: unison.KnownImageFormatExtensions,
+		SVG:                   res.ImageFileSVG,
+		Load:                  NewImageDockable,
+		IsImage:               true,
 	}.Register()
 }
 
 func registerPDFFileInfo() {
 	library.FileInfo{
-		Extension: ".pdf",
-		SVG:       res.PDFFileSVG,
-		Load:      NewPDFDockable,
-		IsPDF:     true,
+		Extension:             ".pdf",
+		ExtensionsToGroupWith: []string{".pdf"},
+		SVG:                   res.PDFFileSVG,
+		Load:                  NewPDFDockable,
+		IsPDF:                 true,
 	}.Register()
 }

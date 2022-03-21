@@ -12,12 +12,12 @@
 package sheet
 
 import (
+	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/gcs/model/theme"
-	"github.com/richardwilkes/gcs/ui/menus"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -237,7 +237,7 @@ func (p *PageList) installPerformHandlers(id int, can func() bool, do func()) {
 }
 
 func (p *PageList) installToggleStateHandler() {
-	p.installPerformHandlers(menus.ToggleStateItemID, func() bool {
+	p.installPerformHandlers(constants.ToggleStateItemID, func() bool {
 		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				switch n.Data().(type) {
@@ -271,7 +271,7 @@ func (p *PageList) installToggleStateHandler() {
 }
 
 func (p *PageList) installIncrementHandler() {
-	p.installPerformHandlers(menus.IncrementItemID, func() bool {
+	p.installPerformHandlers(constants.IncrementItemID, func() bool {
 		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				switch item := n.Data().(type) {
@@ -328,7 +328,7 @@ func (p *PageList) installIncrementHandler() {
 }
 
 func (p *PageList) installDecrementHandler() {
-	p.installPerformHandlers(menus.DecrementItemID, func() bool {
+	p.installPerformHandlers(constants.DecrementItemID, func() bool {
 		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				switch item := n.Data().(type) {
@@ -399,7 +399,7 @@ func decrement(value fixed.F64d4) fixed.F64d4 {
 }
 
 func (p *PageList) installIncrementUsesHandler() {
-	p.installPerformHandlers(menus.IncrementUsesItemID, func() bool {
+	p.installPerformHandlers(constants.IncrementUsesItemID, func() bool {
 		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				var e *gurps.Equipment
@@ -427,7 +427,7 @@ func (p *PageList) installIncrementUsesHandler() {
 }
 
 func (p *PageList) installDecrementUsesHandler() {
-	p.installPerformHandlers(menus.DecrementUsesItemID, func() bool {
+	p.installPerformHandlers(constants.DecrementUsesItemID, func() bool {
 		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				var e *gurps.Equipment
@@ -455,7 +455,7 @@ func (p *PageList) installDecrementUsesHandler() {
 }
 
 func (p *PageList) installIncrementSkillHandler() {
-	p.installPerformHandlers(menus.IncrementSkillLevelItemID, func() bool {
+	p.installPerformHandlers(constants.IncrementSkillLevelItemID, func() bool {
 		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				switch item := n.Data().(type) {
@@ -497,7 +497,7 @@ func (p *PageList) installIncrementSkillHandler() {
 }
 
 func (p *PageList) installDecrementSkillHandler() {
-	p.installPerformHandlers(menus.DecrementSkillLevelItemID, func() bool {
+	p.installPerformHandlers(constants.DecrementSkillLevelItemID, func() bool {
 		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				switch item := n.Data().(type) {
@@ -539,7 +539,7 @@ func (p *PageList) installDecrementSkillHandler() {
 }
 
 func (p *PageList) installIncrementTechLevelHandler() {
-	p.installPerformHandlers(menus.IncrementTechLevelItemID, func() bool {
+	p.installPerformHandlers(constants.IncrementTechLevelItemID, func() bool {
 		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				switch item := n.Data().(type) {
@@ -590,7 +590,7 @@ func (p *PageList) installIncrementTechLevelHandler() {
 }
 
 func (p *PageList) installDecrementTechLevelHandler() {
-	p.installPerformHandlers(menus.DecrementTechLevelItemID, func() bool {
+	p.installPerformHandlers(constants.DecrementTechLevelItemID, func() bool {
 		for _, row := range p.table.SelectedRows(false) {
 			if n, ok := row.(*tbl.Node); ok {
 				switch item := n.Data().(type) {

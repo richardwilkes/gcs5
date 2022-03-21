@@ -28,14 +28,15 @@ const (
 
 // FileInfo contains some static information about a given file type.
 type FileInfo struct {
-	Extension    string
-	SVG          *unison.SVG
-	Load         func(filePath string) (unison.Dockable, error)
-	IsSpecial    bool
-	IsGCSData    bool
-	IsImage      bool
-	IsPDF        bool
-	IsExportable bool
+	Extension             string
+	ExtensionsToGroupWith []string
+	SVG                   *unison.SVG
+	Load                  func(filePath string) (unison.Dockable, error)
+	IsSpecial             bool
+	IsGCSData             bool
+	IsImage               bool
+	IsPDF                 bool
+	IsExportable          bool
 }
 
 var fileTypeRegistry = make(map[string]FileInfo)

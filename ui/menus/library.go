@@ -14,6 +14,7 @@ package menus
 import (
 	"fmt"
 
+	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -31,9 +32,9 @@ func updateLibraryMenu(m unison.Menu) {
 	f := m.Factory()
 	for i, lib := range settings.Global().LibrarySet.List() {
 		if !lib.IsUser() {
-			m.InsertItem(-1, newUpdateLibraryAction(LibraryBaseItemID+i*2, lib).NewMenuItem(f))
+			m.InsertItem(-1, newUpdateLibraryAction(constants.LibraryBaseItemID+i*2, lib).NewMenuItem(f))
 		}
-		m.InsertItem(-1, newShowLibraryFolderAction(LibraryBaseItemID+i*2+1, lib).NewMenuItem(f))
+		m.InsertItem(-1, newShowLibraryFolderAction(constants.LibraryBaseItemID+i*2+1, lib).NewMenuItem(f))
 		m.InsertSeparator(-1, false)
 	}
 	m.InsertItem(-1, ChangeLibraryLocations.NewMenuItem(f))
@@ -74,7 +75,7 @@ func newShowLibraryFolderAction(id int, lib *library.Library) *unison.Action {
 
 // ChangeLibraryLocations brings up the dialog that allows the user to edit the library locations.
 var ChangeLibraryLocations = &unison.Action{
-	ID:              ChangeLibraryLocationsItemID,
+	ID:              constants.ChangeLibraryLocationsItemID,
 	Title:           i18n.Text("Change Library Locations"),
 	ExecuteCallback: unimplemented,
 }

@@ -14,6 +14,7 @@ package menus
 import (
 	"sync"
 
+	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/about"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -44,7 +45,7 @@ func Setup(wnd *unison.Window) {
 		f := bar.Factory()
 		bar.InsertMenu(i, createItemMenu(f))
 		i++
-		bar.InsertMenu(i, f.NewMenu(LibraryMenuID, i18n.Text("Library"), updateLibraryMenu))
+		bar.InsertMenu(i, f.NewMenu(constants.LibraryMenuID, i18n.Text("Library"), updateLibraryMenu))
 		i++
 		bar.InsertMenu(i, createSettingsMenu(f))
 		setupHelpMenu(bar)

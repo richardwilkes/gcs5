@@ -53,74 +53,111 @@ type TableDockable struct {
 	locked          bool
 }
 
-// NewAdvantageTableDockable creates a new unison.Dockable for advantage list files.
-func NewAdvantageTableDockable(filePath string) (unison.Dockable, error) {
+// NewAdvantageTableDockableFromFile loads a list of advantages from a file and creates a new unison.Dockable for them.
+func NewAdvantageTableDockableFromFile(filePath string) (unison.Dockable, error) {
 	advantages, err := gurps.NewAdvantagesFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err
 	}
-	return NewTableDockable(filePath, tbl.NewAdvantageTableHeaders(false),
-		tbl.NewAdvantageRowData(func() []*gurps.Advantage { return advantages }, false)), nil
+	return NewAdvantageTableDockable(filePath, advantages), nil
 }
 
-// NewAdvantageModifierTableDockable creates a new unison.Dockable for advantage modifier list files.
-func NewAdvantageModifierTableDockable(filePath string) (unison.Dockable, error) {
+// NewAdvantageTableDockable creates a new unison.Dockable for advantage list files.
+func NewAdvantageTableDockable(filePath string, advantages []*gurps.Advantage) unison.Dockable {
+	return NewTableDockable(filePath, tbl.NewAdvantageTableHeaders(false),
+		tbl.NewAdvantageRowData(func() []*gurps.Advantage { return advantages }, false))
+}
+
+// NewAdvantageModifierTableDockableFromFile loads a list of advantage modifiers from a file and creates a new
+// unison.Dockable for them.
+func NewAdvantageModifierTableDockableFromFile(filePath string) (unison.Dockable, error) {
 	modifiers, err := gurps.NewAdvantageModifiersFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err
 	}
-	return NewTableDockable(filePath, tbl.NewAdvantageModifierTableHeaders(),
-		tbl.NewAdvantageModifierRowData(func() []*gurps.AdvantageModifier { return modifiers })), nil
+	return NewAdvantageModifierTableDockable(filePath, modifiers), nil
 }
 
-// NewEquipmentTableDockable creates a new unison.Dockable for equipment list files.
-func NewEquipmentTableDockable(filePath string) (unison.Dockable, error) {
+// NewAdvantageModifierTableDockable creates a new unison.Dockable for advantage modifier list files.
+func NewAdvantageModifierTableDockable(filePath string, modifiers []*gurps.AdvantageModifier) unison.Dockable {
+	return NewTableDockable(filePath, tbl.NewAdvantageModifierTableHeaders(),
+		tbl.NewAdvantageModifierRowData(func() []*gurps.AdvantageModifier { return modifiers }))
+}
+
+// NewEquipmentTableDockableFromFile loads a list of equipment from a file and creates a new unison.Dockable for them.
+func NewEquipmentTableDockableFromFile(filePath string) (unison.Dockable, error) {
 	equipment, err := gurps.NewEquipmentFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err
 	}
-	return NewTableDockable(filePath, tbl.NewEquipmentTableHeaders(nil, false, false),
-		tbl.NewEquipmentRowData(func() []*gurps.Equipment { return equipment }, false, false)), nil
+	return NewEquipmentTableDockable(filePath, equipment), nil
 }
 
-// NewEquipmentModifierTableDockable creates a new unison.Dockable for equipment modifier list files.
-func NewEquipmentModifierTableDockable(filePath string) (unison.Dockable, error) {
+// NewEquipmentTableDockable creates a new unison.Dockable for equipment list files.
+func NewEquipmentTableDockable(filePath string, equipment []*gurps.Equipment) unison.Dockable {
+	return NewTableDockable(filePath, tbl.NewEquipmentTableHeaders(nil, false, false),
+		tbl.NewEquipmentRowData(func() []*gurps.Equipment { return equipment }, false, false))
+}
+
+// NewEquipmentModifierTableDockableFromFile loads a list of equipment modifiers from a file and creates a new
+// unison.Dockable for them.
+func NewEquipmentModifierTableDockableFromFile(filePath string) (unison.Dockable, error) {
 	modifiers, err := gurps.NewEquipmentModifiersFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err
 	}
-	return NewTableDockable(filePath, tbl.NewEquipmentModifierTableHeaders(),
-		tbl.NewEquipmentModifierRowData(func() []*gurps.EquipmentModifier { return modifiers })), nil
+	return NewEquipmentModifierTableDockable(filePath, modifiers), nil
 }
 
-// NewSkillTableDockable creates a new unison.Dockable for skill list files.
-func NewSkillTableDockable(filePath string) (unison.Dockable, error) {
+// NewEquipmentModifierTableDockable creates a new unison.Dockable for equipment modifier list files.
+func NewEquipmentModifierTableDockable(filePath string, modifiers []*gurps.EquipmentModifier) unison.Dockable {
+	return NewTableDockable(filePath, tbl.NewEquipmentModifierTableHeaders(),
+		tbl.NewEquipmentModifierRowData(func() []*gurps.EquipmentModifier { return modifiers }))
+}
+
+// NewSkillTableDockableFromFile loads a list of skills from a file and creates a new unison.Dockable for them.
+func NewSkillTableDockableFromFile(filePath string) (unison.Dockable, error) {
 	skills, err := gurps.NewSkillsFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err
 	}
-	return NewTableDockable(filePath, tbl.NewSkillTableHeaders(false),
-		tbl.NewSkillRowData(func() []*gurps.Skill { return skills }, false)), nil
+	return NewSkillTableDockable(filePath, skills), nil
 }
 
-// NewSpellTableDockable creates a new unison.Dockable for spell list files.
-func NewSpellTableDockable(filePath string) (unison.Dockable, error) {
+// NewSkillTableDockable creates a new unison.Dockable for skill list files.
+func NewSkillTableDockable(filePath string, skills []*gurps.Skill) unison.Dockable {
+	return NewTableDockable(filePath, tbl.NewSkillTableHeaders(false),
+		tbl.NewSkillRowData(func() []*gurps.Skill { return skills }, false))
+}
+
+// NewSpellTableDockableFromFile loads a list of spells from a file and creates a new unison.Dockable for them.
+func NewSpellTableDockableFromFile(filePath string) (unison.Dockable, error) {
 	spells, err := gurps.NewSpellsFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err
 	}
-	return NewTableDockable(filePath, tbl.NewSpellTableHeaders(false),
-		tbl.NewSpellRowData(func() []*gurps.Spell { return spells }, false)), nil
+	return NewSpellTableDockable(filePath, spells), nil
 }
 
-// NewNoteTableDockable creates a new unison.Dockable for note list files.
-func NewNoteTableDockable(filePath string) (unison.Dockable, error) {
+// NewSpellTableDockable creates a new unison.Dockable for spell list files.
+func NewSpellTableDockable(filePath string, spells []*gurps.Spell) unison.Dockable {
+	return NewTableDockable(filePath, tbl.NewSpellTableHeaders(false),
+		tbl.NewSpellRowData(func() []*gurps.Spell { return spells }, false))
+}
+
+// NewNoteTableDockableFromFile loads a list of notes from a file and creates a new unison.Dockable for them.
+func NewNoteTableDockableFromFile(filePath string) (unison.Dockable, error) {
 	notes, err := gurps.NewNotesFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err
 	}
+	return NewNoteTableDockable(filePath, notes), nil
+}
+
+// NewNoteTableDockable creates a new unison.Dockable for note list files.
+func NewNoteTableDockable(filePath string, notes []*gurps.Note) unison.Dockable {
 	return NewTableDockable(filePath, tbl.NewNoteTableHeaders(false),
-		tbl.NewNoteRowData(func() []*gurps.Note { return notes }, false)), nil
+		tbl.NewNoteRowData(func() []*gurps.Note { return notes }, false))
 }
 
 // NewTableDockable creates a new TableDockable for list data files.

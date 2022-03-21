@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package menus
+package constants
 
 import "github.com/richardwilkes/unison"
 

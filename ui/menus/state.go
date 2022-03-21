@@ -12,12 +12,13 @@
 package menus
 
 import (
+	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
 
 func createStateMenu(f unison.MenuFactory) unison.Menu {
-	m := f.NewMenu(StateMenuID, i18n.Text("State…"), nil)
+	m := f.NewMenu(constants.StateMenuID, i18n.Text("State…"), nil)
 	m.InsertItem(-1, ToggleState.NewMenuItem(f))
 	m.InsertSeparator(-1, false)
 	m.InsertItem(-1, Increment.NewMenuItem(f))
@@ -38,7 +39,7 @@ func createStateMenu(f unison.MenuFactory) unison.Menu {
 
 // ToggleState switches the state of the selected item(s).
 var ToggleState = &unison.Action{
-	ID:              ToggleStateItemID,
+	ID:              constants.ToggleStateItemID,
 	Title:           i18n.Text("Toggle State"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyApostrophe, Modifiers: unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
@@ -47,7 +48,7 @@ var ToggleState = &unison.Action{
 
 // Increment the points of the selection.
 var Increment = &unison.Action{
-	ID:              IncrementItemID,
+	ID:              constants.IncrementItemID,
 	Title:           i18n.Text("Increment"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyEqual, Modifiers: unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
@@ -56,7 +57,7 @@ var Increment = &unison.Action{
 
 // Decrement the points of the selection.
 var Decrement = &unison.Action{
-	ID:              DecrementItemID,
+	ID:              constants.DecrementItemID,
 	Title:           i18n.Text("Decrement"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyMinus, Modifiers: unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
@@ -65,7 +66,7 @@ var Decrement = &unison.Action{
 
 // IncreaseUses increments the uses of the selection.
 var IncreaseUses = &unison.Action{
-	ID:              IncrementUsesItemID,
+	ID:              constants.IncrementUsesItemID,
 	Title:           i18n.Text("Increase Uses"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyUp, Modifiers: unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
@@ -74,7 +75,7 @@ var IncreaseUses = &unison.Action{
 
 // DecreaseUses decrements the uses of the selection.
 var DecreaseUses = &unison.Action{
-	ID:              DecrementUsesItemID,
+	ID:              constants.DecrementUsesItemID,
 	Title:           i18n.Text("Decrease Uses"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyDown, Modifiers: unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
@@ -83,7 +84,7 @@ var DecreaseUses = &unison.Action{
 
 // IncreaseSkillLevel increments the uses of the skill level.
 var IncreaseSkillLevel = &unison.Action{
-	ID:              IncrementSkillLevelItemID,
+	ID:              constants.IncrementSkillLevelItemID,
 	Title:           i18n.Text("Increase Skill Level"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeySlash, Modifiers: unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
@@ -92,7 +93,7 @@ var IncreaseSkillLevel = &unison.Action{
 
 // DecreaseSkillLevel decrements the uses of the skill level.
 var DecreaseSkillLevel = &unison.Action{
-	ID:              DecrementSkillLevelItemID,
+	ID:              constants.DecrementSkillLevelItemID,
 	Title:           i18n.Text("Decrease Skill Level"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyPeriod, Modifiers: unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
@@ -101,7 +102,7 @@ var DecreaseSkillLevel = &unison.Action{
 
 // IncreaseTechLevel increments the uses of the tech level.
 var IncreaseTechLevel = &unison.Action{
-	ID:              IncrementTechLevelItemID,
+	ID:              constants.IncrementTechLevelItemID,
 	Title:           i18n.Text("Increase Tech Level"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyCloseBracket, Modifiers: unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
@@ -110,7 +111,7 @@ var IncreaseTechLevel = &unison.Action{
 
 // DecreaseTechLevel decrements the uses of the tech level.
 var DecreaseTechLevel = &unison.Action{
-	ID:              DecrementTechLevelItemID,
+	ID:              constants.DecrementTechLevelItemID,
 	Title:           i18n.Text("Decrease Tech Level"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyOpenBracket, Modifiers: unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
@@ -119,7 +120,7 @@ var DecreaseTechLevel = &unison.Action{
 
 // SwapDefaults swaps the defaults of the selected skill.
 var SwapDefaults = &unison.Action{
-	ID:              SwapDefaultsItemID,
+	ID:              constants.SwapDefaultsItemID,
 	Title:           i18n.Text("Swap Defaults"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyX, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,

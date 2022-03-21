@@ -14,9 +14,9 @@ package sheet
 import (
 	"fmt"
 
+	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/theme"
-	"github.com/richardwilkes/gcs/ui/menus"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
@@ -122,7 +122,7 @@ func (p *Page) drawSelf(gc *unison.Canvas, _ geom32.Rect) {
 	right.Draw(gc, r.Right()-right.Width(), y)
 	y = r.Y + mathf32.Max(mathf32.Max(left.Height(), right.Height()), center.Height())
 
-	center = unison.NewText(menus.WebSiteDomain, secondaryDecorations)
+	center = unison.NewText(constants.WebSiteDomain, secondaryDecorations)
 	left = unison.NewText(i18n.Text("All rights reserved"), secondaryDecorations)
 	right = unison.NewText(fmt.Sprintf(i18n.Text("Page %d of %d"), pageNumber, len(parent.Children())), secondaryDecorations)
 	if pageNumber&1 == 0 {

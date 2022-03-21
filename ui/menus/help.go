@@ -12,13 +12,11 @@
 package menus
 
 import (
+	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
-
-// WebSiteDomain holds the web site domain for GCS.
-const WebSiteDomain = "gurpscharactersheet.com"
 
 func setupHelpMenu(bar unison.Menu) {
 	f := bar.Factory()
@@ -36,7 +34,7 @@ func setupHelpMenu(bar unison.Menu) {
 
 // SponsorGCSDevelopment opens the web site for sponsoring GCS development.
 var SponsorGCSDevelopment = &unison.Action{
-	ID:    SponsorGCSDevelopmentItemID,
+	ID:    constants.SponsorGCSDevelopmentItemID,
 	Title: i18n.Text("Sponsor GCS Development"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
 		showWebPage("https://github.com/sponsors/richardwilkes")
@@ -45,7 +43,7 @@ var SponsorGCSDevelopment = &unison.Action{
 
 // MakeDonation opens the web site for make a donation.
 var MakeDonation = &unison.Action{
-	ID:    MakeDonationItemID,
+	ID:    constants.MakeDonationItemID,
 	Title: i18n.Text("Make A Donation For GCS Development"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
 		showWebPage("https://paypal.me/GURPSCharacterSheet")
@@ -54,14 +52,14 @@ var MakeDonation = &unison.Action{
 
 // UpdateApp opens the web site for GCS updates.
 var UpdateApp = &unison.Action{
-	ID:              UpdateAppItemID,
+	ID:              constants.UpdateAppItemID,
 	Title:           i18n.Text("Checking for GCS updates…"),
 	ExecuteCallback: unimplemented,
 }
 
 // ReleaseNotes opens the release notes.
 var ReleaseNotes = &unison.Action{
-	ID:    ReleaseNotesItemID,
+	ID:    constants.ReleaseNotesItemID,
 	Title: i18n.Text("Release Notes"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
 		showWebPage("https://github.com/richardwilkes/gcs/releases")
@@ -70,7 +68,7 @@ var ReleaseNotes = &unison.Action{
 
 // License opens the license.
 var License = &unison.Action{
-	ID:    ReleaseNotesItemID,
+	ID:    constants.ReleaseNotesItemID,
 	Title: i18n.Text("License"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
 		showWebPage("https://github.com/richardwilkes/gcs/blob/master/LICENSE")
@@ -79,16 +77,16 @@ var License = &unison.Action{
 
 // WebSite opens the GCS web site.
 var WebSite = &unison.Action{
-	ID:    WebSiteItemID,
+	ID:    constants.WebSiteItemID,
 	Title: i18n.Text("Web Site"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		showWebPage("https://" + WebSiteDomain)
+		showWebPage("https://" + constants.WebSiteDomain)
 	},
 }
 
 // MailingList opens the GCS mailing list site.
 var MailingList = &unison.Action{
-	ID:    MailingListItemID,
+	ID:    constants.MailingListItemID,
 	Title: i18n.Text("Mailing Lists"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
 		showWebPage("https://groups.io/g/gcs")

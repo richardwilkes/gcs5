@@ -20,32 +20,35 @@ import (
 
 // RegisterFileTypes registers GCS file types.
 func RegisterFileTypes() {
-	registerExportableGCSFileInfo(".gcs", res.GCSSheet, sheet.NewSheet)
-	registerGCSFileInfo(".gct", res.GCSTemplate, NewTemplateDockable)
-	registerGCSFileInfo(".adq", res.GCSAdvantages, NewAdvantageTableDockable)
-	registerGCSFileInfo(".adm", res.GCSAdvantageModifiers, NewAdvantageModifierTableDockable)
-	registerGCSFileInfo(".eqp", res.GCSEquipment, NewEquipmentTableDockable)
-	registerGCSFileInfo(".eqm", res.GCSEquipmentModifiers, NewEquipmentModifierTableDockable)
-	registerGCSFileInfo(".skl", res.GCSSkills, NewSkillTableDockable)
-	registerGCSFileInfo(".spl", res.GCSSpells, NewSpellTableDockable)
-	registerGCSFileInfo(".not", res.GCSNotes, NewNoteTableDockable)
+	registerExportableGCSFileInfo(".gcs", res.GCSSheet, sheet.NewSheetFromFile)
+	registerGCSFileInfo(".gct", []string{".gct"}, res.GCSTemplate, NewTemplateDockable)
+	groupWith := []string{".adq", ".adm", ".eqp", ".eqm", ".skl", ".spl", ".not"}
+	registerGCSFileInfo(".adq", groupWith, res.GCSAdvantages, NewAdvantageTableDockableFromFile)
+	registerGCSFileInfo(".adm", groupWith, res.GCSAdvantageModifiers, NewAdvantageModifierTableDockableFromFile)
+	registerGCSFileInfo(".eqp", groupWith, res.GCSEquipment, NewEquipmentTableDockableFromFile)
+	registerGCSFileInfo(".eqm", groupWith, res.GCSEquipmentModifiers, NewEquipmentModifierTableDockableFromFile)
+	registerGCSFileInfo(".skl", groupWith, res.GCSSkills, NewSkillTableDockableFromFile)
+	registerGCSFileInfo(".spl", groupWith, res.GCSSpells, NewSpellTableDockableFromFile)
+	registerGCSFileInfo(".not", groupWith, res.GCSNotes, NewNoteTableDockableFromFile)
 }
 
-func registerGCSFileInfo(ext string, svg *unison.SVG, loader func(filePath string) (unison.Dockable, error)) {
+func registerGCSFileInfo(ext string, groupWith []string, svg *unison.SVG, loader func(filePath string) (unison.Dockable, error)) {
 	library.FileInfo{
-		Extension: ext,
-		SVG:       svg,
-		Load:      loader,
-		IsGCSData: true,
+		Extension:             ext,
+		ExtensionsToGroupWith: groupWith,
+		SVG:                   svg,
+		Load:                  loader,
+		IsGCSData:             true,
 	}.Register()
 }
 
 func registerExportableGCSFileInfo(ext string, svg *unison.SVG, loader func(filePath string) (unison.Dockable, error)) {
 	library.FileInfo{
-		Extension:    ext,
-		SVG:          svg,
-		Load:         loader,
-		IsGCSData:    true,
-		IsExportable: true,
+		Extension:             ext,
+		ExtensionsToGroupWith: []string{ext},
+		SVG:                   svg,
+		Load:                  loader,
+		IsGCSData:             true,
+		IsExportable:          true,
 	}.Register()
 }

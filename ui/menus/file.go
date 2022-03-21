@@ -12,9 +12,14 @@
 package menus
 
 import (
+	"github.com/richardwilkes/gcs/constants"
+	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/datafile"
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/workspace"
+	gurpsui "github.com/richardwilkes/gcs/ui/workspace/gurps"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/sheet"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -39,7 +44,7 @@ func registerFileMenuActions() {
 func setupFileMenu(bar unison.Menu) {
 	f := bar.Factory()
 	m := bar.Menu(unison.FileMenuID)
-	newFileMenu := f.NewMenu(NewFileMenuID, i18n.Text("New File…"), nil)
+	newFileMenu := f.NewMenu(constants.NewFileMenuID, i18n.Text("New File…"), nil)
 	newFileMenu.InsertItem(-1, NewCharacterSheet.NewMenuItem(f))
 	newFileMenu.InsertItem(-1, NewCharacterTemplate.NewMenuItem(f))
 	newFileMenu.InsertItem(-1, NewAdvantagesLibrary.NewMenuItem(f))
@@ -51,7 +56,7 @@ func setupFileMenu(bar unison.Menu) {
 	newFileMenu.InsertItem(-1, NewSpellsLibrary.NewMenuItem(f))
 	m.InsertMenu(0, newFileMenu)
 	m.InsertItem(1, Open.NewMenuItem(f))
-	m.InsertMenu(2, f.NewMenu(RecentFilesMenuID, i18n.Text("Recent Files"), recentFilesUpdater))
+	m.InsertMenu(2, f.NewMenu(constants.RecentFilesMenuID, i18n.Text("Recent Files"), recentFilesUpdater))
 	i := m.Item(unison.CloseItemID).Index()
 	m.RemoveItem(i)
 	m.InsertItem(i, CloseTab.NewMenuItem(f))
@@ -62,7 +67,7 @@ func setupFileMenu(bar unison.Menu) {
 	i++
 	m.InsertItem(i, SaveAs.NewMenuItem(f))
 	i++
-	m.InsertMenu(i, f.NewMenu(ExportToMenuID, i18n.Text("Export To…"), exportToUpdater))
+	m.InsertMenu(i, f.NewMenu(constants.ExportToMenuID, i18n.Text("Export To…"), exportToUpdater))
 	i++
 	m.InsertSeparator(i, false)
 	i++
@@ -79,71 +84,88 @@ func exportToUpdater(_ unison.Menu) {
 
 // NewCharacterSheet creates a new character sheet.
 var NewCharacterSheet = &unison.Action{
-	ID:              NewSheetItemID,
-	Title:           i18n.Text("New Character Sheet"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: unimplemented,
+	ID:         constants.NewSheetItemID,
+	Title:      i18n.Text("New Character Sheet"),
+	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.OSMenuCmdModifier()},
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+		entity := gurps.NewEntity(datafile.PC)
+		workspace.DisplayNewDockable(nil, sheet.NewSheet(entity.Profile.Name+".gcs", entity))
+	},
 }
 
 // NewCharacterTemplate creates a new character template.
 var NewCharacterTemplate = &unison.Action{
-	ID:              NewTemplateItemID,
+	ID:              constants.NewTemplateItemID,
 	Title:           i18n.Text("New Character Template"),
 	ExecuteCallback: unimplemented,
 }
 
 // NewAdvantagesLibrary creates a new advantages library.
 var NewAdvantagesLibrary = &unison.Action{
-	ID:              NewAdvantagesLibraryItemID,
-	Title:           i18n.Text("New Advantages Library"),
-	ExecuteCallback: unimplemented,
+	ID:    constants.NewAdvantagesLibraryItemID,
+	Title: i18n.Text("New Advantages Library"),
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+		workspace.DisplayNewDockable(nil, gurpsui.NewAdvantageTableDockable("Advantages.adq", nil))
+	},
 }
 
 // NewAdvantageModifiersLibrary creates a new advantage modifiers library.
 var NewAdvantageModifiersLibrary = &unison.Action{
-	ID:              NewAdvantageModifiersLibraryItemID,
-	Title:           i18n.Text("New Advantage Modifiers Library"),
-	ExecuteCallback: unimplemented,
+	ID:    constants.NewAdvantageModifiersLibraryItemID,
+	Title: i18n.Text("New Advantage Modifiers Library"),
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+		workspace.DisplayNewDockable(nil, gurpsui.NewAdvantageModifierTableDockable("Advantage Modifiers.adm", nil))
+	},
 }
 
 // NewEquipmentLibrary creates a new equipment library.
 var NewEquipmentLibrary = &unison.Action{
-	ID:              NewEquipmentLibraryItemID,
-	Title:           i18n.Text("New Equipment Library"),
-	ExecuteCallback: unimplemented,
+	ID:    constants.NewEquipmentLibraryItemID,
+	Title: i18n.Text("New Equipment Library"),
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+		workspace.DisplayNewDockable(nil, gurpsui.NewEquipmentTableDockable("Equipment.eqp", nil))
+	},
 }
 
 // NewEquipmentModifiersLibrary creates a new equipment modifiers library.
 var NewEquipmentModifiersLibrary = &unison.Action{
-	ID:              NewEquipmentModifiersLibraryItemID,
-	Title:           i18n.Text("New Equipment Modifiers Library"),
-	ExecuteCallback: unimplemented,
+	ID:    constants.NewEquipmentModifiersLibraryItemID,
+	Title: i18n.Text("New Equipment Modifiers Library"),
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+		workspace.DisplayNewDockable(nil, gurpsui.NewEquipmentModifierTableDockable("Equipment Modifiers.eqm", nil))
+	},
 }
 
 // NewNotesLibrary creates a new notes library.
 var NewNotesLibrary = &unison.Action{
-	ID:              NewNotesLibraryItemID,
-	Title:           i18n.Text("New Notes Library"),
-	ExecuteCallback: unimplemented,
+	ID:    constants.NewNotesLibraryItemID,
+	Title: i18n.Text("New Notes Library"),
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+		workspace.DisplayNewDockable(nil, gurpsui.NewNoteTableDockable("Notes.not", nil))
+	},
 }
 
 // NewSkillsLibrary creates a new skills library.
 var NewSkillsLibrary = &unison.Action{
-	ID:              NewSkillsLibraryItemID,
-	Title:           i18n.Text("New Skills Library"),
-	ExecuteCallback: unimplemented,
+	ID:    constants.NewSkillsLibraryItemID,
+	Title: i18n.Text("New Skills Library"),
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+		workspace.DisplayNewDockable(nil, gurpsui.NewSkillTableDockable("Skills.skl", nil))
+	},
 }
 
 // NewSpellsLibrary creates a new spells library.
 var NewSpellsLibrary = &unison.Action{
-	ID:              NewSpellsLibraryItemID,
-	Title:           i18n.Text("New Spells Library"),
-	ExecuteCallback: unimplemented,
+	ID:    constants.NewSpellsLibraryItemID,
+	Title: i18n.Text("New Spells Library"),
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+		workspace.DisplayNewDockable(nil, gurpsui.NewSpellTableDockable("Spells.spl", nil))
+	},
 }
 
 // Open a file.
 var Open = &unison.Action{
-	ID:         OpenItemID,
+	ID:         constants.OpenItemID,
 	Title:      i18n.Text("Open…"),
 	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyO, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
@@ -159,7 +181,7 @@ var Open = &unison.Action{
 
 // CloseTab closes a workspace tab if the workspace is foremost, or the current window if not.
 var CloseTab = &unison.Action{
-	ID:         CloseTabID,
+	ID:         constants.CloseTabID,
 	Title:      i18n.Text("Close"),
 	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyW, Modifiers: unison.OSMenuCmdModifier()},
 	EnabledCallback: func(_ *unison.Action, _ interface{}) bool {
@@ -195,7 +217,7 @@ var CloseTab = &unison.Action{
 
 // Save a file.
 var Save = &unison.Action{
-	ID:              SaveItemID,
+	ID:              constants.SaveItemID,
 	Title:           i18n.Text("Save"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyS, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
@@ -203,7 +225,7 @@ var Save = &unison.Action{
 
 // SaveAs saves to a new file.
 var SaveAs = &unison.Action{
-	ID:              SaveAsItemID,
+	ID:              constants.SaveAsItemID,
 	Title:           i18n.Text("Save As…"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyS, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
@@ -211,7 +233,7 @@ var SaveAs = &unison.Action{
 
 // Print the content.
 var Print = &unison.Action{
-	ID:              PrintItemID,
+	ID:              constants.PrintItemID,
 	Title:           i18n.Text("Print…"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyP, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,

@@ -12,6 +12,7 @@
 package menus
 
 import (
+	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -53,7 +54,7 @@ func setupEditMenu(bar unison.Menu) {
 
 // Undo the last action.
 var Undo = &unison.Action{
-	ID:              UndoItemID,
+	ID:              constants.UndoItemID,
 	Title:           i18n.Text("Undo"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyZ, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
@@ -61,7 +62,7 @@ var Undo = &unison.Action{
 
 // Redo the last action.
 var Redo = &unison.Action{
-	ID:              RedoItemID,
+	ID:              constants.RedoItemID,
 	Title:           i18n.Text("Redo"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyZ, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
@@ -69,7 +70,7 @@ var Redo = &unison.Action{
 
 // Duplicate the currently selected content.
 var Duplicate = &unison.Action{
-	ID:              DuplicateItemID,
+	ID:              constants.DuplicateItemID,
 	Title:           i18n.Text("Duplicate"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyU, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,
@@ -77,14 +78,14 @@ var Duplicate = &unison.Action{
 
 // ConvertToContainer converts the currently selected item into a container.
 var ConvertToContainer = &unison.Action{
-	ID:              ConvertToContainerItemID,
+	ID:              constants.ConvertToContainerItemID,
 	Title:           i18n.Text("Convert to Container"),
 	ExecuteCallback: unimplemented,
 }
 
 // JumpToSearch switches the focus to the search widget..
 var JumpToSearch = &unison.Action{
-	ID:              JumpToSearchItemID,
+	ID:              constants.JumpToSearchItemID,
 	Title:           i18n.Text("Jump to Search"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyJ, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: unimplemented,

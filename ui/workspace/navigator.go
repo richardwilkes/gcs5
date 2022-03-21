@@ -188,64 +188,56 @@ func OpenFiles(filePaths []string) {
 	}
 }
 
+// DisplayNewDockable adds the Dockable to the dock and gives it the focus.
+func DisplayNewDockable(wnd *unison.Window, dockable unison.Dockable) {
+	ws := FromWindowOrAny(wnd)
+	if ws == nil {
+		ShowUnableToLocateWorkspaceError()
+		return
+	}
+	defer func() { dockable.AsPanel().RequestFocus() }()
+	if fbd, ok := dockable.(FileBackedDockable); ok {
+		fi := library.FileInfoFor(fbd.BackingFilePath())
+		if dc := ws.CurrentlyFocusedDockContainer(); dc != nil && DockContainerHoldsExtension(dc, fi.ExtensionsToGroupWith...) {
+			dc.Stack(dockable, -1)
+			return
+		} else if dc = ws.LocateDockContainerForExtension(fi.ExtensionsToGroupWith...); dc != nil {
+			dc.Stack(dockable, -1)
+			return
+		}
+	}
+	ws.DocumentDock.DockTo(dockable, nil, unison.RightSide)
+}
+
 // OpenFile attempts to open the given file path in the given window, which should contain a workspace. May pass nil for
 // wnd to let it pick the first such window it discovers.
 func OpenFile(wnd *unison.Window, filePath string) (dockable unison.Dockable, wasOpen bool) {
-	var workspace *Workspace
-	if wnd == nil {
-		workspace = Any()
-	} else {
-		workspace = FromWindow(wnd)
-	}
-	if workspace == nil {
-		unison.ErrorDialogWithMessage(i18n.Text("Unable to locate workspace"), "")
+	ws := FromWindowOrAny(wnd)
+	if ws == nil {
+		ShowUnableToLocateWorkspaceError()
 		return nil, false
 	}
-	var defaultDockContainer *unison.DockContainer
-	if focus := workspace.Window.Focus(); focus != nil {
-		if dc := unison.DockContainerFor(focus); dc != nil && dc.Dock == workspace.DocumentDock.Dock {
-			defaultDockContainer = dc
-		}
-	}
-	var d unison.Dockable
 	var err error
 	if filePath, err = filepath.Abs(filePath); err != nil {
-		unison.ErrorDialogWithError(i18n.Text("Unable to open file"), err)
+		unison.ErrorDialogWithError(i18n.Text("Unable to resolve path"), err)
 		return nil, false
 	}
-	workspace.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
-		for _, one := range dc.Dockables() {
-			if f, ok := one.(FileBackedDockable); ok {
-				if filePath == f.BackingFilePath() {
-					d = one
-					dc.SetCurrentDockable(one)
-					dc.AcquireFocus()
-					return true
-				}
-			}
-			if defaultDockContainer == nil {
-				defaultDockContainer = dc
-			}
-		}
-		return false
-	})
-	if d != nil {
+	if d := ws.LocateFileBackedDockable(filePath); d != nil {
+		dc := unison.DockContainerFor(d)
+		dc.SetCurrentDockable(d)
+		dc.AcquireFocus()
 		return d, true
 	}
 	fi := library.FileInfoFor(filePath)
 	if fi.IsSpecial {
 		return nil, false
 	}
+	var d unison.Dockable
 	if d, err = fi.Load(filePath); err != nil {
 		unison.ErrorDialogWithError(i18n.Text("Unable to open file"), err)
 		return nil, false
 	}
-	if defaultDockContainer != nil {
-		defaultDockContainer.Stack(d, -1)
-	} else {
-		workspace.DocumentDock.DockTo(d, nil, unison.LeftSide)
-		d.AsPanel().RequestFocus()
-	}
+	DisplayNewDockable(wnd, d)
 	return d, false
 }
 

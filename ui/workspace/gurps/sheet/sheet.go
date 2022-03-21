@@ -53,13 +53,17 @@ type Sheet struct {
 	DamagePanel        *DamagePanel
 }
 
-// NewSheet creates a new unison.Dockable for GURPS character sheet files.
-func NewSheet(filePath string) (unison.Dockable, error) {
+// NewSheetFromFile loads a GURPS character sheet file and creates a new unison.Dockable for it.
+func NewSheetFromFile(filePath string) (unison.Dockable, error) {
 	entity, err := gurps.NewEntityFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err
 	}
+	return NewSheet(filePath, entity), nil
+}
 
+// NewSheet creates a new unison.Dockable for GURPS character sheet files.
+func NewSheet(filePath string, entity *gurps.Entity) unison.Dockable {
 	s := &Sheet{
 		path:   filePath,
 		scroll: unison.NewScrollPanel(),
@@ -119,7 +123,7 @@ func NewSheet(filePath string) (unison.Dockable, error) {
 	s.AddChild(s.scroll)
 
 	s.applyScale()
-	return s, nil
+	return s
 }
 
 func (s *Sheet) applyScale() {

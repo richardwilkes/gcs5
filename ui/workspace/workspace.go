@@ -12,6 +12,8 @@
 package workspace
 
 import (
+	"path"
+	"strings"
 	"time"
 
 	"github.com/richardwilkes/gcs/model/settings"
@@ -27,6 +29,20 @@ type Workspace struct {
 	TopDock      *unison.Dock
 	Navigator    *Navigator
 	DocumentDock *DocumentDock
+}
+
+// ShowUnableToLocateWorkspaceError displays an error dialog.
+func ShowUnableToLocateWorkspaceError() {
+	unison.ErrorDialogWithMessage(i18n.Text("Unable to locate workspace"), "")
+}
+
+// FromWindowOrAny first calls FromWindow(wnd) and if that fails to find a Workspace, then calls Any().
+func FromWindowOrAny(wnd *unison.Window) *Workspace {
+	ws := FromWindow(wnd)
+	if ws == nil {
+		ws = Any()
+	}
+	return ws
 }
 
 // FromWindow returns the Workspace associated with the given Window, or nil.
@@ -85,4 +101,61 @@ func (w *Workspace) willClose() {
 	if err := globalSettings.Save(); err != nil {
 		unison.ErrorDialogWithError(i18n.Text("Unable to save global settings"), err)
 	}
+}
+
+// CurrentlyFocusedDockContainer returns the currently focused DockContainer, if any.
+func (w *Workspace) CurrentlyFocusedDockContainer() *unison.DockContainer {
+	if focus := w.Window.Focus(); focus != nil {
+		if dc := unison.DockContainerFor(focus); dc != nil && dc.Dock == w.DocumentDock.Dock {
+			return dc
+		}
+	}
+	return nil
+}
+
+// LocateFileBackedDockable searches for a FileBackedDockable with the given path.
+func (w *Workspace) LocateFileBackedDockable(filePath string) FileBackedDockable {
+	var dockable FileBackedDockable
+	w.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
+		for _, one := range dc.Dockables() {
+			if fbd, ok := one.(FileBackedDockable); ok {
+				if filePath == fbd.BackingFilePath() {
+					dockable = fbd
+					return true
+				}
+			}
+		}
+		return false
+	})
+	return dockable
+}
+
+// LocateDockContainerForExtension searches for the first FileBackedDockable with the given extension and returns its
+// DockContainer.
+func (w *Workspace) LocateDockContainerForExtension(ext ...string) *unison.DockContainer {
+	var extDC *unison.DockContainer
+	w.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
+		if DockContainerHoldsExtension(dc, ext...) {
+			extDC = dc
+			return true
+		}
+		return false
+	})
+	return extDC
+}
+
+// DockContainerHoldsExtension returns true if an immediate child of the given DockContainer has a FileBackedDockable
+// with the given extension.
+func DockContainerHoldsExtension(dc *unison.DockContainer, ext ...string) bool {
+	for _, one := range dc.Dockables() {
+		if fbd, ok := one.(FileBackedDockable); ok {
+			fbdExt := path.Ext(fbd.BackingFilePath())
+			for _, e := range ext {
+				if strings.EqualFold(fbdExt, e) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
