@@ -1,5 +1,96 @@
-### Field access
+### Remaining work for a basic port to Go
 
-When the code was in Java, all fields were accessed through getters and setters. Those have been eliminated where the
-field itself doesn't have special requirements when being read or written, which greatly reduces a lot of boiler-plate
-accessor code.
+#### Unison-specific work that needs to be done
+
+- Printing support in unison
+- Drag & drop support in the unison Table object
+- "Lightweight" menu support for the Windows and Linux platforms, as the current method is too slow when creating top-level windows for their content display... partly exacerbated by the insistence of the Windows OS to animate them
+- Solve the issue on non-macOS platforms where a popup menu in a dialog comes up *behind* the dialog, despite being explicitly told to be in front of it
+- Carefully comb over the interface and identify areas where things aren't working well on Windows and Linux, since I spend nearly all of my development time on macOS and may have not noticed deficiencies there
+
+#### GCS-specific work that needs to be done
+
+- Detail editors
+  - Advantages
+  - Advantage Modifiers
+  - Equipment
+  - Equipment Modifiers
+  - Notes
+  - Skills
+  - Spells
+  - Features
+  - Prerequisites
+  - Modifiers
+  - Melee Weapons
+  - Ranged Weapons
+- Settings editors
+  - Sheet
+  - Attributes
+  - Body Type
+  - Support for the variances between initial defaults and per-sheet variants of each of these
+- Library configuration dialogs
+- General undo / redo support
+- Prompt to save when closing a modified document
+- General completion of menu item actions (many are currently placeholders)
+  - File
+    - New Character Template
+    - Save
+    - Save As...
+    - Print...
+    - Recent Files list
+    - Export To list
+  - Edit
+    - Undo
+    - Redo
+    - Duplicate
+    - Convert to Container
+    - Jump to Search
+  - Item
+    - New Advantage
+    - New Advantage Container
+    - New Advantage Modifier
+    - New Advantage Modifier Container
+    - Add Natural Attacks Advantage
+    - New Skill
+    - New Skill Container
+    - New Technique
+    - New Spell
+    - New Spell Container
+    - New Ritual Magic Spell
+    - New Carried Equipment
+    - New Carried Equipment Container
+    - New Other Equipment
+    - New Other Equipment Container
+    - New Equipment Modifier
+    - New Equipment Modifier Container
+    - New Note
+    - New Note Container
+    - Open Detail Editor
+    - Copy to Character Sheet
+    - Copy to Template
+    - Apply Template to Character Sheet
+    - Open Page Reference
+    - Open Each Page Reference
+  - Library
+    - Show <library> on Disk
+    - Update <library> to <version>
+    - Change Library Locations
+  - Settings
+    - Sheet Settings...
+    - Default Sheet Settings...
+    - Attributes...
+    - Default Attributes...
+    - Body Type...
+    - Default Body Type...
+  - Help
+    - Check for GCS updates...
+- Support for .gct (template) files
+  - Load
+  - Save
+  - Display
+  - Adjust the editors to support the differences when attached to a template rather than a sheet
+  - Applying a template to a sheet
+- Printing support for sheets (requires support in unison first)
+- Ensure table headers don't get cut off when tables are empty
+- Make final decision on whether tables that have no content in the sheet should be hidden (complicates updates and makes it harder for users to discover they exist)
+- 
