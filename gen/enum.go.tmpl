@@ -83,6 +83,9 @@ func (enum {{$name}}) AltString() string {
 
 {{wrapComment (printf "Extract%s extracts the value from a string." $name) 120}}
 func Extract{{$name}}(str string) {{$name}} {
+{{- if and (eq .Name "size") (eq .Pkg "model/paper")}}
+	str = strings.TrimPrefix(strings.TrimPrefix(str, "na-"), "iso-") // For older files that had the Java prefixes
+{{- end}}
     for i, one := range {{$pname}} {
         if strings.EqualFold(one.key, str) {
             return {{$name}}(i)

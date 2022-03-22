@@ -118,6 +118,7 @@ func (enum Size) String() string {
 
 // ExtractSize extracts the value from a string.
 func ExtractSize(str string) Size {
+	str = strings.TrimPrefix(strings.TrimPrefix(str, "na-"), "iso-") // For older files that had the Java prefixes
 	for i, one := range sizeData {
 		if strings.EqualFold(one.key, str) {
 			return Size(i)

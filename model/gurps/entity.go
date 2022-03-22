@@ -49,6 +49,7 @@ var _ eval.VariableResolver = &Entity{}
 // EntityData holds the Entity data that is written to disk.
 type EntityData struct {
 	Type             datafile.Type          `json:"type"`
+	Version          int                    `json:"version"`
 	ID               uuid.UUID              `json:"id"`
 	TotalPoints      fixed.F64d4            `json:"total_points"`
 	Profile          *Profile               `json:"profile,omitempty"`
@@ -149,6 +150,7 @@ func (e *Entity) MarshalJSON() ([]byte, error) {
 			Dodge:                 make([]int, len(datafile.AllEncumbrance)),
 		},
 	}
+	data.Version = gid.CurrentDataVersion
 	for i, one := range datafile.AllEncumbrance {
 		data.Calc.Move[i] = e.Move(one)
 		data.Calc.Dodge[i] = e.Dodge(one)
