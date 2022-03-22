@@ -48,6 +48,8 @@ const (
 	SkillPointsColumn
 )
 
+const skillListTypeKey = "skill_list"
+
 // SkillItem holds the Skill data that only exists in non-containers.
 type SkillItem struct {
 	Specialization               string              `json:"specialization,omitempty"`
@@ -94,27 +96,33 @@ type Skill struct {
 }
 
 type skillListData struct {
-	Current []*Skill `json:"skills"`
+	Type    string   `json:"type"`
+	Version int      `json:"version"`
+	Rows    []*Skill `json:"rows"`
 }
 
 // NewSkillsFromFile loads an Skill list from a file.
 func NewSkillsFromFile(fileSystem fs.FS, filePath string) ([]*Skill, error) {
-	var data struct {
-		skillListData
-		OldKey []*Skill `json:"rows"`
-	}
+	var data skillListData
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
-		return nil, errs.NewWithCause("invalid skills file: "+filePath, err)
+		return nil, errs.NewWithCause(gid.InvalidFileDataMsg, err)
 	}
-	if len(data.Current) != 0 {
-		return data.Current, nil
+	if data.Type != skillListTypeKey {
+		return nil, errs.New(gid.UnexpectedFileDataMsg)
 	}
-	return data.OldKey, nil
+	if err := gid.CheckVersion(data.Version); err != nil {
+		return nil, err
+	}
+	return data.Rows, nil
 }
 
 // SaveSkills writes the Skill list to the file as JSON.
 func SaveSkills(skills []*Skill, filePath string) error {
-	return jio.SaveToFile(context.Background(), filePath, &skillListData{Current: skills})
+	return jio.SaveToFile(context.Background(), filePath, &skillListData{
+		Type:    skillListTypeKey,
+		Version: gid.CurrentDataVersion,
+		Rows:    skills,
+	})
 }
 
 // NewSkill creates a new Skill.

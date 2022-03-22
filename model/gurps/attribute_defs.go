@@ -27,6 +27,8 @@ import (
 	"github.com/richardwilkes/toolbox/log/jot"
 )
 
+const attributeSettingsListTypeKey = "attribute_settings"
+
 // AttributeDefs holds a set of AttributeDef objects.
 type AttributeDefs struct {
 	Set map[string]*AttributeDef
@@ -74,22 +76,30 @@ func FactoryAttributeDefs() *AttributeDefs {
 }
 
 type attributeDefsData struct {
-	Current *AttributeDefs `json:"attribute_definitions"`
+	Type    string         `json:"type"`
+	Version int            `json:"version"`
+	Rows    *AttributeDefs `json:"rows"`
 }
 
 // NewAttributeDefsFromFile loads an AttributeDef set from a file.
 func NewAttributeDefsFromFile(fileSystem fs.FS, filePath string) (*AttributeDefs, error) {
 	var data struct {
-		*attributeDefsData
+		attributeDefsData
 		OldKey1 *AttributeDefs `json:"attribute_settings"`
 		OldKey2 *AttributeDefs `json:"attributes"`
 	}
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
-		return nil, errs.NewWithCause("invalid attribute definitions file: "+filePath, err)
+		return nil, errs.NewWithCause(gid.InvalidFileDataMsg, err)
+	}
+	if data.Type != attributeSettingsListTypeKey {
+		return nil, errs.New(gid.UnexpectedFileDataMsg)
+	}
+	if err := gid.CheckVersion(data.Version); err != nil {
+		return nil, err
 	}
 	var defs *AttributeDefs
-	if data.attributeDefsData != nil {
-		defs = data.attributeDefsData.Current
+	if data.attributeDefsData.Rows != nil {
+		defs = data.attributeDefsData.Rows
 	}
 	if defs == nil && data.OldKey1 != nil {
 		defs = data.OldKey1
@@ -107,7 +117,11 @@ func NewAttributeDefsFromFile(fileSystem fs.FS, filePath string) (*AttributeDefs
 
 // Save writes the AttributeDefs to the file as JSON.
 func (a *AttributeDefs) Save(filePath string) error {
-	return jio.SaveToFile(context.Background(), filePath, &attributeDefsData{Current: a})
+	return jio.SaveToFile(context.Background(), filePath, &attributeDefsData{
+		Type:    attributeSettingsListTypeKey,
+		Version: gid.CurrentDataVersion,
+		Rows:    a,
+	})
 }
 
 // EnsureValidity checks the current settings for validity and if they aren't valid, makes them so.

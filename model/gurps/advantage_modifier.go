@@ -19,6 +19,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
@@ -39,7 +40,10 @@ const (
 	AdvantageModifierReferenceColumn
 )
 
-const advantageModifierTypeKey = "modifier"
+const (
+	advantageModifierListTypeKey = "modifier_list"
+	advantageModifierTypeKey     = "modifier"
+)
 
 // AdvantageModifierItem holds the AdvantageModifier data that only exists in non-containers.
 type AdvantageModifierItem struct {
@@ -77,27 +81,33 @@ type AdvantageModifier struct {
 }
 
 type advantageModifierListData struct {
-	Current []*AdvantageModifier `json:"advantage_modifiers"`
+	Type    string               `json:"type"`
+	Version int                  `json:"version"`
+	Rows    []*AdvantageModifier `json:"rows"`
 }
 
 // NewAdvantageModifiersFromFile loads an AdvantageModifier list from a file.
 func NewAdvantageModifiersFromFile(fileSystem fs.FS, filePath string) ([]*AdvantageModifier, error) {
-	var data struct {
-		advantageModifierListData
-		OldKey []*AdvantageModifier `json:"rows"`
-	}
+	var data advantageModifierListData
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
-		return nil, errs.NewWithCause("invalid advantage modifiers file: "+filePath, err)
+		return nil, errs.NewWithCause(gid.InvalidFileDataMsg, err)
 	}
-	if len(data.Current) != 0 {
-		return data.Current, nil
+	if data.Type != advantageModifierListTypeKey {
+		return nil, errs.New(gid.UnexpectedFileDataMsg)
 	}
-	return data.OldKey, nil
+	if err := gid.CheckVersion(data.Version); err != nil {
+		return nil, err
+	}
+	return data.Rows, nil
 }
 
 // SaveAdvantageModifiers writes the AdvantageModifier list to the file as JSON.
 func SaveAdvantageModifiers(modifiers []*AdvantageModifier, filePath string) error {
-	return jio.SaveToFile(context.Background(), filePath, &advantageModifierListData{Current: modifiers})
+	return jio.SaveToFile(context.Background(), filePath, &advantageModifierListData{
+		Type:    advantageModifierListTypeKey,
+		Version: gid.CurrentDataVersion,
+		Rows:    modifiers,
+	})
 }
 
 // NewAdvantageModifier creates an AdvantageModifier.

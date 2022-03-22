@@ -20,6 +20,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
@@ -69,7 +70,10 @@ TL10: Robotic Age (2070+?)
 TL11: Age of Exotic Matter
 TL12: Anything Goes`)
 
-const equipmentTypeKey = "equipment"
+const (
+	equipmentListTypeKey = "equipment_list"
+	equipmentTypeKey     = "equipment"
+)
 
 // EquipmentContainer holds the Equipment data that only exists in containers.
 type EquipmentContainer struct {
@@ -112,27 +116,33 @@ type Equipment struct {
 }
 
 type equipmentListData struct {
-	Current []*Equipment `json:"equipment"`
+	Type    string       `json:"type"`
+	Version int          `json:"version"`
+	Rows    []*Equipment `json:"rows"`
 }
 
 // NewEquipmentFromFile loads an Equipment list from a file.
 func NewEquipmentFromFile(fileSystem fs.FS, filePath string) ([]*Equipment, error) {
-	var data struct {
-		equipmentListData
-		OldKey []*Equipment `json:"rows"`
-	}
+	var data equipmentListData
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
-		return nil, errs.NewWithCause("invalid equipment file: "+filePath, err)
+		return nil, errs.NewWithCause(gid.InvalidFileDataMsg, err)
 	}
-	if len(data.Current) != 0 {
-		return data.Current, nil
+	if data.Type != equipmentListTypeKey {
+		return nil, errs.New(gid.UnexpectedFileDataMsg)
 	}
-	return data.OldKey, nil
+	if err := gid.CheckVersion(data.Version); err != nil {
+		return nil, err
+	}
+	return data.Rows, nil
 }
 
 // SaveEquipment writes the Equipment list to the file as JSON.
 func SaveEquipment(equipment []*Equipment, filePath string) error {
-	return jio.SaveToFile(context.Background(), filePath, &equipmentListData{Current: equipment})
+	return jio.SaveToFile(context.Background(), filePath, &equipmentListData{
+		Type:    equipmentListTypeKey,
+		Version: gid.CurrentDataVersion,
+		Rows:    equipment,
+	})
 }
 
 // NewEquipment creates a new Equipment.

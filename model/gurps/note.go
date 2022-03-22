@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/model/node"
@@ -32,7 +33,10 @@ const (
 	NoteReferenceColumn
 )
 
-const noteTypeKey = "note"
+const (
+	noteListTypeKey = "note_list"
+	noteTypeKey     = "note"
+)
 
 // NoteContainer holds the Note data that only exists in containers.
 type NoteContainer struct {
@@ -58,27 +62,33 @@ type Note struct {
 }
 
 type noteListData struct {
-	Current []*Note `json:"notes"`
+	Type    string  `json:"type"`
+	Version int     `json:"version"`
+	Rows    []*Note `json:"rows"`
 }
 
 // NewNotesFromFile loads an Note list from a file.
 func NewNotesFromFile(fileSystem fs.FS, filePath string) ([]*Note, error) {
-	var data struct {
-		noteListData
-		OldKey []*Note `json:"rows"`
-	}
+	var data noteListData
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
-		return nil, errs.NewWithCause("invalid notes file: "+filePath, err)
+		return nil, errs.NewWithCause(gid.InvalidFileDataMsg, err)
 	}
-	if len(data.Current) != 0 {
-		return data.Current, nil
+	if data.Type != noteListTypeKey {
+		return nil, errs.New(gid.UnexpectedFileDataMsg)
 	}
-	return data.OldKey, nil
+	if err := gid.CheckVersion(data.Version); err != nil {
+		return nil, err
+	}
+	return data.Rows, nil
 }
 
 // SaveNotes writes the Note list to the file as JSON.
 func SaveNotes(notes []*Note, filePath string) error {
-	return jio.SaveToFile(context.Background(), filePath, &noteListData{Current: notes})
+	return jio.SaveToFile(context.Background(), filePath, &noteListData{
+		Type:    noteListTypeKey,
+		Version: gid.CurrentDataVersion,
+		Rows:    notes,
+	})
 }
 
 // NewNote creates a new Note.

@@ -20,6 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/equipment"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
@@ -43,7 +44,10 @@ const (
 	EquipmentModifierReferenceColumn
 )
 
-const equipmentModifierTypeKey = "modifier"
+const (
+	equipmentModifierListTypeKey = "eqp_modifier_list"
+	equipmentModifierTypeKey     = "eqp_modifier"
+)
 
 // EquipmentModifierItem holds the EquipmentModifier data that only exists in non-containers.
 type EquipmentModifierItem struct {
@@ -82,27 +86,33 @@ type EquipmentModifier struct {
 }
 
 type equipmentModifierListData struct {
-	Current []*EquipmentModifier `json:"equipment_modifiers"`
+	Type    string               `json:"type"`
+	Version int                  `json:"version"`
+	Rows    []*EquipmentModifier `json:"rows"`
 }
 
 // NewEquipmentModifiersFromFile loads an EquipmentModifier list from a file.
 func NewEquipmentModifiersFromFile(fileSystem fs.FS, filePath string) ([]*EquipmentModifier, error) {
-	var data struct {
-		equipmentModifierListData
-		OldKey []*EquipmentModifier `json:"rows"`
-	}
+	var data equipmentModifierListData
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
-		return nil, errs.NewWithCause("invalid equipment modifiers file: "+filePath, err)
+		return nil, errs.NewWithCause(gid.InvalidFileDataMsg, err)
 	}
-	if len(data.Current) != 0 {
-		return data.Current, nil
+	if data.Type != equipmentModifierListTypeKey {
+		return nil, errs.New(gid.UnexpectedFileDataMsg)
 	}
-	return data.OldKey, nil
+	if err := gid.CheckVersion(data.Version); err != nil {
+		return nil, err
+	}
+	return data.Rows, nil
 }
 
 // SaveEquipmentModifiers writes the EquipmentModifier list to the file as JSON.
 func SaveEquipmentModifiers(modifiers []*EquipmentModifier, filePath string) error {
-	return jio.SaveToFile(context.Background(), filePath, &equipmentModifierListData{Current: modifiers})
+	return jio.SaveToFile(context.Background(), filePath, &equipmentModifierListData{
+		Type:    equipmentModifierListTypeKey,
+		Version: gid.CurrentDataVersion,
+		Rows:    modifiers,
+	})
 }
 
 // NewEquipmentModifier creates an EquipmentModifier.

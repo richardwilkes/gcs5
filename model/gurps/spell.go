@@ -56,6 +56,8 @@ const (
 	SpellDescriptionForPageColumn
 )
 
+const spellListTypeKey = "spell_list"
+
 // SpellItem holds the Spell data that only exists in non-containers.
 type SpellItem struct {
 	TechLevel         *string             `json:"tech_level,omitempty"`
@@ -105,27 +107,33 @@ type Spell struct {
 }
 
 type spellListData struct {
-	Current []*Spell `json:"spells"`
+	Type    string   `json:"type"`
+	Version int      `json:"version"`
+	Rows    []*Spell `json:"rows"`
 }
 
 // NewSpellsFromFile loads an Spell list from a file.
 func NewSpellsFromFile(fileSystem fs.FS, filePath string) ([]*Spell, error) {
-	var data struct {
-		spellListData
-		OldKey []*Spell `json:"rows"`
-	}
+	var data spellListData
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
-		return nil, errs.NewWithCause("invalid spells file: "+filePath, err)
+		return nil, errs.NewWithCause(gid.InvalidFileDataMsg, err)
 	}
-	if len(data.Current) != 0 {
-		return data.Current, nil
+	if data.Type != spellListTypeKey {
+		return nil, errs.New(gid.UnexpectedFileDataMsg)
 	}
-	return data.OldKey, nil
+	if err := gid.CheckVersion(data.Version); err != nil {
+		return nil, err
+	}
+	return data.Rows, nil
 }
 
 // SaveSpells writes the Spell list to the file as JSON.
 func SaveSpells(spells []*Spell, filePath string) error {
-	return jio.SaveToFile(context.Background(), filePath, &spellListData{Current: spells})
+	return jio.SaveToFile(context.Background(), filePath, &spellListData{
+		Type:    spellListTypeKey,
+		Version: gid.CurrentDataVersion,
+		Rows:    spells,
+	})
 }
 
 // NewSpell creates a new Spell.

@@ -22,11 +22,15 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/rpgtools/dice"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
 )
+
+const bodyTypeListTypeKey = "body_type"
 
 //go:embed data
 var embeddedFS embed.FS
@@ -38,6 +42,12 @@ type BodyType struct {
 	Locations      []*HitLocation `json:"locations,omitempty"`
 	owningLocation *HitLocation
 	locationLookup map[string]*HitLocation
+}
+
+type bodyTypeListData struct {
+	Type    string `json:"type"`
+	Version int    `json:"version"`
+	*BodyType
 }
 
 // FactoryBodyType returns a new copy of the default factory BodyType.
@@ -70,22 +80,24 @@ func FactoryBodyTypes() []*BodyType {
 // NewBodyTypeFromFile loads an BodyType from a file.
 func NewBodyTypeFromFile(fileSystem fs.FS, filePath string) (*BodyType, error) {
 	var data struct {
-		BodyType
-		HitLocations *BodyType `json:"hit_locations"`
+		bodyTypeListData
+		HitLocations []*HitLocation `json:"hit_locations"`
 	}
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
+		return nil, errs.NewWithCause(gid.InvalidFileDataMsg, err)
+	}
+	if data.Type != bodyTypeListTypeKey {
+		return nil, errs.New(gid.UnexpectedFileDataMsg)
+	}
+	if err := gid.CheckVersion(data.Version); err != nil {
 		return nil, err
 	}
-	var b *BodyType
-	if data.Locations != nil {
-		b1 := data.BodyType
-		b = &b1
-	} else {
-		b = data.HitLocations
+	if data.Locations == nil {
+		data.BodyType.Locations = data.HitLocations
 	}
-	b.EnsureValidity()
-	b.Update(nil)
-	return b, nil
+	data.BodyType.EnsureValidity()
+	data.BodyType.Update(nil)
+	return data.BodyType, nil
 }
 
 // EnsureValidity checks the current settings for validity and if they aren't valid, makes them so.
@@ -110,7 +122,11 @@ func (b *BodyType) Clone(entity *Entity, owningLocation *HitLocation) *BodyType 
 
 // Save writes the BodyType to the file as JSON.
 func (b *BodyType) Save(filePath string) error {
-	return jio.SaveToFile(context.Background(), filePath, b)
+	return jio.SaveToFile(context.Background(), filePath, &bodyTypeListData{
+		Type:     bodyTypeListTypeKey,
+		Version:  gid.CurrentDataVersion,
+		BodyType: b,
+	})
 }
 
 // Update the role ranges and populate the lookup map.

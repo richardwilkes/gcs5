@@ -1,5 +1,7 @@
 {
-  "attribute_settings": [
+  "type": "attribute_settings",
+  "version": 4,
+  "rows": [
     {
       "id": "st",
       "type": "integer",

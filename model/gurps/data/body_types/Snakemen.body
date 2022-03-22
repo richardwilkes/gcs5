@@ -1,4 +1,6 @@
 {
+  "type": "body_type",
+  "version": 4,
   "name": "Snakemen",
   "roll": "3d",
   "locations": [

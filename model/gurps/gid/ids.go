@@ -11,10 +11,6 @@
 
 package gid
 
-// CurrentDataVersion holds the current version for data files written with the current release. Note that this is
-// intentionally the same for all data files that GCS processes.
-const CurrentDataVersion = 2
-
 // Various commonly used IDs
 const (
 	All              = "all"

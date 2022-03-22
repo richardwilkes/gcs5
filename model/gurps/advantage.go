@@ -20,6 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
@@ -45,7 +46,10 @@ const (
 	AdvantageReferenceColumn
 )
 
-const advantageTypeKey = "advantage"
+const (
+	advantageListTypeKey = "advantage_list"
+	advantageTypeKey     = "advantage"
+)
 
 // AdvantageItem holds the Advantage data that only exists in non-containers.
 type AdvantageItem struct {
@@ -99,27 +103,33 @@ type Advantage struct {
 }
 
 type advantageListData struct {
-	Current []*Advantage `json:"advantages"`
+	Type    string       `json:"type"`
+	Version int          `json:"version"`
+	Rows    []*Advantage `json:"rows"`
 }
 
 // NewAdvantagesFromFile loads an Advantage list from a file.
 func NewAdvantagesFromFile(fileSystem fs.FS, filePath string) ([]*Advantage, error) {
-	var data struct {
-		advantageListData
-		OldKey []*Advantage `json:"rows"`
-	}
+	var data advantageListData
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
-		return nil, errs.NewWithCause("invalid advantages file: "+filePath, err)
+		return nil, errs.NewWithCause(gid.InvalidFileDataMsg, err)
 	}
-	if len(data.Current) != 0 {
-		return data.Current, nil
+	if data.Type != advantageListTypeKey {
+		return nil, errs.New(gid.UnexpectedFileDataMsg)
 	}
-	return data.OldKey, nil
+	if err := gid.CheckVersion(data.Version); err != nil {
+		return nil, err
+	}
+	return data.Rows, nil
 }
 
 // SaveAdvantages writes the Advantage list to the file as JSON.
 func SaveAdvantages(advantages []*Advantage, filePath string) error {
-	return jio.SaveToFile(context.Background(), filePath, &advantageListData{Current: advantages})
+	return jio.SaveToFile(context.Background(), filePath, &advantageListData{
+		Type:    advantageListTypeKey,
+		Version: gid.CurrentDataVersion,
+		Rows:    advantages,
+	})
 }
 
 // NewAdvantage creates a new Advantage.

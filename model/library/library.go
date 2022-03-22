@@ -19,20 +19,15 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio"
-)
-
-const (
-	// MinimumLibraryVersion is the oldest version of the library data that can be loaded.
-	MinimumLibraryVersion = "0"
-	// IncompatibleFutureLibraryVersion is the newest version at which the library data can no longer be loaded.
-	IncompatibleFutureLibraryVersion = "4"
 )
 
 const releaseFile = "release.txt"
@@ -101,11 +96,13 @@ func (l *Library) CheckForAvailableUpgrade(ctx context.Context, client *http.Cli
 	l.lock.Lock()
 	l.upgrade = nil
 	l.lock.Unlock()
+	incompatibleFutureLibraryVersion := strconv.Itoa(gid.CurrentDataVersion + 1)
+	minimumLibraryVersion := strconv.Itoa(gid.MinimumLibraryVersion)
 	available, err := LoadReleases(ctx, client, l.GitHubAccountName, l.RepoName, l.VersionOnDisk(),
 		func(version, notes string) bool {
-			return IncompatibleFutureLibraryVersion == version ||
-				txt.NaturalLess(version, MinimumLibraryVersion, true) ||
-				txt.NaturalLess(IncompatibleFutureLibraryVersion, version, true)
+			return incompatibleFutureLibraryVersion == version ||
+				txt.NaturalLess(version, minimumLibraryVersion, true) ||
+				txt.NaturalLess(incompatibleFutureLibraryVersion, version, true)
 		})
 	var upgrade *Release
 	if err != nil {
