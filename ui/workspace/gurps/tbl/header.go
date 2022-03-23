@@ -79,7 +79,7 @@ func NewPageRefHeader(forPage bool) unison.TableColumnHeader {
 
 // NewEquippedHeader creates a new equipped header.
 func NewEquippedHeader(forPage bool) unison.TableColumnHeader {
-	return NewSVGHeader(res.CircledCheckSVG,
+	return NewSVGHeader(res.CheckmarkSVG,
 		i18n.Text(`Whether this piece of equipment is equipped or just carried. Items that are not equipped do not apply any features they may normally contribute to the character.`),
 		forPage)
 }
@@ -155,7 +155,13 @@ func NewPageTableColumnHeader(title, tooltip string) *PageTableColumnHeader {
 
 // DefaultSizes provides the default sizing.
 func (h *PageTableColumnHeader) DefaultSizes(hint geom32.Size) (min, pref, max geom32.Size) {
-	return h.Label.DefaultSizes(hint)
+	_, pref, _ = h.Label.DefaultSizes(hint)
+	if b := h.Border(); b != nil {
+		pref.AddInsets(b.Insets())
+	}
+	pref.GrowToInteger()
+	pref.ConstrainForHint(hint)
+	return pref, pref, pref
 }
 
 // DefaultDraw provides the default drawing.

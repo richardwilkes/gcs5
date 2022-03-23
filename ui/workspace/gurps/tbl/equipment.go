@@ -78,7 +78,7 @@ func NewEquipmentTableHeaders(provider gurps.ListProvider, forPage, carried bool
 			desc = NewHeader(i18n.Text("Equipment"), "", true)
 		}
 		headers = append(headers,
-			NewHeader(i18n.Text("Qty"), i18n.Text("Quantity"), true),
+			NewHeader(i18n.Text("#"), i18n.Text("Quantity"), true),
 			desc,
 			NewHeader(i18n.Text("Uses"), i18n.Text("The number of uses remaining"), true),
 			NewHeader(i18n.Text("TL"), i18n.Text("Tech Level"), true),

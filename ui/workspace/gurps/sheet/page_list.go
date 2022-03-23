@@ -153,6 +153,7 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 	p.table.ColumnSizes = make([]unison.ColumnSize, len(columnHeaders))
 	for i := range p.table.ColumnSizes {
 		_, pref, _ := columnHeaders[i].AsPanel().Sizes(geom32.Size{})
+		pref.Width += p.table.Padding.Left + p.table.Padding.Right
 		p.table.ColumnSizes[i].AutoMinimum = pref.Width
 		p.table.ColumnSizes[i].AutoMaximum = 800
 		p.table.ColumnSizes[i].Minimum = pref.Width
