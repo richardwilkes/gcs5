@@ -21,16 +21,14 @@ import (
 
 // Possible values.
 const (
-	PC Type = iota
-	Template
-	LastType = Template
+	PC       Type = iota
+	LastType      = PC
 )
 
 var (
 	// AllType holds all possible values.
 	AllType = []Type{
 		PC,
-		Template,
 	}
 	typeData = []struct {
 		key    string
@@ -39,10 +37,6 @@ var (
 		{
 			key:    "character",
 			string: i18n.Text("PC"),
-		},
-		{
-			key:    "template",
-			string: i18n.Text("Template"),
 		},
 	}
 )

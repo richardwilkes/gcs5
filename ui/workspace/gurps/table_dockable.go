@@ -115,6 +115,14 @@ func NewEquipmentModifierTableDockable(filePath string, modifiers []*gurps.Equip
 		tbl.NewEquipmentModifierRowData(func() []*gurps.EquipmentModifier { return modifiers }))
 }
 
+type skillListProvider struct {
+	skills []*gurps.Skill
+}
+
+func (p *skillListProvider) SkillList() []*gurps.Skill {
+	return p.skills
+}
+
 // NewSkillTableDockableFromFile loads a list of skills from a file and creates a new unison.Dockable for them.
 func NewSkillTableDockableFromFile(filePath string) (unison.Dockable, error) {
 	skills, err := gurps.NewSkillsFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
@@ -126,8 +134,16 @@ func NewSkillTableDockableFromFile(filePath string) (unison.Dockable, error) {
 
 // NewSkillTableDockable creates a new unison.Dockable for skill list files.
 func NewSkillTableDockable(filePath string, skills []*gurps.Skill) unison.Dockable {
-	return NewTableDockable(filePath, tbl.NewSkillTableHeaders(false),
-		tbl.NewSkillRowData(func() []*gurps.Skill { return skills }, false))
+	p := &skillListProvider{skills: skills}
+	return NewTableDockable(filePath, tbl.NewSkillTableHeaders(p, false), tbl.NewSkillRowData(p, false))
+}
+
+type spellListProvider struct {
+	spells []*gurps.Spell
+}
+
+func (p *spellListProvider) SpellList() []*gurps.Spell {
+	return p.spells
 }
 
 // NewSpellTableDockableFromFile loads a list of spells from a file and creates a new unison.Dockable for them.
@@ -141,8 +157,8 @@ func NewSpellTableDockableFromFile(filePath string) (unison.Dockable, error) {
 
 // NewSpellTableDockable creates a new unison.Dockable for spell list files.
 func NewSpellTableDockable(filePath string, spells []*gurps.Spell) unison.Dockable {
-	return NewTableDockable(filePath, tbl.NewSpellTableHeaders(false),
-		tbl.NewSpellRowData(func() []*gurps.Spell { return spells }, false))
+	p := &spellListProvider{spells: spells}
+	return NewTableDockable(filePath, tbl.NewSpellTableHeaders(p, false), tbl.NewSpellRowData(p, false))
 }
 
 // NewNoteTableDockableFromFile loads a list of notes from a file and creates a new unison.Dockable for them.

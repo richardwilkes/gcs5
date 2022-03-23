@@ -176,7 +176,7 @@ func (s *Sheet) createFirstPage() *Page {
 	p.AddChild(s.createFirstRow())
 	p.AddChild(s.createSecondRow())
 
-	// Add the various outline blocks, based on the layout preference.
+	// Add the various blocks, based on the layout preference.
 	for _, col := range s.entity.SheetSettings.BlockLayout.Decompose() {
 		rowPanel := unison.NewPanel()
 		rowPanel.SetLayout(&unison.FlexLayout{

@@ -31,7 +31,7 @@ var (
 		9:  gurps.SpellCategoryColumn,
 		10: gurps.SpellReferenceColumn,
 	}
-	spellPageColMap = map[int]int{
+	entitySpellPageColMap = map[int]int{
 		0: gurps.SpellDescriptionForPageColumn,
 		1: gurps.SpellCollegeColumn,
 		2: gurps.SpellDifficultyColumn,
@@ -40,10 +40,17 @@ var (
 		5: gurps.SpellPointsColumn,
 		6: gurps.SpellReferenceColumn,
 	}
+	spellPageColMap = map[int]int{
+		0: gurps.SpellDescriptionForPageColumn,
+		1: gurps.SpellCollegeColumn,
+		2: gurps.SpellDifficultyColumn,
+		3: gurps.SpellPointsColumn,
+		4: gurps.SpellReferenceColumn,
+	}
 )
 
 // NewSpellTableHeaders creates a new set of table column headers for spells.
-func NewSpellTableHeaders(forPage bool) []unison.TableColumnHeader {
+func NewSpellTableHeaders(provider gurps.SpellListProvider, forPage bool) []unison.TableColumnHeader {
 	var headers []unison.TableColumnHeader
 	headers = append(headers,
 		NewHeader(i18n.Text("Spell"), "", forPage),
@@ -63,11 +70,13 @@ func NewSpellTableHeaders(forPage bool) []unison.TableColumnHeader {
 		NewHeader(i18n.Text("Diff"), i18n.Text("Difficulty"), forPage),
 	)
 	if forPage {
-		headers = append(headers,
-			NewHeader(i18n.Text("SL"), i18n.Text("Skill Level"), true),
-			NewHeader(i18n.Text("RSL"), i18n.Text("Relative Skill Level"), true),
-			NewHeader(i18n.Text("Pts"), i18n.Text("Points"), true),
-		)
+		if _, ok := provider.(*gurps.Entity); ok {
+			headers = append(headers,
+				NewHeader(i18n.Text("SL"), i18n.Text("Skill Level"), true),
+				NewHeader(i18n.Text("RSL"), i18n.Text("Relative Skill Level"), true),
+			)
+		}
+		headers = append(headers, NewHeader(i18n.Text("Pts"), i18n.Text("Points"), true))
 	} else {
 		headers = append(headers,
 			NewHeader(i18n.Text("Category"), "", false),
@@ -77,15 +86,19 @@ func NewSpellTableHeaders(forPage bool) []unison.TableColumnHeader {
 }
 
 // NewSpellRowData creates a new table data provider function for spells.
-func NewSpellRowData(topLevelRowsProvider func() []*gurps.Spell, forPage bool) func(table *unison.Table) []unison.TableRowData {
+func NewSpellRowData(provider gurps.SpellListProvider, forPage bool) func(table *unison.Table) []unison.TableRowData {
 	return func(table *unison.Table) []unison.TableRowData {
 		var colMap map[int]int
 		if forPage {
-			colMap = spellPageColMap
+			if _, ok := provider.(*gurps.Entity); ok {
+				colMap = entitySpellPageColMap
+			} else {
+				colMap = spellPageColMap
+			}
 		} else {
 			colMap = spellListColMap
 		}
-		data := topLevelRowsProvider()
+		data := provider.SpellList()
 		rows := make([]unison.TableRowData, 0, len(data))
 		for _, one := range data {
 			rows = append(rows, NewNode(table, nil, colMap, one, forPage))

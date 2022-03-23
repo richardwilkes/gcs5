@@ -21,7 +21,7 @@ import (
 // RegisterFileTypes registers GCS file types.
 func RegisterFileTypes() {
 	registerExportableGCSFileInfo(".gcs", res.GCSSheet, sheet.NewSheetFromFile)
-	registerGCSFileInfo(".gct", []string{".gct"}, res.GCSTemplate, NewTemplateDockable)
+	registerGCSFileInfo(".gct", []string{".gct"}, res.GCSTemplate, NewTemplateFromFile)
 	groupWith := []string{".adq", ".adm", ".eqp", ".eqm", ".skl", ".spl", ".not"}
 	registerGCSFileInfo(".adq", groupWith, res.GCSAdvantages, NewAdvantageTableDockableFromFile)
 	registerGCSFileInfo(".adm", groupWith, res.GCSAdvantageModifiers, NewAdvantageModifierTableDockableFromFile)

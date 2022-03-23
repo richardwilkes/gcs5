@@ -39,9 +39,9 @@ type PageList struct {
 }
 
 // NewAdvantagesPageList creates the advantages page list.
-func NewAdvantagesPageList(entity *gurps.Entity) *PageList {
+func NewAdvantagesPageList(provider gurps.ListProvider) *PageList {
 	p := newPageList(tbl.NewAdvantageTableHeaders(true), 0, 0,
-		tbl.NewAdvantageRowData(func() []*gurps.Advantage { return entity.Advantages }, true))
+		tbl.NewAdvantageRowData(func() []*gurps.Advantage { return provider.AdvantageList() }, true))
 	p.installToggleStateHandler()
 	p.installIncrementHandler()
 	p.installDecrementHandler()
@@ -49,9 +49,9 @@ func NewAdvantagesPageList(entity *gurps.Entity) *PageList {
 }
 
 // NewCarriedEquipmentPageList creates the carried equipment page list.
-func NewCarriedEquipmentPageList(entity *gurps.Entity) *PageList {
-	p := newPageList(tbl.NewEquipmentTableHeaders(entity, true, true), 2, 2,
-		tbl.NewEquipmentRowData(func() []*gurps.Equipment { return entity.CarriedEquipment }, true, true))
+func NewCarriedEquipmentPageList(provider gurps.ListProvider) *PageList {
+	p := newPageList(tbl.NewEquipmentTableHeaders(provider, true, true), 2, 2,
+		tbl.NewEquipmentRowData(func() []*gurps.Equipment { return provider.CarriedEquipmentList() }, true, true))
 	p.installToggleStateHandler()
 	p.installIncrementHandler()
 	p.installDecrementHandler()
@@ -63,9 +63,9 @@ func NewCarriedEquipmentPageList(entity *gurps.Entity) *PageList {
 }
 
 // NewOtherEquipmentPageList creates the other equipment page list.
-func NewOtherEquipmentPageList(entity *gurps.Entity) *PageList {
-	p := newPageList(tbl.NewEquipmentTableHeaders(entity, true, false), 1, 1,
-		tbl.NewEquipmentRowData(func() []*gurps.Equipment { return entity.OtherEquipment }, true, false))
+func NewOtherEquipmentPageList(provider gurps.ListProvider) *PageList {
+	p := newPageList(tbl.NewEquipmentTableHeaders(provider, true, false), 1, 1,
+		tbl.NewEquipmentRowData(func() []*gurps.Equipment { return provider.OtherEquipmentList() }, true, false))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
 	p.installIncrementUsesHandler()
@@ -76,9 +76,8 @@ func NewOtherEquipmentPageList(entity *gurps.Entity) *PageList {
 }
 
 // NewSkillsPageList creates the skills page list.
-func NewSkillsPageList(entity *gurps.Entity) *PageList {
-	p := newPageList(tbl.NewSkillTableHeaders(true), 0, 0,
-		tbl.NewSkillRowData(func() []*gurps.Skill { return entity.Skills }, true))
+func NewSkillsPageList(provider gurps.SkillListProvider) *PageList {
+	p := newPageList(tbl.NewSkillTableHeaders(provider, true), 0, 0, tbl.NewSkillRowData(provider, true))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
 	p.installIncrementSkillHandler()
@@ -89,9 +88,8 @@ func NewSkillsPageList(entity *gurps.Entity) *PageList {
 }
 
 // NewSpellsPageList creates the spells page list.
-func NewSpellsPageList(entity *gurps.Entity) *PageList {
-	p := newPageList(tbl.NewSpellTableHeaders(true), 0, 0,
-		tbl.NewSpellRowData(func() []*gurps.Spell { return entity.Spells }, true))
+func NewSpellsPageList(provider gurps.SpellListProvider) *PageList {
+	p := newPageList(tbl.NewSpellTableHeaders(provider, true), 0, 0, tbl.NewSpellRowData(provider, true))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
 	p.installIncrementSkillHandler()
@@ -100,9 +98,9 @@ func NewSpellsPageList(entity *gurps.Entity) *PageList {
 }
 
 // NewNotesPageList creates the notes page list.
-func NewNotesPageList(entity *gurps.Entity) *PageList {
+func NewNotesPageList(provider gurps.ListProvider) *PageList {
 	return newPageList(tbl.NewNoteTableHeaders(true), 0, 0,
-		tbl.NewNoteRowData(func() []*gurps.Note { return entity.Notes }, true))
+		tbl.NewNoteRowData(func() []*gurps.Note { return provider.NoteList() }, true))
 }
 
 // NewConditionalModifiersPageList creates the conditional modifiers page list.

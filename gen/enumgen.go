@@ -341,9 +341,6 @@ func main() {
 				Key:    "character",
 				String: "PC",
 			},
-			{
-				Key: "template",
-			},
 		},
 	})
 	processSourceTemplate(enumTmpl, &enumInfo{

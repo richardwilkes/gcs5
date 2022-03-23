@@ -44,7 +44,10 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-var _ eval.VariableResolver = &Entity{}
+var (
+	_ eval.VariableResolver = &Entity{}
+	_ ListProvider          = &Entity{}
+)
 
 // EntityData holds the Entity data that is written to disk.
 type EntityData struct {
@@ -99,7 +102,6 @@ func NewEntity(entityType datafile.Type) *Entity {
 			ID:          id.NewUUID(),
 			TotalPoints: SettingsProvider.GeneralSettings().InitialPoints,
 			Profile:     &Profile{},
-			Advantages:  nil,
 			CreatedOn:   jio.Now(),
 		},
 	}
@@ -1155,4 +1157,34 @@ func (e *Entity) conditionalModifiersFromFeatureList(source string, features fea
 			}
 		}
 	}
+}
+
+// AdvantageList implements ListProvider
+func (e *Entity) AdvantageList() []*Advantage {
+	return e.Advantages
+}
+
+// CarriedEquipmentList implements ListProvider
+func (e *Entity) CarriedEquipmentList() []*Equipment {
+	return e.CarriedEquipment
+}
+
+// OtherEquipmentList implements ListProvider
+func (e *Entity) OtherEquipmentList() []*Equipment {
+	return e.OtherEquipment
+}
+
+// SkillList implements ListProvider
+func (e *Entity) SkillList() []*Skill {
+	return e.Skills
+}
+
+// SpellList implements ListProvider
+func (e *Entity) SpellList() []*Spell {
+	return e.Spells
+}
+
+// NoteList implements ListProvider
+func (e *Entity) NoteList() []*Note {
+	return e.Notes
 }

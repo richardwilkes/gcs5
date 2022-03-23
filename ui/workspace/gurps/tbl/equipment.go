@@ -59,21 +59,27 @@ var (
 
 // NewEquipmentTableHeaders creates a new set of table column headers for equipment. 'carried' is only relevant if
 // 'forPage' is true.
-func NewEquipmentTableHeaders(entity *gurps.Entity, forPage, carried bool) []unison.TableColumnHeader {
+func NewEquipmentTableHeaders(provider gurps.ListProvider, forPage, carried bool) []unison.TableColumnHeader {
 	var headers []unison.TableColumnHeader
 	if forPage {
 		if carried {
 			headers = append(headers, NewEquippedHeader(true))
 		}
-		headers = append(headers, NewHeader(i18n.Text("Qty"), i18n.Text("Quantity"), true))
-		if carried {
-			headers = append(headers, NewHeader(fmt.Sprintf(i18n.Text("Carried Equipment (%s; $%s)"),
-				entity.WeightCarried(false).String(), entity.WealthCarried().String()), "", true))
+		var desc unison.TableColumnHeader
+		if entity, ok := provider.(*gurps.Entity); ok {
+			if carried {
+				desc = NewHeader(fmt.Sprintf(i18n.Text("Carried Equipment (%s; $%s)"),
+					entity.WeightCarried(false).String(), entity.WealthCarried().String()), "", true)
+			} else {
+				desc = NewHeader(fmt.Sprintf(i18n.Text("Other Equipment ($%s)"),
+					entity.WealthNotCarried().String()), "", true)
+			}
 		} else {
-			headers = append(headers, NewHeader(fmt.Sprintf(i18n.Text("Other Equipment ($%s)"),
-				entity.WealthNotCarried().String()), "", true))
+			desc = NewHeader(i18n.Text("Equipment"), "", true)
 		}
 		headers = append(headers,
+			NewHeader(i18n.Text("Qty"), i18n.Text("Quantity"), true),
+			desc,
 			NewHeader(i18n.Text("Uses"), i18n.Text("The number of uses remaining"), true),
 			NewHeader(i18n.Text("TL"), i18n.Text("Tech Level"), true),
 			NewHeader(i18n.Text("LC"), i18n.Text("Legality Class"), true),
