@@ -655,6 +655,11 @@ func (p *PageList) Sync() {
 			p.table.SelectByIndex(indexes...)
 		}
 	}
+	p.table.NeedsLayout = true
+	p.NeedsLayout = true
+	if parent := p.Parent(); parent != nil {
+		parent.NeedsLayout = true
+	}
 }
 
 func (p *PageList) collectRowMappings(index int, indexes []int, selection map[node.Node]bool, rows []unison.TableRowData) (updatedIndex int, updatedIndexes []int) {
