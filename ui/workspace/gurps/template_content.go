@@ -27,12 +27,11 @@ func newTemplateContent() *templateContent {
 	p := &templateContent{
 		flex: &unison.FlexLayout{
 			Columns:  1,
-			HSpacing: 1,
 			VSpacing: 1,
 		},
 	}
 	p.Self = p
-	p.SetBorder(unison.NewEmptyBorder(geom32.NewUniformInsets(2)))
+	p.SetBorder(unison.NewEmptyBorder(geom32.NewUniformInsets(4)))
 	p.SetLayout(p)
 	return p
 }
@@ -47,4 +46,13 @@ func (p *templateContent) LayoutSizes(_ *unison.Panel, _ geom32.Size) (min, pref
 
 func (p *templateContent) PerformLayout(_ *unison.Panel) {
 	p.flex.PerformLayout(p.AsPanel())
+}
+
+// ApplyPreferredSize to this panel.
+func (p *templateContent) ApplyPreferredSize() {
+	r := p.FrameRect()
+	_, pref, _ := p.Sizes(geom32.Size{})
+	r.Size = pref
+	p.SetFrameRect(r)
+	p.ValidateLayout()
 }

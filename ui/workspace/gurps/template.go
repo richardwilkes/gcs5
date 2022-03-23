@@ -28,8 +28,8 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-// TemplateDockable holds the view for a GURPS character template.
-type TemplateDockable struct {
+// Template holds the view for a GURPS character template.
+type Template struct {
 	unison.Panel
 	path       string
 	scroll     *unison.ScrollPanel
@@ -49,7 +49,7 @@ func NewTemplateFromFile(filePath string) (unison.Dockable, error) {
 
 // NewTemplate creates a new unison.Dockable for GURPS template files.
 func NewTemplate(filePath string, template *gurps.Template) unison.Dockable {
-	t := &TemplateDockable{
+	t := &Template{
 		path:     filePath,
 		scroll:   unison.NewScrollPanel(),
 		template: template,
@@ -105,13 +105,13 @@ func NewTemplate(filePath string, template *gurps.Template) unison.Dockable {
 	return t
 }
 
-func (d *TemplateDockable) applyScale() {
+func (d *Template) applyScale() {
 	d.scroll.Content().AsPanel().SetScale(float32(d.scale) / 100)
 	d.scroll.Sync()
 }
 
 // TitleIcon implements workspace.FileBackedDockable
-func (d *TemplateDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
+func (d *Template) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
 		Size: suggestedSize,
@@ -119,42 +119,42 @@ func (d *TemplateDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable 
 }
 
 // Title implements workspace.FileBackedDockable
-func (d *TemplateDockable) Title() string {
+func (d *Template) Title() string {
 	return fs.BaseName(d.path)
 }
 
 // Tooltip implements workspace.FileBackedDockable
-func (d *TemplateDockable) Tooltip() string {
+func (d *Template) Tooltip() string {
 	return d.path
 }
 
 // BackingFilePath implements workspace.FileBackedDockable
-func (d *TemplateDockable) BackingFilePath() string {
+func (d *Template) BackingFilePath() string {
 	return d.path
 }
 
 // Modified implements workspace.FileBackedDockable
-func (d *TemplateDockable) Modified() bool {
+func (d *Template) Modified() bool {
 	return false // TODO: Implement
 }
 
 // MayAttemptClose implements unison.TabCloser
-func (d *TemplateDockable) MayAttemptClose() bool {
+func (d *Template) MayAttemptClose() bool {
 	return true
 }
 
 // AttemptClose implements unison.TabCloser
-func (d *TemplateDockable) AttemptClose() {
+func (d *Template) AttemptClose() {
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.Close(d)
 	}
 }
 
-func (d *TemplateDockable) createContent() unison.Paneler {
+func (d *Template) createContent() unison.Paneler {
 	content := newTemplateContent()
 
 	// Add the various blocks, based on the layout preference.
-	for _, col := range settings.Global().Sheet.BlockLayout.Decompose() {
+	for _, col := range settings.Global().Sheet.BlockLayout.ByRow() {
 		rowPanel := unison.NewPanel()
 		for _, c := range col {
 			switch c {
@@ -175,7 +175,6 @@ func (d *TemplateDockable) createContent() unison.Paneler {
 				Columns:      len(rowPanel.Children()),
 				HSpacing:     1,
 				HAlign:       unison.FillAlignment,
-				VAlign:       unison.FillAlignment,
 				EqualColumns: true,
 			})
 			rowPanel.SetLayoutData(&unison.FlexLayoutData{
@@ -186,5 +185,6 @@ func (d *TemplateDockable) createContent() unison.Paneler {
 			content.AddChild(rowPanel)
 		}
 	}
+	content.ApplyPreferredSize()
 	return content
 }

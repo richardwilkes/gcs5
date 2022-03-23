@@ -50,8 +50,9 @@ func NewPage(entity *gurps.Entity) *Page {
 
 // LayoutSizes implements unison.Layout
 func (p *Page) LayoutSizes(_ *unison.Panel, _ geom32.Size) (min, pref, max geom32.Size) {
-	pref = p.prefSize()
-	_, size, _ := p.flex.LayoutSizes(p.AsPanel(), geom32.Size{Width: pref.Width})
+	w, _ := gurps.SheetSettingsFor(p.entity).Page.Size.Dimensions()
+	_, size, _ := p.flex.LayoutSizes(p.AsPanel(), geom32.Size{Width: w.Pixels()})
+	pref.Width = w.Pixels()
 	pref.Height = size.Height
 	return pref, pref, pref
 }
@@ -61,12 +62,13 @@ func (p *Page) PerformLayout(_ *unison.Panel) {
 	p.flex.PerformLayout(p.AsPanel())
 }
 
-func (p *Page) prefSize() geom32.Size {
-	w, h := gurps.SheetSettingsFor(p.entity).Page.Size.Dimensions()
-	return geom32.Size{
-		Width:  w.Pixels(),
-		Height: h.Pixels(),
-	}
+// ApplyPreferredSize to this panel.
+func (p *Page) ApplyPreferredSize() {
+	r := p.FrameRect()
+	_, pref, _ := p.Sizes(geom32.Size{})
+	r.Size = pref
+	p.SetFrameRect(r)
+	p.ValidateLayout()
 }
 
 func (p *Page) insets() geom32.Insets {

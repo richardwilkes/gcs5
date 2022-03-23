@@ -177,7 +177,7 @@ func (s *Sheet) createFirstPage() *Page {
 	p.AddChild(s.createSecondRow())
 
 	// Add the various blocks, based on the layout preference.
-	for _, col := range s.entity.SheetSettings.BlockLayout.Decompose() {
+	for _, col := range s.entity.SheetSettings.BlockLayout.ByRow() {
 		rowPanel := unison.NewPanel()
 		rowPanel.SetLayout(&unison.FlexLayout{
 			Columns:      len(col),
@@ -217,6 +217,7 @@ func (s *Sheet) createFirstPage() *Page {
 		}
 		p.AddChild(rowPanel)
 	}
+	p.ApplyPreferredSize()
 	return p
 }
 

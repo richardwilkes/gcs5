@@ -82,8 +82,8 @@ func (b *BlockLayout) EnsureValidity() {
 	b.Layout = layout
 }
 
-// Decompose breaks the layout down into its component parts.
-func (b *BlockLayout) Decompose() [][]string {
+// ByRow breaks the layout down into rows.
+func (b *BlockLayout) ByRow() [][]string {
 	var layout [][]string
 	remaining := b.CreateFullKeySet()
 	for _, line := range b.Layout {
