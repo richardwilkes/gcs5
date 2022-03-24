@@ -20,7 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/model/theme"
-	"github.com/richardwilkes/gcs/ui/undo"
+	"github.com/richardwilkes/gcs/model/undo"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/i18n"

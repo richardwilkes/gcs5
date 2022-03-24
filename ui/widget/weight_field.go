@@ -16,7 +16,7 @@ import (
 
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
-	"github.com/richardwilkes/gcs/ui/undo"
+	"github.com/richardwilkes/gcs/model/undo"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/mathf32"
 	"github.com/richardwilkes/unison"

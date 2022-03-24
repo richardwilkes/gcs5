@@ -12,7 +12,7 @@
 package widget
 
 import (
-	"github.com/richardwilkes/gcs/ui/undo"
+	"github.com/richardwilkes/gcs/model/undo"
 	"github.com/richardwilkes/unison"
 )
 

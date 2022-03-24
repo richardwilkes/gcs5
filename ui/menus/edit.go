@@ -14,7 +14,7 @@ package menus
 import (
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/settings"
-	"github.com/richardwilkes/gcs/ui/undo"
+	"github.com/richardwilkes/gcs/model/undo"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )

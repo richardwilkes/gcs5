@@ -15,7 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/ancestry"
 	"github.com/richardwilkes/gcs/model/settings"
-	"github.com/richardwilkes/gcs/ui/undo"
+	"github.com/richardwilkes/gcs/model/undo"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
