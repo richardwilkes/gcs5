@@ -14,6 +14,7 @@ package sheet
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/jio"
+	"github.com/richardwilkes/gcs/ui/undo"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
@@ -65,8 +66,10 @@ func NewMiscPanel(entity *gurps.Entity) *MiscPanel {
 		}
 	}))
 
-	m.AddChild(widget.NewPageLabelEnd(i18n.Text("Player")))
-	m.AddChild(widget.NewStringPageFieldNoGrab(func() string { return m.entity.Profile.PlayerName },
+	title := i18n.Text("Player")
+	m.AddChild(widget.NewPageLabelEnd(title))
+	m.AddChild(widget.NewStringPageFieldNoGrab(undo.PlayerID, title,
+		func() string { return m.entity.Profile.PlayerName },
 		func(s string) { m.entity.Profile.PlayerName = s }))
 
 	return m

@@ -18,6 +18,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/richardwilkes/gcs/ui/undo"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/mathf32"
 	"github.com/richardwilkes/unison"
@@ -26,22 +27,27 @@ import (
 // IntegerField holds the value for an integer field.
 type IntegerField struct {
 	*unison.Field
-	get      func() int
-	set      func(int)
-	minimum  int
-	maximum  int
-	showSign bool
+	undoID    int
+	undoTitle string
+	get       func() int
+	set       func(int)
+	minimum   int
+	maximum   int
+	showSign  bool
+	inUndo    bool
 }
 
 // NewIntegerField creates a new field that holds an integer.
-func NewIntegerField(get func() int, set func(int), min, max int, showSign bool) *IntegerField {
+func NewIntegerField(undoID int, undoTitle string, get func() int, set func(int), min, max int, showSign bool) *IntegerField {
 	f := &IntegerField{
-		Field:    unison.NewField(),
-		get:      get,
-		set:      set,
-		minimum:  min,
-		maximum:  max,
-		showSign: showSign,
+		Field:     unison.NewField(),
+		undoID:    undoID,
+		undoTitle: undoTitle,
+		get:       get,
+		set:       set,
+		minimum:   min,
+		maximum:   max,
+		showSign:  showSign,
 	}
 	f.Self = f
 	f.ModifiedCallback = f.modified
@@ -84,14 +90,43 @@ func (f *IntegerField) validate() bool {
 }
 
 func (f *IntegerField) modified() {
-	if v, err := strconv.Atoi(f.trimmed(f.Text())); err == nil &&
-		(f.minimum == math.MinInt || v >= f.minimum) &&
-		(f.maximum == math.MaxInt || v <= f.maximum) {
-		if f.get() != v {
-			f.set(v)
-			MarkForLayoutWithinDockable(f)
-			MarkModified(f)
+	text := f.Text()
+	if !f.inUndo && f.undoID != undo.NoneID {
+		if mgr := undo.Manager(f); mgr != nil {
+			mgr.Add(&undo.Edit[string]{
+				ID:       f.undoID,
+				EditName: f.undoTitle,
+				EditCost: 1,
+				UndoFunc: func(e *undo.Edit[string]) { f.setWithoutUndo(e.BeforeData, true) },
+				RedoFunc: func(e *undo.Edit[string]) { f.setWithoutUndo(e.AfterData, true) },
+				AbsorbFunc: func(e *undo.Edit[string], other unison.UndoEdit) bool {
+					if e2, ok := other.(*undo.Edit[string]); ok && e2.ID == f.undoID {
+						e.AfterData = e2.AfterData
+						return true
+					}
+					return false
+				},
+				BeforeData: f.formatted(f.get()),
+				AfterData:  text,
+			})
 		}
+	}
+	if v, err := strconv.Atoi(f.trimmed(text)); err == nil &&
+		(f.minimum == math.MinInt || v >= f.minimum) &&
+		(f.maximum == math.MaxInt || v <= f.maximum) && f.get() != v {
+		f.set(v)
+		MarkForLayoutWithinDockable(f)
+		MarkModified(f)
+	}
+}
+
+func (f *IntegerField) setWithoutUndo(text string, focus bool) {
+	f.inUndo = true
+	f.SetText(text)
+	f.inUndo = false
+	if focus {
+		f.RequestFocus()
+		f.SelectAll()
 	}
 }
 
@@ -103,7 +138,7 @@ func (f *IntegerField) Sync() {
 	} else if f.maximum != math.MaxInt && value > f.maximum {
 		value = f.maximum
 	}
-	SetFieldValue(f.Field, f.formatted(value))
+	f.setWithoutUndo(f.formatted(value), false)
 }
 
 func (f *IntegerField) runeTyped(ch rune) bool {

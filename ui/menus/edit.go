@@ -14,6 +14,7 @@ package menus
 import (
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/settings"
+	"github.com/richardwilkes/gcs/ui/undo"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -54,18 +55,54 @@ func setupEditMenu(bar unison.Menu) {
 
 // Undo the last action.
 var Undo = &unison.Action{
-	ID:              constants.UndoItemID,
-	Title:           i18n.Text("Undo"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyZ, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: unimplemented,
+	ID:         constants.UndoItemID,
+	Title:      i18n.Text("Undo"),
+	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyZ, Modifiers: unison.OSMenuCmdModifier()},
+	EnabledCallback: func(_ *unison.Action, _ interface{}) bool {
+		if wnd := unison.ActiveWindow(); wnd != nil {
+			if focus := wnd.Focus(); focus != nil {
+				if mgr := undo.Manager(focus); mgr != nil {
+					return mgr.CanUndo()
+				}
+			}
+		}
+		return false
+	},
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+		if wnd := unison.ActiveWindow(); wnd != nil {
+			if focus := wnd.Focus(); focus != nil {
+				if mgr := undo.Manager(focus); mgr != nil {
+					mgr.Undo()
+				}
+			}
+		}
+	},
 }
 
 // Redo the last action.
 var Redo = &unison.Action{
-	ID:              constants.RedoItemID,
-	Title:           i18n.Text("Redo"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyZ, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	ExecuteCallback: unimplemented,
+	ID:         constants.RedoItemID,
+	Title:      i18n.Text("Redo"),
+	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyY, Modifiers: unison.OSMenuCmdModifier()},
+	EnabledCallback: func(_ *unison.Action, _ interface{}) bool {
+		if wnd := unison.ActiveWindow(); wnd != nil {
+			if focus := wnd.Focus(); focus != nil {
+				if mgr := undo.Manager(focus); mgr != nil {
+					return mgr.CanRedo()
+				}
+			}
+		}
+		return false
+	},
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+		if wnd := unison.ActiveWindow(); wnd != nil {
+			if focus := wnd.Focus(); focus != nil {
+				if mgr := undo.Manager(focus); mgr != nil {
+					mgr.Redo()
+				}
+			}
+		}
+	},
 }
 
 // Duplicate the currently selected content.

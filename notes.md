@@ -7,6 +7,7 @@
 - "Lightweight" menu support for the Windows and Linux platforms, as the current method is too slow when creating top-level windows for their content display... partly exacerbated by the insistence of the Windows OS to animate them
 - Solve the issue on non-macOS platforms where a popup menu in a dialog comes up *behind* the dialog, despite being explicitly told to be in front of it
 - Carefully comb over the interface and identify areas where things aren't working well on Windows and Linux, since I spend nearly all of my development time on macOS and may have not noticed deficiencies there
+- Multi-line support in Field objects
 
 #### GCS-specific work that needs to be done
 
@@ -85,12 +86,8 @@
   - Help
     - Check for GCS updates...
 - Support for .gct (template) files
-  - Load
-  - Save
-  - Display
   - Adjust the editors to support the differences when attached to a template rather than a sheet
   - Applying a template to a sheet
 - Printing support for sheets (requires support in unison first)
 - Ensure table headers don't get cut off when tables are empty
 - Make final decision on whether tables that have no content in the sheet should be hidden (complicates updates and makes it harder for users to discover they exist)
-- 

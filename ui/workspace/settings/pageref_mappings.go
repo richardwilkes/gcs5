@@ -19,6 +19,7 @@ import (
 
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
+	"github.com/richardwilkes/gcs/ui/undo"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/gcs/ui/workspace/external"
@@ -170,7 +171,7 @@ func (d *pageRefMappingsDockable) createIDField(ref *settings.PageRef) {
 }
 
 func (d *pageRefMappingsDockable) createOffsetField(ref *settings.PageRef) {
-	p := widget.NewIntegerField(func() int { return ref.Offset },
+	p := widget.NewIntegerField(undo.PageOffsetID, i18n.Text("Page Offset"), func() int { return ref.Offset },
 		func(v int) {
 			ref.Offset = v
 			settings.Global().PageRefs.Set(ref)

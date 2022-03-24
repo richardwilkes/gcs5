@@ -19,6 +19,7 @@ import (
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
+	"github.com/richardwilkes/gcs/ui/undo"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -73,14 +74,16 @@ func (d *generalSettingsDockable) initContent(content *unison.Panel) {
 	d.createTechLevelField(content)
 	d.createCalendarPopup(content)
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Initial List Scale")))
-	d.initialListScaleField = widget.NewPercentageField(func() int { return settings.Global().General.InitialListUIScale },
-		func(v int) { settings.Global().General.InitialListUIScale = v }, gsettings.InitialUIScaleMin,
-		gsettings.InitialUIScaleMax)
+	d.initialListScaleField = widget.NewPercentageField(
+		func() int { return settings.Global().General.InitialListUIScale },
+		func(v int) { settings.Global().General.InitialListUIScale = v },
+		gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax)
 	content.AddChild(widget.WrapWithSpan(2, d.initialListScaleField))
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Initial Sheet Scale")))
-	d.initialSheetScaleField = widget.NewPercentageField(func() int { return settings.Global().General.InitialSheetUIScale },
-		func(v int) { settings.Global().General.InitialSheetUIScale = v }, gsettings.InitialUIScaleMin,
-		gsettings.InitialUIScaleMax)
+	d.initialSheetScaleField = widget.NewPercentageField(
+		func() int { return settings.Global().General.InitialSheetUIScale },
+		func(v int) { settings.Global().General.InitialSheetUIScale = v },
+		gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax)
 	content.AddChild(widget.WrapWithSpan(2, d.initialSheetScaleField))
 	d.createImageResolutionField(content)
 	d.createTooltipDelayField(content)
@@ -89,8 +92,10 @@ func (d *generalSettingsDockable) initContent(content *unison.Panel) {
 }
 
 func (d *generalSettingsDockable) createPlayerAndDescFields(content *unison.Panel) {
-	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Default Player Name")))
-	d.nameField = widget.NewStringField(func() string { return settings.Global().General.DefaultPlayerName },
+	title := i18n.Text("Default Player Name")
+	content.AddChild(widget.NewFieldLeadingLabel(title))
+	d.nameField = widget.NewStringField(undo.DefaultPlayerNameID, title,
+		func() string { return settings.Global().General.DefaultPlayerName },
 		func(s string) { settings.Global().General.DefaultPlayerName = s })
 	content.AddChild(d.nameField)
 	d.autoFillProfileCheckbox = widget.NewCheckBox(i18n.Text("Fill in initial description"),
@@ -112,8 +117,10 @@ func (d *generalSettingsDockable) createInitialPointsFields(content *unison.Pane
 }
 
 func (d *generalSettingsDockable) createTechLevelField(content *unison.Panel) {
-	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Default Tech Level")))
-	d.techLevelField = widget.NewStringField(func() string { return settings.Global().General.DefaultTechLevel },
+	title := i18n.Text("Default Tech Level")
+	content.AddChild(widget.NewFieldLeadingLabel(title))
+	d.techLevelField = widget.NewStringField(undo.DefaultTechLevelID, title,
+		func() string { return settings.Global().General.DefaultTechLevel },
 		func(s string) { settings.Global().General.DefaultTechLevel = s })
 	d.techLevelField.Tooltip = unison.NewTooltipWithText(gurps.TechLevelInfo)
 	content.AddChild(d.techLevelField)
@@ -141,10 +148,12 @@ func (d *generalSettingsDockable) createCalendarPopup(content *unison.Panel) {
 }
 
 func (d *generalSettingsDockable) createImageResolutionField(content *unison.Panel) {
-	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Image Export Resolution")))
-	d.exportResolutionField = widget.NewIntegerField(func() int { return settings.Global().General.ImageResolution },
-		func(v int) { settings.Global().General.ImageResolution = v }, gsettings.ImageResolutionMin,
-		gsettings.ImageResolutionMax, false)
+	title := i18n.Text("Image Export Resolution")
+	content.AddChild(widget.NewFieldLeadingLabel(title))
+	d.exportResolutionField = widget.NewIntegerField(undo.ImageExportResolutionID, title,
+		func() int { return settings.Global().General.ImageResolution },
+		func(v int) { settings.Global().General.ImageResolution = v },
+		gsettings.ImageResolutionMin, gsettings.ImageResolutionMax, false)
 	content.AddChild(widget.WrapWithSpan(2, d.exportResolutionField, widget.NewFieldTrailingLabel(i18n.Text("ppi"))))
 }
 
@@ -172,7 +181,8 @@ func (d *generalSettingsDockable) createTooltipDismissalField(content *unison.Pa
 }
 
 func (d *generalSettingsDockable) createGCalcKeyField(content *unison.Panel) {
-	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("GURPS Calculator Key")))
+	title := i18n.Text("GURPS Calculator Key")
+	content.AddChild(widget.NewFieldLeadingLabel(title))
 	button := unison.NewButton()
 	button.HideBase = true
 	baseline := button.Font.Baseline()
@@ -181,7 +191,8 @@ func (d *generalSettingsDockable) createGCalcKeyField(content *unison.Panel) {
 		Size: geom32.NewSize(baseline, baseline),
 	}
 	button.ClickCallback = d.findGCalcKey
-	d.gCalcKeyField = widget.NewStringField(func() string { return settings.Global().General.GCalcKey },
+	d.gCalcKeyField = widget.NewStringField(undo.GCalcKeyID, title,
+		func() string { return settings.Global().General.GCalcKey },
 		func(s string) { settings.Global().General.GCalcKey = s })
 	content.AddChild(widget.WrapWithSpan(2, d.gCalcKeyField, button))
 }

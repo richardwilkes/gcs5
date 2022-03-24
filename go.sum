@@ -27,6 +27,8 @@ github.com/richardwilkes/toolbox v1.65.0 h1:chxYIEz67GlPIiSb/6+aMAjzAMXLco++i4De
 github.com/richardwilkes/toolbox v1.65.0/go.mod h1:4dyXTAhKFT7CDrkWFukS21kdqLuGRZH3zSX0D5v7M3U=
 github.com/richardwilkes/unison v0.10.1-0.20220321003456-6c87b9a6e16c h1:O0a578CjIpuLictVtxPXSaICML3mLdsP2bLnaHsRHYc=
 github.com/richardwilkes/unison v0.10.1-0.20220321003456-6c87b9a6e16c/go.mod h1:cXYw5m8M1QlJLpUZxjkDdwit6WmJbeH96TEGTJS8ANI=
+github.com/richardwilkes/unison v0.10.1-0.20220324010149-7a2a3024b7ae h1:stt0sDR1ezdKF3uIxIA8KITALb7WzaP1zqfPBXia9f0=
+github.com/richardwilkes/unison v0.10.1-0.20220324010149-7a2a3024b7ae/go.mod h1:cXYw5m8M1QlJLpUZxjkDdwit6WmJbeH96TEGTJS8ANI=
 github.com/rogpeppe/go-internal v1.8.0 h1:FCbCCtXNOY3UtUuHUYaghJg4y7Fd14rXifAYUAtL9R8=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.7.1 h1:5TQK59W5E3v0r2duFAb7P95B6hEeOyEnHRa8MjYSMTY=
@@ -35,6 +37,8 @@ github.com/yookoala/realpath v1.0.0 h1:7OA9pj4FZd+oZDsyvXWQvjn5oBdcHRTV44PpdMSuI
 github.com/yookoala/realpath v1.0.0/go.mod h1:gJJMA9wuX7AcqLy1+ffPatSCySA1FQ2S8Ya9AIoYBpE=
 golang.org/x/image v0.0.0-20220302094943-723b81ca9867 h1:TcHcE0vrmgzNH1v3ppjcMGbhG5+9fMuvOmUYwNEF4q4=
 golang.org/x/image v0.0.0-20220302094943-723b81ca9867/go.mod h1:023OzeP/+EPmXeapQh35lcL3II3LrY8Ic+EFFKVhULM=
+golang.org/x/image v0.0.0-20220321031419-a8550c1d254a h1:LnH9RNcpPv5Kzi15lXg42lYMPUf0x8CuPv1YnvBWZAg=
+golang.org/x/image v0.0.0-20220321031419-a8550c1d254a/go.mod h1:023OzeP/+EPmXeapQh35lcL3II3LrY8Ic+EFFKVhULM=
 golang.org/x/sys v0.0.0-20200909081042-eff7692f9009/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8 h1:OH54vjqzRWmbJ62fjuhxy7AxFFgoHN0/DPc/UrL8cAs=
 golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=

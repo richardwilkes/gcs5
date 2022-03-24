@@ -20,20 +20,26 @@ import (
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/model/theme"
+	"github.com/richardwilkes/gcs/ui/undo"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/unison"
 )
 
-var _ workspace.FileBackedDockable = &Sheet{}
+var (
+	_ workspace.FileBackedDockable = &Sheet{}
+	_ undo.Provider                = &Sheet{}
+)
 
 // Sheet holds the view for a GURPS character sheet.
 type Sheet struct {
 	unison.Panel
 	path               string
+	undoMgr            *unison.UndoManager
 	scroll             *unison.ScrollPanel
 	entity             *gurps.Entity
 	scale              int
@@ -65,11 +71,12 @@ func NewSheetFromFile(filePath string) (unison.Dockable, error) {
 // NewSheet creates a new unison.Dockable for GURPS character sheet files.
 func NewSheet(filePath string, entity *gurps.Entity) unison.Dockable {
 	s := &Sheet{
-		path:   filePath,
-		scroll: unison.NewScrollPanel(),
-		entity: entity,
-		scale:  settings.Global().General.InitialSheetUIScale,
-		pages:  unison.NewPanel(),
+		path:    filePath,
+		undoMgr: unison.NewUndoManager(200, func(err error) { jot.Error(err) }),
+		scroll:  unison.NewScrollPanel(),
+		entity:  entity,
+		scale:   settings.Global().General.InitialSheetUIScale,
+		pages:   unison.NewPanel(),
 	}
 	s.Self = s
 	s.SetLayout(&unison.FlexLayout{
@@ -124,6 +131,11 @@ func NewSheet(filePath string, entity *gurps.Entity) unison.Dockable {
 
 	s.applyScale()
 	return s
+}
+
+// UndoManager implements undo.Provider
+func (s *Sheet) UndoManager() *unison.UndoManager {
+	return s.undoMgr
 }
 
 func (s *Sheet) applyScale() {
