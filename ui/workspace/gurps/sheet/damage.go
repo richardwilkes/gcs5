@@ -15,7 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -38,13 +38,13 @@ func NewDamagePanel(entity *gurps.Entity) *DamagePanel {
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
 	})
-	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Basic Damage")}, unison.NewEmptyBorder(geom32.Insets{
+	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Basic Damage")}, unison.NewEmptyBorder(geom.Insets[float32]{
 		Top:    1,
 		Left:   2,
 		Bottom: 1,
 		Right:  2,
 	})))
-	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) { drawBandedBackground(p, gc, rect, 0, 2) }
+	p.DrawCallback = func(gc *unison.Canvas, rect geom.Rect[float32]) { drawBandedBackground(p, gc, rect, 0, 2) }
 
 	p.AddChild(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
 		f.Text = p.entity.Thrust().String()

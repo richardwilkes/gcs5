@@ -18,8 +18,8 @@ import (
 	"unicode"
 
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
-	"github.com/richardwilkes/toolbox/xmath/mathf32"
 	"github.com/richardwilkes/unison"
 )
 
@@ -55,7 +55,7 @@ func NewNumericField(get func() fixed.F64d4, set func(fixed.F64d4), min, max fix
 func (f *NumericField) SetMaximum(maximum fixed.F64d4) {
 	f.maximum = maximum
 	if !f.noMinWidth && f.minimum != fixed.F64d4Min && f.maximum != fixed.F64d4Max {
-		f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth((f.minimum.Trunc() + fixed.F64d4One - 1).String()),
+		f.MinimumTextWidth = xmath.Max(f.Font.SimpleWidth((f.minimum.Trunc() + fixed.F64d4One - 1).String()),
 			f.Font.SimpleWidth((f.maximum.Trunc() + fixed.F64d4One - 1).String()))
 	}
 }

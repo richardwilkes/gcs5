@@ -13,7 +13,7 @@ package widget
 
 import (
 	"github.com/richardwilkes/gcs/model/theme"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -50,7 +50,7 @@ func newNonEditablePageField(syncer func(*NonEditablePageField), hAlign unison.A
 	f.OnBackgroundInk = nonEditableFieldColor
 	f.Font = theme.PageFieldPrimaryFont
 	f.HAlign = hAlign
-	f.SetBorder(unison.NewEmptyBorder(geom32.Insets{
+	f.SetBorder(unison.NewEmptyBorder(geom.Insets[float32]{
 		Left:   1,
 		Bottom: 1,
 		Right:  1,

@@ -20,7 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/settings"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -199,12 +199,12 @@ func (n *Node) addLabelCell(c *node.CellData, parent *unison.Panel, width float3
 func (n *Node) createToggleCell(c *node.CellData, selected bool) unison.Paneler {
 	check := unison.NewLabel()
 	check.Font = n.primaryFieldFont()
-	check.SetBorder(unison.NewEmptyBorder(geom32.Insets{Top: 1}))
+	check.SetBorder(unison.NewEmptyBorder(geom.Insets[float32]{Top: 1}))
 	baseline := check.Font.Baseline()
 	if c.Checked {
 		check.Drawable = &unison.DrawableSVG{
 			SVG:  res.CheckmarkSVG,
-			Size: geom32.Size{Width: baseline, Height: baseline},
+			Size: geom.Size[float32]{Width: baseline, Height: baseline},
 		}
 	}
 	check.HAlign = c.Alignment
@@ -215,7 +215,7 @@ func (n *Node) createToggleCell(c *node.CellData, selected bool) unison.Paneler 
 	if c.Tooltip != "" {
 		check.Tooltip = unison.NewTooltipWithText(c.Tooltip)
 	}
-	check.MouseDownCallback = func(where geom32.Point, button, clickCount int, mod unison.Modifiers) bool {
+	check.MouseDownCallback = func(where geom.Point[float32], button, clickCount int, mod unison.Modifiers) bool {
 		c.Checked = !c.Checked
 		// Currently, there is only one thing, carried equipment, that generates a toggle field and that only generates
 		// a single cell, so we're going to hard-code that into this logic. If we get more, we'll have to find a better
@@ -227,7 +227,7 @@ func (n *Node) createToggleCell(c *node.CellData, selected bool) unison.Paneler 
 		if c.Checked {
 			check.Drawable = &unison.DrawableSVG{
 				SVG:  res.CheckmarkSVG,
-				Size: geom32.Size{Width: baseline, Height: baseline},
+				Size: geom.Size[float32]{Width: baseline, Height: baseline},
 			}
 		} else {
 			check.Drawable = nil
@@ -257,7 +257,7 @@ func (n *Node) createPageRefCell(text, highlight string, selected bool) unison.P
 	}
 	if label.Text != "" {
 		const isLinkKey = "is_link"
-		label.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
+		label.DrawCallback = func(gc *unison.Canvas, rect geom.Rect[float32]) {
 			if _, exists := label.ClientData()[isLinkKey]; exists {
 				gc.DrawRect(rect, theme.LinkColor.Paint(gc, rect, unison.Fill))
 				save := label.OnBackgroundInk
@@ -268,7 +268,7 @@ func (n *Node) createPageRefCell(text, highlight string, selected bool) unison.P
 				label.DefaultDraw(gc, rect)
 			}
 		}
-		label.MouseEnterCallback = func(where geom32.Point, mod unison.Modifiers) bool {
+		label.MouseEnterCallback = func(where geom.Point[float32], mod unison.Modifiers) bool {
 			label.ClientData()[isLinkKey] = true
 			label.MarkForRedraw()
 			return true
@@ -278,7 +278,7 @@ func (n *Node) createPageRefCell(text, highlight string, selected bool) unison.P
 			label.MarkForRedraw()
 			return true
 		}
-		label.MouseDownCallback = func(where geom32.Point, button, clickCount int, mod unison.Modifiers) bool {
+		label.MouseDownCallback = func(where geom.Point[float32], button, clickCount int, mod unison.Modifiers) bool {
 			var list []string
 			for _, one := range strings.FieldsFunc(text, func(ch rune) bool { return ch == ',' || ch == ';' || ch == ' ' }) {
 				if one = strings.TrimSpace(one); one != "" {

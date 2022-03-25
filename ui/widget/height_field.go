@@ -18,7 +18,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/undo"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/mathf32"
+	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/unison"
 )
 
@@ -52,7 +52,7 @@ func NewHeightField(undoID int, undoTitle string, entity *gurps.Entity, get func
 	f.ValidateCallback = f.validate
 	units := gurps.SheetSettingsFor(f.entity).DefaultLengthUnits
 	if min >= 0 && max > 0 {
-		f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth(units.Format(min)), f.Font.SimpleWidth(units.Format(max)))
+		f.MinimumTextWidth = xmath.Max(f.Font.SimpleWidth(units.Format(min)), f.Font.SimpleWidth(units.Format(max)))
 	}
 	f.Sync()
 	return f

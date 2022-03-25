@@ -789,7 +789,7 @@ func (e *Entity) NamedWeaponSkillBonusesFor(featureID, nameQualifier, usageQuali
 // Move returns the current Move value for the given Encumbrance.
 func (e *Entity) Move(enc datafile.Encumbrance) int {
 	initialMove := e.ResolveAttributeCurrent(gid.BasicMove).Max(0)
-	divisor := 2 * xmath.MinInt(CountThresholdOpMet(attribute.HalveMove, e.Attributes), 2)
+	divisor := 2 * xmath.Min(CountThresholdOpMet(attribute.HalveMove, e.Attributes), 2)
 	if divisor > 0 {
 		initialMove = initialMove.Div(fixed.F64d4FromInt(divisor)).Ceil()
 	}
@@ -806,7 +806,7 @@ func (e *Entity) Move(enc datafile.Encumbrance) int {
 // Dodge returns the current Dodge value for the given Encumbrance.
 func (e *Entity) Dodge(enc datafile.Encumbrance) int {
 	dodge := fxp.Three + e.DodgeBonus + e.ResolveAttributeCurrent(gid.BasicSpeed).Max(0)
-	divisor := 2 * xmath.MinInt(CountThresholdOpMet(attribute.HalveDodge, e.Attributes), 2)
+	divisor := 2 * xmath.Min(CountThresholdOpMet(attribute.HalveDodge, e.Attributes), 2)
 	if divisor > 0 {
 		dodge = dodge.Div(fixed.F64d4FromInt(divisor)).Ceil()
 	}

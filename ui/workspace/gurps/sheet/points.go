@@ -18,7 +18,7 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -44,13 +44,13 @@ func NewPointsPanel(entity *gurps.Entity) *PointsPanel {
 		VSpan:  2,
 	})
 	p.pointsBorder = &TitledBorder{Title: fmt.Sprintf(i18n.Text("%s Points"), p.entity.TotalPoints.String())}
-	p.SetBorder(unison.NewCompoundBorder(p.pointsBorder, unison.NewEmptyBorder(geom32.Insets{
+	p.SetBorder(unison.NewCompoundBorder(p.pointsBorder, unison.NewEmptyBorder(geom.Insets[float32]{
 		Top:    1,
 		Left:   2,
 		Bottom: 1,
 		Right:  2,
 	})))
-	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) { drawBandedBackground(p, gc, rect, 0, 2) }
+	p.DrawCallback = func(gc *unison.Canvas, rect geom.Rect[float32]) { drawBandedBackground(p, gc, rect, 0, 2) }
 
 	p.unspent = widget.NewNumericPageField(func() fixed.F64d4 { return p.entity.UnspentPoints() },
 		func(v fixed.F64d4) { p.entity.SetUnspentPoints(v) }, fixed.F64d4Min, fixed.F64d4Max, true)

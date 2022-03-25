@@ -24,7 +24,7 @@ import (
 	"github.com/richardwilkes/gcs/ui/workspace/gurps/sheet"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio/fs"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -69,7 +69,7 @@ func NewTemplate(filePath string, template *gurps.Template) unison.Dockable {
 		HGrab:  true,
 		VGrab:  true,
 	})
-	t.scroll.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
+	t.scroll.DrawCallback = func(gc *unison.Canvas, rect geom.Rect[float32]) {
 		gc.DrawRect(rect, theme.PageVoidColor.Paint(gc, rect, unison.Fill))
 	}
 
@@ -81,8 +81,8 @@ func NewTemplate(filePath string, template *gurps.Template) unison.Dockable {
 	t.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
 
 	toolbar := unison.NewPanel()
-	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, geom32.Insets{Bottom: 1}, false),
-		unison.NewEmptyBorder(geom32.Insets{
+	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, geom.Insets[float32]{Bottom: 1}, false),
+		unison.NewEmptyBorder(geom.Insets[float32]{
 			Top:    unison.StdVSpacing,
 			Left:   unison.StdHSpacing,
 			Bottom: unison.StdVSpacing,
@@ -111,7 +111,7 @@ func (d *Template) applyScale() {
 }
 
 // TitleIcon implements workspace.FileBackedDockable
-func (d *Template) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
+func (d *Template) TitleIcon(suggestedSize geom.Size[float32]) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
 		Size: suggestedSize,

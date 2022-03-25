@@ -21,7 +21,7 @@ import (
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -46,7 +46,7 @@ func NewEncumbrancePanel(entity *gurps.Entity) *EncumbrancePanel {
 		HGrab:  true,
 	})
 	p.SetBorder(&TitledBorder{Title: i18n.Text("Encumbrance, Move & Dodge")})
-	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
+	p.DrawCallback = func(gc *unison.Canvas, rect geom.Rect[float32]) {
 		r := p.Children()[0].FrameRect()
 		r.X = rect.X
 		r.Width = rect.Width
@@ -84,12 +84,12 @@ func NewEncumbrancePanel(entity *gurps.Entity) *EncumbrancePanel {
 	current := entity.EncumbranceLevel(true)
 	for i, enc := range datafile.AllEncumbrance {
 		marker := widget.NewPageLabel("")
-		marker.SetBorder(unison.NewEmptyBorder(geom32.Insets{Left: 4}))
+		marker.SetBorder(unison.NewEmptyBorder(geom.Insets[float32]{Left: 4}))
 		if enc == current {
 			baseline := marker.Font.Baseline()
 			marker.Drawable = &unison.DrawableSVG{
 				SVG:  res.WeightSVG,
-				Size: geom32.Size{Width: baseline, Height: baseline},
+				Size: geom.Size[float32]{Width: baseline, Height: baseline},
 			}
 		}
 		p.AddChild(marker)
@@ -159,7 +159,7 @@ func (p *EncumbrancePanel) createDodgeField(enc datafile.Encumbrance) *widget.No
 		}
 	})
 	field.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("The dodge for the %s encumbrance level"), enc.String()))
-	field.SetBorder(unison.NewEmptyBorder(geom32.Insets{Right: 4}))
+	field.SetBorder(unison.NewEmptyBorder(geom.Insets[float32]{Right: 4}))
 	return field
 }
 

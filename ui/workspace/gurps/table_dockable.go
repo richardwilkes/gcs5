@@ -28,7 +28,7 @@ import (
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -189,7 +189,7 @@ func NewTableDockable(filePath string, columnHeaders []unison.TableColumnHeader,
 
 	d.table.ColumnSizes = make([]unison.ColumnSize, len(columnHeaders))
 	for i := range d.table.ColumnSizes {
-		_, pref, _ := columnHeaders[i].AsPanel().Sizes(geom32.Size{})
+		_, pref, _ := columnHeaders[i].AsPanel().Sizes(geom.Size[float32]{})
 		d.table.ColumnSizes[i].AutoMinimum = pref.Width
 		d.table.ColumnSizes[i].AutoMaximum = 800
 		d.table.ColumnSizes[i].Minimum = pref.Width
@@ -272,8 +272,8 @@ func NewTableDockable(filePath string, columnHeaders []unison.TableColumnHeader,
 	d.matchesLabel.Tooltip = unison.NewTooltipWithText(i18n.Text("Number of matches found"))
 
 	toolbar := unison.NewPanel()
-	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, geom32.Insets{Bottom: 1}, false),
-		unison.NewEmptyBorder(geom32.Insets{
+	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, geom.Insets[float32]{Bottom: 1}, false),
+		unison.NewEmptyBorder(geom.Insets[float32]{
 			Top:    unison.StdVSpacing,
 			Left:   unison.StdHSpacing,
 			Bottom: unison.StdVSpacing,
@@ -311,7 +311,7 @@ func (d *TableDockable) applyScale() {
 }
 
 // TitleIcon implements workspace.FileBackedDockable
-func (d *TableDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
+func (d *TableDockable) TitleIcon(suggestedSize geom.Size[float32]) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
 		Size: suggestedSize,

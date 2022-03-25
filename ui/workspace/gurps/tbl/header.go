@@ -16,7 +16,7 @@ import (
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -35,7 +35,7 @@ func NewSVGHeader(svg *unison.SVG, tooltip string, forPage bool) unison.TableCol
 		baseline := header.Font.Baseline()
 		header.Drawable = &unison.DrawableSVG{
 			SVG:  svg,
-			Size: geom32.NewSize(baseline, baseline),
+			Size: geom.NewSize[float32](baseline, baseline),
 		}
 		return header
 	}
@@ -43,7 +43,7 @@ func NewSVGHeader(svg *unison.SVG, tooltip string, forPage bool) unison.TableCol
 	baseline := header.Font.Baseline()
 	header.Drawable = &unison.DrawableSVG{
 		SVG:  svg,
-		Size: geom32.NewSize(baseline, baseline),
+		Size: geom.NewSize[float32](baseline, baseline),
 	}
 	return header
 }
@@ -56,7 +56,7 @@ func NewSVGPairHeader(leftSVG, rightSVG *unison.SVG, tooltip string, forPage boo
 		header.Drawable = &widget.DrawableSVGPair{
 			Left:  leftSVG,
 			Right: rightSVG,
-			Size:  geom32.NewSize(baseline*2+4, baseline),
+			Size:  geom.NewSize[float32](baseline*2+4, baseline),
 		}
 		return header
 	}
@@ -65,7 +65,7 @@ func NewSVGPairHeader(leftSVG, rightSVG *unison.SVG, tooltip string, forPage boo
 	header.Drawable = &widget.DrawableSVGPair{
 		Left:  leftSVG,
 		Right: rightSVG,
-		Size:  geom32.NewSize(baseline*2+4, baseline),
+		Size:  geom.NewSize[float32](baseline*2+4, baseline),
 	}
 	return header
 }
@@ -154,7 +154,7 @@ func NewPageTableColumnHeader(title, tooltip string) *PageTableColumnHeader {
 }
 
 // DefaultSizes provides the default sizing.
-func (h *PageTableColumnHeader) DefaultSizes(hint geom32.Size) (min, pref, max geom32.Size) {
+func (h *PageTableColumnHeader) DefaultSizes(hint geom.Size[float32]) (min, pref, max geom.Size[float32]) {
 	_, pref, _ = h.Label.DefaultSizes(hint)
 	if b := h.Border(); b != nil {
 		pref.AddInsets(b.Insets())
@@ -165,7 +165,7 @@ func (h *PageTableColumnHeader) DefaultSizes(hint geom32.Size) (min, pref, max g
 }
 
 // DefaultDraw provides the default drawing.
-func (h *PageTableColumnHeader) DefaultDraw(canvas *unison.Canvas, dirty geom32.Rect) {
+func (h *PageTableColumnHeader) DefaultDraw(canvas *unison.Canvas, dirty geom.Rect[float32]) {
 	if h.sortState.Order == 0 {
 		canvas.DrawRect(dirty, theme.MarkerColor.Paint(canvas, dirty, unison.Fill))
 		save := h.OnBackgroundInk
@@ -191,7 +191,7 @@ func (h *PageTableColumnHeader) SetSortState(state unison.SortState) {
 }
 
 // DefaultMouseUp provides the default mouse up handling.
-func (h *PageTableColumnHeader) DefaultMouseUp(where geom32.Point, button int, mod unison.Modifiers) bool {
+func (h *PageTableColumnHeader) DefaultMouseUp(where geom.Point[float32], button int, mod unison.Modifiers) bool {
 	if h.sortState.Sortable && h.ContentRect(false).ContainsPoint(where) {
 		if header, ok := h.Parent().Self.(*unison.TableHeader); ok {
 			header.SortOn(h)

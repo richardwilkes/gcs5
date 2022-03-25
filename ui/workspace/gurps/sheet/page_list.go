@@ -24,7 +24,7 @@ import (
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -142,7 +142,7 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 		HGrab:  true,
 		VGrab:  true,
 	})
-	p.SetBorder(unison.NewLineBorder(theme.HeaderColor, 0, geom32.NewUniformInsets(1), false))
+	p.SetBorder(unison.NewLineBorder(theme.HeaderColor, 0, geom.NewUniformInsets[float32](1), false))
 	p.table.DividerInk = theme.HeaderColor
 	p.table.MinimumRowHeight = theme.PageFieldPrimaryFont.LineHeight()
 	p.table.Padding.Top = 0
@@ -152,7 +152,7 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 	p.table.PreventUserColumnResize = true
 	p.table.ColumnSizes = make([]unison.ColumnSize, len(columnHeaders))
 	for i := range p.table.ColumnSizes {
-		_, pref, _ := columnHeaders[i].AsPanel().Sizes(geom32.Size{})
+		_, pref, _ := columnHeaders[i].AsPanel().Sizes(geom.Size[float32]{})
 		pref.Width += p.table.Padding.Left + p.table.Padding.Right
 		p.table.ColumnSizes[i].AutoMinimum = pref.Width
 		p.table.ColumnSizes[i].AutoMaximum = 800
@@ -165,7 +165,7 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 		HGrab:  true,
 		VGrab:  true,
 	})
-	p.table.MouseDownCallback = func(where geom32.Point, button, clickCount int, mod unison.Modifiers) bool {
+	p.table.MouseDownCallback = func(where geom.Point[float32], button, clickCount int, mod unison.Modifiers) bool {
 		p.table.RequestFocus()
 		return p.table.DefaultMouseDown(where, button, clickCount, mod)
 	}
@@ -186,7 +186,7 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 	p.tableHeader = unison.NewTableHeader(p.table, columnHeaders...)
 	p.tableHeader.BackgroundInk = theme.HeaderColor
 	p.tableHeader.DividerInk = theme.HeaderColor
-	p.tableHeader.HeaderBorder = unison.NewLineBorder(theme.HeaderColor, 0, geom32.Insets{Bottom: 1}, false)
+	p.tableHeader.HeaderBorder = unison.NewLineBorder(theme.HeaderColor, 0, geom.Insets[float32]{Bottom: 1}, false)
 	p.tableHeader.SetBorder(p.tableHeader.HeaderBorder)
 	p.tableHeader.Less = func(s1, s2 string) bool {
 		if n1, err := fixed.F64d4FromString(s1); err == nil {
@@ -202,7 +202,7 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
-	p.tableHeader.DrawCallback = func(gc *unison.Canvas, dirty geom32.Rect) {
+	p.tableHeader.DrawCallback = func(gc *unison.Canvas, dirty geom.Rect[float32]) {
 		sortedOn := -1
 		for i, hdr := range p.tableHeader.ColumnHeaders {
 			if hdr.SortState().Order == 0 {
@@ -414,7 +414,7 @@ func (p *PageList) installIncrementUsesHandler() {
 			if n, ok := row.(*tbl.Node); ok {
 				var e *gurps.Equipment
 				if e, ok = n.Data().(*gurps.Equipment); ok && e.Uses < e.MaxUses {
-					e.Uses = xmath.MinInt(e.Uses+1, e.MaxUses)
+					e.Uses = xmath.Min(e.Uses+1, e.MaxUses)
 					updated = true
 				}
 			}
@@ -442,7 +442,7 @@ func (p *PageList) installDecrementUsesHandler() {
 			if n, ok := row.(*tbl.Node); ok {
 				var e *gurps.Equipment
 				if e, ok = n.Data().(*gurps.Equipment); ok && e.MaxUses > 0 && e.Uses > 0 {
-					e.Uses = xmath.MaxInt(e.Uses-1, 0)
+					e.Uses = xmath.Max(e.Uses-1, 0)
 					updated = true
 				}
 			}

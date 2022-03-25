@@ -19,7 +19,7 @@ import (
 
 	"github.com/richardwilkes/pdf"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -27,7 +27,7 @@ import (
 type TOC struct {
 	Title        string
 	PageNumber   int
-	PageLocation geom32.Point
+	PageLocation geom.Point[float32]
 	Children     []*TOC
 }
 
@@ -38,14 +38,14 @@ type Page struct {
 	Image      *unison.Image
 	TOC        []*TOC
 	Links      []*Link
-	Matches    []geom32.Rect
+	Matches    []geom.Rect[float32]
 }
 
 // Link holds a single link on a page. If PageNumber if >= 0, then this is an internal link and the URI will be empty.
 type Link struct {
-	Bounds       geom32.Rect
+	Bounds       geom.Rect[float32]
 	PageNumber   int
-	PageLocation geom32.Point
+	PageLocation geom.Point[float32]
 	URI          string
 }
 
@@ -271,22 +271,22 @@ func convertLinks(pageLinks []*pdf.PageLink, displayScaleAdjust float32) []*Link
 	return links
 }
 
-func convertMatches(hits []image.Rectangle, displayScaleAdjust float32) []geom32.Rect {
+func convertMatches(hits []image.Rectangle, displayScaleAdjust float32) []geom.Rect[float32] {
 	if len(hits) == 0 {
 		return nil
 	}
-	matches := make([]geom32.Rect, len(hits))
+	matches := make([]geom.Rect[float32], len(hits))
 	for i, hit := range hits {
 		matches[i] = rectFromPageRect(hit, displayScaleAdjust)
 	}
 	return matches
 }
 
-func pointFromPagePoint(x, y int, displayScaleAdjust float32) geom32.Point {
-	return geom32.NewPoint(float32(x)*displayScaleAdjust, float32(y)*displayScaleAdjust)
+func pointFromPagePoint(x, y int, displayScaleAdjust float32) geom.Point[float32] {
+	return geom.NewPoint(float32(x)*displayScaleAdjust, float32(y)*displayScaleAdjust)
 }
 
-func rectFromPageRect(r image.Rectangle, displayScaleAdjust float32) geom32.Rect {
-	return geom32.NewRect(float32(r.Min.X)*displayScaleAdjust, float32(r.Min.Y)*displayScaleAdjust,
+func rectFromPageRect(r image.Rectangle, displayScaleAdjust float32) geom.Rect[float32] {
+	return geom.NewRect(float32(r.Min.X)*displayScaleAdjust, float32(r.Min.Y)*displayScaleAdjust,
 		float32(r.Dx())*displayScaleAdjust, float32(r.Dy())*displayScaleAdjust)
 }

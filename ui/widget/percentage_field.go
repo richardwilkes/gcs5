@@ -19,7 +19,7 @@ import (
 	"unicode"
 
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/mathf32"
+	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/unison"
 )
 
@@ -48,7 +48,7 @@ func NewPercentageField(get func() int, set func(int), min, max int) *Percentage
 	f.ValidateCallback = f.validate
 	f.RuneTypedCallback = f.runeTyped
 	if min != math.MinInt && max != math.MaxInt {
-		f.MinimumTextWidth = mathf32.Max(f.Font.SimpleWidth(f.formatted(min)), f.Font.SimpleWidth(f.formatted(max)))
+		f.MinimumTextWidth = xmath.Max(f.Font.SimpleWidth(f.formatted(min)), f.Font.SimpleWidth(f.formatted(max)))
 	}
 	f.Sync()
 	return f

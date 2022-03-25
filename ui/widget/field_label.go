@@ -12,7 +12,7 @@
 package widget
 
 import (
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -35,7 +35,7 @@ func NewFieldInteriorLeadingLabel(text string) *unison.Label {
 		HAlign: unison.EndAlignment,
 		VAlign: unison.MiddleAlignment,
 	})
-	label.SetBorder(unison.NewEmptyBorder(geom32.Insets{Left: unison.StdHSpacing}))
+	label.SetBorder(unison.NewEmptyBorder(geom.Insets[float32]{Left: unison.StdHSpacing}))
 	return label
 }
 

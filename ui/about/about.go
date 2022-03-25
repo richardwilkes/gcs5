@@ -21,7 +21,7 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -71,23 +71,23 @@ func (w *aboutWindow) prepare() error {
 	return nil
 }
 
-func (w *aboutWindow) LayoutSizes(_ *unison.Panel, _ geom32.Size) (min, pref, max geom32.Size) {
+func (w *aboutWindow) LayoutSizes(_ *unison.Panel, _ geom.Size[float32]) (min, pref, max geom.Size[float32]) {
 	pref = w.img.LogicalSize()
 	return pref, pref, pref
 }
 
 func (w *aboutWindow) PerformLayout(target *unison.Panel) {
-	target.SetFrameRect(geom32.Rect{Size: w.img.LogicalSize()})
+	target.SetFrameRect(geom.Rect[float32]{Size: w.img.LogicalSize()})
 }
 
-func (w *aboutWindow) drawContentBackground(gc *unison.Canvas, _ geom32.Rect) {
+func (w *aboutWindow) drawContentBackground(gc *unison.Canvas, _ geom.Rect[float32]) {
 	r := w.Content().ContentRect(true)
 	gc.DrawImageInRect(w.img, r, nil, nil)
-	gc.DrawRect(r, unison.NewEvenlySpacedGradient(geom32.Point{Y: 0.25}, geom32.Point{Y: 1}, 0, 0,
+	gc.DrawRect(r, unison.NewEvenlySpacedGradient(geom.Point[float32]{Y: 0.25}, geom.Point[float32]{Y: 1}, 0, 0,
 		unison.Transparent, unison.Black).Paint(gc, r, unison.Fill))
 
 	face := unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.NormalFontWeight, unison.StandardSpacing, unison.NoSlant)
-	paint := unison.RGB(128, 128, 128).Paint(gc, geom32.Rect{}, unison.Fill)
+	paint := unison.RGB(128, 128, 128).Paint(gc, geom.Rect[float32]{}, unison.Fill)
 	text := unison.NewText(i18n.Text("This product includes copyrighted material from the GURPS game, which is used by permission of Steve Jackson Games."),
 		&unison.TextDecoration{
 			Font:  face.Font(7),
@@ -108,7 +108,7 @@ func (w *aboutWindow) drawContentBackground(gc *unison.Canvas, _ geom32.Rect) {
 	y -= lineHeight * 1.5
 	yr := y
 
-	paint = unison.RGB(204, 204, 204).Paint(gc, geom32.Rect{}, unison.Fill)
+	paint = unison.RGB(204, 204, 204).Paint(gc, geom.Rect[float32]{}, unison.Fill)
 	unison.NewText(cmdline.Copyright(), &unison.TextDecoration{
 		Font:  font,
 		Paint: paint,
@@ -130,7 +130,7 @@ func (w *aboutWindow) drawContentBackground(gc *unison.Canvas, _ geom32.Rect) {
 	unison.NewText(t, &unison.TextDecoration{
 		Font: unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.MediumFontWeight,
 			unison.StandardSpacing, unison.NoSlant).Font(10),
-		Paint: unison.White.Paint(gc, geom32.Rect{}, unison.Fill),
+		Paint: unison.White.Paint(gc, geom.Rect[float32]{}, unison.Fill),
 	}).Draw(gc, aboutMargin, y)
 
 	right := r.Width - aboutMargin

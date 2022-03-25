@@ -20,7 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -93,7 +93,7 @@ func (d *menuKeySettingsDockable) createBindingButton(binding *settings.Binding)
 		capturePanel.Text = binding.KeyBinding.String()
 		capturePanel.HAlign = unison.MiddleAlignment
 		capturePanel.SetBorder(unison.DefaultFieldTheme.FocusedBorder)
-		capturePanel.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
+		capturePanel.DrawCallback = func(gc *unison.Canvas, rect geom.Rect[float32]) {
 			gc.DrawRect(rect, unison.DefaultFieldTheme.BackgroundInk.Paint(gc, rect, unison.Fill))
 			capturePanel.DefaultDraw(gc, rect)
 		}
@@ -112,7 +112,7 @@ func (d *menuKeySettingsDockable) createBindingButton(binding *settings.Binding)
 			VAlign:  unison.MiddleAlignment,
 		})
 		capturePanel.SetLayoutData(&unison.FlexLayoutData{
-			MinSize: geom32.Size{Width: 100, Height: 50},
+			MinSize: geom.Size[float32]{Width: 100, Height: 50},
 			HAlign:  unison.FillAlignment,
 			VAlign:  unison.FillAlignment,
 			HGrab:   true,

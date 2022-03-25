@@ -18,7 +18,7 @@ import (
 	"github.com/richardwilkes/gcs/model/undo"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -41,13 +41,13 @@ func NewIdentityPanel(entity *gurps.Entity) *IdentityPanel {
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
-	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Identity")}, unison.NewEmptyBorder(geom32.Insets{
+	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Identity")}, unison.NewEmptyBorder(geom.Insets[float32]{
 		Top:    1,
 		Left:   2,
 		Bottom: 1,
 		Right:  2,
 	})))
-	p.DrawCallback = func(gc *unison.Canvas, rect geom32.Rect) {
+	p.DrawCallback = func(gc *unison.Canvas, rect geom.Rect[float32]) {
 		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
 	}
 

@@ -21,7 +21,7 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -89,7 +89,7 @@ func (d *fontSettingsDockable) fill() {
 	notice := unison.NewLabel()
 	notice.Text = "Changing fonts usually requires restarting the app to see content laid out correctly."
 	notice.Font = unison.SystemFont
-	notice.SetBorder(unison.NewEmptyBorder(geom32.Insets{Top: unison.StdVSpacing * 2}))
+	notice.SetBorder(unison.NewEmptyBorder(geom.Insets[float32]{Top: unison.StdVSpacing * 2}))
 	notice.SetLayoutData(&unison.FlexLayoutData{
 		HSpan:  7,
 		VSpan:  1,

@@ -19,7 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/i18n"
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -42,8 +42,8 @@ type ImageDockable struct {
 	imgPanel   *unison.Panel
 	scroll     *unison.ScrollPanel
 	scaleField *widget.PercentageField
-	dragStart  geom32.Point
-	dragOrigin geom32.Point
+	dragStart  geom.Point[float32]
+	dragOrigin geom.Point[float32]
 	scale      int
 	inDrag     bool
 }
@@ -107,8 +107,8 @@ func NewImageDockable(filePath string) (unison.Dockable, error) {
 	sizeLabel.Font = unison.DefaultFieldTheme.Font
 
 	toolbar := unison.NewPanel()
-	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, geom32.Insets{Bottom: 1}, false),
-		unison.NewEmptyBorder(geom32.Insets{
+	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, geom.Insets[float32]{Bottom: 1}, false),
+		unison.NewEmptyBorder(geom.Insets[float32]{
 			Top:    unison.StdVSpacing,
 			Left:   unison.StdHSpacing,
 			Bottom: unison.StdVSpacing,
@@ -132,14 +132,14 @@ func NewImageDockable(filePath string) (unison.Dockable, error) {
 	return d, nil
 }
 
-func (d *ImageDockable) updateCursor(_ geom32.Point) *unison.Cursor {
+func (d *ImageDockable) updateCursor(_ geom.Point[float32]) *unison.Cursor {
 	if d.inDrag {
 		return unison.MoveCursor()
 	}
 	return unison.ArrowCursor()
 }
 
-func (d *ImageDockable) mouseDown(where geom32.Point, _, _ int, _ unison.Modifiers) bool {
+func (d *ImageDockable) mouseDown(where geom.Point[float32], _, _ int, _ unison.Modifiers) bool {
 	d.dragStart = d.imgPanel.PointToRoot(where)
 	d.dragOrigin.X, d.dragOrigin.Y = d.scroll.Position()
 	d.inDrag = true
@@ -148,20 +148,20 @@ func (d *ImageDockable) mouseDown(where geom32.Point, _, _ int, _ unison.Modifie
 	return true
 }
 
-func (d *ImageDockable) mouseDrag(where geom32.Point, _ int, _ unison.Modifiers) bool {
+func (d *ImageDockable) mouseDrag(where geom.Point[float32], _ int, _ unison.Modifiers) bool {
 	pt := d.dragStart
 	pt.Subtract(d.imgPanel.PointToRoot(where))
 	d.scroll.SetPosition(d.dragOrigin.X+pt.X, d.dragOrigin.Y+pt.Y)
 	return true
 }
 
-func (d *ImageDockable) mouseUp(_ geom32.Point, _ int, _ unison.Modifiers) bool {
+func (d *ImageDockable) mouseUp(_ geom.Point[float32], _ int, _ unison.Modifiers) bool {
 	d.inDrag = false
 	d.UpdateCursorNow()
 	return true
 }
 
-func (d *ImageDockable) mouseWheel(_, delta geom32.Point, mod unison.Modifiers) bool {
+func (d *ImageDockable) mouseWheel(_, delta geom.Point[float32], mod unison.Modifiers) bool {
 	if !mod.OptionDown() {
 		return false
 	}
@@ -223,21 +223,21 @@ func (d *ImageDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bo
 	return true
 }
 
-func (d *ImageDockable) imageSizer(_ geom32.Size) (min, pref, max geom32.Size) {
+func (d *ImageDockable) imageSizer(_ geom.Size[float32]) (min, pref, max geom.Size[float32]) {
 	pref = d.img.Size()
 	pref.Width *= float32(d.scale) / 100
 	pref.Height *= float32(d.scale) / 100
-	return geom32.NewSize(50, 50), pref, unison.MaxSize(pref)
+	return geom.NewSize[float32](50, 50), pref, unison.MaxSize(pref)
 }
 
-func (d *ImageDockable) draw(gc *unison.Canvas, dirty geom32.Rect) {
+func (d *ImageDockable) draw(gc *unison.Canvas, dirty geom.Rect[float32]) {
 	gc.DrawRect(dirty, unison.ContentColor.Paint(gc, dirty, unison.Fill))
 	size := d.img.Size()
-	gc.DrawImageInRect(d.img, geom32.NewRect(0, 0, size.Width*float32(d.scale)/100, size.Height*float32(d.scale)/100), nil, nil)
+	gc.DrawImageInRect(d.img, geom.NewRect[float32](0, 0, size.Width*float32(d.scale)/100, size.Height*float32(d.scale)/100), nil, nil)
 }
 
 // TitleIcon implements workspace.FileBackedDockable
-func (d *ImageDockable) TitleIcon(suggestedSize geom32.Size) unison.Drawable {
+func (d *ImageDockable) TitleIcon(suggestedSize geom.Size[float32]) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
 		Size: suggestedSize,

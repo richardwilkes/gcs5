@@ -24,7 +24,7 @@ import (
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -188,7 +188,7 @@ func (d *generalSettingsDockable) createGCalcKeyField(content *unison.Panel) {
 	baseline := button.Font.Baseline()
 	button.Drawable = &unison.DrawableSVG{
 		SVG:  res.SearchSVG,
-		Size: geom32.NewSize(baseline, baseline),
+		Size: geom.NewSize[float32](baseline, baseline),
 	}
 	button.ClickCallback = d.findGCalcKey
 	d.gCalcKeyField = widget.NewStringField(undo.GCalcKeyID, title,

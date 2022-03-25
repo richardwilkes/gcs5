@@ -330,7 +330,7 @@ func multiplyDice(multiplier int, d *dice.Dice) {
 
 func addDice(left, right *dice.Dice) *dice.Dice {
 	if left.Sides > 1 && right.Sides > 1 && left.Sides != right.Sides {
-		sides := xmath.MinInt(left.Sides, right.Sides)
+		sides := xmath.Min(left.Sides, right.Sides)
 		average := fixed.F64d4FromInt(sides + 1).Div(fxp.Two)
 		averageLeft := fixed.F64d4FromInt(left.Count * (left.Sides + 1)).Div(fxp.Two).Mul(fixed.F64d4FromInt(left.Multiplier))
 		averageRight := fixed.F64d4FromInt(right.Count * (right.Sides + 1)).Div(fxp.Two).Mul(fixed.F64d4FromInt(right.Multiplier))
@@ -344,7 +344,7 @@ func addDice(left, right *dice.Dice) *dice.Dice {
 	}
 	return &dice.Dice{
 		Count:      left.Count + right.Count,
-		Sides:      xmath.MaxInt(left.Sides, right.Sides),
+		Sides:      xmath.Max(left.Sides, right.Sides),
 		Modifier:   left.Modifier + right.Modifier,
 		Multiplier: left.Multiplier + right.Multiplier - 1,
 	}

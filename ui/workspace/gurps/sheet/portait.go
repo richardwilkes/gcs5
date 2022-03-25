@@ -16,7 +16,7 @@ import (
 
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -47,14 +47,14 @@ Recommended minimum dimensions are %dx%d.`), gurps.PortraitWidth*2, gurps.Portra
 	return p
 }
 
-func (p *PortraitPanel) portraitSizer(_ geom32.Size) (min, pref, max geom32.Size) {
+func (p *PortraitPanel) portraitSizer(_ geom.Size[float32]) (min, pref, max geom.Size[float32]) {
 	var width, height float32
 	insets := p.Border().Insets()
 	parent := p.Parent()
 	for parent != nil {
 		if sheet, ok := parent.Self.(*Sheet); ok {
-			_, idPanelPref, _ := sheet.IdentityPanel.Sizes(geom32.Size{})
-			_, descPanelPref, _ := sheet.DescriptionPanel.Sizes(geom32.Size{})
+			_, idPanelPref, _ := sheet.IdentityPanel.Sizes(geom.Size[float32]{})
+			_, descPanelPref, _ := sheet.DescriptionPanel.Sizes(geom.Size[float32]{})
 			height = idPanelPref.Height + 1 + descPanelPref.Height
 			break
 		}
@@ -71,7 +71,7 @@ func (p *PortraitPanel) portraitSizer(_ geom32.Size) (min, pref, max geom32.Size
 	return pref, pref, pref
 }
 
-func (p *PortraitPanel) drawSelf(gc *unison.Canvas, r geom32.Rect) {
+func (p *PortraitPanel) drawSelf(gc *unison.Canvas, r geom.Rect[float32]) {
 	r = p.ContentRect(false)
 	paint := unison.ContentColor.Paint(gc, r, unison.Fill)
 	gc.DrawRect(r, paint)

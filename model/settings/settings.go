@@ -30,7 +30,7 @@ import (
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xio/fs/paths"
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 )
 
 const maxRecentFiles = 20
@@ -39,8 +39,8 @@ var global *Settings
 
 // WindowPosition holds a window's last known frame and when the frame's size or position was last altered.
 type WindowPosition struct {
-	Frame       geom32.Rect `json:"frame"`
-	LastUpdated time.Time   `json:"last_updated"`
+	Frame       geom.Rect[float32] `json:"frame"`
+	LastUpdated time.Time          `json:"last_updated"`
 }
 
 // NavigatorSettings holds settings for the navigator view.

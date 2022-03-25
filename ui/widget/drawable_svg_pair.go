@@ -12,7 +12,7 @@
 package widget
 
 import (
-	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -20,16 +20,16 @@ import (
 type DrawableSVGPair struct {
 	Left  *unison.SVG
 	Right *unison.SVG
-	Size  geom32.Size
+	Size  geom.Size[float32]
 }
 
 // LogicalSize implements the Drawable interface.
-func (s *DrawableSVGPair) LogicalSize() geom32.Size {
+func (s *DrawableSVGPair) LogicalSize() geom.Size[float32] {
 	return s.Size
 }
 
 // DrawInRect implements the Drawable interface.
-func (s *DrawableSVGPair) DrawInRect(canvas *unison.Canvas, rect geom32.Rect, _ *unison.SamplingOptions, paint *unison.Paint) {
+func (s *DrawableSVGPair) DrawInRect(canvas *unison.Canvas, rect geom.Rect[float32], _ *unison.SamplingOptions, paint *unison.Paint) {
 	canvas.Save()
 	defer canvas.Restore()
 	r := rect
