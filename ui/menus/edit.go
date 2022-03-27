@@ -14,7 +14,6 @@ package menus
 import (
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/settings"
-	"github.com/richardwilkes/gcs/model/undo"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -60,20 +59,16 @@ var Undo = &unison.Action{
 	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyZ, Modifiers: unison.OSMenuCmdModifier()},
 	EnabledCallback: func(_ *unison.Action, _ interface{}) bool {
 		if wnd := unison.ActiveWindow(); wnd != nil {
-			if focus := wnd.Focus(); focus != nil {
-				if mgr := undo.Manager(focus); mgr != nil {
-					return mgr.CanUndo()
-				}
+			if mgr := wnd.UndoManager(); mgr != nil {
+				return mgr.CanUndo()
 			}
 		}
 		return false
 	},
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
 		if wnd := unison.ActiveWindow(); wnd != nil {
-			if focus := wnd.Focus(); focus != nil {
-				if mgr := undo.Manager(focus); mgr != nil {
-					mgr.Undo()
-				}
+			if mgr := wnd.UndoManager(); mgr != nil {
+				mgr.Undo()
 			}
 		}
 	},
@@ -86,20 +81,16 @@ var Redo = &unison.Action{
 	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyY, Modifiers: unison.OSMenuCmdModifier()},
 	EnabledCallback: func(_ *unison.Action, _ interface{}) bool {
 		if wnd := unison.ActiveWindow(); wnd != nil {
-			if focus := wnd.Focus(); focus != nil {
-				if mgr := undo.Manager(focus); mgr != nil {
-					return mgr.CanRedo()
-				}
+			if mgr := wnd.UndoManager(); mgr != nil {
+				return mgr.CanRedo()
 			}
 		}
 		return false
 	},
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
 		if wnd := unison.ActiveWindow(); wnd != nil {
-			if focus := wnd.Focus(); focus != nil {
-				if mgr := undo.Manager(focus); mgr != nil {
-					mgr.Redo()
-				}
+			if mgr := wnd.UndoManager(); mgr != nil {
+				mgr.Redo()
 			}
 		}
 	},

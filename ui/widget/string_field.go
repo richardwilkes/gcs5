@@ -12,7 +12,7 @@
 package widget
 
 import (
-	"github.com/richardwilkes/gcs/model/undo"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/unison"
 )
 
@@ -47,16 +47,16 @@ func NewStringField(undoID int, undoTitle string, get func() string, set func(st
 
 func (f *StringField) modified() {
 	text := f.Text()
-	if !f.inUndo && f.undoID != undo.NoneID {
-		if mgr := undo.Manager(f); mgr != nil {
-			mgr.Add(&undo.Edit[string]{
+	if !f.inUndo && f.undoID != gid.FieldNone {
+		if mgr := unison.UndoManagerFor(f); mgr != nil {
+			mgr.Add(&unison.UndoEdit[string]{
 				ID:       f.undoID,
 				EditName: f.undoTitle,
 				EditCost: 1,
-				UndoFunc: func(e *undo.Edit[string]) { f.setWithoutUndo(e.BeforeData, true) },
-				RedoFunc: func(e *undo.Edit[string]) { f.setWithoutUndo(e.AfterData, true) },
-				AbsorbFunc: func(e *undo.Edit[string], other unison.UndoEdit) bool {
-					if e2, ok := other.(*undo.Edit[string]); ok && e2.ID == f.undoID {
+				UndoFunc: func(e *unison.UndoEdit[string]) { f.setWithoutUndo(e.BeforeData, true) },
+				RedoFunc: func(e *unison.UndoEdit[string]) { f.setWithoutUndo(e.AfterData, true) },
+				AbsorbFunc: func(e *unison.UndoEdit[string], other unison.Undoable) bool {
+					if e2, ok := other.(*unison.UndoEdit[string]); ok && e2.ID == f.undoID {
 						e.AfterData = e2.AfterData
 						return true
 					}

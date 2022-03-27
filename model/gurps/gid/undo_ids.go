@@ -9,29 +9,29 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package undo
+package gid
 
 const (
-	NoneID = iota
-	NameID
-	TitleID
-	OrganizationID
-	PlayerID
-	GenderID
-	AgeID
-	BirthdayID
-	ReligionID
-	TechLevelID
-	HairID
-	EyesID
-	SkinID
-	HandID
-	SizeID
-	HeightID
-	WeightID
-	DefaultPlayerNameID
-	DefaultTechLevelID
-	GCalcKeyID
-	ImageExportResolutionID
-	PageOffsetID
+	FieldNone = iota
+	FieldName
+	FieldTitle
+	FieldOrganization
+	FieldPlayer
+	FieldGender
+	FieldAge
+	FieldBirthday
+	FieldReligion
+	FieldTechLevel
+	FieldHair
+	FieldEyes
+	FieldSkin
+	FieldHand
+	FieldSize
+	FieldHeight
+	FieldWeight
+	FieldDefaultPlayerName
+	FieldDefaultTechLevel
+	FieldGCalcKey
+	FieldImageExportResolution
+	FieldPageOffset
 )

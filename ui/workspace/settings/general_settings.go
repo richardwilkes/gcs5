@@ -16,9 +16,9 @@ import (
 	"strconv"
 
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/settings"
-	"github.com/richardwilkes/gcs/model/undo"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/desktop"
@@ -94,7 +94,7 @@ func (d *generalSettingsDockable) initContent(content *unison.Panel) {
 func (d *generalSettingsDockable) createPlayerAndDescFields(content *unison.Panel) {
 	title := i18n.Text("Default Player Name")
 	content.AddChild(widget.NewFieldLeadingLabel(title))
-	d.nameField = widget.NewStringField(undo.DefaultPlayerNameID, title,
+	d.nameField = widget.NewStringField(gid.FieldDefaultPlayerName, title,
 		func() string { return settings.Global().General.DefaultPlayerName },
 		func(s string) { settings.Global().General.DefaultPlayerName = s })
 	content.AddChild(d.nameField)
@@ -119,7 +119,7 @@ func (d *generalSettingsDockable) createInitialPointsFields(content *unison.Pane
 func (d *generalSettingsDockable) createTechLevelField(content *unison.Panel) {
 	title := i18n.Text("Default Tech Level")
 	content.AddChild(widget.NewFieldLeadingLabel(title))
-	d.techLevelField = widget.NewStringField(undo.DefaultTechLevelID, title,
+	d.techLevelField = widget.NewStringField(gid.FieldDefaultTechLevel, title,
 		func() string { return settings.Global().General.DefaultTechLevel },
 		func(s string) { settings.Global().General.DefaultTechLevel = s })
 	d.techLevelField.Tooltip = unison.NewTooltipWithText(gurps.TechLevelInfo)
@@ -150,7 +150,7 @@ func (d *generalSettingsDockable) createCalendarPopup(content *unison.Panel) {
 func (d *generalSettingsDockable) createImageResolutionField(content *unison.Panel) {
 	title := i18n.Text("Image Export Resolution")
 	content.AddChild(widget.NewFieldLeadingLabel(title))
-	d.exportResolutionField = widget.NewIntegerField(undo.ImageExportResolutionID, title,
+	d.exportResolutionField = widget.NewIntegerField(gid.FieldImageExportResolution, title,
 		func() int { return settings.Global().General.ImageResolution },
 		func(v int) { settings.Global().General.ImageResolution = v },
 		gsettings.ImageResolutionMin, gsettings.ImageResolutionMax, false)
@@ -191,7 +191,7 @@ func (d *generalSettingsDockable) createGCalcKeyField(content *unison.Panel) {
 		Size: geom.NewSize[float32](baseline, baseline),
 	}
 	button.ClickCallback = d.findGCalcKey
-	d.gCalcKeyField = widget.NewStringField(undo.GCalcKeyID, title,
+	d.gCalcKeyField = widget.NewStringField(gid.FieldGCalcKey, title,
 		func() string { return settings.Global().General.GCalcKey },
 		func(s string) { settings.Global().General.GCalcKey = s })
 	content.AddChild(widget.WrapWithSpan(2, d.gCalcKeyField, button))

@@ -17,8 +17,8 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/settings"
-	"github.com/richardwilkes/gcs/model/undo"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
@@ -171,7 +171,7 @@ func (d *pageRefMappingsDockable) createIDField(ref *settings.PageRef) {
 }
 
 func (d *pageRefMappingsDockable) createOffsetField(ref *settings.PageRef) {
-	p := widget.NewIntegerField(undo.PageOffsetID, i18n.Text("Page Offset"), func() int { return ref.Offset },
+	p := widget.NewIntegerField(gid.FieldPageOffset, i18n.Text("Page Offset"), func() int { return ref.Offset },
 		func(v int) {
 			ref.Offset = v
 			settings.Global().PageRefs.Set(ref)
