@@ -35,7 +35,6 @@ func NewPortraitPanel(entity *gurps.Entity) *PortraitPanel {
 		VAlign: unison.StartAlignment,
 		VSpan:  2,
 	})
-	p.SetSizer(p.portraitSizer)
 	p.SetBorder(&TitledBorder{Title: i18n.Text("Portrait")})
 	p.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text(`Double-click to set a character portrait, or drag an image onto this block.
 

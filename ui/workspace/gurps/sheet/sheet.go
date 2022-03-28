@@ -44,7 +44,7 @@ type Sheet struct {
 	scale              int
 	scaleField         *widget.PercentageField
 	pages              *unison.Panel
-	PortaitPanel       *PortraitPanel
+	PortraitPanel      *PortraitPanel
 	IdentityPanel      *IdentityPanel
 	MiscPanel          *MiscPanel
 	DescriptionPanel   *DescriptionPanel
@@ -191,11 +191,11 @@ func (s *Sheet) createFirstPage() *Page {
 	for _, col := range s.entity.SheetSettings.BlockLayout.ByRow() {
 		rowPanel := unison.NewPanel()
 		rowPanel.SetLayout(&unison.FlexLayout{
-			Columns:      len(col),
-			HSpacing:     1,
-			HAlign:       unison.FillAlignment,
-			VAlign:       unison.FillAlignment,
-			EqualColumns: true,
+			Columns:  len(col),
+			HSpacing: 1,
+			HAlign:   unison.FillAlignment,
+			VAlign:   unison.FillAlignment,
+			//EqualColumns: true,
 		})
 		rowPanel.SetLayoutData(&unison.FlexLayoutData{
 			HAlign: unison.FillAlignment,
@@ -233,31 +233,39 @@ func (s *Sheet) createFirstPage() *Page {
 }
 
 func (s *Sheet) createFirstRow() *unison.Panel {
-	p := unison.NewPanel()
-	p.SetLayout(&unison.FlexLayout{
-		Columns:  4,
+	s.PortraitPanel = NewPortraitPanel(s.entity)
+	s.IdentityPanel = NewIdentityPanel(s.entity)
+	s.MiscPanel = NewMiscPanel(s.entity)
+	s.DescriptionPanel = NewDescriptionPanel(s.entity)
+	s.PointsPanel = NewPointsPanel(s.entity)
+
+	right := unison.NewPanel()
+	right.SetLayout(&unison.FlexLayout{
+		Columns:  3,
 		HSpacing: 1,
 		VSpacing: 1,
 		HAlign:   unison.FillAlignment,
 		VAlign:   unison.FillAlignment,
+	})
+
+	right.AddChild(s.IdentityPanel)
+	right.AddChild(s.MiscPanel)
+	right.AddChild(s.PointsPanel)
+	right.AddChild(s.DescriptionPanel)
+
+	p := unison.NewPanel()
+	p.SetLayout(&portraitLayout{
+		portrait: s.PortraitPanel,
+		rest:     right,
 	})
 	p.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
+	p.AddChild(s.PortraitPanel)
+	p.AddChild(right)
 
-	s.PortaitPanel = NewPortraitPanel(s.entity)
-	s.IdentityPanel = NewIdentityPanel(s.entity)
-	s.MiscPanel = NewMiscPanel(s.entity)
-	s.DescriptionPanel = NewDescriptionPanel(s.entity)
-	s.PointsPanel = NewPointsPanel(s.entity)
-
-	p.AddChild(s.PortaitPanel)
-	p.AddChild(s.IdentityPanel)
-	p.AddChild(s.MiscPanel)
-	p.AddChild(s.PointsPanel)
-	p.AddChild(s.DescriptionPanel)
 	return p
 }
 

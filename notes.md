@@ -41,8 +41,6 @@
     - Recent Files list
     - Export To list
   - Edit
-    - Undo
-    - Redo
     - Duplicate
     - Convert to Container
     - Jump to Search

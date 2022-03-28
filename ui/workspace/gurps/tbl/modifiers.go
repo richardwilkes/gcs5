@@ -87,7 +87,7 @@ func NewEquipmentModifierRowData(topLevelRowsProvider func() []*gurps.EquipmentM
 // NewConditionalModifierTableHeaders creates a new set of table column headers for conditional modifiers.
 func NewConditionalModifierTableHeaders(descTitle string) []unison.TableColumnHeader {
 	return []unison.TableColumnHeader{
-		NewHeader(i18n.Text("Modifier"), "", true),
+		NewHeader("±", i18n.Text("Modifier"), true),
 		NewHeader(descTitle, "", true),
 	}
 }
