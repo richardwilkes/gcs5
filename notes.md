@@ -4,7 +4,7 @@
 
 - Printing support in unison
 - Drag & drop support in the unison Table object
-- "Lightweight" menu support for the Windows and Linux platforms, as the current method is too slow when creating top-level windows for their content display... partly exacerbated by the insistence of the Windows OS to animate them
+- In-window menus (those used on non-macOS platforms) need to be able to constrain themselves to the window and provide scrolling mechanisms when required to view all content
 - Solve the issue on non-macOS platforms where a popup menu in a dialog comes up *behind* the dialog, despite being explicitly told to be in front of it
 - Carefully comb over the interface and identify areas where things aren't working well on Windows and Linux, since I spend nearly all of my development time on macOS and may have not noticed deficiencies there
 - Multi-line support in Field objects
