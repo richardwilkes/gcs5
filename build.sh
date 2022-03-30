@@ -39,10 +39,10 @@ echo -e "\033[33mBuilding...\033[0m"
 go generate ./gen/enumgen.go
 
 # Build our code
-go install -v .
 EXE="$(go env GOPATH)/bin/gcs"
 case $(uname -s) in
 Darwin*)
+  go install -v .
   /bin/rm -rf GCS.app
   CONTENTS="GCS.app/Contents"
   mkdir -p "$CONTENTS/MacOS"
@@ -55,10 +55,12 @@ Darwin*)
   mv "$EXE" "$CONTENTS/MacOS/"
   ;;
 Linux*)
+  go install -v .
   /bin/rm -f gcs
   mv "$EXE" ./gcs
   ;;
 MINGW*)
+  go install -v -ldflags all="-H windowsgui" .
   /bin/rm -f gcs.exe
   mv "$EXE.exe" ./gcs.exe
   ;;
