@@ -32,12 +32,6 @@ func main() {
 	cmdline.CopyrightStartYear = "1998"
 	cmdline.CopyrightHolder = "Richard A. Wilkes"
 	cmdline.AppIdentifier = "com.trollworks.gcs"
-
-	fmt.Println("cmdline.AppVersion: ", cmdline.AppVersion)
-	fmt.Println("cmdline.CopyrightStartYear: ", cmdline.CopyrightStartYear)
-	fmt.Println("cmdline.CopyrightEndYear: ", cmdline.CopyrightEndYear)
-	fmt.Println("cmdline.CopyrightYears: ", cmdline.CopyrightYears)
-
 	cl := cmdline.New(true)
 	var textTmplPath string
 	var showCopyrightDateAndExit bool
