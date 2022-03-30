@@ -13,7 +13,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/richardwilkes/gcs/model/export"
 	"github.com/richardwilkes/gcs/model/library"
@@ -30,16 +29,26 @@ func main() {
 	cmdline.AppName = "GCS"
 	cmdline.AppCmdName = "gcs"
 	cmdline.License = "Mozilla Public License, version 2.0"
-	cmdline.CopyrightYears = fmt.Sprintf("1998-%d", time.Now().Year())
+	cmdline.CopyrightStartYear = "1998"
 	cmdline.CopyrightHolder = "Richard A. Wilkes"
 	cmdline.AppIdentifier = "com.trollworks.gcs"
-	if cmdline.AppVersion == "" {
-		cmdline.AppVersion = "0.0"
-	}
+
+	fmt.Println("cmdline.AppVersion: ", cmdline.AppVersion)
+	fmt.Println("cmdline.CopyrightStartYear: ", cmdline.CopyrightStartYear)
+	fmt.Println("cmdline.CopyrightEndYear: ", cmdline.CopyrightEndYear)
+	fmt.Println("cmdline.CopyrightYears: ", cmdline.CopyrightYears)
+
 	cl := cmdline.New(true)
 	var textTmplPath string
-	cl.NewStringOption(&textTmplPath).SetName("text").SetSingle('x').SetArg("file").SetUsage(i18n.Text("Export sheets using the specified template file"))
+	var showCopyrightDateAndExit bool
+	cl.NewGeneralOption(&textTmplPath).SetName("text").SetSingle('x').SetArg("file").
+		SetUsage(i18n.Text("Export sheets using the specified template file"))
+	cl.NewGeneralOption(&showCopyrightDateAndExit).SetName("copyright-date")
 	fileList := jotrotate.ParseAndSetup(cl)
+	if showCopyrightDateAndExit {
+		fmt.Print(cmdline.ResolveCopyrightYears())
+		atexit.Exit(0)
+	}
 	setup.Setup()
 	settings.Global() // Here to force early initialization
 	if textTmplPath != "" {
