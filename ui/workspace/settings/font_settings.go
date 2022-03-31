@@ -20,7 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
@@ -119,15 +119,15 @@ func (d *fontSettingsDockable) createFamilyField(index int) {
 }
 
 func (d *fontSettingsDockable) createSizeField(index int) {
-	field := widget.NewNumericField(func() fixed.F64d4 {
-		return fixed.F64d4FromFloat32(theme.CurrentFonts[index].Font.Size())
-	}, func(v fixed.F64d4) {
+	field := widget.NewNumericField(func() f64d4.Int {
+		return f64d4.FromFloat32(theme.CurrentFonts[index].Font.Size())
+	}, func(v f64d4.Int) {
 		if !d.noUpdate {
 			fd := theme.CurrentFonts[index].Font.Descriptor()
 			fd.Size = v.AsFloat32()
 			d.applyFont(index, fd)
 		}
-	}, fixed.F64d4One, fixed.F64d4FromInt(999), false)
+	}, f64d4.One, f64d4.FromInt(999), false)
 	field.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,
@@ -224,7 +224,7 @@ func (d *fontSettingsDockable) applyFont(index int, fd unison.FontDescriptor) {
 		p.Select(fd.Family)
 	}
 	if nf, ok := children[i+2].Self.(*widget.NumericField); ok {
-		nf.SetText(fixed.F64d4FromFloat32(fd.Size).String())
+		nf.SetText(f64d4.FromFloat32(fd.Size).String())
 	}
 	if p, ok := children[i+3].Self.(*unison.PopupMenu); ok {
 		p.Select(fd.Weight)

@@ -21,9 +21,8 @@ import (
 	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/eval"
-	"github.com/richardwilkes/toolbox/eval/f64d4eval"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // InstallEvaluatorFunctions installs additional functions for the evaluator.
@@ -44,7 +43,7 @@ func evalToBool(e *eval.Evaluator, arguments string) (bool, error) {
 	switch a := evaluated.(type) {
 	case bool:
 		return a, nil
-	case fixed.F64d4:
+	case f64d4.Int:
 		return a != 0, nil
 	case string:
 		return txt.IsTruthy(a), nil
@@ -53,12 +52,12 @@ func evalToBool(e *eval.Evaluator, arguments string) (bool, error) {
 	}
 }
 
-func evalToNumber(e *eval.Evaluator, arguments string) (fixed.F64d4, error) {
+func evalToNumber(e *eval.Evaluator, arguments string) (f64d4.Int, error) {
 	evaluated, err := e.EvaluateNew(arguments)
 	if err != nil {
 		return 0, err
 	}
-	return f64d4eval.NumberFrom(evaluated)
+	return eval.FixedFrom[f64d4.Int](evaluated)
 }
 
 func evalToString(e *eval.Evaluator, arguments string) (string, error) {
@@ -140,7 +139,7 @@ func evalRoll(e *eval.Evaluator, arguments string) (interface{}, error) {
 			return nil, err
 		}
 	}
-	return fixed.F64d4FromInt(dice.New(arguments).Roll(false)), nil
+	return f64d4.FromInt(dice.New(arguments).Roll(false)), nil
 }
 
 func evalSigned(e *eval.Evaluator, arguments string) (interface{}, error) {
@@ -177,7 +176,7 @@ func evalSSRT(e *eval.Evaluator, arguments string) (interface{}, error) {
 	if !wantSize {
 		result = -result
 	}
-	return fixed.F64d4FromInt(result), nil
+	return f64d4.FromInt(result), nil
 }
 
 func evalSSRTYards(e *eval.Evaluator, arguments string) (interface{}, error) {
@@ -189,19 +188,19 @@ func evalSSRTYards(e *eval.Evaluator, arguments string) (interface{}, error) {
 }
 
 func yardsToValue(length measure.Length, allowNegative bool) int {
-	inches := fixed.F64d4(length)
+	inches := f64d4.Int(length)
 	yards := inches.Div(fxp.ThirtySix)
 	if allowNegative {
 		switch {
-		case inches <= fixed.F64d4One.Div(fxp.Five):
+		case inches <= f64d4.One.Div(fxp.Five):
 			return -15
-		case inches <= fixed.F64d4One.Div(fxp.Three):
+		case inches <= f64d4.One.Div(fxp.Three):
 			return -14
-		case inches <= fixed.F64d4Half:
+		case inches <= f64d4.Half:
 			return -13
 		case inches <= fxp.Two.Div(fxp.Three):
 			return -12
-		case inches <= fixed.F64d4One:
+		case inches <= f64d4.One:
 			return -11
 		case inches <= fxp.OneAndAHalf:
 			return -10
@@ -216,13 +215,13 @@ func yardsToValue(length measure.Length, allowNegative bool) int {
 		}
 		feet := inches.Div(fxp.Twelve)
 		switch {
-		case feet <= fixed.F64d4One:
+		case feet <= f64d4.One:
 			return -5
 		case feet <= fxp.OneAndAHalf:
 			return -4
 		case feet <= fxp.Two:
 			return -3
-		case yards <= fixed.F64d4One:
+		case yards <= f64d4.One:
 			return -2
 		case yards <= fxp.OneAndAHalf:
 			return -1
@@ -252,21 +251,21 @@ func yardsToValue(length measure.Length, allowNegative bool) int {
 	}
 }
 
-func valueToYards(value int) fixed.F64d4 {
+func valueToYards(value int) f64d4.Int {
 	if value < -15 {
 		value = -15
 	}
 	switch value {
 	case -15:
-		return fixed.F64d4One.Div(fxp.Five).Div(fxp.ThirtySix)
+		return f64d4.One.Div(fxp.Five).Div(fxp.ThirtySix)
 	case -14:
-		return fixed.F64d4One.Div(fxp.Three).Div(fxp.ThirtySix)
+		return f64d4.One.Div(fxp.Three).Div(fxp.ThirtySix)
 	case -13:
-		return fixed.F64d4Half.Div(fxp.ThirtySix)
+		return f64d4.Half.Div(fxp.ThirtySix)
 	case -12:
 		return fxp.Two.Div(fxp.Three).Div(fxp.ThirtySix)
 	case -11:
-		return fixed.F64d4One.Div(fxp.ThirtySix)
+		return f64d4.One.Div(fxp.ThirtySix)
 	case -10:
 		return fxp.OneAndAHalf.Div(fxp.ThirtySix)
 	case -9:
@@ -278,13 +277,13 @@ func valueToYards(value int) fixed.F64d4 {
 	case -6:
 		return fxp.Eight.Div(fxp.ThirtySix)
 	case -5:
-		return fixed.F64d4One.Div(fxp.Three)
+		return f64d4.One.Div(fxp.Three)
 	case -4:
 		return fxp.OneAndAHalf.Div(fxp.Three)
 	case -3:
 		return fxp.Two.Div(fxp.Three)
 	case -2:
-		return fixed.F64d4One
+		return f64d4.One
 	case -1:
 		return fxp.OneAndAHalf
 	case 0:
@@ -297,11 +296,11 @@ func valueToYards(value int) fixed.F64d4 {
 		return fxp.Seven
 	}
 	value -= 4
-	multiplier := fixed.F64d4One
+	multiplier := f64d4.One
 	for i := 0; i < value/6; i++ {
 		multiplier = multiplier.Mul(fxp.Ten)
 	}
-	var v fixed.F64d4
+	var v f64d4.Int
 	switch value % 6 {
 	case 0:
 		v = fxp.Ten

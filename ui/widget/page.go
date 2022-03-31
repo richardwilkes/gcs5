@@ -17,7 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
@@ -196,14 +196,14 @@ func NewIntegerPageField(undoID int, undoTitle string, get func() int, set func(
 }
 
 // NewNumericPageField creates a new numeric text entry field for a sheet page.
-func NewNumericPageField(get func() fixed.F64d4, set func(fixed.F64d4), min, max fixed.F64d4, noMinWidth bool) *NumericField {
+func NewNumericPageField(get func() f64d4.Int, set func(f64d4.Int), min, max f64d4.Int, noMinWidth bool) *NumericField {
 	field := NewNumericField(get, set, min, max, noMinWidth)
 	field.HAlign = unison.EndAlignment
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom.Insets[float32]{Bottom: 1}, false)
 	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom.Insets[float32]{Bottom: 1}, false)
 	field.SetBorder(field.UnfocusedBorder)
-	if !noMinWidth && min != fixed.F64d4Min && max != fixed.F64d4Max {
+	if !noMinWidth && min != f64d4.Min && max != f64d4.Max {
 		// Override to ignore fractional values
 		field.MinimumTextWidth = xmath.Max(field.Font.SimpleWidth(min.Trunc().String()),
 			field.Font.SimpleWidth(max.Trunc().String()))

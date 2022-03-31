@@ -23,7 +23,7 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
@@ -189,9 +189,9 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 	p.tableHeader.HeaderBorder = unison.NewLineBorder(theme.HeaderColor, 0, geom.Insets[float32]{Bottom: 1}, false)
 	p.tableHeader.SetBorder(p.tableHeader.HeaderBorder)
 	p.tableHeader.Less = func(s1, s2 string) bool {
-		if n1, err := fixed.F64d4FromString(s1); err == nil {
-			var n2 fixed.F64d4
-			if n2, err = fixed.F64d4FromString(s2); err == nil {
+		if n1, err := f64d4.FromString(s1); err == nil {
+			var n2 f64d4.Int
+			if n2, err = f64d4.FromString(s2); err == nil {
 				return n1 < n2
 			}
 		}
@@ -385,14 +385,14 @@ func (p *PageList) installDecrementHandler() {
 	})
 }
 
-func increment(value fixed.F64d4) fixed.F64d4 {
-	return value.Trunc() + fixed.F64d4One
+func increment(value f64d4.Int) f64d4.Int {
+	return value.Trunc() + f64d4.One
 }
 
-func decrement(value fixed.F64d4) fixed.F64d4 {
+func decrement(value f64d4.Int) f64d4.Int {
 	v := value.Trunc()
 	if v == value {
-		v -= fixed.F64d4One
+		v -= f64d4.One
 	}
 	return v
 }
@@ -563,18 +563,18 @@ func (p *PageList) installIncrementTechLevelHandler() {
 			if n, ok := row.(*tbl.Node); ok {
 				switch item := n.Data().(type) {
 				case *gurps.Equipment:
-					if item.TechLevel, changed = gurps.AdjustTechLevel(item.TechLevel, fixed.F64d4One); changed {
+					if item.TechLevel, changed = gurps.AdjustTechLevel(item.TechLevel, f64d4.One); changed {
 						entity = item.Entity
 					}
 				case *gurps.Skill:
 					if !item.Container() && item.TechLevel != nil {
-						if *item.TechLevel, changed = gurps.AdjustTechLevel(*item.TechLevel, fixed.F64d4One); changed {
+						if *item.TechLevel, changed = gurps.AdjustTechLevel(*item.TechLevel, f64d4.One); changed {
 							entity = item.Entity
 						}
 					}
 				case *gurps.Spell:
 					if !item.Container() && item.TechLevel != nil {
-						if *item.TechLevel, changed = gurps.AdjustTechLevel(*item.TechLevel, fixed.F64d4One); changed {
+						if *item.TechLevel, changed = gurps.AdjustTechLevel(*item.TechLevel, f64d4.One); changed {
 							entity = item.Entity
 						}
 					}

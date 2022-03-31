@@ -20,7 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
@@ -71,8 +71,8 @@ func (p *PrimaryAttrPanel) rebuild(attrs *gurps.AttributeDefs) {
 			continue
 		}
 		p.AddChild(p.createPointsField(attr))
-		p.AddChild(widget.NewNumericPageField(func() fixed.F64d4 { return attr.Maximum() },
-			func(v fixed.F64d4) { attr.SetMaximum(v) }, fixed.F64d4Min, fixed.F64d4Max, true))
+		p.AddChild(widget.NewNumericPageField(func() f64d4.Int { return attr.Maximum() },
+			func(v f64d4.Int) { attr.SetMaximum(v) }, f64d4.Min, f64d4.Max, true))
 		p.AddChild(widget.NewPageLabel(def.CombinedName()))
 	}
 }

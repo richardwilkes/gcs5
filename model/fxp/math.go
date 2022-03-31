@@ -12,23 +12,23 @@
 package fxp
 
 import (
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // ApplyRounding truncates if 'roundDown' is true and performs a ceil() if false.
-func ApplyRounding(value fixed.F64d4, roundDown bool) fixed.F64d4 {
+func ApplyRounding(value f64d4.Int, roundDown bool) f64d4.Int {
 	if roundDown {
 		return value.Trunc()
 	}
 	if value.Trunc() != value {
-		return value.Trunc() + fixed.F64d4One
+		return value.Trunc() + f64d4.One
 	}
 	return value
 }
 
 // ResetIfOutOfRange checks the value and if it is lower than min or greater than max, returns def, otherwise returns
 // value.
-func ResetIfOutOfRange(value, min, max, def fixed.F64d4) fixed.F64d4 {
+func ResetIfOutOfRange(value, min, max, def f64d4.Int) f64d4.Int {
 	if value < min || value > max {
 		return def
 	}

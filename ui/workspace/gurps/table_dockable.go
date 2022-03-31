@@ -27,7 +27,7 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio/fs"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
@@ -200,9 +200,9 @@ func NewTableDockable(filePath string, columnHeaders []unison.TableColumnHeader,
 
 	d.tableHeader = unison.NewTableHeader(d.table, columnHeaders...)
 	d.tableHeader.Less = func(s1, s2 string) bool {
-		if n1, err := fixed.F64d4FromString(s1); err == nil {
-			var n2 fixed.F64d4
-			if n2, err = fixed.F64d4FromString(s2); err == nil {
+		if n1, err := f64d4.FromString(s1); err == nil {
+			var n2 f64d4.Int
+			if n2, err = f64d4.FromString(s2); err == nil {
 				return n1 < n2
 			}
 		}

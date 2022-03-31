@@ -23,10 +23,10 @@ github.com/richardwilkes/pdf v0.0.0-20220115194011-2380c98780aa h1:jMZDX5eFUy7pc
 github.com/richardwilkes/pdf v0.0.0-20220115194011-2380c98780aa/go.mod h1:aN1tva752mG3No50feQpoIhvMfYnhBj+JmIevlNd6Js=
 github.com/richardwilkes/rpgtools v1.4.1 h1:uoQKvM64owkU5gKYAlqZuWDvIfKcs8OCVRsXRPu1i2o=
 github.com/richardwilkes/rpgtools v1.4.1/go.mod h1:w4bCZ1a0YGKPzSA/Yr3XinTMVLlYOKEnrormltb1r9s=
-github.com/richardwilkes/toolbox v1.66.0 h1:W1O5VKrfKNF/MTtNApo/Q4I09cH9E+5ri7f+/Br5E2A=
-github.com/richardwilkes/toolbox v1.66.0/go.mod h1:XeVqb3G7LFGmC5QwypayYy0VoPD5czvQYFQd/C/meH0=
-github.com/richardwilkes/unison v0.11.1 h1:MMeWYZOcUwDBdxSv80LSnW0uSvBfQuqaNlQQS/Hjc6k=
-github.com/richardwilkes/unison v0.11.1/go.mod h1:/64uIRWCSqI1QO6/XOYEx6S8sIyBQ4OkuvL2AM0rrVM=
+github.com/richardwilkes/toolbox v1.68.1 h1:eWJv2a1shyTaZeqh5uAwZLWvO8mRUS+J8ZaYCCMd26k=
+github.com/richardwilkes/toolbox v1.68.1/go.mod h1:dTabQRf90QsPFzFiGg/phbsdqN3R0jzzHd2mwahTe5g=
+github.com/richardwilkes/unison v0.11.2 h1:C9YJbQzkzlrCCrwuFWzZ2Nk/EM9jrqG4Otgxb484nsY=
+github.com/richardwilkes/unison v0.11.2/go.mod h1:h9TUxYqoJlLKSPwZwSz3e1qUUR3tFAQMfBBMUJ2br+w=
 github.com/rogpeppe/go-internal v1.8.0 h1:FCbCCtXNOY3UtUuHUYaghJg4y7Fd14rXifAYUAtL9R8=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.7.1 h1:5TQK59W5E3v0r2duFAb7P95B6hEeOyEnHRa8MjYSMTY=
@@ -38,8 +38,8 @@ golang.org/x/exp v0.0.0-20220328175248-053ad81199eb/go.mod h1:lgLbSvA5ygNOMpwM/9
 golang.org/x/image v0.0.0-20220321031419-a8550c1d254a h1:LnH9RNcpPv5Kzi15lXg42lYMPUf0x8CuPv1YnvBWZAg=
 golang.org/x/image v0.0.0-20220321031419-a8550c1d254a/go.mod h1:023OzeP/+EPmXeapQh35lcL3II3LrY8Ic+EFFKVhULM=
 golang.org/x/sys v0.0.0-20200909081042-eff7692f9009/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.0.0-20220329152356-43be30ef3008 h1:pq9pwoi2rjLWvmiVser/lIOgiyA3fli4M+RfGVMA7nE=
-golang.org/x/sys v0.0.0-20220329152356-43be30ef3008/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.0.0-20220330033206-e17cdc41300f h1:rlezHXNlxYWvBCzNses9Dlc7nGFaNMJeqLolcmQSSZY=
+golang.org/x/sys v0.0.0-20220330033206-e17cdc41300f/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/text v0.3.6/go.mod h1:5Zoc/QRtKVWzQhOtBMvqHzDpF6irO9z98xDceosuGiQ=
 golang.org/x/text v0.3.7 h1:olpwvP2KacW1ZWvsR7uQhoyTYvKAupfQrRGBFM352Gk=
 golang.org/x/text v0.3.7/go.mod h1:u+2+/6zg+i71rQMx5EYifcz6MCKuco9NR6JIITiCfzQ=

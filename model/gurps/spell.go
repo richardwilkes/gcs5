@@ -31,7 +31,7 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -72,7 +72,7 @@ type SpellItem struct {
 	Duration          string              `json:"duration,omitempty"`
 	RitualSkillName   string              `json:"base_skill,omitempty"`
 	RitualPrereqCount int                 `json:"prereq_count,omitempty"`
-	Points            fixed.F64d4         `json:"points,omitempty"`
+	Points            f64d4.Int           `json:"points,omitempty"`
 	Prereq            *PrereqList         `json:"prereqs,omitempty"`
 	Weapons           []*Weapon           `json:"weapons,omitempty"`
 }
@@ -161,7 +161,7 @@ func NewSpell(entity *Entity, parent *Spell, container bool) *Spell {
 			CastingCost: "1",
 			CastingTime: "1 sec",
 			Duration:    "Instant",
-			Points:      fixed.F64d4One,
+			Points:      f64d4.One,
 			Prereq:      NewPrereqList(),
 		}
 	}
@@ -187,8 +187,8 @@ func (s *Spell) MarshalJSON() ([]byte, error) {
 		s.SpellContainer = nil
 		if s.LevelData.Level > 0 {
 			type calc struct {
-				Level              fixed.F64d4 `json:"level"`
-				RelativeSkillLevel string      `json:"rsl"`
+				Level              f64d4.Int `json:"level"`
+				RelativeSkillLevel string    `json:"rsl"`
 			}
 			return json.Marshal(&struct {
 				SpellData
@@ -398,22 +398,22 @@ func (s *Spell) AdjustedRelativeLevelAsString() string {
 		return ""
 	}
 	level := s.AdjustedRelativeLevel()
-	if level == fixed.F64d4Min {
+	if level == f64d4.Min {
 		return "-"
 	}
 	return level.Trunc().String()
 }
 
 // AdjustedRelativeLevel returns the relative skill level.
-func (s *Spell) AdjustedRelativeLevel() fixed.F64d4 {
+func (s *Spell) AdjustedRelativeLevel() f64d4.Int {
 	if s.Container() {
-		return fixed.F64d4Min
+		return f64d4.Min
 	}
 	if s.Entity != nil && s.Level() > 0 {
 		return s.LevelData.RelativeLevel
 	}
 	// TODO: Old code had a case for templates... but can't see that being exercised in the actual display anywhere
-	return fixed.F64d4Min
+	return f64d4.Min
 }
 
 // UpdateLevel updates the level of the spell, returning true if it has changed.
@@ -440,7 +440,7 @@ func (s *Spell) LevelAsString() string {
 }
 
 // Level returns the computed level without updating it.
-func (s *Spell) Level() fixed.F64d4 {
+func (s *Spell) Level() f64d4.Int {
 	if s.Type == gid.RitualMagicSpell {
 		return s.calculateRitualMagicLevel().Level
 	}
@@ -450,7 +450,7 @@ func (s *Spell) Level() fixed.F64d4 {
 // IncrementSkillLevel adds enough points to increment the skill level to the next level.
 func (s *Spell) IncrementSkillLevel() {
 	if !s.Container() {
-		basePoints := s.Points.Trunc() + fixed.F64d4One
+		basePoints := s.Points.Trunc() + f64d4.One
 		maxPoints := basePoints
 		if s.Difficulty.Difficulty == skill.Wildcard {
 			maxPoints += fxp.Twelve
@@ -458,7 +458,7 @@ func (s *Spell) IncrementSkillLevel() {
 			maxPoints += fxp.Four
 		}
 		oldLevel := s.Level()
-		for points := basePoints; points < maxPoints; points += fixed.F64d4One {
+		for points := basePoints; points < maxPoints; points += f64d4.One {
 			s.Points = points
 			if s.Level() > oldLevel {
 				break
@@ -479,7 +479,7 @@ func (s *Spell) DecrementSkillLevel() {
 		}
 		minPoints = minPoints.Max(0)
 		oldLevel := s.Level()
-		for points := basePoints; points >= minPoints; points -= fixed.F64d4One {
+		for points := basePoints; points >= minPoints; points -= f64d4.One {
 			s.Points = points
 			if s.Level() < oldLevel {
 				break
@@ -488,9 +488,9 @@ func (s *Spell) DecrementSkillLevel() {
 		if s.Points > 0 {
 			oldLevel = s.Level()
 			for s.Points > 0 {
-				s.Points -= fixed.F64d4One
+				s.Points -= f64d4.One
 				if s.Level() != oldLevel {
-					s.Points += fixed.F64d4One
+					s.Points += f64d4.One
 					break
 				}
 			}
@@ -509,17 +509,17 @@ func (s *Spell) calculateLevel() skill.Level {
 			pts = pts.Div(fxp.Three).Trunc()
 		}
 		switch {
-		case pts < fixed.F64d4One:
+		case pts < f64d4.One:
 			level = fxp.NegOne
 			relativeLevel = 0
-		case pts == fixed.F64d4One:
+		case pts == f64d4.One:
 		// relativeLevel is preset to this point value
 		case pts < fxp.Four:
-			relativeLevel += fixed.F64d4One
+			relativeLevel += f64d4.One
 		default:
-			relativeLevel += fixed.F64d4One + pts.Div(fxp.Four).Trunc()
+			relativeLevel += f64d4.One + pts.Div(fxp.Four).Trunc()
 		}
-		if level != fixed.F64d4One {
+		if level != f64d4.One {
 			relativeLevel += s.BestCollegeSpellBonus(s.Categories, s.College, &tooltip)
 			relativeLevel += s.SpellBonusesFor(feature.SpellPowerSourceID, s.PowerSource, s.Categories, &tooltip)
 			relativeLevel += s.SpellBonusesFor(feature.SpellNameID, s.Name, s.Categories, &tooltip)
@@ -565,12 +565,12 @@ func (s *Spell) determineSkillLevelForCollege(college string) skill.Level {
 		DefaultType:    gid.Skill,
 		Name:           s.RitualSkillName,
 		Specialization: college,
-		Modifier:       fixed.F64d4FromInt(-s.RitualPrereqCount),
+		Modifier:       f64d4.FromInt(-s.RitualPrereqCount),
 	}
 	if college == "" {
 		def.Name = ""
 	}
-	var limit fixed.F64d4
+	var limit f64d4.Int
 	skillLevel := CalculateTechniqueLevel(s.Entity, s.Name, college, s.Categories, def, s.Difficulty.Difficulty, s.AdjustedPoints(), false, &limit)
 	// CalculateTechniqueLevel() does not add the default skill modifier to the relative level, only to the final level
 	skillLevel.RelativeLevel += def.Modifier
@@ -585,8 +585,8 @@ func (s *Spell) determineSkillLevelForCollege(college string) skill.Level {
 }
 
 // BestCollegeSpellBonus returns the best college spell bonus for this spell.
-func (s *Spell) BestCollegeSpellBonus(categories, colleges []string, tooltip *xio.ByteBuffer) fixed.F64d4 {
-	best := fixed.F64d4Min
+func (s *Spell) BestCollegeSpellBonus(categories, colleges []string, tooltip *xio.ByteBuffer) f64d4.Int {
+	best := f64d4.Min
 	var bestTooltip string
 	for _, college := range colleges {
 		var buffer *xio.ByteBuffer
@@ -603,14 +603,14 @@ func (s *Spell) BestCollegeSpellBonus(categories, colleges []string, tooltip *xi
 	if tooltip != nil {
 		tooltip.WriteString(bestTooltip)
 	}
-	if best == fixed.F64d4Min {
+	if best == f64d4.Min {
 		best = 0
 	}
 	return best
 }
 
 // SpellBonusesFor returns the bonus for this spell.
-func (s *Spell) SpellBonusesFor(featureID, qualifier string, categories []string, tooltip *xio.ByteBuffer) fixed.F64d4 {
+func (s *Spell) SpellBonusesFor(featureID, qualifier string, categories []string, tooltip *xio.ByteBuffer) f64d4.Int {
 	level := s.Entity.BonusFor(featureID, tooltip)
 	level += s.Entity.BonusFor(featureID+"/"+strings.ToLower(qualifier), tooltip)
 	level += s.Entity.SpellComparedBonusFor(featureID+"*", qualifier, categories, tooltip)
@@ -773,9 +773,9 @@ func (s *Spell) String() string {
 }
 
 // AdjustedPoints returns the points, adjusted for any bonuses.
-func (s *Spell) AdjustedPoints() fixed.F64d4 {
+func (s *Spell) AdjustedPoints() f64d4.Int {
 	if s.Container() {
-		var total fixed.F64d4
+		var total f64d4.Int
 		for _, one := range s.Children {
 			total += one.AdjustedPoints()
 		}
@@ -791,8 +791,8 @@ func (s *Spell) AdjustedPoints() fixed.F64d4 {
 	return points
 }
 
-func (s *Spell) bestCollegeSpellPointBonus(tooltip *xio.ByteBuffer) fixed.F64d4 {
-	best := fixed.F64d4Min
+func (s *Spell) bestCollegeSpellPointBonus(tooltip *xio.ByteBuffer) f64d4.Int {
+	best := f64d4.Min
 	bestTooltip := ""
 	for _, college := range s.College {
 		var buffer *xio.ByteBuffer
@@ -810,7 +810,7 @@ func (s *Spell) bestCollegeSpellPointBonus(tooltip *xio.ByteBuffer) fixed.F64d4 
 	if tooltip != nil {
 		tooltip.WriteString(bestTooltip)
 	}
-	if best == fixed.F64d4Min {
+	if best == f64d4.Min {
 		best = 0
 	}
 	return best

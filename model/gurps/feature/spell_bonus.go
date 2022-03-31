@@ -19,7 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/spell"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 const (
@@ -58,7 +58,7 @@ func NewSpellBonus() *SpellBonus {
 				Compare: criteria.Any,
 			},
 		},
-		LeveledAmount: LeveledAmount{Amount: fixed.F64d4One},
+		LeveledAmount: LeveledAmount{Amount: f64d4.One},
 	}
 }
 
@@ -111,7 +111,7 @@ func (s *SpellBonus) SetParent(parent fmt.Stringer) {
 }
 
 // SetLevel implements Bonus.
-func (s *SpellBonus) SetLevel(level fixed.F64d4) {
+func (s *SpellBonus) SetLevel(level f64d4.Int) {
 	s.Level = level
 }
 

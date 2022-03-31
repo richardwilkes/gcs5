@@ -14,15 +14,15 @@ package measure
 import (
 	"strings"
 
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // Format the length for this LengthUnits.
 func (enum LengthUnits) Format(length Length) string {
 	switch enum {
 	case FeetAndInches:
-		oneFoot := fixed.F64d4FromInt(12)
-		inches := fixed.F64d4(length)
+		oneFoot := f64d4.FromInt(12)
+		inches := f64d4.Int(length)
 		feet := inches.Div(oneFoot).Trunc()
 		inches -= feet.Mul(oneFoot)
 		if feet == 0 && inches == 0 {
@@ -39,41 +39,41 @@ func (enum LengthUnits) Format(length Length) string {
 		}
 		return buffer.String()
 	case Inch:
-		return fixed.F64d4(length).String() + " " + enum.Key()
+		return f64d4.Int(length).String() + " " + enum.Key()
 	case Feet:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt(12)).String() + " " + enum.Key()
+		return f64d4.Int(length).Div(f64d4.FromInt(12)).String() + " " + enum.Key()
 	case Yard:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36)).String() + " " + enum.Key()
+		return f64d4.Int(length).Div(f64d4.FromInt(36)).String() + " " + enum.Key()
 	case Mile:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt(5280)).String() + " " + enum.Key()
+		return f64d4.Int(length).Div(f64d4.FromInt(5280)).String() + " " + enum.Key()
 	case Centimeter:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36)).Mul(fixed.F64d4FromInt(100)).String() + " " + enum.Key()
+		return f64d4.Int(length).Div(f64d4.FromInt(36)).Mul(f64d4.FromInt(100)).String() + " " + enum.Key()
 	case Kilometer:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36000)).String() + " " + enum.Key()
+		return f64d4.Int(length).Div(f64d4.FromInt(36000)).String() + " " + enum.Key()
 	case Meter:
-		return fixed.F64d4(length).Div(fixed.F64d4FromInt(36)).String() + " " + enum.Key()
+		return f64d4.Int(length).Div(f64d4.FromInt(36)).String() + " " + enum.Key()
 	default:
 		return FeetAndInches.Format(length)
 	}
 }
 
 // ToInches converts the length in this LengthUnits to inches.
-func (enum LengthUnits) ToInches(length fixed.F64d4) fixed.F64d4 {
+func (enum LengthUnits) ToInches(length f64d4.Int) f64d4.Int {
 	switch enum {
 	case FeetAndInches, Inch:
 		return length
 	case Feet:
-		return length.Mul(fixed.F64d4FromInt(12))
+		return length.Mul(f64d4.FromInt(12))
 	case Yard:
-		return length.Mul(fixed.F64d4FromInt(36))
+		return length.Mul(f64d4.FromInt(36))
 	case Mile:
-		return length.Mul(fixed.F64d4FromInt(63360))
+		return length.Mul(f64d4.FromInt(63360))
 	case Centimeter:
-		return length.Mul(fixed.F64d4FromInt(36)).Div(fixed.F64d4FromInt(100))
+		return length.Mul(f64d4.FromInt(36)).Div(f64d4.FromInt(100))
 	case Kilometer:
-		return length.Mul(fixed.F64d4FromInt(36000))
+		return length.Mul(f64d4.FromInt(36000))
 	case Meter:
-		return length.Mul(fixed.F64d4FromInt(36))
+		return length.Mul(f64d4.FromInt(36))
 	default:
 		return FeetAndInches.ToInches(length)
 	}

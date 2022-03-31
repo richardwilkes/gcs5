@@ -17,7 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var _ Bonus = &ReactionBonus{}
@@ -35,7 +35,7 @@ func NewReactionBonus() *ReactionBonus {
 	return &ReactionBonus{
 		Type:          ReactionBonusType,
 		Situation:     i18n.Text("from others"),
-		LeveledAmount: LeveledAmount{Amount: fixed.F64d4One},
+		LeveledAmount: LeveledAmount{Amount: f64d4.One},
 	}
 }
 
@@ -60,7 +60,7 @@ func (r *ReactionBonus) SetParent(parent fmt.Stringer) {
 }
 
 // SetLevel implements Bonus.
-func (r *ReactionBonus) SetLevel(level fixed.F64d4) {
+func (r *ReactionBonus) SetLevel(level f64d4.Int) {
 	r.Level = level
 }
 

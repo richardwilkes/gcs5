@@ -17,7 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/gcs/model/gurps/spell"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var _ Prereq = &SpellPrereq{}
@@ -45,7 +45,7 @@ func NewSpellPrereq() *SpellPrereq {
 		QuantityCriteria: criteria.Numeric{
 			NumericData: criteria.NumericData{
 				Compare:   criteria.AtLeast,
-				Qualifier: fixed.F64d4One,
+				Qualifier: f64d4.One,
 			},
 		},
 		Has: true,
@@ -119,7 +119,7 @@ func (s *SpellPrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xi
 	if s.SubType == spell.CollegeCount {
 		count = len(colleges)
 	}
-	satisfied := s.QuantityCriteria.Matches(fixed.F64d4FromInt(count))
+	satisfied := s.QuantityCriteria.Matches(f64d4.FromInt(count))
 	if !s.Has {
 		satisfied = !satisfied
 	}
@@ -133,7 +133,7 @@ func (s *SpellPrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xi
 		} else {
 			tooltip.WriteByte(' ')
 			tooltip.WriteString(s.QuantityCriteria.String())
-			if s.QuantityCriteria.Qualifier == fixed.F64d4One {
+			if s.QuantityCriteria.Qualifier == f64d4.One {
 				tooltip.WriteString(" spell ")
 			} else {
 				tooltip.WriteString(" spells ")

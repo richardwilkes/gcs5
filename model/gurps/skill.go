@@ -31,7 +31,7 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -55,12 +55,12 @@ type SkillItem struct {
 	Specialization               string              `json:"specialization,omitempty"`
 	TechLevel                    *string             `json:"tech_level,omitempty"`
 	Difficulty                   AttributeDifficulty `json:"difficulty"`
-	Points                       fixed.F64d4         `json:"points,omitempty"`
-	EncumbrancePenaltyMultiplier fixed.F64d4         `json:"encumbrance_penalty_multiplier,omitempty"`
+	Points                       f64d4.Int           `json:"points,omitempty"`
+	EncumbrancePenaltyMultiplier f64d4.Int           `json:"encumbrance_penalty_multiplier,omitempty"`
 	DefaultedFrom                *SkillDefault       `json:"defaulted_from,omitempty"`
 	Defaults                     []*SkillDefault     `json:"defaults,omitempty"`
 	TechniqueDefault             *SkillDefault       `json:"default,omitempty"`
-	TechniqueLimitModifier       *fixed.F64d4        `json:"limit,omitempty"`
+	TechniqueLimitModifier       *f64d4.Int          `json:"limit,omitempty"`
 	Prereq                       *PrereqList         `json:"prereqs,omitempty"`
 	Weapons                      []*Weapon           `json:"weapons,omitempty"`
 	Features                     feature.Features    `json:"features,omitempty"`
@@ -145,7 +145,7 @@ func NewSkill(entity *Entity, parent *Skill, container bool) *Skill {
 				Attribute:  AttributeIDFor(entity, gid.Dexterity),
 				Difficulty: skill.Average,
 			},
-			Points: fixed.F64d4One,
+			Points: f64d4.One,
 			Prereq: NewPrereqList(),
 		}
 	}
@@ -175,8 +175,8 @@ func (s *Skill) MarshalJSON() ([]byte, error) {
 		s.SkillContainer = nil
 		if s.LevelData.Level > 0 {
 			type calc struct {
-				Level              fixed.F64d4 `json:"level"`
-				RelativeSkillLevel string      `json:"rsl"`
+				Level              f64d4.Int `json:"level"`
+				RelativeSkillLevel string    `json:"rsl"`
 			}
 			return json.Marshal(&struct {
 				SkillData
@@ -428,9 +428,9 @@ func (s *Skill) RelativeLevel() string {
 }
 
 // AdjustedRelativeLevel returns the relative skill level.
-func (s *Skill) AdjustedRelativeLevel() fixed.F64d4 {
+func (s *Skill) AdjustedRelativeLevel() f64d4.Int {
 	if s.Container() {
-		return fixed.F64d4Min
+		return f64d4.Min
 	}
 	if s.Entity != nil && s.LevelData.Level > 0 {
 		if s.Type == gid.Technique {
@@ -439,13 +439,13 @@ func (s *Skill) AdjustedRelativeLevel() fixed.F64d4 {
 		return s.LevelData.RelativeLevel
 	}
 	// TODO: Old code had a case for templates... but can't see that being exercised in the actual display anywhere
-	return fixed.F64d4Min
+	return f64d4.Min
 }
 
 // AdjustedPoints returns the points, adjusted for any bonuses.
-func (s *Skill) AdjustedPoints() fixed.F64d4 {
+func (s *Skill) AdjustedPoints() f64d4.Int {
 	if s.Container() {
-		var total fixed.F64d4
+		var total f64d4.Int
 		for _, one := range s.Children {
 			total += one.AdjustedPoints()
 		}
@@ -473,14 +473,14 @@ func (s *Skill) LevelAsString() string {
 }
 
 // Level returns the computed level.
-func (s *Skill) Level() fixed.F64d4 {
+func (s *Skill) Level() f64d4.Int {
 	return s.calculateLevel().Level
 }
 
 // IncrementSkillLevel adds enough points to increment the skill level to the next level.
 func (s *Skill) IncrementSkillLevel() {
 	if !s.Container() {
-		basePoints := s.Points.Trunc() + fixed.F64d4One
+		basePoints := s.Points.Trunc() + f64d4.One
 		maxPoints := basePoints
 		if s.Difficulty.Difficulty == skill.Wildcard {
 			maxPoints += fxp.Twelve
@@ -488,7 +488,7 @@ func (s *Skill) IncrementSkillLevel() {
 			maxPoints += fxp.Four
 		}
 		oldLevel := s.Level()
-		for points := basePoints; points < maxPoints; points += fixed.F64d4One {
+		for points := basePoints; points < maxPoints; points += f64d4.One {
 			s.Points = points
 			if s.Level() > oldLevel {
 				break
@@ -509,7 +509,7 @@ func (s *Skill) DecrementSkillLevel() {
 		}
 		minPoints = minPoints.Max(0)
 		oldLevel := s.Level()
-		for points := basePoints; points >= minPoints; points -= fixed.F64d4One {
+		for points := basePoints; points >= minPoints; points -= f64d4.One {
 			s.Points = points
 			if s.Level() < oldLevel {
 				break
@@ -518,9 +518,9 @@ func (s *Skill) DecrementSkillLevel() {
 		if s.Points > 0 {
 			oldLevel = s.Level()
 			for s.Points > 0 {
-				s.Points -= fixed.F64d4One
+				s.Points -= f64d4.One
 				if s.Level() != oldLevel {
-					s.Points += fixed.F64d4One
+					s.Points += f64d4.One
 					break
 				}
 			}
@@ -533,26 +533,26 @@ func (s *Skill) calculateLevel() skill.Level {
 	pts := s.Points
 	relativeLevel := s.Difficulty.Difficulty.BaseRelativeLevel()
 	level := s.Entity.ResolveAttributeCurrent(s.Difficulty.Attribute)
-	if level != fixed.F64d4Min {
+	if level != f64d4.Min {
 		if s.Difficulty.Difficulty == skill.Wildcard {
 			pts = pts.Div(fxp.Three).Trunc()
 		} else if s.DefaultedFrom != nil && s.DefaultedFrom.Points > 0 {
 			pts += s.DefaultedFrom.Points
 		}
 		switch {
-		case pts == fixed.F64d4One:
+		case pts == f64d4.One:
 		// relativeLevel is preset to this point value
 		case pts > 0 && pts < fxp.Four:
-			relativeLevel += fixed.F64d4One
+			relativeLevel += f64d4.One
 		case pts > 0:
-			relativeLevel += fixed.F64d4One + pts.Div(fxp.Four).Trunc()
+			relativeLevel += f64d4.One + pts.Div(fxp.Four).Trunc()
 		case s.DefaultedFrom != nil && s.DefaultedFrom.Points < 0:
 			relativeLevel = s.DefaultedFrom.AdjLevel - level
 		default:
-			level = fixed.F64d4Min
+			level = f64d4.Min
 			relativeLevel = 0
 		}
-		if level != fixed.F64d4Min {
+		if level != f64d4.Min {
 			level += relativeLevel
 			if s.DefaultedFrom != nil && level < s.DefaultedFrom.AdjLevel {
 				level = s.DefaultedFrom.AdjLevel
@@ -580,10 +580,10 @@ func (s *Skill) calculateLevel() skill.Level {
 }
 
 // CalculateTechniqueLevel returns the calculated level for a technique.
-func CalculateTechniqueLevel(entity *Entity, name, specialization string, categories []string, def *SkillDefault, difficulty skill.Difficulty, points fixed.F64d4, requirePoints bool, limitModifier *fixed.F64d4) skill.Level {
+func CalculateTechniqueLevel(entity *Entity, name, specialization string, categories []string, def *SkillDefault, difficulty skill.Difficulty, points f64d4.Int, requirePoints bool, limitModifier *f64d4.Int) skill.Level {
 	var tooltip xio.ByteBuffer
-	var relativeLevel fixed.F64d4
-	level := fixed.F64d4Min
+	var relativeLevel f64d4.Int
+	level := f64d4.Min
 	if entity != nil {
 		if def.DefaultType == gid.Skill {
 			if sk := entity.BaseSkill(def, requirePoints); sk != nil {
@@ -593,16 +593,16 @@ func CalculateTechniqueLevel(entity *Entity, name, specialization string, catego
 			// Take the modifier back out, as we wanted the base, not the final value.
 			level = def.SkillLevelFast(entity, true, nil, false) - def.Modifier
 		}
-		if level != fixed.F64d4Min {
+		if level != f64d4.Min {
 			baseLevel := level
 			level += def.Modifier
 			if difficulty == skill.Hard {
-				points -= fixed.F64d4One
+				points -= f64d4.One
 			}
 			if points > 0 {
 				relativeLevel = points
 			}
-			if level != fixed.F64d4Min {
+			if level != f64d4.Min {
 				relativeLevel += entity.BonusFor(feature.SkillNameID+"/"+strings.ToLower(name), &tooltip)
 				relativeLevel += entity.SkillComparedBonusFor(feature.SkillNameID+"*", name, specialization, categories, &tooltip)
 				level += relativeLevel
@@ -643,11 +643,11 @@ func (s *Skill) bestDefaultWithPoints(excluded *SkillDefault) *SkillDefault {
 		best.AdjLevel = level
 		switch {
 		case level == baseLine:
-			best.Points = fixed.F64d4One
-		case level == baseLine+fixed.F64d4One:
+			best.Points = f64d4.One
+		case level == baseLine+f64d4.One:
 			best.Points = fxp.Two
-		case level > baseLine+fixed.F64d4One:
-			best.Points = fxp.Four.Mul(level - (baseLine + fixed.F64d4One))
+		case level > baseLine+f64d4.One:
+			best.Points = fxp.Four.Mul(level - (baseLine + f64d4.One))
 		default:
 			best.Points = -level.Max(0)
 		}
@@ -662,7 +662,7 @@ func (s *Skill) bestDefault(excluded *SkillDefault) *SkillDefault {
 	excludes := make(map[string]bool)
 	excludes[s.String()] = true
 	var bestDef *SkillDefault
-	best := fixed.F64d4Min
+	best := f64d4.Min
 	for _, def := range s.Defaults {
 		// For skill-based defaults, prune out any that already use a default that we are involved with
 		if def.Equivalent(excluded) || s.inDefaultChain(def, make(map[*Skill]bool)) {

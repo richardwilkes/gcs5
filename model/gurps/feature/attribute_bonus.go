@@ -16,7 +16,7 @@ import (
 
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var _ Bonus = &AttributeBonus{}
@@ -36,7 +36,7 @@ func NewAttributeBonus(attrID string) *AttributeBonus {
 		Type:          AttributeBonusType,
 		Attribute:     attrID,
 		Limitation:    attribute.None,
-		LeveledAmount: LeveledAmount{Amount: fixed.F64d4One},
+		LeveledAmount: LeveledAmount{Amount: f64d4.One},
 	}
 }
 
@@ -63,7 +63,7 @@ func (a *AttributeBonus) SetParent(parent fmt.Stringer) {
 }
 
 // SetLevel implements Bonus.
-func (a *AttributeBonus) SetLevel(level fixed.F64d4) {
+func (a *AttributeBonus) SetLevel(level f64d4.Int) {
 	a.Level = level
 }
 

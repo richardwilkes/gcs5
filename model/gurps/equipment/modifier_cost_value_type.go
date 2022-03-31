@@ -14,11 +14,11 @@ package equipment
 import (
 	"strings"
 
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // Format returns a formatted version of the value.
-func (enum ModifierCostValueType) Format(value fixed.F64d4) string {
+func (enum ModifierCostValueType) Format(value f64d4.Int) string {
 	switch enum {
 	case Addition:
 		return value.StringWithSign()
@@ -26,7 +26,7 @@ func (enum ModifierCostValueType) Format(value fixed.F64d4) string {
 		return value.StringWithSign() + enum.String()
 	case Multiplier:
 		if value <= 0 {
-			value = fixed.F64d4One
+			value = f64d4.One
 		}
 		return enum.String() + value.String()
 	case CostFactor:
@@ -37,10 +37,10 @@ func (enum ModifierCostValueType) Format(value fixed.F64d4) string {
 }
 
 // ExtractValue from the string.
-func (enum ModifierCostValueType) ExtractValue(s string) fixed.F64d4 {
-	v := fixed.F64d4FromStringForced(s)
+func (enum ModifierCostValueType) ExtractValue(s string) f64d4.Int {
+	v := f64d4.FromStringForced(s)
 	if enum.EnsureValid() == Multiplier && v <= 0 {
-		v = fixed.F64d4One
+		v = f64d4.One
 	}
 	return v
 }

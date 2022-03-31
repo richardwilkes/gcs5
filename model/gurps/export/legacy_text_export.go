@@ -36,7 +36,7 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xio/fs"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -613,7 +613,7 @@ func (ex *legacyExporter) writeEncodedText(text string) {
 
 func (ex *legacyExporter) bestWeaponDefense(f func(weapon *gurps.Weapon) string) string {
 	best := "-"
-	bestValue := fixed.F64d4Min
+	bestValue := f64d4.Min
 	for _, w := range ex.entity.EquippedWeapons(weapon.Melee) {
 		if s := f(w); s != "" && !strings.EqualFold(s, "no") {
 			if v, rem := fxp.Extract(s); v != 0 || rem != s {
@@ -660,11 +660,11 @@ func (ex *legacyExporter) includeByAdvantageCategories(adq *gurps.Advantage) boo
 }
 
 func (ex *legacyExporter) includeAdvantages(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() > fixed.F64d4One && ex.includeByAdvantageCategories(adq)
+	return adq.AdjustedPoints() > f64d4.One && ex.includeByAdvantageCategories(adq)
 }
 
 func (ex *legacyExporter) includePerks(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() == fixed.F64d4One && ex.includeByAdvantageCategories(adq)
+	return adq.AdjustedPoints() == f64d4.One && ex.includeByAdvantageCategories(adq)
 }
 
 func (ex *legacyExporter) includeAdvantagesAndPerks(adq *gurps.Advantage) bool {
@@ -1059,7 +1059,7 @@ func (ex *legacyExporter) processEquipmentLoop(buffer []byte, carried bool) {
 				case "WEIGHT_SUMMARY":
 					ex.writeEncodedText(ex.entity.SheetSettings.DefaultWeightUnits.Format(eqp.ExtendedWeight(false, ex.entity.SheetSettings.DefaultWeightUnits)))
 				case "WEIGHT_RAW":
-					ex.writeEncodedText(fixed.F64d4(eqp.AdjustedWeight(false, ex.entity.SheetSettings.DefaultWeightUnits)).String())
+					ex.writeEncodedText(f64d4.Int(eqp.AdjustedWeight(false, ex.entity.SheetSettings.DefaultWeightUnits)).String())
 				case techLevelKey:
 					ex.writeEncodedText(eqp.TechLevel)
 				case "LEGALITY_CLASS", "LC":
@@ -1383,7 +1383,7 @@ func (ex *legacyExporter) processWeaponKeys(key string, currentID int, w *gurps.
 	}
 }
 
-func (ex *legacyExporter) ammoFor(weaponEqp *gurps.Equipment) fixed.F64d4 {
+func (ex *legacyExporter) ammoFor(weaponEqp *gurps.Equipment) f64d4.Int {
 	uses := ""
 	for _, cat := range weaponEqp.CategoryList() {
 		if strings.HasPrefix(strings.ToLower(cat), "usesammotype:") {
@@ -1394,7 +1394,7 @@ func (ex *legacyExporter) ammoFor(weaponEqp *gurps.Equipment) fixed.F64d4 {
 	if uses == "" {
 		return 0
 	}
-	var total fixed.F64d4
+	var total f64d4.Int
 	gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
 		if eqp.Equipped && eqp.Quantity > 0 {
 			for _, cat := range eqp.Categories {

@@ -20,7 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
@@ -74,22 +74,22 @@ func (p *PointPoolsPanel) rebuild(attrs *gurps.AttributeDefs) {
 		p.AddChild(p.createPointsField(attr))
 
 		var currentField *widget.NumericField
-		currentField = widget.NewNumericPageField(func() fixed.F64d4 {
+		currentField = widget.NewNumericPageField(func() f64d4.Int {
 			if currentField != nil {
 				currentField.SetMaximum(attr.Maximum())
 			}
 			return attr.Current()
-		}, func(v fixed.F64d4) { attr.Damage = (attr.Maximum() - v).Max(0) }, fixed.F64d4Min, attr.Maximum(), true)
+		}, func(v f64d4.Int) { attr.Damage = (attr.Maximum() - v).Max(0) }, f64d4.Min, attr.Maximum(), true)
 		p.AddChild(currentField)
 
 		p.AddChild(widget.NewPageLabel(i18n.Text("of")))
 
-		maximumField := widget.NewNumericPageField(func() fixed.F64d4 { return attr.Maximum() },
-			func(v fixed.F64d4) {
+		maximumField := widget.NewNumericPageField(func() f64d4.Int { return attr.Maximum() },
+			func(v f64d4.Int) {
 				attr.SetMaximum(v)
 				currentField.SetMaximum(v)
 				currentField.Sync()
-			}, fixed.F64d4Min, fixed.F64d4Max, true)
+			}, f64d4.Min, f64d4.Max, true)
 		p.AddChild(maximumField)
 
 		name := widget.NewPageLabel(def.Name)

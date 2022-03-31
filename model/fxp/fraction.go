@@ -15,24 +15,24 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/json"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // Fraction holds a fraction value.
 type Fraction struct {
-	Numerator   fixed.F64d4
-	Denominator fixed.F64d4
+	Numerator   f64d4.Int
+	Denominator f64d4.Int
 }
 
 // NewFractionFromString creates a new fractional value from a string.
 func NewFractionFromString(s string) Fraction {
 	parts := strings.SplitN(s, "/", 2)
 	f := Fraction{
-		Numerator:   fixed.F64d4FromStringForced(strings.TrimSpace(parts[0])),
-		Denominator: fixed.F64d4One,
+		Numerator:   f64d4.FromStringForced(strings.TrimSpace(parts[0])),
+		Denominator: f64d4.One,
 	}
 	if len(parts) > 1 {
-		f.Denominator = fixed.F64d4FromStringForced(strings.TrimSpace(parts[1]))
+		f.Denominator = f64d4.FromStringForced(strings.TrimSpace(parts[1]))
 	}
 	return f
 }
@@ -41,7 +41,7 @@ func NewFractionFromString(s string) Fraction {
 func (f *Fraction) Normalize() {
 	if f.Denominator == 0 {
 		f.Numerator = 0
-		f.Denominator = fixed.F64d4One
+		f.Denominator = f64d4.One
 	} else if f.Denominator < 0 {
 		f.Numerator = f.Numerator.Mul(NegOne)
 		f.Denominator = f.Denominator.Mul(NegOne)
@@ -49,14 +49,14 @@ func (f *Fraction) Normalize() {
 }
 
 // Value returns the computed value.
-func (f Fraction) Value() fixed.F64d4 {
+func (f Fraction) Value() f64d4.Int {
 	return f.Numerator.Div(f.Denominator)
 }
 
 // StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive
 func (f Fraction) StringWithSign() string {
 	s := f.Numerator.StringWithSign()
-	if f.Denominator == fixed.F64d4One {
+	if f.Denominator == f64d4.One {
 		return s
 	}
 	return s + "/" + f.Denominator.String()
@@ -64,7 +64,7 @@ func (f Fraction) StringWithSign() string {
 
 func (f Fraction) String() string {
 	s := f.Numerator.String()
-	if f.Denominator == fixed.F64d4One {
+	if f.Denominator == f64d4.One {
 		return s
 	}
 	return s + "/" + f.Denominator.String()

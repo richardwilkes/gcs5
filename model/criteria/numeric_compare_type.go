@@ -13,7 +13,7 @@ package criteria
 
 import (
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // Possible NumericCompareType values.
@@ -66,7 +66,7 @@ func (n NumericCompareType) String() string {
 }
 
 // Describe returns a description of this NumericCompareType using a qualifier.
-func (n NumericCompareType) Describe(qualifier fixed.F64d4) string {
+func (n NumericCompareType) Describe(qualifier f64d4.Int) string {
 	v := n.EnsureValid()
 	if v == AnyNumber {
 		return v.String()
@@ -75,7 +75,7 @@ func (n NumericCompareType) Describe(qualifier fixed.F64d4) string {
 }
 
 // Matches performs a comparison and returns true if the data matches.
-func (n NumericCompareType) Matches(qualifier, data fixed.F64d4) bool {
+func (n NumericCompareType) Matches(qualifier, data f64d4.Int) bool {
 	switch n {
 	case AnyNumber:
 		return true

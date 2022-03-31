@@ -20,7 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -49,7 +49,7 @@ type Profile struct {
 	Height            measure.Length `json:"height,omitempty"`
 	Weight            measure.Weight `json:"weight,omitempty"`
 	SizeModifier      int            `json:"SM,omitempty"`
-	SizeModifierBonus fixed.F64d4    `json:"-"`
+	SizeModifierBonus f64d4.Int      `json:"-"`
 	portrait          *unison.Image
 }
 

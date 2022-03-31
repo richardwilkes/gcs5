@@ -14,7 +14,7 @@ package gurps
 import (
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -29,28 +29,28 @@ const (
 // ConditionalModifier holds data for a reaction or conditional modifier.
 type ConditionalModifier struct {
 	From    string
-	Amounts []fixed.F64d4
+	Amounts []f64d4.Int
 	Sources []string
 }
 
 // NewReaction creates a new ConditionalModifier.
-func NewReaction(source, from string, amt fixed.F64d4) *ConditionalModifier {
+func NewReaction(source, from string, amt f64d4.Int) *ConditionalModifier {
 	return &ConditionalModifier{
 		From:    from,
-		Amounts: []fixed.F64d4{amt},
+		Amounts: []f64d4.Int{amt},
 		Sources: []string{source},
 	}
 }
 
 // Add another source.
-func (m *ConditionalModifier) Add(source string, amt fixed.F64d4) {
+func (m *ConditionalModifier) Add(source string, amt f64d4.Int) {
 	m.Amounts = append(m.Amounts, amt)
 	m.Sources = append(m.Sources, source)
 }
 
 // Total returns the total of all amounts.
-func (m *ConditionalModifier) Total() fixed.F64d4 {
-	var total fixed.F64d4
+func (m *ConditionalModifier) Total() f64d4.Int {
+	var total f64d4.Int
 	for _, amt := range m.Amounts {
 		total += amt
 	}

@@ -20,7 +20,7 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 const (
@@ -70,7 +70,7 @@ func NewWeaponDamageBonus() *WeaponDamageBonus {
 				Compare: criteria.Any,
 			},
 		},
-		LeveledAmount: LeveledAmount{Amount: fixed.F64d4One},
+		LeveledAmount: LeveledAmount{Amount: f64d4.One},
 	}
 }
 
@@ -123,7 +123,7 @@ func (w *WeaponDamageBonus) SetParent(parent fmt.Stringer) {
 }
 
 // SetLevel implements Bonus.
-func (w *WeaponDamageBonus) SetLevel(level fixed.F64d4) {
+func (w *WeaponDamageBonus) SetLevel(level f64d4.Int) {
 	w.Level = level
 }
 

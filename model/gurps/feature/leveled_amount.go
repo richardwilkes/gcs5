@@ -15,18 +15,18 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // LeveledAmount holds an amount that can be either a fixed amount, or an amount per level.
 type LeveledAmount struct {
-	Level    fixed.F64d4 `json:"-"`
-	Amount   fixed.F64d4 `json:"amount"`
-	PerLevel bool        `json:"per_level,omitempty"`
+	Level    f64d4.Int `json:"-"`
+	Amount   f64d4.Int `json:"amount"`
+	PerLevel bool      `json:"per_level,omitempty"`
 }
 
 // AdjustedAmount returns the amount, adjusted for level, if requested.
-func (l *LeveledAmount) AdjustedAmount() fixed.F64d4 {
+func (l *LeveledAmount) AdjustedAmount() f64d4.Int {
 	if l.PerLevel {
 		if l.Level < 0 {
 			return 0

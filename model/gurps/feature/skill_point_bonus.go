@@ -18,7 +18,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 const (
@@ -57,7 +57,7 @@ func NewSkillPointBonus() *SkillPointBonus {
 				Compare: criteria.Any,
 			},
 		},
-		LeveledAmount: LeveledAmount{Amount: fixed.F64d4One},
+		LeveledAmount: LeveledAmount{Amount: f64d4.One},
 	}
 }
 
@@ -90,7 +90,7 @@ func (s *SkillPointBonus) SetParent(parent fmt.Stringer) {
 }
 
 // SetLevel implements Bonus.
-func (s *SkillPointBonus) SetLevel(level fixed.F64d4) {
+func (s *SkillPointBonus) SetLevel(level f64d4.Int) {
 	s.Level = level
 }
 
@@ -101,7 +101,7 @@ func (s *SkillPointBonus) AddToTooltip(buffer *xio.ByteBuffer) {
 		buffer.WriteString(parentName(s.Parent))
 		buffer.WriteString(" [")
 		buffer.WriteString(s.LeveledAmount.FormatWithLevel())
-		if s.AdjustedAmount() == fixed.F64d4One {
+		if s.AdjustedAmount() == f64d4.One {
 			buffer.WriteString(i18n.Text(" pt]"))
 		} else {
 			buffer.WriteString(i18n.Text(" pts]"))

@@ -15,20 +15,20 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/json"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // Weight contains a fixed-point value in pounds.
-type Weight fixed.F64d4
+type Weight f64d4.Int
 
 // WeightFromInt64 creates a new Weight.
 func WeightFromInt64(value int64, unit WeightUnits) Weight {
-	return Weight(unit.ToPounds(fixed.F64d4FromInt64(value)))
+	return Weight(unit.ToPounds(f64d4.FromInt64(value)))
 }
 
 // WeightFromInt creates a new Weight.
 func WeightFromInt(value int, unit WeightUnits) Weight {
-	return Weight(unit.ToPounds(fixed.F64d4FromInt(value)))
+	return Weight(unit.ToPounds(f64d4.FromInt(value)))
 }
 
 // WeightFromStringForced creates a new Weight. May have any of the known Weight suffixes or no notation at all, in which
@@ -47,7 +47,7 @@ func WeightFromString(text string, defaultUnits WeightUnits) (Weight, error) {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
 	for _, unit := range AllWeightUnits {
 		if strings.HasSuffix(text, unit.Key()) {
-			value, err := fixed.F64d4FromString(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())))
+			value, err := f64d4.FromString(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())))
 			if err != nil {
 				return 0, err
 			}
@@ -55,7 +55,7 @@ func WeightFromString(text string, defaultUnits WeightUnits) (Weight, error) {
 		}
 	}
 	// No matches, so let's use our passed-in default units
-	value, err := fixed.F64d4FromString(strings.TrimSpace(text))
+	value, err := f64d4.FromString(strings.TrimSpace(text))
 	if err != nil {
 		return 0, err
 	}

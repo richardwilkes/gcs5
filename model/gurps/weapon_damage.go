@@ -25,7 +25,7 @@ import (
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // WeaponDamageData holds the WeaponDamage data that is written to disk.
@@ -33,11 +33,11 @@ type WeaponDamageData struct {
 	Type                      string                `json:"type"`
 	StrengthType              weapon.StrengthDamage `json:"st,omitempty"`
 	Base                      *dice.Dice            `json:"base,omitempty"`
-	ArmorDivisor              fixed.F64d4           `json:"armor_divisor,omitempty"`
+	ArmorDivisor              f64d4.Int             `json:"armor_divisor,omitempty"`
 	Fragmentation             *dice.Dice            `json:"fragmentation,omitempty"`
-	FragmentationArmorDivisor fixed.F64d4           `json:"fragmentation_armor_divisor,omitempty"`
+	FragmentationArmorDivisor f64d4.Int             `json:"fragmentation_armor_divisor,omitempty"`
 	FragmentationType         string                `json:"fragmentation_type,omitempty"`
-	ModifierPerDie            fixed.F64d4           `json:"modifier_per_die,omitempty"`
+	ModifierPerDie            f64d4.Int             `json:"modifier_per_die,omitempty"`
 }
 
 // WeaponDamage holds the damage information for a weapon.
@@ -52,10 +52,10 @@ func (w *WeaponDamage) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if w.ArmorDivisor == 0 {
-		w.ArmorDivisor = fixed.F64d4One
+		w.ArmorDivisor = f64d4.One
 	}
 	if w.Fragmentation != nil && w.FragmentationArmorDivisor == 0 {
-		w.FragmentationArmorDivisor = fixed.F64d4One
+		w.FragmentationArmorDivisor = f64d4.One
 	}
 	return nil
 }
@@ -64,14 +64,14 @@ func (w *WeaponDamage) UnmarshalJSON(data []byte) error {
 func (w *WeaponDamage) MarshalJSON() ([]byte, error) {
 	// An armor divisor of 0 is not valid and 1 is very common, so suppress its output when 1.
 	armorDivisor := w.ArmorDivisor
-	if armorDivisor == fixed.F64d4One {
+	if armorDivisor == f64d4.One {
 		w.ArmorDivisor = 0
 	}
 	fragArmorDivisor := w.FragmentationArmorDivisor
 	if w.Fragmentation == nil {
 		w.FragmentationArmorDivisor = 0
 		w.FragmentationType = ""
-	} else if w.FragmentationArmorDivisor == fixed.F64d4One {
+	} else if w.FragmentationArmorDivisor == f64d4.One {
 		w.FragmentationArmorDivisor = 0
 	}
 	data, err := json.Marshal(&w.WeaponDamageData)
@@ -99,7 +99,7 @@ func (w *WeaponDamage) String() string {
 			buffer.WriteString(base)
 		}
 	}
-	if w.ArmorDivisor != fixed.F64d4One {
+	if w.ArmorDivisor != f64d4.One {
 		buffer.WriteByte('(')
 		buffer.WriteString(w.ArmorDivisor.String())
 		buffer.WriteByte(')')
@@ -120,7 +120,7 @@ func (w *WeaponDamage) String() string {
 		if frag := w.Fragmentation.StringExtra(convertMods); frag != "0" {
 			buffer.WriteString(" [")
 			buffer.WriteString(frag)
-			if w.FragmentationArmorDivisor != fixed.F64d4One {
+			if w.FragmentationArmorDivisor != f64d4.One {
 				buffer.WriteByte('(')
 				buffer.WriteString(w.FragmentationArmorDivisor.String())
 				buffer.WriteByte(')')
@@ -188,7 +188,7 @@ func (w *WeaponDamage) ResolvedDamage(tooltip *xio.ByteBuffer) string {
 		base = addDice(base, thrust)
 	}
 	var bestDefault *SkillDefault
-	best := fixed.F64d4Min
+	best := f64d4.Min
 	for _, one := range w.Owner.Defaults {
 		if one.SkillBased() {
 			if level := one.SkillLevelFast(pc, false, nil, true); best < level {
@@ -232,14 +232,14 @@ func (w *WeaponDamage) ResolvedDamage(tooltip *xio.ByteBuffer) string {
 		}
 	}
 	adjustForPhoenixFlame := pc.SheetSettings.DamageProgression == attribute.PhoenixFlameD3 && base.Sides == 3
-	var percent fixed.F64d4
+	var percent f64d4.Int
 	for bonus := range bonusSet {
 		if bonus.Percent {
 			percent += bonus.Amount
 		} else {
 			amt := bonus.Amount
 			if bonus.PerLevel {
-				amt = amt.Mul(fixed.F64d4FromInt(base.Count))
+				amt = amt.Mul(f64d4.FromInt(base.Count))
 				if adjustForPhoenixFlame {
 					amt = amt.Div(fxp.Two)
 				}
@@ -248,7 +248,7 @@ func (w *WeaponDamage) ResolvedDamage(tooltip *xio.ByteBuffer) string {
 		}
 	}
 	if w.ModifierPerDie != 0 {
-		amt := w.ModifierPerDie.Mul(fixed.F64d4FromInt(base.Count))
+		amt := w.ModifierPerDie.Mul(f64d4.FromInt(base.Count))
 		if adjustForPhoenixFlame {
 			amt = amt.Div(fxp.Two)
 		}
@@ -261,7 +261,7 @@ func (w *WeaponDamage) ResolvedDamage(tooltip *xio.ByteBuffer) string {
 	if base.Count != 0 || base.Modifier != 0 {
 		buffer.WriteString(base.StringExtra(pc.SheetSettings.UseModifyingDicePlusAdds))
 	}
-	if w.ArmorDivisor != fixed.F64d4One {
+	if w.ArmorDivisor != f64d4.One {
 		buffer.WriteByte('(')
 		buffer.WriteString(w.ArmorDivisor.String())
 		buffer.WriteByte(')')
@@ -295,7 +295,7 @@ func (w *WeaponDamage) ResolvedDamage(tooltip *xio.ByteBuffer) string {
 func (w *WeaponDamage) extractWeaponDamageBonus(f feature.Feature, set map[*feature.WeaponDamageBonus]bool, dieCount int, tooltip *xio.ByteBuffer) {
 	if bonus, ok := f.(*feature.WeaponDamageBonus); ok {
 		level := bonus.LeveledAmount.Level
-		bonus.LeveledAmount.Level = fixed.F64d4FromInt(dieCount)
+		bonus.LeveledAmount.Level = f64d4.FromInt(dieCount)
 		switch bonus.SelectionType {
 		case weapon.WithRequiredSkill:
 		case weapon.ThisWeapon:
@@ -331,9 +331,9 @@ func multiplyDice(multiplier int, d *dice.Dice) {
 func addDice(left, right *dice.Dice) *dice.Dice {
 	if left.Sides > 1 && right.Sides > 1 && left.Sides != right.Sides {
 		sides := xmath.Min(left.Sides, right.Sides)
-		average := fixed.F64d4FromInt(sides + 1).Div(fxp.Two)
-		averageLeft := fixed.F64d4FromInt(left.Count * (left.Sides + 1)).Div(fxp.Two).Mul(fixed.F64d4FromInt(left.Multiplier))
-		averageRight := fixed.F64d4FromInt(right.Count * (right.Sides + 1)).Div(fxp.Two).Mul(fixed.F64d4FromInt(right.Multiplier))
+		average := f64d4.FromInt(sides + 1).Div(fxp.Two)
+		averageLeft := f64d4.FromInt(left.Count * (left.Sides + 1)).Div(fxp.Two).Mul(f64d4.FromInt(left.Multiplier))
+		averageRight := f64d4.FromInt(right.Count * (right.Sides + 1)).Div(fxp.Two).Mul(f64d4.FromInt(right.Multiplier))
 		averageBoth := averageLeft + averageRight
 		return &dice.Dice{
 			Count:      averageBoth.Div(average).AsInt(),
@@ -350,10 +350,10 @@ func addDice(left, right *dice.Dice) *dice.Dice {
 	}
 }
 
-func adjustDiceForPercentBonus(d *dice.Dice, percent fixed.F64d4) *dice.Dice {
-	count := fixed.F64d4FromInt(d.Count)
-	modifier := fixed.F64d4FromInt(d.Modifier)
-	averagePerDie := fixed.F64d4FromInt(d.Sides + 1).Div(fxp.Two)
+func adjustDiceForPercentBonus(d *dice.Dice, percent f64d4.Int) *dice.Dice {
+	count := f64d4.FromInt(d.Count)
+	modifier := f64d4.FromInt(d.Modifier)
+	averagePerDie := f64d4.FromInt(d.Sides + 1).Div(fxp.Two)
 	average := averagePerDie.Mul(count) + modifier
 	modifier = modifier.Mul(fxp.Hundred + percent).Div(fxp.Hundred)
 	if average < 0 {

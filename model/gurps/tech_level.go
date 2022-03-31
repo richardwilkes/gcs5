@@ -15,13 +15,13 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/fxp"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // ExtractTechLevel extracts the first number it finds in the string and returns that as the tech level. The start and
 // end (inclusive) indexes within the string where the number resided are returned, but will be -1 if the string didn't
 // contain a resolvable number. The returned tech level will be clamped to the range 0 to 12.
-func ExtractTechLevel(str string) (techLevel fixed.F64d4, start, end int) {
+func ExtractTechLevel(str string) (techLevel f64d4.Int, start, end int) {
 	var buffer strings.Builder
 	decimal := true
 	looking := true
@@ -51,14 +51,14 @@ outer:
 		return 0, -1, -1
 	}
 	var err error
-	if techLevel, err = fixed.F64d4FromString(buffer.String()); err == nil {
+	if techLevel, err = f64d4.FromString(buffer.String()); err == nil {
 		return techLevel.Max(0).Min(fxp.Twelve), start, end
 	}
 	return 0, -1, -1
 }
 
 // ReplaceTechLevel replaces the tech level (as found by a call to ExtractTechLevel) with a new value.
-func ReplaceTechLevel(str string, value fixed.F64d4) string {
+func ReplaceTechLevel(str string, value f64d4.Int) string {
 	if _, start, end := ExtractTechLevel(str); start != -1 {
 		var buffer strings.Builder
 		if start > 0 {
@@ -74,7 +74,7 @@ func ReplaceTechLevel(str string, value fixed.F64d4) string {
 }
 
 // AdjustTechLevel returns a new string with the adjusted tech level.
-func AdjustTechLevel(str string, delta fixed.F64d4) (s string, changed bool) {
+func AdjustTechLevel(str string, delta f64d4.Int) (s string, changed bool) {
 	tl, start, _ := ExtractTechLevel(str)
 	newTL := (tl + delta).Max(0).Min(fxp.Twelve)
 	if tl == newTL {

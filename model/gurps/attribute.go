@@ -15,23 +15,23 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/json"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // AttributeData holds the Attribute data that is written to disk.
 type AttributeData struct {
-	AttrID     string      `json:"attr_id"`
-	Adjustment fixed.F64d4 `json:"adj"`
-	Damage     fixed.F64d4 `json:"damage,omitempty"`
+	AttrID     string    `json:"attr_id"`
+	Adjustment f64d4.Int `json:"adj"`
+	Damage     f64d4.Int `json:"damage,omitempty"`
 }
 
 // Attribute holds the current state of an AttributeDef.
 type Attribute struct {
 	AttributeData
-	Entity        *Entity     `json:"-"`
-	Bonus         fixed.F64d4 `json:"-"`
-	CostReduction fixed.F64d4 `json:"-"`
-	Order         int         `json:"-"`
+	Entity        *Entity   `json:"-"`
+	Bonus         f64d4.Int `json:"-"`
+	CostReduction f64d4.Int `json:"-"`
+	Order         int       `json:"-"`
 }
 
 // NewAttribute creates a new Attribute.
@@ -50,9 +50,9 @@ func (a *Attribute) MarshalJSON() ([]byte, error) {
 	if a.Entity != nil {
 		if def := a.AttributeDef(); def != nil {
 			type calc struct {
-				Value   fixed.F64d4  `json:"value"`
-				Current *fixed.F64d4 `json:"current,omitempty"`
-				Points  fixed.F64d4  `json:"points"`
+				Value   f64d4.Int  `json:"value"`
+				Current *f64d4.Int `json:"current,omitempty"`
+				Points  f64d4.Int  `json:"points"`
 			}
 			data := struct {
 				AttributeData
@@ -107,7 +107,7 @@ func (a *Attribute) AttributeDef() *AttributeDef {
 }
 
 // Maximum returns the maximum value of a pool or the adjusted attribute value for other types.
-func (a *Attribute) Maximum() fixed.F64d4 {
+func (a *Attribute) Maximum() f64d4.Int {
 	def := a.AttributeDef()
 	if def == nil {
 		return 0
@@ -120,7 +120,7 @@ func (a *Attribute) Maximum() fixed.F64d4 {
 }
 
 // SetMaximum sets the maximum value.
-func (a *Attribute) SetMaximum(value fixed.F64d4) {
+func (a *Attribute) SetMaximum(value f64d4.Int) {
 	if a.Maximum() == value {
 		return
 	}
@@ -130,7 +130,7 @@ func (a *Attribute) SetMaximum(value fixed.F64d4) {
 }
 
 // Current returns the current value. Same as .Maximum() if not a pool.
-func (a *Attribute) Current() fixed.F64d4 {
+func (a *Attribute) Current() f64d4.Int {
 	max := a.Maximum()
 	def := a.AttributeDef()
 	if def == nil || def.Type != attribute.Pool {
@@ -156,7 +156,7 @@ func (a *Attribute) CurrentThreshold() *PoolThreshold {
 }
 
 // PointCost returns the number of points spent on this Attribute.
-func (a *Attribute) PointCost() fixed.F64d4 {
+func (a *Attribute) PointCost() f64d4.Int {
 	def := a.AttributeDef()
 	if def == nil {
 		return 0

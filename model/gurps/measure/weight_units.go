@@ -14,7 +14,7 @@ package measure
 import (
 	"strings"
 
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // TrailingWeightUnitsFromString extracts a trailing WeightUnits from a string.
@@ -32,33 +32,33 @@ func TrailingWeightUnitsFromString(s string, defUnits WeightUnits) WeightUnits {
 func (enum WeightUnits) Format(weight Weight) string {
 	switch enum {
 	case Pound, PoundAlt:
-		return fixed.F64d4(weight).String() + " " + enum.Key()
+		return f64d4.Int(weight).String() + " " + enum.Key()
 	case Ounce:
-		return fixed.F64d4(weight).Mul(fixed.F64d4FromInt(16)).String() + " " + enum.Key()
+		return f64d4.Int(weight).Mul(f64d4.FromInt(16)).String() + " " + enum.Key()
 	case Ton:
-		return fixed.F64d4(weight).Div(fixed.F64d4FromInt(2000)).String() + " " + enum.Key()
+		return f64d4.Int(weight).Div(f64d4.FromInt(2000)).String() + " " + enum.Key()
 	case Kilogram:
-		return fixed.F64d4(weight).Div(fixed.F64d4FromInt(2)).String() + " " + enum.Key()
+		return f64d4.Int(weight).Div(f64d4.FromInt(2)).String() + " " + enum.Key()
 	case Gram:
-		return fixed.F64d4(weight).Mul(fixed.F64d4FromInt(500)).String() + " " + enum.Key()
+		return f64d4.Int(weight).Mul(f64d4.FromInt(500)).String() + " " + enum.Key()
 	default:
 		return Pound.Format(weight)
 	}
 }
 
 // ToPounds the weight for this WeightUnits.
-func (enum WeightUnits) ToPounds(weight fixed.F64d4) fixed.F64d4 {
+func (enum WeightUnits) ToPounds(weight f64d4.Int) f64d4.Int {
 	switch enum {
 	case Pound, PoundAlt:
 		return weight
 	case Ounce:
-		return weight.Div(fixed.F64d4FromInt(16))
+		return weight.Div(f64d4.FromInt(16))
 	case Ton:
-		return weight.Mul(fixed.F64d4FromInt(2000))
+		return weight.Mul(f64d4.FromInt(2000))
 	case Kilogram:
-		return weight.Mul(fixed.F64d4FromInt(2))
+		return weight.Mul(f64d4.FromInt(2))
 	case Gram:
-		return weight.Div(fixed.F64d4FromInt(500))
+		return weight.Div(f64d4.FromInt(500))
 	default:
 		return Pound.ToPounds(weight)
 	}

@@ -27,7 +27,7 @@ import (
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var _ node.Node = &AdvantageModifier{}
@@ -49,8 +49,8 @@ const (
 type AdvantageModifierItem struct {
 	CostType advantage.ModifierCostType `json:"cost_type"`
 	Disabled bool                       `json:"disabled,omitempty"`
-	Cost     fixed.F64d4                `json:"cost,omitempty"`
-	Levels   fixed.F64d4                `json:"levels,omitempty"`
+	Cost     f64d4.Int                  `json:"cost,omitempty"`
+	Levels   f64d4.Int                  `json:"levels,omitempty"`
 	Affects  *advantage.Affects         `json:"affects,omitempty"`
 	Features feature.Features           `json:"features,omitempty"`
 }
@@ -230,7 +230,7 @@ func (a *AdvantageModifier) SetOwningEntity(entity *Entity) {
 }
 
 // CostModifier returns the total cost modifier.
-func (a *AdvantageModifier) CostModifier() fixed.F64d4 {
+func (a *AdvantageModifier) CostModifier() f64d4.Int {
 	if a.Levels > 0 {
 		return a.Cost.Mul(a.Levels)
 	}

@@ -13,14 +13,14 @@ package datafile
 
 import (
 	"github.com/richardwilkes/gcs/model/fxp"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // WeightMultiplier returns the weight multiplier associated with the Encumbrance level.
-func (enum Encumbrance) WeightMultiplier() fixed.F64d4 {
+func (enum Encumbrance) WeightMultiplier() f64d4.Int {
 	switch enum {
 	case None:
-		return fixed.F64d4One
+		return f64d4.One
 	case Light:
 		return fxp.Two
 	case Medium:
@@ -35,7 +35,7 @@ func (enum Encumbrance) WeightMultiplier() fixed.F64d4 {
 }
 
 // Penalty returns the penalty associated with the Encumbrance level.
-func (enum Encumbrance) Penalty() fixed.F64d4 {
+func (enum Encumbrance) Penalty() f64d4.Int {
 	switch enum {
 	case None:
 		return 0

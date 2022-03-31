@@ -17,7 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var _ Bonus = &ConditionalModifier{}
@@ -35,7 +35,7 @@ func NewConditionalModifierBonus() *ConditionalModifier {
 	return &ConditionalModifier{
 		Type:          ConditionalModifierType,
 		Situation:     i18n.Text("triggering condition"),
-		LeveledAmount: LeveledAmount{Amount: fixed.F64d4One},
+		LeveledAmount: LeveledAmount{Amount: f64d4.One},
 	}
 }
 
@@ -60,7 +60,7 @@ func (c *ConditionalModifier) SetParent(parent fmt.Stringer) {
 }
 
 // SetLevel implements Bonus.
-func (c *ConditionalModifier) SetLevel(level fixed.F64d4) {
+func (c *ConditionalModifier) SetLevel(level f64d4.Int) {
 	c.Level = level
 }
 

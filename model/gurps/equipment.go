@@ -29,7 +29,7 @@ import (
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -91,8 +91,8 @@ type EquipmentData struct {
 	VTTNotes               string               `json:"vtt_notes,omitempty"`
 	TechLevel              string               `json:"tech_level,omitempty"`
 	LegalityClass          string               `json:"legality_class,omitempty"`
-	Quantity               fixed.F64d4          `json:"quantity,omitempty"`
-	Value                  fixed.F64d4          `json:"value,omitempty"`
+	Quantity               f64d4.Int            `json:"quantity,omitempty"`
+	Value                  f64d4.Int            `json:"value,omitempty"`
 	Weight                 measure.Weight       `json:"weight,omitempty"`
 	MaxUses                int                  `json:"max_uses,omitempty"`
 	Uses                   int                  `json:"uses,omitempty"`
@@ -154,7 +154,7 @@ func NewEquipment(entity *Entity, parent *Equipment, container bool) *Equipment 
 			Name:          i18n.Text("Equipment"),
 			LegalityClass: "4",
 			Prereq:        NewPrereqList(),
-			Quantity:      fixed.F64d4One,
+			Quantity:      f64d4.One,
 			Equipped:      true,
 		},
 		Entity: entity,
@@ -170,7 +170,7 @@ func NewEquipment(entity *Entity, parent *Equipment, container bool) *Equipment 
 // MarshalJSON implements json.Marshaler.
 func (e *Equipment) MarshalJSON() ([]byte, error) {
 	type calc struct {
-		ExtendedValue           fixed.F64d4     `json:"extended_value"`
+		ExtendedValue           f64d4.Int       `json:"extended_value"`
 		ExtendedWeight          measure.Weight  `json:"extended_weight"`
 		ExtendedWeightForSkills *measure.Weight `json:"extended_weight_for_skills,omitempty"`
 	}
@@ -215,7 +215,7 @@ func (e *Equipment) UnmarshalJSON(data []byte) error {
 			m := make(map[string]interface{})
 			if err := json.Unmarshal(data, &m); err == nil {
 				if _, exists := m["quantity"]; !exists {
-					e.Quantity = fixed.F64d4One
+					e.Quantity = f64d4.One
 				}
 			}
 		}
@@ -395,12 +395,12 @@ func (e *Equipment) CategoryList() []string {
 }
 
 // AdjustedValue returns the value after adjustments for any modifiers. Does not include the value of children.
-func (e *Equipment) AdjustedValue() fixed.F64d4 {
+func (e *Equipment) AdjustedValue() f64d4.Int {
 	return ValueAdjustedForModifiers(e.Value, e.Modifiers)
 }
 
 // ExtendedValue returns the extended value.
-func (e *Equipment) ExtendedValue() fixed.F64d4 {
+func (e *Equipment) ExtendedValue() f64d4.Int {
 	if e.Quantity <= 0 {
 		return 0
 	}
@@ -426,19 +426,19 @@ func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits)
 	if e.Quantity <= 0 {
 		return 0
 	}
-	base := fixed.F64d4(e.AdjustedWeight(forSkills, defUnits)).Mul(e.Quantity)
+	base := f64d4.Int(e.AdjustedWeight(forSkills, defUnits)).Mul(e.Quantity)
 	if e.Container() {
-		var contained fixed.F64d4
+		var contained f64d4.Int
 		for _, one := range e.Children {
-			contained += fixed.F64d4(one.ExtendedWeight(forSkills, defUnits))
+			contained += f64d4.Int(one.ExtendedWeight(forSkills, defUnits))
 		}
-		var percentage, reduction fixed.F64d4
+		var percentage, reduction f64d4.Int
 		for _, one := range e.Features {
 			if cwr, ok := one.(*feature.ContainedWeightReduction); ok {
 				if cwr.IsPercentageReduction() {
 					percentage += cwr.PercentageReduction()
 				} else {
-					reduction += fixed.F64d4(cwr.FixedReduction(defUnits))
+					reduction += f64d4.Int(cwr.FixedReduction(defUnits))
 				}
 			}
 		}
@@ -449,7 +449,7 @@ func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits)
 						if cwr.IsPercentageReduction() {
 							percentage += cwr.PercentageReduction()
 						} else {
-							reduction += fixed.F64d4(cwr.FixedReduction(defUnits))
+							reduction += f64d4.Int(cwr.FixedReduction(defUnits))
 						}
 					}
 				}

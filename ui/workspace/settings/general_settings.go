@@ -23,7 +23,7 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
@@ -106,8 +106,8 @@ func (d *generalSettingsDockable) createPlayerAndDescFields(content *unison.Pane
 
 func (d *generalSettingsDockable) createInitialPointsFields(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Initial Points")))
-	d.pointsField = widget.NewNumericField(func() fixed.F64d4 { return settings.Global().General.InitialPoints },
-		func(v fixed.F64d4) { settings.Global().General.InitialPoints = v }, gsettings.InitialPointsMin,
+	d.pointsField = widget.NewNumericField(func() f64d4.Int { return settings.Global().General.InitialPoints },
+		func(v f64d4.Int) { settings.Global().General.InitialPoints = v }, gsettings.InitialPointsMin,
 		gsettings.InitialPointsMax, false)
 	content.AddChild(d.pointsField)
 	d.includeUnspentPointsInTotalCheckbox = widget.NewCheckBox(i18n.Text("Include unspent points in total"),
@@ -159,8 +159,8 @@ func (d *generalSettingsDockable) createImageResolutionField(content *unison.Pan
 
 func (d *generalSettingsDockable) createTooltipDelayField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Tooltip Delay")))
-	d.tooltipDelayField = widget.NewNumericField(func() fixed.F64d4 { return settings.Global().General.TooltipDelay },
-		func(v fixed.F64d4) {
+	d.tooltipDelayField = widget.NewNumericField(func() f64d4.Int { return settings.Global().General.TooltipDelay },
+		func(v f64d4.Int) {
 			general := settings.Global().General
 			general.TooltipDelay = v
 			general.UpdateToolTipTiming()
@@ -170,9 +170,9 @@ func (d *generalSettingsDockable) createTooltipDelayField(content *unison.Panel)
 
 func (d *generalSettingsDockable) createTooltipDismissalField(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Tooltip Dismissal")))
-	d.tooltipDismissalField = widget.NewNumericField(func() fixed.F64d4 {
+	d.tooltipDismissalField = widget.NewNumericField(func() f64d4.Int {
 		return settings.Global().General.TooltipDismissal
-	}, func(v fixed.F64d4) {
+	}, func(v f64d4.Int) {
 		general := settings.Global().General
 		general.TooltipDismissal = v
 		general.UpdateToolTipTiming()

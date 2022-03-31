@@ -13,11 +13,11 @@ package skill
 
 import (
 	"github.com/richardwilkes/gcs/model/fxp"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // BaseRelativeLevel returns the base relative skill level at 0 points.
-func (enum Difficulty) BaseRelativeLevel() fixed.F64d4 {
+func (enum Difficulty) BaseRelativeLevel() f64d4.Int {
 	switch enum {
 	case Easy:
 		return 0

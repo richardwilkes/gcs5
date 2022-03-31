@@ -19,7 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var skillBasedDefaultTypes = map[string]bool{
@@ -30,13 +30,13 @@ var skillBasedDefaultTypes = map[string]bool{
 
 // SkillDefault holds data for a Skill default.
 type SkillDefault struct {
-	DefaultType    string      `json:"type"`
-	Name           string      `json:"name,omitempty"`
-	Specialization string      `json:"specialization,omitempty"`
-	Modifier       fixed.F64d4 `json:"modifier,omitempty"`
-	Level          fixed.F64d4 `json:"level,omitempty"`
-	AdjLevel       fixed.F64d4 `json:"adjusted_level,omitempty"`
-	Points         fixed.F64d4 `json:"points,omitempty"`
+	DefaultType    string    `json:"type"`
+	Name           string    `json:"name,omitempty"`
+	Specialization string    `json:"specialization,omitempty"`
+	Modifier       f64d4.Int `json:"modifier,omitempty"`
+	Level          f64d4.Int `json:"level,omitempty"`
+	AdjLevel       f64d4.Int `json:"adjusted_level,omitempty"`
+	Points         f64d4.Int `json:"points,omitempty"`
 }
 
 // CloneWithoutLevelOrPoints creates a copy, but without the level or points set.
@@ -114,17 +114,17 @@ func (s *SkillDefault) SkillBased() bool {
 }
 
 // SkillLevel returns the base skill level for this SkillDefault.
-func (s *SkillDefault) SkillLevel(entity *Entity, requirePoints bool, excludes map[string]bool, ruleOf20 bool) fixed.F64d4 {
+func (s *SkillDefault) SkillLevel(entity *Entity, requirePoints bool, excludes map[string]bool, ruleOf20 bool) f64d4.Int {
 	switch s.Type() {
 	case gid.Parry:
 		best := s.best(entity, requirePoints, excludes)
-		if best != fixed.F64d4Min {
+		if best != f64d4.Min {
 			best = best.Div(fxp.Two).Trunc() + fxp.Three + entity.ParryBonus
 		}
 		return s.finalLevel(best)
 	case gid.Block:
 		best := s.best(entity, requirePoints, excludes)
-		if best != fixed.F64d4Min {
+		if best != f64d4.Min {
 			best = best.Div(fxp.Two).Trunc() + fxp.Three + entity.BlockBonus
 		}
 		return s.finalLevel(best)
@@ -135,8 +135,8 @@ func (s *SkillDefault) SkillLevel(entity *Entity, requirePoints bool, excludes m
 	}
 }
 
-func (s *SkillDefault) best(entity *Entity, requirePoints bool, excludes map[string]bool) fixed.F64d4 {
-	best := fixed.F64d4Min
+func (s *SkillDefault) best(entity *Entity, requirePoints bool, excludes map[string]bool) f64d4.Int {
+	best := f64d4.Min
 	for _, sk := range entity.SkillNamed(s.Name, s.Specialization, requirePoints, excludes) {
 		if best < sk.LevelData.Level {
 			level := sk.Level()
@@ -149,23 +149,23 @@ func (s *SkillDefault) best(entity *Entity, requirePoints bool, excludes map[str
 }
 
 // SkillLevelFast returns the base skill level for this SkillDefault.
-func (s *SkillDefault) SkillLevelFast(entity *Entity, requirePoints bool, excludes map[string]bool, ruleOf20 bool) fixed.F64d4 {
+func (s *SkillDefault) SkillLevelFast(entity *Entity, requirePoints bool, excludes map[string]bool, ruleOf20 bool) f64d4.Int {
 	switch s.Type() {
 	case gid.Dodge:
 		level := entity.Dodge(entity.EncumbranceLevel(true))
 		if ruleOf20 && level > 20 {
 			level = 20
 		}
-		return s.finalLevel(fixed.F64d4FromInt(level))
+		return s.finalLevel(f64d4.FromInt(level))
 	case gid.Parry:
 		best := s.bestFast(entity, requirePoints, excludes)
-		if best != fixed.F64d4Min {
+		if best != f64d4.Min {
 			best = best.Div(fxp.Two).Trunc() + fxp.Three + entity.ParryBonus
 		}
 		return s.finalLevel(best)
 	case gid.Block:
 		best := s.bestFast(entity, requirePoints, excludes)
-		if best != fixed.F64d4Min {
+		if best != f64d4.Min {
 			best = best.Div(fxp.Two).Trunc() + fxp.Three + entity.BlockBonus
 		}
 		return s.finalLevel(best)
@@ -180,8 +180,8 @@ func (s *SkillDefault) SkillLevelFast(entity *Entity, requirePoints bool, exclud
 	}
 }
 
-func (s *SkillDefault) bestFast(entity *Entity, requirePoints bool, excludes map[string]bool) fixed.F64d4 {
-	best := fixed.F64d4Min
+func (s *SkillDefault) bestFast(entity *Entity, requirePoints bool, excludes map[string]bool) f64d4.Int {
+	best := f64d4.Min
 	for _, sk := range entity.SkillNamed(s.Name, s.Specialization, requirePoints, excludes) {
 		if best < sk.LevelData.Level {
 			best = sk.LevelData.Level
@@ -190,8 +190,8 @@ func (s *SkillDefault) bestFast(entity *Entity, requirePoints bool, excludes map
 	return best
 }
 
-func (s *SkillDefault) finalLevel(level fixed.F64d4) fixed.F64d4 {
-	if level != fixed.F64d4Min {
+func (s *SkillDefault) finalLevel(level f64d4.Int) f64d4.Int {
+	if level != f64d4.Min {
 		level += s.Modifier
 	}
 	return level

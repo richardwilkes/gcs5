@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps/measure"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var _ Feature = &ContainedWeightReduction{}
@@ -54,11 +54,11 @@ func (c *ContainedWeightReduction) IsPercentageReduction() bool {
 
 // PercentageReduction returns the percentage (where 1% is 1, not 0.01) the weight should be reduced by. Will return 0 if
 // this is not a percentage.
-func (c *ContainedWeightReduction) PercentageReduction() fixed.F64d4 {
+func (c *ContainedWeightReduction) PercentageReduction() f64d4.Int {
 	if !c.IsPercentageReduction() {
 		return 0
 	}
-	return fixed.F64d4FromStringForced(c.Reduction[:len(c.Reduction)-1])
+	return f64d4.FromStringForced(c.Reduction[:len(c.Reduction)-1])
 }
 
 // FixedReduction returns the fixed amount the weight should be reduced by. Will return 0 if this is a percentage.

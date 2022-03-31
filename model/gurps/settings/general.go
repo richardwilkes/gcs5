@@ -22,21 +22,21 @@ import (
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
 // Default, min & max values for the general numeric settings
 var (
-	InitialPointsDef       = fixed.F64d4FromInt(150)
-	InitialPointsMin       fixed.F64d4
-	InitialPointsMax       = fixed.F64d4FromInt(9999999)
-	TooltipDelayDef        = fixed.F64d4FromStringForced("0.75")
-	TooltipDelayMin        fixed.F64d4
+	InitialPointsDef       = f64d4.FromInt(150)
+	InitialPointsMin       f64d4.Int
+	InitialPointsMax       = f64d4.FromInt(9999999)
+	TooltipDelayDef        = f64d4.FromStringForced("0.75")
+	TooltipDelayMin        f64d4.Int
 	TooltipDelayMax        = fxp.Thirty
-	TooltipDismissalDef    = fixed.F64d4FromInt(60)
-	TooltipDismissalMin    = fixed.F64d4One
-	TooltipDismissalMax    = fixed.F64d4FromInt(3600)
+	TooltipDismissalDef    = f64d4.FromInt(60)
+	TooltipDismissalMin    = f64d4.One
+	TooltipDismissalMax    = f64d4.FromInt(3600)
 	ImageResolutionDef     = 200
 	ImageResolutionMin     = 50
 	ImageResolutionMax     = 400
@@ -48,18 +48,18 @@ var (
 
 // General holds settings for a sheet.
 type General struct {
-	DefaultPlayerName           string      `json:"default_player_name,omitempty"`
-	DefaultTechLevel            string      `json:"default_tech_level,omitempty"`
-	CalendarName                string      `json:"calendar_ref,omitempty"`
-	GCalcKey                    string      `json:"gurps_calculator_key,omitempty"`
-	InitialPoints               fixed.F64d4 `json:"initial_points"`
-	TooltipDelay                fixed.F64d4 `json:"tooltip_delay"`
-	TooltipDismissal            fixed.F64d4 `json:"tooltip_dismissal"`
-	InitialListUIScale          int         `json:"initial_list_scale"`
-	InitialSheetUIScale         int         `json:"initial_sheet_scale"`
-	ImageResolution             int         `json:"image_resolution"`
-	AutoFillProfile             bool        `json:"auto_fill_profile,omitempty"`
-	IncludeUnspentPointsInTotal bool        `json:"include_unspent_points_in_total,omitempty"`
+	DefaultPlayerName           string    `json:"default_player_name,omitempty"`
+	DefaultTechLevel            string    `json:"default_tech_level,omitempty"`
+	CalendarName                string    `json:"calendar_ref,omitempty"`
+	GCalcKey                    string    `json:"gurps_calculator_key,omitempty"`
+	InitialPoints               f64d4.Int `json:"initial_points"`
+	TooltipDelay                f64d4.Int `json:"tooltip_delay"`
+	TooltipDismissal            f64d4.Int `json:"tooltip_dismissal"`
+	InitialListUIScale          int       `json:"initial_list_scale"`
+	InitialSheetUIScale         int       `json:"initial_sheet_scale"`
+	ImageResolution             int       `json:"image_resolution"`
+	AutoFillProfile             bool      `json:"auto_fill_profile,omitempty"`
+	IncludeUnspentPointsInTotal bool      `json:"include_unspent_points_in_total,omitempty"`
 }
 
 // NewGeneral creates settings with factory defaults.

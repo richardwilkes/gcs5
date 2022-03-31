@@ -28,7 +28,7 @@ import (
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -53,9 +53,9 @@ const (
 
 // AdvantageItem holds the Advantage data that only exists in non-containers.
 type AdvantageItem struct {
-	Levels         *fixed.F64d4     `json:"levels,omitempty"`
-	BasePoints     fixed.F64d4      `json:"base_points,omitempty"`
-	PointsPerLevel fixed.F64d4      `json:"points_per_level,omitempty"`
+	Levels         *f64d4.Int       `json:"levels,omitempty"`
+	BasePoints     f64d4.Int        `json:"base_points,omitempty"`
+	PointsPerLevel f64d4.Int        `json:"points_per_level,omitempty"`
 	Prereq         *PrereqList      `json:"prereqs,omitempty"`
 	Weapons        []*Weapon        `json:"weapons,omitempty"`
 	Features       feature.Features `json:"features,omitempty"`
@@ -158,7 +158,7 @@ func NewAdvantage(entity *Entity, parent *Advantage, container bool) *Advantage 
 // MarshalJSON implements json.Marshaler.
 func (a *Advantage) MarshalJSON() ([]byte, error) {
 	type calc struct {
-		Points fixed.F64d4 `json:"points"`
+		Points f64d4.Int `json:"points"`
 	}
 	data := struct {
 		AdvantageData
@@ -301,20 +301,20 @@ func (a *Advantage) IsLeveled() bool {
 }
 
 // AdjustedPoints returns the total points, taking levels and modifiers into account.
-func (a *Advantage) AdjustedPoints() fixed.F64d4 {
+func (a *Advantage) AdjustedPoints() f64d4.Int {
 	if a.Disabled {
 		return 0
 	}
 	if !a.Container() {
-		var levels fixed.F64d4
+		var levels f64d4.Int
 		if a.Levels != nil {
 			levels = *a.Levels
 		}
 		return AdjustedPoints(a.Entity, a.BasePoints, levels, a.PointsPerLevel, a.CR, a.AllModifiers(), a.RoundCostDown)
 	}
-	var points fixed.F64d4
+	var points f64d4.Int
 	if a.ContainerType == advantage.AlternativeAbilities {
-		values := make([]fixed.F64d4, len(a.Children))
+		values := make([]f64d4.Int, len(a.Children))
 		for i, one := range a.Children {
 			values[i] = one.AdjustedPoints()
 			if values[i] > points {
@@ -519,8 +519,8 @@ func HasCategory(category string, categories []string) bool {
 }
 
 // AdjustedPoints returns the total points, taking levels and modifiers into account. 'entity' may be nil.
-func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fixed.F64d4, cr advantage.SelfControlRoll, modifiers []*AdvantageModifier, roundCostDown bool) fixed.F64d4 {
-	var baseEnh, levelEnh, baseLim, levelLim fixed.F64d4
+func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel f64d4.Int, cr advantage.SelfControlRoll, modifiers []*AdvantageModifier, roundCostDown bool) f64d4.Int {
+	var baseEnh, levelEnh, baseLim, levelLim f64d4.Int
 	multiplier := cr.Multiplier()
 	for _, one := range modifiers {
 		if !one.Disabled {
@@ -585,10 +585,10 @@ func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fixed.F64
 	return fxp.ApplyRounding(modifiedBasePoints.Mul(multiplier), roundCostDown)
 }
 
-func modifyPoints(points, modifier fixed.F64d4) fixed.F64d4 {
+func modifyPoints(points, modifier f64d4.Int) f64d4.Int {
 	return points + calculateModifierPoints(points, modifier)
 }
 
-func calculateModifierPoints(points, modifier fixed.F64d4) fixed.F64d4 {
+func calculateModifierPoints(points, modifier f64d4.Int) f64d4.Int {
 	return points.Mul(modifier).Div(fxp.Hundred)
 }

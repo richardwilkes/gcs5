@@ -14,7 +14,7 @@ package advantage
 import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // Possible SelfControlRoll values.
@@ -86,18 +86,18 @@ func (s SelfControlRoll) DescriptionWithCost() string {
 }
 
 // Multiplier returns the cost multiplier.
-func (s SelfControlRoll) Multiplier() fixed.F64d4 {
+func (s SelfControlRoll) Multiplier() f64d4.Int {
 	switch s {
 	case None:
-		return fixed.F64d4One
+		return f64d4.One
 	case CR6:
 		return fxp.Two
 	case CR9:
 		return fxp.OneAndAHalf
 	case CR12:
-		return fixed.F64d4One
+		return f64d4.One
 	case CR15:
-		return fixed.F64d4Half
+		return f64d4.Half
 	default:
 		return None.Multiplier()
 	}
