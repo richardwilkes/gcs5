@@ -34,4 +34,16 @@ const (
 	FieldGCalcKey
 	FieldImageExportResolution
 	FieldPageOffset
+	FieldFontSize
+	FieldInitialPoints
+	FieldTooltipDelay
+	FieldTooltipDismissal
+	FieldUnspentPoints
+)
+
+const (
+	FieldPrimaryAttributeBase = 1000 * (iota + 1)
+	FieldSecondaryAttributeBase
+	FieldPointPoolCurrentBase
+	FieldPointPoolMaximumBase
 )

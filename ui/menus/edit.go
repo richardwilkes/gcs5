@@ -55,14 +55,16 @@ func setupEditMenu(bar unison.Menu) {
 // Undo the last action.
 var Undo = &unison.Action{
 	ID:         constants.UndoItemID,
-	Title:      i18n.Text("Undo"),
+	Title:      unison.CannotUndoTitle(),
 	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyZ, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: func(_ *unison.Action, _ interface{}) bool {
+	EnabledCallback: func(action *unison.Action, _ interface{}) bool {
 		if wnd := unison.ActiveWindow(); wnd != nil {
 			if mgr := wnd.UndoManager(); mgr != nil {
+				action.Title = mgr.UndoTitle()
 				return mgr.CanUndo()
 			}
 		}
+		action.Title = unison.CannotUndoTitle()
 		return false
 	},
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
@@ -77,14 +79,16 @@ var Undo = &unison.Action{
 // Redo the last action.
 var Redo = &unison.Action{
 	ID:         constants.RedoItemID,
-	Title:      i18n.Text("Redo"),
+	Title:      unison.CannotRedoTitle(),
 	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyY, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: func(_ *unison.Action, _ interface{}) bool {
+	EnabledCallback: func(action *unison.Action, _ interface{}) bool {
 		if wnd := unison.ActiveWindow(); wnd != nil {
 			if mgr := wnd.UndoManager(); mgr != nil {
+				action.Title = mgr.RedoTitle()
 				return mgr.CanRedo()
 			}
 		}
+		action.Title = unison.CannotRedoTitle()
 		return false
 	},
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {

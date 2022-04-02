@@ -17,6 +17,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
@@ -26,17 +27,22 @@ import (
 // NumericField holds the value for a numeric field.
 type NumericField struct {
 	*unison.Field
+	undoID     int
+	undoTitle  string
 	get        func() f64d4.Int
 	set        func(f64d4.Int)
 	minimum    f64d4.Int
 	maximum    f64d4.Int
 	noMinWidth bool
+	inUndo     bool
 }
 
 // NewNumericField creates a new field that holds a fixed-point number.
-func NewNumericField(get func() f64d4.Int, set func(f64d4.Int), min, max f64d4.Int, noMinWidth bool) *NumericField {
+func NewNumericField(undoID int, undoTitle string, get func() f64d4.Int, set func(f64d4.Int), min, max f64d4.Int, noMinWidth bool) *NumericField {
 	f := &NumericField{
 		Field:      unison.NewField(),
+		undoID:     undoID,
+		undoTitle:  undoTitle,
 		get:        get,
 		set:        set,
 		minimum:    min,
@@ -83,14 +89,43 @@ func (f *NumericField) validate() bool {
 }
 
 func (f *NumericField) modified() {
-	if v, err := f64d4.FromString(f.trimmed(f.Text())); err == nil &&
-		(f.minimum == f64d4.Min || v >= f.minimum) &&
-		(f.maximum == f64d4.Max || v <= f.maximum) {
-		if f.get() != v {
-			f.set(v)
-			MarkForLayoutWithinDockable(f)
-			MarkModified(f)
+	text := f.Text()
+	if !f.inUndo && f.undoID != gid.FieldNone {
+		if mgr := unison.UndoManagerFor(f); mgr != nil {
+			mgr.Add(&unison.UndoEdit[string]{
+				ID:       f.undoID,
+				EditName: f.undoTitle,
+				EditCost: 1,
+				UndoFunc: func(e *unison.UndoEdit[string]) { f.setWithoutUndo(e.BeforeData, true) },
+				RedoFunc: func(e *unison.UndoEdit[string]) { f.setWithoutUndo(e.AfterData, true) },
+				AbsorbFunc: func(e *unison.UndoEdit[string], other unison.Undoable) bool {
+					if e2, ok := other.(*unison.UndoEdit[string]); ok && e2.ID == f.undoID {
+						e.AfterData = e2.AfterData
+						return true
+					}
+					return false
+				},
+				BeforeData: f.get().String(),
+				AfterData:  text,
+			})
 		}
+	}
+	if v, err := f64d4.FromString(f.trimmed(text)); err == nil &&
+		(f.minimum == f64d4.Min || v >= f.minimum) &&
+		(f.maximum == f64d4.Max || v <= f.maximum) && f.get() != v {
+		f.set(v)
+		MarkForLayoutWithinDockable(f)
+		MarkModified(f)
+	}
+}
+
+func (f *NumericField) setWithoutUndo(text string, focus bool) {
+	f.inUndo = true
+	f.SetText(text)
+	f.inUndo = false
+	if focus {
+		f.RequestFocus()
+		f.SelectAll()
 	}
 }
 
@@ -102,7 +137,7 @@ func (f *NumericField) Sync() {
 	} else if f.maximum != f64d4.Max && value > f.maximum {
 		value = f.maximum
 	}
-	SetFieldValue(f.Field, value.String())
+	f.setWithoutUndo(value.String(), false)
 }
 
 func (f *NumericField) runeTyped(ch rune) bool {

@@ -16,6 +16,7 @@ import (
 
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -63,7 +64,7 @@ func NewSecondaryAttrPanel(entity *gurps.Entity) *SecondaryAttrPanel {
 
 func (p *SecondaryAttrPanel) rebuild(attrs *gurps.AttributeDefs) {
 	p.RemoveAllChildren()
-	for _, def := range attrs.List() {
+	for i, def := range attrs.List() {
 		if def.Type == attribute.Pool || def.Primary() {
 			continue
 		}
@@ -73,7 +74,8 @@ func (p *SecondaryAttrPanel) rebuild(attrs *gurps.AttributeDefs) {
 			continue
 		}
 		p.AddChild(p.createPointsField(attr))
-		p.AddChild(widget.NewNumericPageField(func() f64d4.Int { return attr.Maximum() },
+		p.AddChild(widget.NewNumericPageField(gid.FieldSecondaryAttributeBase+i, i18n.Text("Secondary Attribute"),
+			func() f64d4.Int { return attr.Maximum() },
 			func(v f64d4.Int) { attr.SetMaximum(v) }, f64d4.Min, f64d4.Max, true))
 		p.AddChild(widget.NewPageLabel(def.CombinedName()))
 	}

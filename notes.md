@@ -29,7 +29,6 @@
   - Body Type
   - Support for the variances between initial defaults and per-sheet variants of each of these
 - Library configuration dialogs
-- General undo / redo support
 - Prompt to save when closing a modified document
 - General completion of menu item actions (many are currently placeholders)
   - File

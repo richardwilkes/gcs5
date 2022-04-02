@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"io/fs"
 
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/res"
@@ -119,7 +120,7 @@ func (d *fontSettingsDockable) createFamilyField(index int) {
 }
 
 func (d *fontSettingsDockable) createSizeField(index int) {
-	field := widget.NewNumericField(func() f64d4.Int {
+	field := widget.NewNumericField(gid.FieldFontSize, i18n.Text("Font Size"), func() f64d4.Int {
 		return f64d4.FromFloat32(theme.CurrentFonts[index].Font.Size())
 	}, func(v f64d4.Int) {
 		if !d.noUpdate {

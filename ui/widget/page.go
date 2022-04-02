@@ -196,8 +196,8 @@ func NewIntegerPageField(undoID int, undoTitle string, get func() int, set func(
 }
 
 // NewNumericPageField creates a new numeric text entry field for a sheet page.
-func NewNumericPageField(get func() f64d4.Int, set func(f64d4.Int), min, max f64d4.Int, noMinWidth bool) *NumericField {
-	field := NewNumericField(get, set, min, max, noMinWidth)
+func NewNumericPageField(undoID int, undoTitle string, get func() f64d4.Int, set func(f64d4.Int), min, max f64d4.Int, noMinWidth bool) *NumericField {
+	field := NewNumericField(undoID, undoTitle, get, set, min, max, noMinWidth)
 	field.HAlign = unison.EndAlignment
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom.Insets[float32]{Bottom: 1}, false)

@@ -105,8 +105,10 @@ func (d *generalSettingsDockable) createPlayerAndDescFields(content *unison.Pane
 }
 
 func (d *generalSettingsDockable) createInitialPointsFields(content *unison.Panel) {
-	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Initial Points")))
-	d.pointsField = widget.NewNumericField(func() f64d4.Int { return settings.Global().General.InitialPoints },
+	title := i18n.Text("Initial Points")
+	content.AddChild(widget.NewFieldLeadingLabel(title))
+	d.pointsField = widget.NewNumericField(gid.FieldInitialPoints, title,
+		func() f64d4.Int { return settings.Global().General.InitialPoints },
 		func(v f64d4.Int) { settings.Global().General.InitialPoints = v }, gsettings.InitialPointsMin,
 		gsettings.InitialPointsMax, false)
 	content.AddChild(d.pointsField)
@@ -158,8 +160,9 @@ func (d *generalSettingsDockable) createImageResolutionField(content *unison.Pan
 }
 
 func (d *generalSettingsDockable) createTooltipDelayField(content *unison.Panel) {
-	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Tooltip Delay")))
-	d.tooltipDelayField = widget.NewNumericField(func() f64d4.Int { return settings.Global().General.TooltipDelay },
+	title := i18n.Text("Tooltip Delay")
+	content.AddChild(widget.NewFieldLeadingLabel(title))
+	d.tooltipDelayField = widget.NewNumericField(gid.FieldTooltipDelay, title, func() f64d4.Int { return settings.Global().General.TooltipDelay },
 		func(v f64d4.Int) {
 			general := settings.Global().General
 			general.TooltipDelay = v
@@ -169,8 +172,9 @@ func (d *generalSettingsDockable) createTooltipDelayField(content *unison.Panel)
 }
 
 func (d *generalSettingsDockable) createTooltipDismissalField(content *unison.Panel) {
-	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Tooltip Dismissal")))
-	d.tooltipDismissalField = widget.NewNumericField(func() f64d4.Int {
+	title := i18n.Text("Tooltip Dismissal")
+	content.AddChild(widget.NewFieldLeadingLabel(title))
+	d.tooltipDismissalField = widget.NewNumericField(gid.FieldTooltipDismissal, title, func() f64d4.Int {
 		return settings.Global().General.TooltipDismissal
 	}, func(v f64d4.Int) {
 		general := settings.Global().General
