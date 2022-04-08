@@ -195,7 +195,6 @@ func (s *Sheet) createFirstPage() *Page {
 			HSpacing: 1,
 			HAlign:   unison.FillAlignment,
 			VAlign:   unison.FillAlignment,
-			//EqualColumns: true,
 		})
 		rowPanel.SetLayoutData(&unison.FlexLayoutData{
 			HAlign: unison.FillAlignment,

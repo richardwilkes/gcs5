@@ -42,7 +42,12 @@ go generate ./gen/enumgen.go
 EXE="$(go env GOPATH)/bin/gcs"
 case $(uname -s) in
 Darwin*)
-  go install -v .
+  if [ $(uname -p) == "arm" ]; then
+    DEPLOYMENT_TARGET=11
+  else
+    DEPLOYMENT_TARGET=10.14
+  fi
+  MACOSX_DEPLOYMENT_TARGET=$DEPLOYMENT_TARGET go install -v .
   /bin/rm -rf GCS.app
   CONTENTS="GCS.app/Contents"
   mkdir -p "$CONTENTS/MacOS"

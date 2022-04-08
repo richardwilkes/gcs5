@@ -6,7 +6,6 @@
 - Drag & drop support in the unison Table object
 - In-window menus (those used on non-macOS platforms) need to be able to constrain themselves to the window and provide scrolling mechanisms when required to view all content
 - Carefully comb over the interface and identify areas where things aren't working well on Windows and Linux, since I spend nearly all of my development time on macOS and may have not noticed deficiencies there
-- Multi-line support in Field objects
 
 #### GCS-specific work that needs to be done
 

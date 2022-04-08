@@ -11,6 +11,7 @@
 
 package gid
 
+// Field undo IDs
 const (
 	FieldNone = iota
 	FieldName
@@ -41,6 +42,7 @@ const (
 	FieldUnspentPoints
 )
 
+// Base field undo IDs where the field count is dynamic.
 const (
 	FieldPrimaryAttributeBase = 1000 * (iota + 1)
 	FieldSecondaryAttributeBase

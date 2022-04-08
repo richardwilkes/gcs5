@@ -124,7 +124,6 @@ func (d *menuKeySettingsDockable) createBindingButton(binding *settings.Binding)
 				{
 					Title:        i18n.Text("Clear"),
 					ResponseCode: unison.ModalResponseUserBase,
-					KeyCodes:     []unison.KeyCode{unison.KeyClear},
 				},
 				unison.NewCancelButtonInfo(),
 				unison.NewOKButtonInfoWithTitle(i18n.Text("Set")),
