@@ -83,5 +83,4 @@
   - Adjust the editors to support the differences when attached to a template rather than a sheet
   - Applying a template to a sheet
 - Printing support for sheets (requires support in unison first)
-- Ensure table headers don't get cut off when tables are empty
 - Make final decision on whether tables that have no content in the sheet should be hidden (complicates updates and makes it harder for users to discover they exist)
