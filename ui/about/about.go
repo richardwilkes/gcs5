@@ -13,14 +13,13 @@ package about
 
 import (
 	_ "embed"
-	"runtime"
 
 	"github.com/richardwilkes/gcs/setup/trampolines"
-	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
+	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
@@ -87,72 +86,73 @@ func (w *aboutWindow) drawContentBackground(gc *unison.Canvas, _ geom.Rect[float
 		unison.Transparent, unison.Black).Paint(gc, r, unison.Fill))
 
 	face := unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.NormalFontWeight, unison.StandardSpacing, unison.NoSlant)
-	paint := unison.RGB(128, 128, 128).Paint(gc, geom.Rect[float32]{}, unison.Fill)
-	text := unison.NewText(i18n.Text("This product includes copyrighted material from the GURPS game, which is used by permission of Steve Jackson Games."),
-		&unison.TextDecoration{
-			Font:  face.Font(7),
-			Paint: paint,
-		})
-	const aboutMargin = 10
-	y := r.Height - aboutMargin
+	boldFace := unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.BlackFontWeight, unison.StandardSpacing, unison.NoSlant)
+	paint := unison.Gray.Paint(gc, geom.Rect[float32]{}, unison.Fill)
+	dec := &unison.TextDecoration{
+		Font:  face.Font(7),
+		Paint: paint,
+	}
+	text := unison.NewText(i18n.Text("This product includes copyrighted material from the "), dec)
+	text.AddString("GURPS", &unison.TextDecoration{
+		Font:  boldFace.Font(7),
+		Paint: paint,
+	})
+	text.AddString(i18n.Text(" game, which is used by permission of Steve Jackson Games."), dec)
+	y := r.Height - 10
 	text.Draw(gc, (r.Width-text.Width())/2, y)
 	y -= text.Height()
+
 	font := face.Font(8)
-	text = unison.NewText(i18n.Text("GURPS is a trademark of Steve Jackson Games, used by permission. All rights reserved."),
-		&unison.TextDecoration{
-			Font:  font,
-			Paint: paint,
-		})
+	dec = &unison.TextDecoration{
+		Font:  font,
+		Paint: paint,
+	}
+	text = unison.NewText("GURPS", &unison.TextDecoration{
+		Font:  boldFace.Font(8),
+		Paint: paint,
+	})
+	text.AddString(i18n.Text(" is a trademark of Steve Jackson Games, used by permission. All rights reserved."), dec)
 	text.Draw(gc, (r.Width-text.Width())/2, y)
 	lineHeight := text.Height()
 	y -= lineHeight * 1.5
-	yr := y
 
 	paint = unison.RGB(204, 204, 204).Paint(gc, geom.Rect[float32]{}, unison.Fill)
-	unison.NewText(cmdline.Copyright(), &unison.TextDecoration{
+	text = unison.NewText(cmdline.Copyright(), &unison.TextDecoration{
 		Font:  font,
 		Paint: paint,
-	}).Draw(gc, aboutMargin, y)
-	y -= lineHeight
-	if cmdline.BuildNumber != "" {
-		unison.NewText(i18n.Text("Build ")+cmdline.BuildNumber, &unison.TextDecoration{
-			Font:  font,
-			Paint: paint,
-		}).Draw(gc, aboutMargin, y)
-		y -= lineHeight
-	}
+	})
+	text.Draw(gc, (r.Width-text.Width())/2, y)
+
+	buildText := unison.NewText(i18n.Text("Build ")+cmdline.BuildNumber, &unison.TextDecoration{
+		Font:  font,
+		Paint: paint,
+	})
 	var t string
-	if cmdline.AppVersion != "" {
+	if cmdline.AppVersion != "" && cmdline.AppVersion != "0.0" {
 		t = i18n.Text("Version ") + cmdline.AppVersion
 	} else {
-		t = i18n.Text("Development Version")
+		t = i18n.Text("Development")
 	}
-	unison.NewText(t, &unison.TextDecoration{
-		Font: unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.MediumFontWeight,
+	versionText := unison.NewText(t, &unison.TextDecoration{
+		Font: unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.BlackFontWeight,
 			unison.StandardSpacing, unison.NoSlant).Font(10),
 		Paint: unison.White.Paint(gc, geom.Rect[float32]{}, unison.Fill),
-	}).Draw(gc, aboutMargin, y)
+	})
 
-	right := r.Width - aboutMargin
-	text = unison.NewText(runtime.GOARCH, &unison.TextDecoration{
-		Font:  font,
-		Paint: paint,
-	})
-	text.Draw(gc, right-text.Width(), yr)
-	yr -= lineHeight
-	switch runtime.GOOS {
-	case toolbox.MacOS:
-		t = "macOS"
-	case toolbox.LinuxOS:
-		t = "Linux"
-	case toolbox.WindowsOS:
-		t = "Windows"
-	default:
-		t = runtime.GOOS
-	}
-	text = unison.NewText(t, &unison.TextDecoration{
-		Font:  font,
-		Paint: paint,
-	})
-	text.Draw(gc, right-text.Width(), yr)
+	const (
+		hMargin = 8
+		vMargin = 4
+	)
+	var backing geom.Rect[float32]
+	backing.Width = xmath.Max(versionText.Width(), buildText.Width()) + hMargin*2
+	backing.Height = versionText.Height() + buildText.Height() + vMargin*2
+	backing.X = (r.Width - backing.Width) / 2
+	backing.Y = 65
+	gc.DrawRoundedRect(backing, 8, 8, unison.Black.SetAlphaIntensity(0.7).Paint(gc, backing, unison.Fill))
+	p := unison.Black.Paint(gc, backing, unison.Stroke)
+	p.SetStrokeWidth(2)
+	gc.DrawRoundedRect(backing, 8, 8, p)
+
+	versionText.Draw(gc, (r.Width-versionText.Width())/2, backing.Y+vMargin+versionText.Baseline())
+	buildText.Draw(gc, (r.Width-buildText.Width())/2, backing.Y+vMargin+versionText.Height()+buildText.Baseline())
 }
