@@ -14,6 +14,7 @@ package menus
 import (
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/settings"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps"
 	uisettings "github.com/richardwilkes/gcs/ui/workspace/settings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -56,7 +57,12 @@ var PerSheetSettings = &unison.Action{
 	ID:              constants.PerSheetSettingsItemID,
 	Title:           i18n.Text("Sheet Settings…"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyComma, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	ExecuteCallback: unimplemented,
+	EnabledCallback: func(_ *unison.Action, _ interface{}) bool { return gurps.ActiveEntity() != nil },
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+		if entity := gurps.ActiveEntity(); entity != nil {
+			uisettings.ShowSheetSettings(entity)
+		}
+	},
 }
 
 // DefaultSheetSettings opens the default settings for the character sheet.
@@ -64,7 +70,7 @@ var DefaultSheetSettings = &unison.Action{
 	ID:              constants.DefaultSheetSettingsItemID,
 	Title:           i18n.Text("Default Sheet Settings…"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyComma, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: unimplemented,
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) { uisettings.ShowSheetSettings(nil) },
 }
 
 // PerSheetAttributeSettings opens the attributes settings for the foremost character sheet.

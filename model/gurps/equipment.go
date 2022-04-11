@@ -303,11 +303,13 @@ func (e *Equipment) CellData(column int, data *node.CellData) {
 		data.Alignment = unison.EndAlignment
 	case EquipmentWeightColumn:
 		data.Type = node.Text
-		data.Primary = e.AdjustedWeight(false, SheetSettingsFor(e.Entity).DefaultWeightUnits).String()
+		units := SheetSettingsFor(e.Entity).DefaultWeightUnits
+		data.Primary = units.Format(e.AdjustedWeight(false, units))
 		data.Alignment = unison.EndAlignment
 	case EquipmentExtendedWeightColumn:
 		data.Type = node.Text
-		data.Primary = e.ExtendedWeight(false, SheetSettingsFor(e.Entity).DefaultWeightUnits).String()
+		units := SheetSettingsFor(e.Entity).DefaultWeightUnits
+		data.Primary = units.Format(e.ExtendedWeight(false, units))
 		data.Alignment = unison.EndAlignment
 	case EquipmentCategoryColumn:
 		data.Type = node.Text

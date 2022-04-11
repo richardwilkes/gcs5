@@ -19,10 +19,10 @@ import (
 
 // Format the length for this LengthUnits.
 func (enum LengthUnits) Format(length Length) string {
+	inches := f64d4.Int(length)
 	switch enum {
 	case FeetAndInches:
 		oneFoot := f64d4.FromInt(12)
-		inches := f64d4.Int(length)
 		feet := inches.Div(oneFoot).Trunc()
 		inches -= feet.Mul(oneFoot)
 		if feet == 0 && inches == 0 {
@@ -39,19 +39,17 @@ func (enum LengthUnits) Format(length Length) string {
 		}
 		return buffer.String()
 	case Inch:
-		return f64d4.Int(length).String() + " " + enum.Key()
+		return inches.String() + " " + enum.Key()
 	case Feet:
-		return f64d4.Int(length).Div(f64d4.FromInt(12)).String() + " " + enum.Key()
-	case Yard:
-		return f64d4.Int(length).Div(f64d4.FromInt(36)).String() + " " + enum.Key()
+		return inches.Div(f64d4.FromInt(12)).String() + " " + enum.Key()
+	case Yard, Meter:
+		return inches.Div(f64d4.FromInt(36)).String() + " " + enum.Key()
 	case Mile:
-		return f64d4.Int(length).Div(f64d4.FromInt(5280)).String() + " " + enum.Key()
+		return inches.Div(f64d4.FromInt(63360)).String() + " " + enum.Key()
 	case Centimeter:
-		return f64d4.Int(length).Div(f64d4.FromInt(36)).Mul(f64d4.FromInt(100)).String() + " " + enum.Key()
+		return inches.Div(f64d4.FromInt(36)).Mul(f64d4.FromInt(100)).String() + " " + enum.Key()
 	case Kilometer:
-		return f64d4.Int(length).Div(f64d4.FromInt(36000)).String() + " " + enum.Key()
-	case Meter:
-		return f64d4.Int(length).Div(f64d4.FromInt(36)).String() + " " + enum.Key()
+		return inches.Div(f64d4.FromInt(36000)).String() + " " + enum.Key()
 	default:
 		return FeetAndInches.Format(length)
 	}

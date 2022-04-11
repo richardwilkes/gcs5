@@ -12,9 +12,13 @@
 package gurps
 
 import (
+	"context"
+	"io/fs"
+
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/settings"
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings/display"
 	"github.com/richardwilkes/json"
@@ -45,8 +49,6 @@ type SheetSettingsData struct {
 	SkillLevelAdjDisplay       display.Option              `json:"skill_level_adj_display"`
 	UseMultiplicativeModifiers bool                        `json:"use_multiplicative_modifiers,omitempty"`
 	UseModifyingDicePlusAdds   bool                        `json:"use_modifying_dice_plus_adds,omitempty"`
-	ShowCollegeInSheetSpells   bool                        `json:"show_college_in_sheet_spells,omitempty"`
-	ShowDifficulty             bool                        `json:"show_difficulty,omitempty"`
 	ShowAdvantageModifierAdj   bool                        `json:"show_advantage_modifier_adj,omitempty"`
 	ShowEquipmentModifierAdj   bool                        `json:"show_equipment_modifier_adj,omitempty"`
 	ShowSpellAdj               bool                        `json:"show_spell_adj,omitempty"`
@@ -71,7 +73,7 @@ func SheetSettingsFor(entity *Entity) *SheetSettings {
 }
 
 // FactorySheetSettings returns a new SheetSettings with factory defaults.
-func FactorySheetSettings(entity *Entity) *SheetSettings {
+func FactorySheetSettings() *SheetSettings {
 	return &SheetSettings{
 		SheetSettingsData: SheetSettingsData{
 			Page:                   settings.NewPage(),
@@ -87,8 +89,27 @@ func FactorySheetSettings(entity *Entity) *SheetSettings {
 			SkillLevelAdjDisplay:   display.Tooltip,
 			ShowSpellAdj:           true,
 		},
-		Entity: entity,
 	}
+}
+
+// NewSheetSettingsFromFile loads new settings from a file.
+func NewSheetSettingsFromFile(fileSystem fs.FS, filePath string) (*SheetSettings, error) {
+	var data struct {
+		SheetSettings `json:",inline"`
+		OldLocation   *SheetSettings `json:"sheet_settings"`
+	}
+	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
+		return nil, err
+	}
+	var s *SheetSettings
+	if data.OldLocation != nil {
+		s = data.OldLocation
+	} else {
+		ss := data.SheetSettings
+		s = &ss
+	}
+	s.EnsureValidity()
+	return s, nil
 }
 
 // EnsureValidity checks the current settings for validity and if they aren't valid, makes them so.
@@ -151,4 +172,9 @@ func (s *SheetSettings) Clone(entity *Entity) *SheetSettings {
 func (s *SheetSettings) SetOwningEntity(entity *Entity) {
 	s.Entity = entity
 	s.HitLocations.Update(entity)
+}
+
+// Save writes the settings to the file as JSON.
+func (s *SheetSettings) Save(filePath string) error {
+	return jio.SaveToFile(context.Background(), filePath, s)
 }

@@ -131,7 +131,7 @@ func (p *EncumbrancePanel) createLevelField(enc datafile.Encumbrance) *widget.No
 
 func (p *EncumbrancePanel) createMaxCarryField(enc datafile.Encumbrance) *widget.NonEditablePageField {
 	field := widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
-		if text := p.entity.MaximumCarry(enc).String(); text != f.Text {
+		if text := p.entity.SheetSettings.DefaultWeightUnits.Format(p.entity.MaximumCarry(enc)); text != f.Text {
 			f.Text = text
 			widget.MarkForLayoutWithinDockable(f)
 		}

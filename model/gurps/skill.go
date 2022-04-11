@@ -277,8 +277,10 @@ func (s *Skill) CellData(column int, data *node.CellData) {
 	case SkillRelativeLevelColumn:
 		if !s.Container() {
 			data.Type = node.Text
-			data.Primary = s.AdjustedRelativeLevel().String()
-			data.Alignment = unison.EndAlignment
+			data.Primary = ResolveAttributeName(s.Entity, s.Difficulty.Attribute)
+			if rsl := s.AdjustedRelativeLevel(); rsl != 0 {
+				data.Primary += rsl.StringWithSign()
+			}
 		}
 	case SkillPointsColumn:
 		data.Type = node.Text

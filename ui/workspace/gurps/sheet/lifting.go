@@ -47,45 +47,45 @@ func NewLiftingPanel(entity *gurps.Entity) *LiftingPanel {
 	})))
 	p.DrawCallback = func(gc *unison.Canvas, rect geom.Rect[float32]) { drawBandedBackground(p, gc, rect, 0, 2) }
 	p.addFieldAndLabel(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
-		if text := p.entity.BasicLift().String(); text != f.Text {
+		if text := p.entity.SheetSettings.DefaultWeightUnits.Format(p.entity.BasicLift()); text != f.Text {
 			f.Text = text
 			widget.MarkForLayoutWithinDockable(f)
 		}
 	}), i18n.Text("Basic Lift"), i18n.Text("The weight that can be lifted overhead with one hand in one second"))
 	p.addFieldAndLabel(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
-		if text := p.entity.OneHandedLift().String(); text != f.Text {
+		if text := p.entity.SheetSettings.DefaultWeightUnits.Format(p.entity.OneHandedLift()); text != f.Text {
 			f.Text = text
 			widget.MarkForLayoutWithinDockable(f)
 		}
 	}), i18n.Text("One-Handed Lift"), i18n.Text("The weight that can be lifted overhead with one hand in two seconds"))
 	p.addFieldAndLabel(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
-		if text := p.entity.TwoHandedLift().String(); text != f.Text {
+		if text := p.entity.SheetSettings.DefaultWeightUnits.Format(p.entity.TwoHandedLift()); text != f.Text {
 			f.Text = text
 			widget.MarkForLayoutWithinDockable(f)
 		}
 	}), i18n.Text("Two-Handed Lift"),
 		i18n.Text("The weight that can be lifted overhead with both hands in four seconds"))
 	p.addFieldAndLabel(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
-		if text := p.entity.ShoveAndKnockOver().String(); text != f.Text {
+		if text := p.entity.SheetSettings.DefaultWeightUnits.Format(p.entity.ShoveAndKnockOver()); text != f.Text {
 			f.Text = text
 			widget.MarkForLayoutWithinDockable(f)
 		}
 	}), i18n.Text("Shove & Knock Over"), i18n.Text("The weight of an object that can be shoved and knocked over"))
 	p.addFieldAndLabel(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
-		if text := p.entity.RunningShoveAndKnockOver().String(); text != f.Text {
+		if text := p.entity.SheetSettings.DefaultWeightUnits.Format(p.entity.RunningShoveAndKnockOver()); text != f.Text {
 			f.Text = text
 			widget.MarkForLayoutWithinDockable(f)
 		}
 	}), i18n.Text("Running Shove & Knock Over"),
 		i18n.Text("The weight of an object that can be shoved and knocked over with a running start"))
 	p.addFieldAndLabel(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
-		if text := p.entity.CarryOnBack().String(); text != f.Text {
+		if text := p.entity.SheetSettings.DefaultWeightUnits.Format(p.entity.CarryOnBack()); text != f.Text {
 			f.Text = text
 			widget.MarkForLayoutWithinDockable(f)
 		}
 	}), i18n.Text("Carry On Back"), i18n.Text("The weight that can be carried slung across the back"))
 	p.addFieldAndLabel(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
-		if text := p.entity.ShiftSlightly().String(); text != f.Text {
+		if text := p.entity.SheetSettings.DefaultWeightUnits.Format(p.entity.ShiftSlightly()); text != f.Text {
 			f.Text = text
 			widget.MarkForLayoutWithinDockable(f)
 		}

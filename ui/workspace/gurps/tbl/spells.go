@@ -14,6 +14,7 @@ package tbl
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
 
@@ -34,11 +35,10 @@ var (
 	entitySpellPageColMap = map[int]int{
 		0: gurps.SpellDescriptionForPageColumn,
 		1: gurps.SpellCollegeColumn,
-		2: gurps.SpellDifficultyColumn,
-		3: gurps.SpellLevelColumn,
-		4: gurps.SpellRelativeLevelColumn,
-		5: gurps.SpellPointsColumn,
-		6: gurps.SpellReferenceColumn,
+		2: gurps.SpellLevelColumn,
+		3: gurps.SpellRelativeLevelColumn,
+		4: gurps.SpellPointsColumn,
+		5: gurps.SpellReferenceColumn,
 	}
 	spellPageColMap = map[int]int{
 		0: gurps.SpellDescriptionForPageColumn,
@@ -49,60 +49,93 @@ var (
 	}
 )
 
-// NewSpellTableHeaders creates a new set of table column headers for spells.
-func NewSpellTableHeaders(provider gurps.SpellListProvider, forPage bool) []unison.TableColumnHeader {
-	var headers []unison.TableColumnHeader
-	headers = append(headers,
-		NewHeader(i18n.Text("Spell"), "", forPage),
-		NewHeader(i18n.Text("College"), "", forPage),
-	)
-	if !forPage {
-		headers = append(headers,
-			NewHeader(i18n.Text("Resist"), i18n.Text("Resistance"), forPage),
-			NewHeader(i18n.Text("Class"), "", forPage),
-			NewHeader(i18n.Text("Cost"), i18n.Text("The mana cost to cast the spell"), forPage),
-			NewHeader(i18n.Text("Maintain"), i18n.Text("The mana cost to maintain the spell"), forPage),
-			NewHeader(i18n.Text("Time"), i18n.Text("The time required to cast the spell"), forPage),
-			NewHeader(i18n.Text("Duration"), "", forPage),
-		)
-	}
-	headers = append(headers,
-		NewHeader(i18n.Text("Diff"), i18n.Text("Difficulty"), forPage),
-	)
-	if forPage {
-		if _, ok := provider.(*gurps.Entity); ok {
-			headers = append(headers,
-				NewHeader(i18n.Text("SL"), i18n.Text("Skill Level"), true),
-				NewHeader(i18n.Text("RSL"), i18n.Text("Relative Skill Level"), true),
-			)
-		}
-		headers = append(headers, NewHeader(i18n.Text("Pts"), i18n.Text("Points"), true))
-	} else {
-		headers = append(headers,
-			NewHeader(i18n.Text("Category"), "", false),
-		)
-	}
-	return append(headers, NewPageRefHeader(forPage))
+type spellsProvider struct {
+	colMap   map[int]int
+	provider gurps.SpellListProvider
+	forPage  bool
 }
 
-// NewSpellRowData creates a new table data provider function for spells.
-func NewSpellRowData(provider gurps.SpellListProvider, forPage bool) func(table *unison.Table) []unison.TableRowData {
-	return func(table *unison.Table) []unison.TableRowData {
-		var colMap map[int]int
-		if forPage {
-			if _, ok := provider.(*gurps.Entity); ok {
-				colMap = entitySpellPageColMap
-			} else {
-				colMap = spellPageColMap
-			}
-		} else {
-			colMap = spellListColMap
-		}
-		data := provider.SpellList()
-		rows := make([]unison.TableRowData, 0, len(data))
-		for _, one := range data {
-			rows = append(rows, NewNode(table, nil, colMap, one, forPage))
-		}
-		return rows
+// NewSpellsProvider creates a new table provider for spells.
+func NewSpellsProvider(provider gurps.SpellListProvider, forPage bool) TableProvider {
+	p := &spellsProvider{
+		provider: provider,
+		forPage:  forPage,
 	}
+	if forPage {
+		if _, ok := provider.(*gurps.Entity); ok {
+			p.colMap = entitySpellPageColMap
+		} else {
+			p.colMap = spellPageColMap
+		}
+	} else {
+		p.colMap = spellListColMap
+	}
+	return p
+}
+
+func (p *spellsProvider) Headers() []unison.TableColumnHeader {
+	var headers []unison.TableColumnHeader
+	for i := 0; i < len(p.colMap); i++ {
+		switch p.colMap[i] {
+		case gurps.SpellDescriptionColumn, gurps.SpellDescriptionForPageColumn:
+			headers = append(headers, NewHeader(i18n.Text("Spell"), "", p.forPage))
+		case gurps.SpellResistColumn:
+			headers = append(headers, NewHeader(i18n.Text("Resist"), i18n.Text("Resistance"), p.forPage))
+		case gurps.SpellClassColumn:
+			headers = append(headers, NewHeader(i18n.Text("Class"), "", p.forPage))
+		case gurps.SpellCollegeColumn:
+			headers = append(headers, NewHeader(i18n.Text("College"), "", p.forPage))
+		case gurps.SpellCastCostColumn:
+			headers = append(headers, NewHeader(i18n.Text("Cost"), i18n.Text("The mana cost to cast the spell"),
+				p.forPage))
+		case gurps.SpellMaintainCostColumn:
+			headers = append(headers, NewHeader(i18n.Text("Maintain"), i18n.Text("The mana cost to maintain the spell"),
+				p.forPage))
+		case gurps.SpellCastTimeColumn:
+			headers = append(headers, NewHeader(i18n.Text("Time"), i18n.Text("The time required to cast the spell"),
+				p.forPage))
+		case gurps.SpellDurationColumn:
+			headers = append(headers, NewHeader(i18n.Text("Duration"), "", p.forPage))
+		case gurps.SpellDifficultyColumn:
+			headers = append(headers, NewHeader(i18n.Text("Diff"), i18n.Text("Difficulty"), p.forPage))
+		case gurps.SpellCategoryColumn:
+			headers = append(headers, NewHeader(i18n.Text("Category"), "", p.forPage))
+		case gurps.SpellReferenceColumn:
+			headers = append(headers, NewPageRefHeader(p.forPage))
+		case gurps.SpellLevelColumn:
+			headers = append(headers, NewHeader(i18n.Text("SL"), i18n.Text("Skill Level"), p.forPage))
+		case gurps.SpellRelativeLevelColumn:
+			headers = append(headers, NewHeader(i18n.Text("RSL"), i18n.Text("Relative Skill Level"), p.forPage))
+		case gurps.SpellPointsColumn:
+			headers = append(headers, NewHeader(i18n.Text("Pts"), i18n.Text("Points"), p.forPage))
+		default:
+			jot.Fatalf(1, "invalid spell column: %d", p.colMap[i])
+		}
+	}
+	return headers
+}
+
+func (p *spellsProvider) RowData(table *unison.Table) []unison.TableRowData {
+	data := p.provider.SpellList()
+	rows := make([]unison.TableRowData, 0, len(data))
+	for _, one := range data {
+		rows = append(rows, NewNode(table, nil, p.colMap, one, p.forPage))
+	}
+	return rows
+}
+
+func (p *spellsProvider) SyncHeader(_ []unison.TableColumnHeader) {
+}
+
+func (p *spellsProvider) HierarchyColumnIndex() int {
+	for k, v := range p.colMap {
+		if v == gurps.SpellDescriptionColumn || v == gurps.SpellDescriptionForPageColumn {
+			return k
+		}
+	}
+	return 0
+}
+
+func (p *spellsProvider) ExcessWidthColumnIndex() int {
+	return p.HierarchyColumnIndex()
 }

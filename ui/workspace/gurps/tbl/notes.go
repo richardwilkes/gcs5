@@ -14,6 +14,7 @@ package tbl
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
 
@@ -22,22 +23,55 @@ var noteColMap = map[int]int{
 	1: gurps.NoteReferenceColumn,
 }
 
-// NewNoteTableHeaders creates a new set of table column headers for notes.
-func NewNoteTableHeaders(forPage bool) []unison.TableColumnHeader {
-	return []unison.TableColumnHeader{
-		NewHeader(i18n.Text("Note"), "", forPage),
-		NewPageRefHeader(forPage),
+type notesProvider struct {
+	provider gurps.NoteListProvider
+	forPage  bool
+}
+
+// NewNotesProvider creates a new table provider for skills.
+func NewNotesProvider(provider gurps.NoteListProvider, forPage bool) TableProvider {
+	return &notesProvider{
+		provider: provider,
+		forPage:  forPage,
 	}
 }
 
-// NewNoteRowData creates a new table data provider function for notes.
-func NewNoteRowData(topLevelRowsProvider func() []*gurps.Note, forPage bool) func(table *unison.Table) []unison.TableRowData {
-	return func(table *unison.Table) []unison.TableRowData {
-		data := topLevelRowsProvider()
-		rows := make([]unison.TableRowData, 0, len(data))
-		for _, one := range data {
-			rows = append(rows, NewNode(table, nil, noteColMap, one, forPage))
+func (p *notesProvider) Headers() []unison.TableColumnHeader {
+	var headers []unison.TableColumnHeader
+	for i := 0; i < len(noteColMap); i++ {
+		switch noteColMap[i] {
+		case gurps.NoteTextColumn:
+			headers = append(headers, NewHeader(i18n.Text("Note"), "", p.forPage))
+		case gurps.NoteReferenceColumn:
+			headers = append(headers, NewPageRefHeader(p.forPage))
+		default:
+			jot.Fatalf(1, "invalid note column: %d", noteColMap[i])
 		}
-		return rows
 	}
+	return headers
+}
+
+func (p *notesProvider) RowData(table *unison.Table) []unison.TableRowData {
+	data := p.provider.NoteList()
+	rows := make([]unison.TableRowData, 0, len(data))
+	for _, one := range data {
+		rows = append(rows, NewNode(table, nil, noteColMap, one, p.forPage))
+	}
+	return rows
+}
+
+func (p *notesProvider) SyncHeader(_ []unison.TableColumnHeader) {
+}
+
+func (p *notesProvider) HierarchyColumnIndex() int {
+	for k, v := range noteColMap {
+		if v == gurps.NoteTextColumn {
+			return k
+		}
+	}
+	return 0
+}
+
+func (p *notesProvider) ExcessWidthColumnIndex() int {
+	return p.HierarchyColumnIndex()
 }

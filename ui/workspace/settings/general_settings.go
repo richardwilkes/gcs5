@@ -35,7 +35,7 @@ type generalSettingsDockable struct {
 	pointsField                         *widget.NumericField
 	includeUnspentPointsInTotalCheckbox *unison.CheckBox
 	techLevelField                      *widget.StringField
-	calendarPopup                       *unison.PopupMenu
+	calendarPopup                       *unison.PopupMenu[string]
 	initialListScaleField               *widget.PercentageField
 	initialSheetScaleField              *widget.PercentageField
 	exportResolutionField               *widget.IntegerField
@@ -131,7 +131,7 @@ func (d *generalSettingsDockable) createTechLevelField(content *unison.Panel) {
 
 func (d *generalSettingsDockable) createCalendarPopup(content *unison.Panel) {
 	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Calendar")))
-	d.calendarPopup = unison.NewPopupMenu()
+	d.calendarPopup = unison.NewPopupMenu[string]()
 	libraries := settings.Global().Libraries()
 	for _, lib := range gsettings.AvailableCalendarRefs(libraries) {
 		d.calendarPopup.AddDisabledItem(lib.Name)
@@ -141,10 +141,8 @@ func (d *generalSettingsDockable) createCalendarPopup(content *unison.Panel) {
 	}
 	d.calendarPopup.Select(settings.Global().General.CalendarRef(libraries).Name)
 	d.calendarPopup.SetLayoutData(&unison.FlexLayoutData{HSpan: 2})
-	d.calendarPopup.SelectionCallback = func() {
-		if name, ok := d.calendarPopup.Selected().(string); ok {
-			settings.Global().General.CalendarName = name
-		}
+	d.calendarPopup.SelectionCallback = func(_ int, item string) {
+		settings.Global().General.CalendarName = item
 	}
 	content.AddChild(d.calendarPopup)
 }

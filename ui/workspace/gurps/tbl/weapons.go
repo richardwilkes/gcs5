@@ -13,7 +13,9 @@ package tbl
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
 
@@ -43,53 +45,86 @@ var (
 	}
 )
 
-// NewWeaponTableHeaders creates a new set of table column headers for weapons.
-func NewWeaponTableHeaders(melee bool) []unison.TableColumnHeader {
-	var headers []unison.TableColumnHeader
-	if melee {
-		headers = append(headers, NewHeader(i18n.Text("Melee Weapon"), "", true))
-	} else {
-		headers = append(headers, NewHeader(i18n.Text("Ranged Weapon"), "", true))
-	}
-	headers = append(headers,
-		NewHeader(i18n.Text("Usage"), "", true),
-		NewHeader(i18n.Text("SL"), i18n.Text("Skill Level"), true),
-	)
-	if melee {
-		headers = append(headers,
-			NewHeader(i18n.Text("Parry"), "", true),
-			NewHeader(i18n.Text("Block"), "", true),
-			NewHeader(i18n.Text("Damage"), "", true),
-			NewHeader(i18n.Text("Reach"), "", true),
-		)
-	} else {
-		headers = append(headers,
-			NewHeader(i18n.Text("Acc"), i18n.Text("Accuracy Bonus"), true),
-			NewHeader(i18n.Text("Damage"), "", true),
-			NewHeader(i18n.Text("Range"), "", true),
-			NewHeader(i18n.Text("RoF"), i18n.Text("Rate of Fire"), true),
-			NewHeader(i18n.Text("Shots"), "", true),
-			NewHeader(i18n.Text("Bulk"), "", true),
-			NewHeader(i18n.Text("Recoil"), "", true),
-		)
-	}
-	return append(headers, NewHeader(i18n.Text("ST"), i18n.Text("Minimum Strength"), true))
+type weaponsProvider struct {
+	colMap     map[int]int
+	provider   gurps.WeaponListProvider
+	weaponType weapon.Type
 }
 
-// NewWeaponRowData creates a new table data provider function for weapons.
-func NewWeaponRowData(topLevelRowProvider func() []*gurps.Weapon, melee bool) func(table *unison.Table) []unison.TableRowData {
-	return func(table *unison.Table) []unison.TableRowData {
-		var colMap map[int]int
-		if melee {
-			colMap = meleeWeaponColMap
-		} else {
-			colMap = rangedWeaponColMap
-		}
-		data := topLevelRowProvider()
-		rows := make([]unison.TableRowData, 0, len(data))
-		for _, one := range data {
-			rows = append(rows, NewNode(table, nil, colMap, one, true))
-		}
-		return rows
+// NewWeaponsProvider creates a new table provider for weapons.
+func NewWeaponsProvider(provider gurps.WeaponListProvider, weaponType weapon.Type) TableProvider {
+	p := &weaponsProvider{
+		provider:   provider,
+		weaponType: weaponType,
 	}
+	if weaponType == weapon.Melee {
+		p.colMap = meleeWeaponColMap
+	} else {
+		p.colMap = rangedWeaponColMap
+	}
+	return p
+}
+
+func (p *weaponsProvider) Headers() []unison.TableColumnHeader {
+	var headers []unison.TableColumnHeader
+	for i := 0; i < len(p.colMap); i++ {
+		switch p.colMap[i] {
+		case gurps.WeaponDescriptionColumn:
+			headers = append(headers, NewHeader(p.weaponType.String(), "", true))
+		case gurps.WeaponUsageColumn:
+			headers = append(headers, NewHeader(i18n.Text("Usage"), "", true))
+		case gurps.WeaponSLColumn:
+			headers = append(headers, NewHeader(i18n.Text("SL"), i18n.Text("Skill Level"), true))
+		case gurps.WeaponParryColumn:
+			headers = append(headers, NewHeader(i18n.Text("Parry"), "", true))
+		case gurps.WeaponBlockColumn:
+			headers = append(headers, NewHeader(i18n.Text("Block"), "", true))
+		case gurps.WeaponDamageColumn:
+			headers = append(headers, NewHeader(i18n.Text("Damage"), "", true))
+		case gurps.WeaponReachColumn:
+			headers = append(headers, NewHeader(i18n.Text("Reach"), "", true))
+		case gurps.WeaponSTColumn:
+			headers = append(headers, NewHeader(i18n.Text("ST"), i18n.Text("Minimum Strength"), true))
+		case gurps.WeaponAccColumn:
+			headers = append(headers, NewHeader(i18n.Text("Acc"), i18n.Text("Accuracy Bonus"), true))
+		case gurps.WeaponRangeColumn:
+			headers = append(headers, NewHeader(i18n.Text("Range"), "", true))
+		case gurps.WeaponRoFColumn:
+			headers = append(headers, NewHeader(i18n.Text("RoF"), i18n.Text("Rate of Fire"), true))
+		case gurps.WeaponShotsColumn:
+			headers = append(headers, NewHeader(i18n.Text("Shots"), "", true))
+		case gurps.WeaponBulkColumn:
+			headers = append(headers, NewHeader(i18n.Text("Bulk"), "", true))
+		case gurps.WeaponRecoilColumn:
+			headers = append(headers, NewHeader(i18n.Text("Recoil"), "", true))
+		default:
+			jot.Fatalf(1, "invalid weapon column: %d", p.colMap[i])
+		}
+	}
+	return headers
+}
+
+func (p *weaponsProvider) RowData(table *unison.Table) []unison.TableRowData {
+	data := p.provider.EquippedWeapons(p.weaponType)
+	rows := make([]unison.TableRowData, 0, len(data))
+	for _, one := range data {
+		rows = append(rows, NewNode(table, nil, p.colMap, one, true))
+	}
+	return rows
+}
+
+func (p *weaponsProvider) SyncHeader(_ []unison.TableColumnHeader) {
+}
+
+func (p *weaponsProvider) HierarchyColumnIndex() int {
+	return -1
+}
+
+func (p *weaponsProvider) ExcessWidthColumnIndex() int {
+	for k, v := range p.colMap {
+		if v == gurps.WeaponDescriptionColumn {
+			return k
+		}
+	}
+	return 0
 }

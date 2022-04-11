@@ -20,7 +20,6 @@ import (
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
-	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
@@ -31,17 +30,16 @@ import (
 // PageList holds a list for a sheet page.
 type PageList struct {
 	unison.Panel
-	tableHeader          *unison.TableHeader
-	table                *unison.Table
-	topLevelRowsCallback func(table *unison.Table) []unison.TableRowData
-	canPerformMap        map[int]func() bool
-	performMap           map[int]func()
+	tableHeader   *unison.TableHeader
+	table         *unison.Table
+	provider      tbl.TableProvider
+	canPerformMap map[int]func() bool
+	performMap    map[int]func()
 }
 
 // NewAdvantagesPageList creates the advantages page list.
 func NewAdvantagesPageList(provider gurps.ListProvider) *PageList {
-	p := newPageList(tbl.NewAdvantageTableHeaders(true), 0, 0,
-		tbl.NewAdvantageRowData(func() []*gurps.Advantage { return provider.AdvantageList() }, true))
+	p := newPageList(tbl.NewAdvantagesProvider(provider, true))
 	p.installToggleStateHandler()
 	p.installIncrementHandler()
 	p.installDecrementHandler()
@@ -50,8 +48,7 @@ func NewAdvantagesPageList(provider gurps.ListProvider) *PageList {
 
 // NewCarriedEquipmentPageList creates the carried equipment page list.
 func NewCarriedEquipmentPageList(provider gurps.ListProvider) *PageList {
-	p := newPageList(tbl.NewEquipmentTableHeaders(provider, true, true), 2, 2,
-		tbl.NewEquipmentRowData(func() []*gurps.Equipment { return provider.CarriedEquipmentList() }, true, true))
+	p := newPageList(tbl.NewEquipmentProvider(provider, true, true))
 	p.installToggleStateHandler()
 	p.installIncrementHandler()
 	p.installDecrementHandler()
@@ -64,8 +61,7 @@ func NewCarriedEquipmentPageList(provider gurps.ListProvider) *PageList {
 
 // NewOtherEquipmentPageList creates the other equipment page list.
 func NewOtherEquipmentPageList(provider gurps.ListProvider) *PageList {
-	p := newPageList(tbl.NewEquipmentTableHeaders(provider, true, false), 1, 1,
-		tbl.NewEquipmentRowData(func() []*gurps.Equipment { return provider.OtherEquipmentList() }, true, false))
+	p := newPageList(tbl.NewEquipmentProvider(provider, true, false))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
 	p.installIncrementUsesHandler()
@@ -76,8 +72,8 @@ func NewOtherEquipmentPageList(provider gurps.ListProvider) *PageList {
 }
 
 // NewSkillsPageList creates the skills page list.
-func NewSkillsPageList(provider gurps.SkillListProvider) *PageList {
-	p := newPageList(tbl.NewSkillTableHeaders(provider, true), 0, 0, tbl.NewSkillRowData(provider, true))
+func NewSkillsPageList(provider gurps.ListProvider) *PageList {
+	p := newPageList(tbl.NewSkillsProvider(provider, true))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
 	p.installIncrementSkillHandler()
@@ -89,7 +85,7 @@ func NewSkillsPageList(provider gurps.SkillListProvider) *PageList {
 
 // NewSpellsPageList creates the spells page list.
 func NewSpellsPageList(provider gurps.SpellListProvider) *PageList {
-	p := newPageList(tbl.NewSpellTableHeaders(provider, true), 0, 0, tbl.NewSpellRowData(provider, true))
+	p := newPageList(tbl.NewSpellsProvider(provider, true))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
 	p.installIncrementSkillHandler()
@@ -99,40 +95,35 @@ func NewSpellsPageList(provider gurps.SpellListProvider) *PageList {
 
 // NewNotesPageList creates the notes page list.
 func NewNotesPageList(provider gurps.ListProvider) *PageList {
-	return newPageList(tbl.NewNoteTableHeaders(true), 0, 0,
-		tbl.NewNoteRowData(func() []*gurps.Note { return provider.NoteList() }, true))
+	return newPageList(tbl.NewNotesProvider(provider, true))
 }
 
 // NewConditionalModifiersPageList creates the conditional modifiers page list.
 func NewConditionalModifiersPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewConditionalModifierTableHeaders(i18n.Text("Condition")), -1, 1,
-		tbl.NewConditionalModifierRowData(entity, false))
+	return newPageList(tbl.NewConditionalModifiersProvider(entity))
 }
 
 // NewReactionsPageList creates the reaction modifiers page list.
 func NewReactionsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewConditionalModifierTableHeaders(i18n.Text("Reaction")), -1, 1,
-		tbl.NewConditionalModifierRowData(entity, true))
+	return newPageList(tbl.NewReactionModifiersProvider(entity))
 }
 
 // NewMeleeWeaponsPageList creates the melee weapons page list.
 func NewMeleeWeaponsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewWeaponTableHeaders(true), -1, 0,
-		tbl.NewWeaponRowData(func() []*gurps.Weapon { return entity.EquippedWeapons(weapon.Melee) }, true))
+	return newPageList(tbl.NewWeaponsProvider(entity, weapon.Melee))
 }
 
 // NewRangedWeaponsPageList creates the ranged weapons page list.
 func NewRangedWeaponsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewWeaponTableHeaders(false), -1, 0,
-		tbl.NewWeaponRowData(func() []*gurps.Weapon { return entity.EquippedWeapons(weapon.Ranged) }, false))
+	return newPageList(tbl.NewWeaponsProvider(entity, weapon.Ranged))
 }
 
-func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex, excessWidthIndex int, topLevelRows func(table *unison.Table) []unison.TableRowData) *PageList {
+func newPageList(provider tbl.TableProvider) *PageList {
 	p := &PageList{
-		table:                unison.NewTable(),
-		topLevelRowsCallback: topLevelRows,
-		canPerformMap:        make(map[int]func() bool),
-		performMap:           make(map[int]func()),
+		table:         unison.NewTable(),
+		provider:      provider,
+		canPerformMap: make(map[int]func() bool),
+		performMap:    make(map[int]func()),
 	}
 	p.Self = p
 	p.SetLayout(&unison.FlexLayout{Columns: 1})
@@ -147,12 +138,13 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 	p.table.MinimumRowHeight = theme.PageFieldPrimaryFont.LineHeight()
 	p.table.Padding.Top = 0
 	p.table.Padding.Bottom = 0
-	p.table.HierarchyColumnIndex = hierarchyColumnIndex
+	p.table.HierarchyColumnIndex = provider.HierarchyColumnIndex()
 	p.table.HierarchyIndent = theme.PageFieldPrimaryFont.LineHeight()
 	p.table.PreventUserColumnResize = true
-	p.table.ColumnSizes = make([]unison.ColumnSize, len(columnHeaders))
+	headers := provider.Headers()
+	p.table.ColumnSizes = make([]unison.ColumnSize, len(headers))
 	for i := range p.table.ColumnSizes {
-		_, pref, _ := columnHeaders[i].AsPanel().Sizes(geom.Size[float32]{})
+		_, pref, _ := headers[i].AsPanel().Sizes(geom.Size[float32]{})
 		pref.Width += p.table.Padding.Left + p.table.Padding.Right
 		p.table.ColumnSizes[i].AutoMinimum = pref.Width
 		p.table.ColumnSizes[i].AutoMaximum = 800
@@ -170,7 +162,7 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 		return p.table.DefaultMouseDown(where, button, clickCount, mod)
 	}
 	p.table.FrameChangeCallback = func() {
-		p.table.SizeColumnsToFitWithExcessIn(excessWidthIndex)
+		p.table.SizeColumnsToFitWithExcessIn(p.provider.ExcessWidthColumnIndex())
 	}
 	p.table.CanPerformCmdCallback = func(_ interface{}, id int) bool {
 		if f, ok := p.canPerformMap[id]; ok {
@@ -183,7 +175,7 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 			f()
 		}
 	}
-	p.tableHeader = unison.NewTableHeader(p.table, columnHeaders...)
+	p.tableHeader = unison.NewTableHeader(p.table, headers...)
 	p.tableHeader.BackgroundInk = theme.HeaderColor
 	p.tableHeader.DividerInk = theme.HeaderColor
 	p.tableHeader.HeaderBorder = unison.NewLineBorder(theme.HeaderColor, 0, geom.Insets[float32]{Bottom: 1}, false)
@@ -224,7 +216,7 @@ func newPageList(columnHeaders []unison.TableColumnHeader, hierarchyColumnIndex,
 			p.tableHeader.DefaultDraw(gc, dirty)
 		}
 	}
-	p.table.SetTopLevelRows(p.topLevelRowsCallback(p.table))
+	p.table.SetTopLevelRows(p.provider.RowData(p.table))
 	p.AddChild(p.tableHeader)
 	p.AddChild(p.table)
 	return p
@@ -641,6 +633,7 @@ func (p *PageList) installDecrementTechLevelHandler() {
 
 // Sync the underlying data.
 func (p *PageList) Sync() {
+	p.provider.SyncHeader(p.tableHeader.ColumnHeaders)
 	rows := p.table.SelectedRows(false)
 	selection := make(map[node.Node]bool, len(rows))
 	for _, row := range rows {
@@ -648,7 +641,7 @@ func (p *PageList) Sync() {
 			selection[n.Data()] = true
 		}
 	}
-	p.table.SetTopLevelRows(p.topLevelRowsCallback(p.table))
+	p.table.SetTopLevelRows(p.provider.RowData(p.table))
 	if len(selection) != 0 {
 		_, indexes := p.collectRowMappings(0, make([]int, 0, len(selection)), selection, p.table.TopLevelRows())
 		if len(indexes) != 0 {

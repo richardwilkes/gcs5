@@ -27,6 +27,10 @@ github.com/richardwilkes/toolbox v1.68.1 h1:eWJv2a1shyTaZeqh5uAwZLWvO8mRUS+J8ZaY
 github.com/richardwilkes/toolbox v1.68.1/go.mod h1:dTabQRf90QsPFzFiGg/phbsdqN3R0jzzHd2mwahTe5g=
 github.com/richardwilkes/unison v0.12.0 h1:XsMLnZ3Jni2Fyin9CX4v5RvFEJV7VN7qVUC80KT3R/w=
 github.com/richardwilkes/unison v0.12.0/go.mod h1:h9TUxYqoJlLKSPwZwSz3e1qUUR3tFAQMfBBMUJ2br+w=
+github.com/richardwilkes/unison v0.12.1-0.20220410193623-15fb48b820dd h1:HabTSLEgnIDaZC0kuuBzVoDn3T2sUatPxLQsNAET/+g=
+github.com/richardwilkes/unison v0.12.1-0.20220410193623-15fb48b820dd/go.mod h1:h9TUxYqoJlLKSPwZwSz3e1qUUR3tFAQMfBBMUJ2br+w=
+github.com/richardwilkes/unison v0.12.1-0.20220410203522-1a0d6194197e h1:ykEoi28w3B3+kax0Vk9VA74uVk25poipiKZlGFz3jZw=
+github.com/richardwilkes/unison v0.12.1-0.20220410203522-1a0d6194197e/go.mod h1:h9TUxYqoJlLKSPwZwSz3e1qUUR3tFAQMfBBMUJ2br+w=
 github.com/rogpeppe/go-internal v1.8.0 h1:FCbCCtXNOY3UtUuHUYaghJg4y7Fd14rXifAYUAtL9R8=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.7.1 h1:5TQK59W5E3v0r2duFAb7P95B6hEeOyEnHRa8MjYSMTY=

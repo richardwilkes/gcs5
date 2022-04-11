@@ -67,7 +67,7 @@ type Settings struct {
 }
 
 // Default returns new default settings.
-func Default(entity *gurps.Entity) *Settings {
+func Default() *Settings {
 	return &Settings{
 		LastSeenGCSVersion: cmdline.AppVersion,
 		General:            settings.NewGeneral(),
@@ -76,7 +76,7 @@ func Default(entity *gurps.Entity) *Settings {
 		LastDirs:           make(map[string]string),
 		WindowPositions:    make(map[string]*WindowPosition),
 		QuickExports:       gurps.NewQuickExports(),
-		Sheet:              gurps.FactorySheetSettings(entity),
+		Sheet:              gurps.FactorySheetSettings(),
 	}
 }
 
@@ -85,9 +85,9 @@ func Global() *Settings {
 	if global == nil {
 		dice.GURPSFormat = true
 		if err := jio.LoadFromFile(context.Background(), Path(), &global); err != nil {
-			global = Default(nil)
+			global = Default()
 		}
-		global.EnsureValidity(nil)
+		global.EnsureValidity()
 		gurps.SettingsProvider = global
 		gurps.InstallEvaluatorFunctions(fxp.EvalFuncs)
 		global.Colors.MakeCurrent()
@@ -102,7 +102,7 @@ func (s *Settings) Save() error {
 }
 
 // EnsureValidity checks the current settings for validity and if they aren't valid, makes them so.
-func (s *Settings) EnsureValidity(entity *gurps.Entity) {
+func (s *Settings) EnsureValidity() {
 	if s.General == nil {
 		s.General = settings.NewGeneral()
 	} else {
@@ -121,7 +121,7 @@ func (s *Settings) EnsureValidity(entity *gurps.Entity) {
 		s.QuickExports = gurps.NewQuickExports()
 	}
 	if s.Sheet == nil {
-		s.Sheet = gurps.FactorySheetSettings(entity)
+		s.Sheet = gurps.FactorySheetSettings()
 	} else {
 		s.Sheet.EnsureValidity()
 	}

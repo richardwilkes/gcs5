@@ -35,7 +35,7 @@ func (enum WeightUnits) Format(weight Weight) string {
 		return f64d4.Int(weight).String() + " " + enum.Key()
 	case Ounce:
 		return f64d4.Int(weight).Mul(f64d4.FromInt(16)).String() + " " + enum.Key()
-	case Ton:
+	case Ton, TonAlt:
 		return f64d4.Int(weight).Div(f64d4.FromInt(2000)).String() + " " + enum.Key()
 	case Kilogram:
 		return f64d4.Int(weight).Div(f64d4.FromInt(2)).String() + " " + enum.Key()
@@ -53,7 +53,7 @@ func (enum WeightUnits) ToPounds(weight f64d4.Int) f64d4.Int {
 		return weight
 	case Ounce:
 		return weight.Div(f64d4.FromInt(16))
-	case Ton:
+	case Ton, TonAlt:
 		return weight.Mul(f64d4.FromInt(2000))
 	case Kilogram:
 		return weight.Mul(f64d4.FromInt(2))

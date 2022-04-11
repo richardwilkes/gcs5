@@ -101,20 +101,18 @@ func (d *fontSettingsDockable) fill() {
 }
 
 func (d *fontSettingsDockable) createFamilyField(index int) {
-	p := unison.NewPopupMenu()
-	for _, fam := range unison.FontFamilies() {
-		p.AddItem(fam)
+	p := unison.NewPopupMenu[string]()
+	for _, family := range unison.FontFamilies() {
+		p.AddItem(family)
 	}
 	p.Select(theme.CurrentFonts[index].Font.Descriptor().Family)
-	p.SelectionCallback = func() {
+	p.SelectionCallback = func(_ int, family string) {
 		if d.noUpdate {
 			return
 		}
 		fd := theme.CurrentFonts[index].Font.Descriptor()
-		if s, ok := p.Selected().(string); ok {
-			fd.Family = s
-			d.applyFont(index, fd)
-		}
+		fd.Family = family
+		d.applyFont(index, fd)
 	}
 	d.content.AddChild(p)
 }
@@ -137,58 +135,52 @@ func (d *fontSettingsDockable) createSizeField(index int) {
 }
 
 func (d *fontSettingsDockable) createWeightField(index int) {
-	p := unison.NewPopupMenu()
+	p := unison.NewPopupMenu[unison.FontWeight]()
 	for _, s := range unison.FontWeights {
 		p.AddItem(s)
 	}
 	p.Select(theme.CurrentFonts[index].Font.Descriptor().Weight)
-	p.SelectionCallback = func() {
+	p.SelectionCallback = func(_ int, item unison.FontWeight) {
 		if d.noUpdate {
 			return
 		}
 		fd := theme.CurrentFonts[index].Font.Descriptor()
-		if w, ok := p.Selected().(unison.FontWeight); ok {
-			fd.Weight = w
-			d.applyFont(index, fd)
-		}
+		fd.Weight = item
+		d.applyFont(index, fd)
 	}
 	d.content.AddChild(p)
 }
 
 func (d *fontSettingsDockable) createSpacingField(index int) {
-	p := unison.NewPopupMenu()
+	p := unison.NewPopupMenu[unison.FontSpacing]()
 	for _, s := range unison.Spacings {
 		p.AddItem(s)
 	}
 	p.Select(theme.CurrentFonts[index].Font.Descriptor().Spacing)
-	p.SelectionCallback = func() {
+	p.SelectionCallback = func(_ int, item unison.FontSpacing) {
 		if d.noUpdate {
 			return
 		}
 		fd := theme.CurrentFonts[index].Font.Descriptor()
-		if s, ok := p.Selected().(unison.FontSpacing); ok {
-			fd.Spacing = s
-			d.applyFont(index, fd)
-		}
+		fd.Spacing = item
+		d.applyFont(index, fd)
 	}
 	d.content.AddChild(p)
 }
 
 func (d *fontSettingsDockable) createSlantField(index int) {
-	p := unison.NewPopupMenu()
+	p := unison.NewPopupMenu[unison.FontSlant]()
 	for _, s := range unison.Slants {
 		p.AddItem(s)
 	}
 	p.Select(theme.CurrentFonts[index].Font.Descriptor().Slant)
-	p.SelectionCallback = func() {
+	p.SelectionCallback = func(_ int, item unison.FontSlant) {
 		if d.noUpdate {
 			return
 		}
 		fd := theme.CurrentFonts[index].Font.Descriptor()
-		if s, ok := p.Selected().(unison.FontSlant); ok {
-			fd.Slant = s
-			d.applyFont(index, fd)
-		}
+		fd.Slant = item
+		d.applyFont(index, fd)
 	}
 	d.content.AddChild(p)
 }
@@ -221,19 +213,19 @@ func (d *fontSettingsDockable) applyFont(index int, fd unison.FontDescriptor) {
 	i := index * 7
 	fd = theme.CurrentFonts[index].Font.Descriptor()
 	d.noUpdate = true
-	if p, ok := children[i+1].Self.(*unison.PopupMenu); ok {
+	if p, ok := children[i+1].Self.(*unison.PopupMenu[string]); ok {
 		p.Select(fd.Family)
 	}
 	if nf, ok := children[i+2].Self.(*widget.NumericField); ok {
 		nf.SetText(f64d4.FromFloat32(fd.Size).String())
 	}
-	if p, ok := children[i+3].Self.(*unison.PopupMenu); ok {
+	if p, ok := children[i+3].Self.(*unison.PopupMenu[unison.FontWeight]); ok {
 		p.Select(fd.Weight)
 	}
-	if p, ok := children[i+4].Self.(*unison.PopupMenu); ok {
+	if p, ok := children[i+4].Self.(*unison.PopupMenu[unison.FontSpacing]); ok {
 		p.Select(fd.Spacing)
 	}
-	if p, ok := children[i+5].Self.(*unison.PopupMenu); ok {
+	if p, ok := children[i+5].Self.(*unison.PopupMenu[unison.FontSlant]); ok {
 		p.Select(fd.Slant)
 	}
 	d.noUpdate = false

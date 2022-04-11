@@ -14,6 +14,7 @@ package tbl
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
 
@@ -38,49 +39,76 @@ var (
 	}
 )
 
-// NewSkillTableHeaders creates a new set of table column headers for skills.
-func NewSkillTableHeaders(provider gurps.SkillListProvider, forPage bool) []unison.TableColumnHeader {
-	var headers []unison.TableColumnHeader
-	headers = append(headers,
-		NewHeader(i18n.Text("Skill / Technique"), "", forPage),
-	)
-	if forPage {
-		if _, ok := provider.(*gurps.Entity); ok {
-			headers = append(headers,
-				NewHeader(i18n.Text("SL"), i18n.Text("Skill Level"), true),
-				NewHeader(i18n.Text("RSL"), i18n.Text("Relative Skill Level"), true),
-			)
-		}
-		headers = append(headers, NewHeader(i18n.Text("Pts"), i18n.Text("Points"), true))
-	} else {
-		headers = append(headers,
-			NewHeader(i18n.Text("Diff"), i18n.Text("Difficulty"), false),
-			NewHeader(i18n.Text("Category"), "", false),
-		)
-	}
-	return append(headers,
-		NewPageRefHeader(forPage),
-	)
+type skillsProvider struct {
+	colMap   map[int]int
+	provider gurps.SkillListProvider
+	forPage  bool
 }
 
-// NewSkillRowData creates a new table data provider function for skills.
-func NewSkillRowData(provider gurps.SkillListProvider, forPage bool) func(table *unison.Table) []unison.TableRowData {
-	return func(table *unison.Table) []unison.TableRowData {
-		var colMap map[int]int
-		if forPage {
-			if _, ok := provider.(*gurps.Entity); ok {
-				colMap = entitySkillPageColMap
-			} else {
-				colMap = skillPageColMap
-			}
-		} else {
-			colMap = skillListColMap
-		}
-		data := provider.SkillList()
-		rows := make([]unison.TableRowData, 0, len(data))
-		for _, one := range data {
-			rows = append(rows, NewNode(table, nil, colMap, one, forPage))
-		}
-		return rows
+// NewSkillsProvider creates a new table provider for skills.
+func NewSkillsProvider(provider gurps.SkillListProvider, forPage bool) TableProvider {
+	p := &skillsProvider{
+		provider: provider,
+		forPage:  forPage,
 	}
+	if forPage {
+		if _, ok := provider.(*gurps.Entity); ok {
+			p.colMap = entitySkillPageColMap
+		} else {
+			p.colMap = skillPageColMap
+		}
+	} else {
+		p.colMap = skillListColMap
+	}
+	return p
+}
+
+func (p *skillsProvider) Headers() []unison.TableColumnHeader {
+	var headers []unison.TableColumnHeader
+	for i := 0; i < len(p.colMap); i++ {
+		switch p.colMap[i] {
+		case gurps.SkillDescriptionColumn:
+			headers = append(headers, NewHeader(i18n.Text("Skill / Technique"), "", p.forPage))
+		case gurps.SkillDifficultyColumn:
+			headers = append(headers, NewHeader(i18n.Text("Diff"), i18n.Text("Difficulty"), p.forPage))
+		case gurps.SkillCategoryColumn:
+			headers = append(headers, NewHeader(i18n.Text("Category"), "", p.forPage))
+		case gurps.SkillReferenceColumn:
+			headers = append(headers, NewPageRefHeader(p.forPage))
+		case gurps.SkillLevelColumn:
+			headers = append(headers, NewHeader(i18n.Text("SL"), i18n.Text("Skill Level"), p.forPage))
+		case gurps.SkillRelativeLevelColumn:
+			headers = append(headers, NewHeader(i18n.Text("RSL"), i18n.Text("Relative Skill Level"), p.forPage))
+		case gurps.SkillPointsColumn:
+			headers = append(headers, NewHeader(i18n.Text("Pts"), i18n.Text("Points"), p.forPage))
+		default:
+			jot.Fatalf(1, "invalid skill column: %d", p.colMap[i])
+		}
+	}
+	return headers
+}
+
+func (p *skillsProvider) RowData(table *unison.Table) []unison.TableRowData {
+	data := p.provider.SkillList()
+	rows := make([]unison.TableRowData, 0, len(data))
+	for _, one := range data {
+		rows = append(rows, NewNode(table, nil, p.colMap, one, p.forPage))
+	}
+	return rows
+}
+
+func (p *skillsProvider) SyncHeader(_ []unison.TableColumnHeader) {
+}
+
+func (p *skillsProvider) HierarchyColumnIndex() int {
+	for k, v := range p.colMap {
+		if v == gurps.SkillDescriptionColumn {
+			return k
+		}
+	}
+	return 0
+}
+
+func (p *skillsProvider) ExcessWidthColumnIndex() int {
+	return p.HierarchyColumnIndex()
 }

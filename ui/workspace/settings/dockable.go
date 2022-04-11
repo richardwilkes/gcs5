@@ -42,6 +42,19 @@ type Dockable struct {
 	Resetter  func()
 }
 
+// ActiveDockable returns the currently active dockable in the active window.
+func ActiveDockable() unison.Dockable {
+	ws := workspace.FromWindow(unison.ActiveWindow())
+	if ws == nil {
+		return nil
+	}
+	dc := ws.CurrentlyFocusedDockContainer()
+	if dc == nil {
+		return nil
+	}
+	return dc.CurrentDockable()
+}
+
 // Activate attempts to locate an existing dockable that 'matcher' returns true for. If found, it will have been
 // activated and focused.
 func Activate(matcher func(d unison.Dockable) bool) (ws *workspace.Workspace, dc *unison.DockContainer, found bool) {
@@ -49,11 +62,7 @@ func Activate(matcher func(d unison.Dockable) bool) (ws *workspace.Workspace, dc
 		jot.Error("no workspace available")
 		return nil, nil, false
 	}
-	if focus := ws.Window.Focus(); focus != nil {
-		if focusedDC := unison.DockContainerFor(focus); focusedDC != nil && focusedDC.Dock == ws.DocumentDock.Dock {
-			dc = focusedDC
-		}
-	}
+	dc = ws.CurrentlyFocusedDockContainer()
 	ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(container *unison.DockContainer) bool {
 		for _, one := range container.Dockables() {
 			if matcher(one) {

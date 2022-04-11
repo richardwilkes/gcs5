@@ -36,6 +36,7 @@ import (
 type TableDockable struct {
 	unison.Panel
 	path            string
+	provider        tbl.TableProvider
 	lockButton      *unison.Button
 	hierarchyButton *unison.Button
 	sizeToFitButton *unison.Button
@@ -53,6 +54,14 @@ type TableDockable struct {
 	locked          bool
 }
 
+type advantageListProvider struct {
+	advantages []*gurps.Advantage
+}
+
+func (p *advantageListProvider) AdvantageList() []*gurps.Advantage {
+	return p.advantages
+}
+
 // NewAdvantageTableDockableFromFile loads a list of advantages from a file and creates a new unison.Dockable for them.
 func NewAdvantageTableDockableFromFile(filePath string) (unison.Dockable, error) {
 	advantages, err := gurps.NewAdvantagesFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
@@ -64,8 +73,15 @@ func NewAdvantageTableDockableFromFile(filePath string) (unison.Dockable, error)
 
 // NewAdvantageTableDockable creates a new unison.Dockable for advantage list files.
 func NewAdvantageTableDockable(filePath string, advantages []*gurps.Advantage) unison.Dockable {
-	return NewTableDockable(filePath, tbl.NewAdvantageTableHeaders(false),
-		tbl.NewAdvantageRowData(func() []*gurps.Advantage { return advantages }, false))
+	return NewTableDockable(filePath, tbl.NewAdvantagesProvider(&advantageListProvider{advantages: advantages}, false))
+}
+
+type advantageModifierListProvider struct {
+	modifiers []*gurps.AdvantageModifier
+}
+
+func (p *advantageModifierListProvider) AdvantageModifierList() []*gurps.AdvantageModifier {
+	return p.modifiers
 }
 
 // NewAdvantageModifierTableDockableFromFile loads a list of advantage modifiers from a file and creates a new
@@ -80,8 +96,20 @@ func NewAdvantageModifierTableDockableFromFile(filePath string) (unison.Dockable
 
 // NewAdvantageModifierTableDockable creates a new unison.Dockable for advantage modifier list files.
 func NewAdvantageModifierTableDockable(filePath string, modifiers []*gurps.AdvantageModifier) unison.Dockable {
-	return NewTableDockable(filePath, tbl.NewAdvantageModifierTableHeaders(),
-		tbl.NewAdvantageModifierRowData(func() []*gurps.AdvantageModifier { return modifiers }))
+	return NewTableDockable(filePath, tbl.NewAdvantageModifiersProvider(&advantageModifierListProvider{modifiers: modifiers}))
+}
+
+type equipmentListProvider struct {
+	carried []*gurps.Equipment
+	other   []*gurps.Equipment
+}
+
+func (p *equipmentListProvider) CarriedEquipmentList() []*gurps.Equipment {
+	return p.carried
+}
+
+func (p *equipmentListProvider) OtherEquipmentList() []*gurps.Equipment {
+	return p.other
 }
 
 // NewEquipmentTableDockableFromFile loads a list of equipment from a file and creates a new unison.Dockable for them.
@@ -95,8 +123,15 @@ func NewEquipmentTableDockableFromFile(filePath string) (unison.Dockable, error)
 
 // NewEquipmentTableDockable creates a new unison.Dockable for equipment list files.
 func NewEquipmentTableDockable(filePath string, equipment []*gurps.Equipment) unison.Dockable {
-	return NewTableDockable(filePath, tbl.NewEquipmentTableHeaders(nil, false, false),
-		tbl.NewEquipmentRowData(func() []*gurps.Equipment { return equipment }, false, false))
+	return NewTableDockable(filePath, tbl.NewEquipmentProvider(&equipmentListProvider{other: equipment}, false, false))
+}
+
+type equipmentModifierListProvider struct {
+	modifiers []*gurps.EquipmentModifier
+}
+
+func (p *equipmentModifierListProvider) EquipmentModifierList() []*gurps.EquipmentModifier {
+	return p.modifiers
 }
 
 // NewEquipmentModifierTableDockableFromFile loads a list of equipment modifiers from a file and creates a new
@@ -111,8 +146,7 @@ func NewEquipmentModifierTableDockableFromFile(filePath string) (unison.Dockable
 
 // NewEquipmentModifierTableDockable creates a new unison.Dockable for equipment modifier list files.
 func NewEquipmentModifierTableDockable(filePath string, modifiers []*gurps.EquipmentModifier) unison.Dockable {
-	return NewTableDockable(filePath, tbl.NewEquipmentModifierTableHeaders(),
-		tbl.NewEquipmentModifierRowData(func() []*gurps.EquipmentModifier { return modifiers }))
+	return NewTableDockable(filePath, tbl.NewEquipmentModifiersProvider(&equipmentModifierListProvider{modifiers: modifiers}))
 }
 
 type skillListProvider struct {
@@ -134,8 +168,7 @@ func NewSkillTableDockableFromFile(filePath string) (unison.Dockable, error) {
 
 // NewSkillTableDockable creates a new unison.Dockable for skill list files.
 func NewSkillTableDockable(filePath string, skills []*gurps.Skill) unison.Dockable {
-	p := &skillListProvider{skills: skills}
-	return NewTableDockable(filePath, tbl.NewSkillTableHeaders(p, false), tbl.NewSkillRowData(p, false))
+	return NewTableDockable(filePath, tbl.NewSkillsProvider(&skillListProvider{skills: skills}, false))
 }
 
 type spellListProvider struct {
@@ -157,8 +190,15 @@ func NewSpellTableDockableFromFile(filePath string) (unison.Dockable, error) {
 
 // NewSpellTableDockable creates a new unison.Dockable for spell list files.
 func NewSpellTableDockable(filePath string, spells []*gurps.Spell) unison.Dockable {
-	p := &spellListProvider{spells: spells}
-	return NewTableDockable(filePath, tbl.NewSpellTableHeaders(p, false), tbl.NewSpellRowData(p, false))
+	return NewTableDockable(filePath, tbl.NewSpellsProvider(&spellListProvider{spells: spells}, false))
+}
+
+type noteListProvider struct {
+	notes []*gurps.Note
+}
+
+func (p *noteListProvider) NoteList() []*gurps.Note {
+	return p.notes
 }
 
 // NewNoteTableDockableFromFile loads a list of notes from a file and creates a new unison.Dockable for them.
@@ -172,33 +212,35 @@ func NewNoteTableDockableFromFile(filePath string) (unison.Dockable, error) {
 
 // NewNoteTableDockable creates a new unison.Dockable for note list files.
 func NewNoteTableDockable(filePath string, notes []*gurps.Note) unison.Dockable {
-	return NewTableDockable(filePath, tbl.NewNoteTableHeaders(false),
-		tbl.NewNoteRowData(func() []*gurps.Note { return notes }, false))
+	return NewTableDockable(filePath, tbl.NewNotesProvider(&noteListProvider{notes: notes}, false))
 }
 
 // NewTableDockable creates a new TableDockable for list data files.
-func NewTableDockable(filePath string, columnHeaders []unison.TableColumnHeader, topLevelRows func(table *unison.Table) []unison.TableRowData) *TableDockable {
+func NewTableDockable(filePath string, provider tbl.TableProvider) *TableDockable {
 	d := &TableDockable{
-		path:   filePath,
-		scroll: unison.NewScrollPanel(),
-		table:  unison.NewTable(),
-		scale:  settings.Global().General.InitialListUIScale,
+		path:     filePath,
+		provider: provider,
+		scroll:   unison.NewScrollPanel(),
+		table:    unison.NewTable(),
+		scale:    settings.Global().General.InitialListUIScale,
 	}
 	d.Self = d
 	d.SetLayout(&unison.FlexLayout{Columns: 1})
 
-	d.table.ColumnSizes = make([]unison.ColumnSize, len(columnHeaders))
+	headers := provider.Headers()
+	d.table.ColumnSizes = make([]unison.ColumnSize, len(headers))
 	for i := range d.table.ColumnSizes {
-		_, pref, _ := columnHeaders[i].AsPanel().Sizes(geom.Size[float32]{})
+		_, pref, _ := headers[i].AsPanel().Sizes(geom.Size[float32]{})
 		d.table.ColumnSizes[i].AutoMinimum = pref.Width
 		d.table.ColumnSizes[i].AutoMaximum = 800
 		d.table.ColumnSizes[i].Minimum = pref.Width
 		d.table.ColumnSizes[i].Maximum = 10000
 	}
-	d.table.SetTopLevelRows(topLevelRows(d.table))
+	d.table.HierarchyColumnIndex = provider.HierarchyColumnIndex()
+	d.table.SetTopLevelRows(provider.RowData(d.table))
 	d.table.SizeColumnsToFit(true)
 
-	d.tableHeader = unison.NewTableHeader(d.table, columnHeaders...)
+	d.tableHeader = unison.NewTableHeader(d.table, headers...)
 	d.tableHeader.Less = func(s1, s2 string) bool {
 		if n1, err := f64d4.FromString(s1); err == nil {
 			var n2 f64d4.Int

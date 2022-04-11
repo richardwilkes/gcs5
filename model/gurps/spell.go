@@ -324,8 +324,15 @@ func (s *Spell) CellData(column int, data *node.CellData) {
 	case SpellRelativeLevelColumn:
 		if !s.Container() {
 			data.Type = node.Text
-			data.Primary = s.AdjustedRelativeLevelAsString()
-			data.Alignment = unison.EndAlignment
+			rsl := s.AdjustedRelativeLevel()
+			if rsl == f64d4.Min {
+				data.Primary = "-"
+			} else {
+				data.Primary = ResolveAttributeName(s.Entity, s.Difficulty.Attribute)
+				if rsl != 0 {
+					data.Primary += rsl.StringWithSign()
+				}
+			}
 		}
 	case SpellPointsColumn:
 		data.Type = node.Text
@@ -390,18 +397,6 @@ func (s *Spell) RelativeLevel() string {
 	default:
 		return rsl.StringWithSign()
 	}
-}
-
-// AdjustedRelativeLevelAsString returns the relative skill level as a string.
-func (s *Spell) AdjustedRelativeLevelAsString() string {
-	if s.Container() {
-		return ""
-	}
-	level := s.AdjustedRelativeLevel()
-	if level == f64d4.Min {
-		return "-"
-	}
-	return level.Trunc().String()
 }
 
 // AdjustedRelativeLevel returns the relative skill level.

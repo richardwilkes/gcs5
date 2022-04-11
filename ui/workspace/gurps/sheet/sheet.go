@@ -14,14 +14,17 @@ package sheet
 import (
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/richardwilkes/gcs/model/gurps"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/model/theme"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
+	wsettings "github.com/richardwilkes/gcs/ui/workspace/settings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio/fs"
@@ -56,6 +59,7 @@ type Sheet struct {
 	EncumbrancePanel   *EncumbrancePanel
 	LiftingPanel       *LiftingPanel
 	DamagePanel        *DamagePanel
+	rebuild            bool
 }
 
 // NewSheetFromFile loads a GURPS character sheet file and creates a new unison.Dockable for it.
@@ -100,6 +104,10 @@ func NewSheet(filePath string, entity *gurps.Entity) unison.Dockable {
 		gc.DrawRect(rect, theme.PageVoidColor.Paint(gc, rect, unison.Fill))
 	}
 
+	sheetSettingsButton := unison.NewSVGButton(res.SettingsSVG)
+	sheetSettingsButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Sheet Settings"))
+	sheetSettingsButton.ClickCallback = func() { wsettings.ShowSheetSettings(s.entity) }
+
 	s.scaleField = widget.NewPercentageField(func() int { return s.scale }, func(v int) {
 		s.scale = v
 		s.applyScale()
@@ -119,6 +127,7 @@ func NewSheet(filePath string, entity *gurps.Entity) unison.Dockable {
 		HAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
+	toolbar.AddChild(sheetSettingsButton)
 	toolbar.AddChild(s.scaleField)
 	toolbar.SetLayout(&unison.FlexLayout{
 		Columns:  len(toolbar.Children()),
@@ -130,6 +139,11 @@ func NewSheet(filePath string, entity *gurps.Entity) unison.Dockable {
 
 	s.applyScale()
 	return s
+}
+
+// Entity returns the entity this is displaying information for.
+func (s *Sheet) Entity() *gurps.Entity {
+	return s.entity
 }
 
 // UndoManager implements undo.Provider
@@ -321,6 +335,19 @@ func (s *Sheet) MarkModified() {
 	widget.DeepSync(s)
 	if dc := unison.DockContainerFor(s); dc != nil {
 		dc.UpdateTitle(s)
+	}
+}
+
+// MarkForRebuild causes the sheet to rebuild itself from the underlying data at the next available opportunity.
+func (s *Sheet) MarkForRebuild() {
+	if !s.rebuild {
+		s.rebuild = true
+		unison.InvokeTaskAfter(func() {
+			s.rebuild = false
+			s.entity.Recalculate()
+			widget.DeepSync(s)
+			// TODO: Probably need to actually rebuild
+		}, 50*time.Millisecond)
 	}
 }
 

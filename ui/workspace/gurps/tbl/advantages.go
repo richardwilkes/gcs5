@@ -14,6 +14,7 @@ package tbl
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
 
@@ -32,36 +33,68 @@ var (
 	}
 )
 
-// NewAdvantageTableHeaders creates a new set of table column headers for advantages.
-func NewAdvantageTableHeaders(forPage bool) []unison.TableColumnHeader {
-	var headers []unison.TableColumnHeader
-	headers = append(headers,
-		NewHeader(i18n.Text("Advantage / Disadvantage"), "", forPage),
-		NewHeader(i18n.Text("Pts"), i18n.Text("Points"), forPage),
-	)
-	if !forPage {
-		headers = append(headers,
-			NewHeader(i18n.Text("Type"), "", false),
-			NewHeader(i18n.Text("Category"), "", false),
-		)
-	}
-	return append(headers, NewPageRefHeader(forPage))
+type advantagesProvider struct {
+	colMap   map[int]int
+	provider gurps.AdvantageListProvider
+	forPage  bool
 }
 
-// NewAdvantageRowData creates a new table data provider function for advantages.
-func NewAdvantageRowData(topLevelRowsProvider func() []*gurps.Advantage, forPage bool) func(table *unison.Table) []unison.TableRowData {
-	return func(table *unison.Table) []unison.TableRowData {
-		var colMap map[int]int
-		if forPage {
-			colMap = advantagePageColMap
-		} else {
-			colMap = advantageListColMap
-		}
-		data := topLevelRowsProvider()
-		rows := make([]unison.TableRowData, 0, len(data))
-		for _, one := range data {
-			rows = append(rows, NewNode(table, nil, colMap, one, forPage))
-		}
-		return rows
+// NewAdvantagesProvider creates a new table provider for advantages.
+func NewAdvantagesProvider(provider gurps.AdvantageListProvider, forPage bool) TableProvider {
+	p := &advantagesProvider{
+		provider: provider,
+		forPage:  forPage,
 	}
+	if forPage {
+		p.colMap = advantagePageColMap
+	} else {
+		p.colMap = advantageListColMap
+	}
+	return p
+}
+
+func (p *advantagesProvider) Headers() []unison.TableColumnHeader {
+	var headers []unison.TableColumnHeader
+	for i := 0; i < len(p.colMap); i++ {
+		switch p.colMap[i] {
+		case gurps.AdvantageDescriptionColumn:
+			headers = append(headers, NewHeader(i18n.Text("Advantage / Disadvantage"), "", p.forPage))
+		case gurps.AdvantagePointsColumn:
+			headers = append(headers, NewHeader(i18n.Text("Pts"), i18n.Text("Points"), p.forPage))
+		case gurps.AdvantageTypeColumn:
+			headers = append(headers, NewHeader(i18n.Text("Type"), "", p.forPage))
+		case gurps.AdvantageCategoryColumn:
+			headers = append(headers, NewHeader(i18n.Text("Category"), "", p.forPage))
+		case gurps.AdvantageReferenceColumn:
+			headers = append(headers, NewPageRefHeader(p.forPage))
+		default:
+			jot.Fatalf(1, "invalid advantage column: %d", p.colMap[i])
+		}
+	}
+	return headers
+}
+
+func (p *advantagesProvider) RowData(table *unison.Table) []unison.TableRowData {
+	data := p.provider.AdvantageList()
+	rows := make([]unison.TableRowData, 0, len(data))
+	for _, one := range data {
+		rows = append(rows, NewNode(table, nil, p.colMap, one, p.forPage))
+	}
+	return rows
+}
+
+func (p *advantagesProvider) SyncHeader(_ []unison.TableColumnHeader) {
+}
+
+func (p *advantagesProvider) HierarchyColumnIndex() int {
+	for k, v := range p.colMap {
+		if v == gurps.AdvantageDescriptionColumn {
+			return k
+		}
+	}
+	return 0
+}
+
+func (p *advantagesProvider) ExcessWidthColumnIndex() int {
+	return p.HierarchyColumnIndex()
 }
