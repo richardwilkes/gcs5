@@ -62,6 +62,10 @@ func ShowSheetSettings(entity *gurps.Entity) {
 	}
 }
 
+func (d *sheetSettingsDockable) CloseWithEntity(entity *gurps.Entity) bool {
+	return entity != nil && entity == d.entity
+}
+
 func (d *sheetSettingsDockable) settings() *gurps.SheetSettings {
 	if d.entity != nil {
 		return d.entity.SheetSettings

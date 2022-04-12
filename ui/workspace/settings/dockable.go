@@ -27,6 +27,8 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+const settingsGroup = "settings"
+
 var (
 	_ unison.Dockable  = &Dockable{}
 	_ unison.TabCloser = &Dockable{}
@@ -96,10 +98,15 @@ func (d *Dockable) Setup(ws *workspace.Workspace, dc *unison.DockContainer, addT
 		VGrab:  true,
 	})
 	d.AddChild(scroller)
-	if dc != nil {
+	if dc != nil && dc.Group == settingsGroup {
+		dc.Stack(d, -1)
+	} else if dc = ws.DocumentDock.ContainerForGroup(settingsGroup); dc != nil {
 		dc.Stack(d, -1)
 	} else {
-		ws.DocumentDock.DockTo(d, nil, unison.LeftSide)
+		ws.DocumentDock.DockTo(d, nil, unison.RightSide)
+		if dc = unison.DockContainerFor(d); dc != nil && dc.Group == "" {
+			dc.Group = settingsGroup
+		}
 	}
 }
 

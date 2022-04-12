@@ -184,13 +184,46 @@ func (s *Sheet) Modified() bool {
 	return s.MiscPanel.Modified
 }
 
+type closeWithEntity interface {
+	unison.TabCloser
+	CloseWithEntity(entity *gurps.Entity) bool
+}
+
 // MayAttemptClose implements unison.TabCloser
 func (s *Sheet) MayAttemptClose() bool {
-	return true
+	allow := true
+	for _, wnd := range unison.Windows() {
+		if ws := workspace.FromWindow(wnd); ws != nil {
+			ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
+				for _, d := range dc.Dockables() {
+					if fe, ok := d.(closeWithEntity); ok && fe.CloseWithEntity(s.entity) {
+						if !fe.MayAttemptClose() {
+							allow = false
+							return true
+						}
+					}
+				}
+				return false
+			})
+		}
+	}
+	return allow
 }
 
 // AttemptClose implements unison.TabCloser
 func (s *Sheet) AttemptClose() {
+	for _, wnd := range unison.Windows() {
+		if ws := workspace.FromWindow(wnd); ws != nil {
+			ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
+				for _, d := range dc.Dockables() {
+					if fe, ok := d.(closeWithEntity); ok && fe.CloseWithEntity(s.entity) {
+						fe.AttemptClose()
+					}
+				}
+				return false
+			})
+		}
+	}
 	if dc := unison.DockContainerFor(s); dc != nil {
 		dc.Close(s)
 	}
