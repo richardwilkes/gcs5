@@ -386,7 +386,7 @@ func (s *Skill) SecondaryText() string {
 			if buffer.Len() != 0 {
 				buffer.WriteByte('\n')
 			}
-			levelTooltip := strings.ReplaceAll(s.LevelData.Tooltip, "\n", ", ")
+			levelTooltip := strings.ReplaceAll(strings.TrimSpace(s.LevelData.Tooltip), "\n", ", ")
 			if strings.HasPrefix(levelTooltip, IncludesModifiersFrom+",") {
 				levelTooltip = IncludesModifiersFrom + ":" + levelTooltip[len(IncludesModifiersFrom)+1:]
 			}

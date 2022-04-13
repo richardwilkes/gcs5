@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/errs"
 )
 
 // Length contains a real-world length value with an attached units.
@@ -27,22 +28,31 @@ type Length struct {
 // LengthFromString creates a new Length. May have any of the known units.Units suffixes or no notation at all, in which
 // case units.Inch is used.
 func LengthFromString(text string) Length {
+	length, err := ParseLengthFromString(text)
+	if err != nil {
+		length.Length = 0
+	}
+	return length
+}
+
+// ParseLengthFromString parses a Length from the text. May have any of the known units.Units suffixes or no notation at
+// all, in which case units.Inch is used.
+func ParseLengthFromString(text string) (length Length, err error) {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
 	for _, unit := range AllUnits {
 		if strings.HasSuffix(text, unit.Key()) {
-			value, err := strconv.ParseFloat(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())), 64)
-			if err != nil {
-				return Length{Units: unit}
-			}
-			return Length{Length: value, Units: unit}
+			length.Units = unit
+			text = strings.TrimSpace(strings.TrimSuffix(text, unit.Key()))
+			break
 		}
 	}
-	// Didn't match any of the Units types, assume the default
-	value, err := strconv.ParseFloat(text, 64)
-	if err != nil {
-		return Length{Units: Inch}
+	if length.Length, err = strconv.ParseFloat(text, 64); err != nil {
+		return length, errs.NewWithCause("invalid value", err)
 	}
-	return Length{Length: value, Units: Inch}
+	if length.Length < 0 {
+		return length, errs.New("value must be zero or greater")
+	}
+	return length, nil
 }
 
 func (l Length) String() string {
@@ -65,7 +75,10 @@ func (l *Length) UnmarshalJSON(in []byte) error {
 	if err := json.Unmarshal(in, &s); err != nil {
 		return err
 	}
-	*l = LengthFromString(s)
+	var err error
+	if *l, err = ParseLengthFromString(s); err != nil {
+		return err
+	}
 	return nil
 }
 
