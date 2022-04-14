@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/google/uuid v1.3.0
 	github.com/richardwilkes/json v0.0.0-20220202023945-ac9125b86187
-	github.com/richardwilkes/pdf v0.0.0-20220414000535-eb6048106f67
+	github.com/richardwilkes/pdf v0.0.0-20220414031719-fa3d49a402b1
 	github.com/richardwilkes/rpgtools v1.4.1
 	github.com/richardwilkes/toolbox v1.68.1
 	github.com/richardwilkes/unison v0.12.1-0.20220412001106-2b99a35d7669

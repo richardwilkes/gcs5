@@ -19,8 +19,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/richardwilkes/json v0.0.0-20220202023945-ac9125b86187 h1:9hftpZWGXtZC1CWN6coFToRvjXAWz+xPrbLXhS080mM=
 github.com/richardwilkes/json v0.0.0-20220202023945-ac9125b86187/go.mod h1:4maPYRzwKz+kN/HWUd1re9kco0eoN6znhPBBqX0p+gk=
-github.com/richardwilkes/pdf v0.0.0-20220414000535-eb6048106f67 h1:eKoDJfZfXNcSZ2RAq1WvzhY7kTZEACiAwZLwR2glRCQ=
-github.com/richardwilkes/pdf v0.0.0-20220414000535-eb6048106f67/go.mod h1:iUyrCdi7MtyKx7lZ6O2qp5/9dBXEZLc+rJLxpCnm6Ok=
+github.com/richardwilkes/pdf v0.0.0-20220414031719-fa3d49a402b1 h1:aeBtMihd8VOPI3XC0YUZRJlz0r30mCch4WlMwaz6V44=
+github.com/richardwilkes/pdf v0.0.0-20220414031719-fa3d49a402b1/go.mod h1:iUyrCdi7MtyKx7lZ6O2qp5/9dBXEZLc+rJLxpCnm6Ok=
 github.com/richardwilkes/rpgtools v1.4.1 h1:uoQKvM64owkU5gKYAlqZuWDvIfKcs8OCVRsXRPu1i2o=
 github.com/richardwilkes/rpgtools v1.4.1/go.mod h1:w4bCZ1a0YGKPzSA/Yr3XinTMVLlYOKEnrormltb1r9s=
 github.com/richardwilkes/toolbox v1.68.1 h1:eWJv2a1shyTaZeqh5uAwZLWvO8mRUS+J8ZaYCCMd26k=
