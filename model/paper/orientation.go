@@ -12,14 +12,13 @@
 package paper
 
 // Dimensions returns the paper dimensions after orienting the paper.
-func (enum Orientation) Dimensions(size Size) (width, height Length) {
+func (enum Orientation) Dimensions(width, height Length) (adjustedWidth, adjustedHeight Length) {
 	switch enum {
 	case Portrait:
-		return size.Dimensions()
+		return width, height
 	case Landscape:
-		width, height = size.Dimensions()
 		return height, width
 	default:
-		return Portrait.Dimensions(size)
+		return Portrait.Dimensions(width, height)
 	}
 }

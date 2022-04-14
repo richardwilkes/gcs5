@@ -27,8 +27,9 @@ import (
 // Page holds a logical page worth of content.
 type Page struct {
 	unison.Panel
-	flex   *unison.FlexLayout
-	entity *gurps.Entity
+	flex       *unison.FlexLayout
+	entity     *gurps.Entity
+	lastInsets geom.Insets[float32]
 }
 
 // NewPage creates a new page.
@@ -42,7 +43,8 @@ func NewPage(entity *gurps.Entity) *Page {
 		},
 	}
 	p.Self = p
-	p.SetBorder(unison.NewEmptyBorder(p.insets()))
+	p.lastInsets = p.insets()
+	p.SetBorder(unison.NewEmptyBorder(p.lastInsets))
 	p.SetLayout(p)
 	p.DrawCallback = p.drawSelf
 	return p
@@ -50,7 +52,12 @@ func NewPage(entity *gurps.Entity) *Page {
 
 // LayoutSizes implements unison.Layout
 func (p *Page) LayoutSizes(_ *unison.Panel, _ geom.Size[float32]) (min, pref, max geom.Size[float32]) {
-	w, _ := gurps.SheetSettingsFor(p.entity).Page.Size.Dimensions()
+	s := gurps.SheetSettingsFor(p.entity)
+	w, _ := s.Page.Orientation.Dimensions(s.Page.Size.Dimensions())
+	if insets := p.insets(); insets != p.lastInsets {
+		p.lastInsets = insets
+		p.SetBorder(unison.NewEmptyBorder(insets))
+	}
 	_, size, _ := p.flex.LayoutSizes(p.AsPanel(), geom.Size[float32]{Width: w.Pixels()})
 	pref.Width = w.Pixels()
 	pref.Height = size.Height

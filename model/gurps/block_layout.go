@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/txt"
 )
 
 // Valid block layout keys
@@ -56,16 +57,55 @@ func NewBlockLayout() *BlockLayout {
 	return &b
 }
 
-// EnsureValidity checks the current settings for validity and if they aren't valid, makes them so.
-func (b *BlockLayout) EnsureValidity() {
+// NewBlockLayoutFromString creates a new BlockLayout from an input string.
+func NewBlockLayoutFromString(str string) (blockLayout *BlockLayout, inputWasValid bool) {
 	var layout []string
-	remaining := b.CreateFullKeySet()
-	for _, line := range b.Layout {
+	remaining := CreateFullKeySet()
+	inputWasValid = true
+	for _, line := range strings.Split(strings.ToLower(str), "\n") {
 		var parts []string
-		for _, part := range strings.Split(strings.ToLower(strings.TrimSpace(line)), " ") {
+		for _, part := range strings.Split(txt.CollapseSpaces(line), " ") {
+			if part == "" {
+				continue
+			}
+			if len(parts) > 1 {
+				inputWasValid = false
+				break
+			}
 			if remaining[part] {
 				delete(remaining, part)
 				parts = append(parts, part)
+			} else {
+				inputWasValid = false
+			}
+		}
+		if len(parts) != 0 {
+			layout = append(layout, strings.Join(parts, " "))
+		}
+	}
+	if len(remaining) != 0 {
+		for _, k := range allBlockLayoutKeys {
+			if remaining[k] {
+				layout = append(layout, k)
+			}
+		}
+	}
+	return &BlockLayout{Layout: layout}, inputWasValid
+}
+
+// EnsureValidity checks the current settings for validity and if they aren't valid, makes them so.
+func (b *BlockLayout) EnsureValidity() {
+	var layout []string
+	remaining := CreateFullKeySet()
+	for _, line := range b.Layout {
+		var parts []string
+		for _, part := range strings.Split(strings.ToLower(txt.CollapseSpaces(line)), " ") {
+			if remaining[part] {
+				delete(remaining, part)
+				parts = append(parts, part)
+				if len(parts) > 1 {
+					break
+				}
 			}
 		}
 		if len(parts) != 0 {
@@ -85,10 +125,10 @@ func (b *BlockLayout) EnsureValidity() {
 // ByRow breaks the layout down into rows.
 func (b *BlockLayout) ByRow() [][]string {
 	var layout [][]string
-	remaining := b.CreateFullKeySet()
+	remaining := CreateFullKeySet()
 	for _, line := range b.Layout {
 		var parts []string
-		for _, part := range strings.Split(strings.ToLower(strings.TrimSpace(line)), " ") {
+		for _, part := range strings.Split(strings.ToLower(txt.CollapseSpaces(line)), " ") {
 			if remaining[part] {
 				delete(remaining, part)
 				parts = append(parts, part)
@@ -106,6 +146,15 @@ func (b *BlockLayout) ByRow() [][]string {
 		}
 	}
 	return layout
+}
+
+func (b *BlockLayout) String() string {
+	var buffer strings.Builder
+	for _, row := range b.ByRow() {
+		buffer.WriteString(strings.Join(row, " "))
+		buffer.WriteByte('\n')
+	}
+	return strings.TrimSpace(buffer.String())
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -148,7 +197,7 @@ func (b *BlockLayout) Reset() {
 }
 
 // CreateFullKeySet creates a map that contains each of the possible block layout keys.
-func (b *BlockLayout) CreateFullKeySet() map[string]bool {
+func CreateFullKeySet() map[string]bool {
 	m := make(map[string]bool)
 	for _, one := range allBlockLayoutKeys {
 		m[one] = true
@@ -159,9 +208,9 @@ func (b *BlockLayout) CreateFullKeySet() map[string]bool {
 // HTMLGridTemplate returns the text for the HTML grid layout.
 func (b *BlockLayout) HTMLGridTemplate() string {
 	var buffer strings.Builder
-	remaining := b.CreateFullKeySet()
+	remaining := CreateFullKeySet()
 	for _, line := range b.Layout {
-		parts := strings.Split(strings.ToLower(strings.TrimSpace(line)), " ")
+		parts := strings.Split(strings.ToLower(txt.CollapseSpaces(line)), " ")
 		if parts[0] != "" && remaining[parts[0]] {
 			delete(remaining, parts[0])
 			if len(parts) > 1 && remaining[parts[1]] {

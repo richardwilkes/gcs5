@@ -44,6 +44,11 @@ type sheetSettingsDockable struct {
 	skillLevelAdjDisplayPopup          *unison.PopupMenu[display.Option]
 	paperSizePopup                     *unison.PopupMenu[paper.Size]
 	orientationPopup                   *unison.PopupMenu[paper.Orientation]
+	topMarginField                     *unison.Field
+	leftMarginField                    *unison.Field
+	bottomMarginField                  *unison.Field
+	rightMarginField                   *unison.Field
+	blockLayoutField                   *unison.Field
 }
 
 // ShowSheetSettings the Sheet Settings window.
@@ -92,6 +97,7 @@ func (d *sheetSettingsDockable) initContent(content *unison.Panel) {
 	d.createUnitsOfMeasurement(content)
 	d.createWhereToDisplay(content)
 	d.createPageSettings(content)
+	d.createBlockLayout(content)
 }
 
 func (d *sheetSettingsDockable) createDamageProgression(content *unison.Panel) {
@@ -122,32 +128,32 @@ func (d *sheetSettingsDockable) createOptions(content *unison.Panel) {
 	d.showAdvantageModifier = d.addCheckBox(panel, i18n.Text("Show advantage modifier cost adjustments"),
 		s.ShowAdvantageModifierAdj, func() {
 			d.settings().ShowAdvantageModifierAdj = d.showAdvantageModifier.State == unison.OnCheckState
-			d.syncSheet()
+			d.syncSheet(false)
 		})
 	d.showEquipmentModifier = d.addCheckBox(panel, i18n.Text("Show equipment modifier cost & weight adjustments"),
 		s.ShowEquipmentModifierAdj, func() {
 			d.settings().ShowEquipmentModifierAdj = d.showEquipmentModifier.State == unison.OnCheckState
-			d.syncSheet()
+			d.syncSheet(false)
 		})
 	d.showSpellAdjustments = d.addCheckBox(panel, i18n.Text("Show spell ritual, cost & time adjustments"),
 		s.ShowSpellAdj, func() {
 			d.settings().ShowSpellAdj = d.showSpellAdjustments.State == unison.OnCheckState
-			d.syncSheet()
+			d.syncSheet(false)
 		})
 	d.showTitleInsteadOfNameInPageFooter = d.addCheckBox(panel,
 		i18n.Text("Show the title instead of the name in the footer"), s.UseTitleInFooter, func() {
 			d.settings().UseTitleInFooter = d.showTitleInsteadOfNameInPageFooter.State == unison.OnCheckState
-			d.syncSheet()
+			d.syncSheet(false)
 		})
 	d.useMultiplicativeModifiers = d.addCheckBox(panel,
 		i18n.Text("Use Multiplicative Modifiers (PW102; changes point value)"), s.UseMultiplicativeModifiers, func() {
 			d.settings().UseMultiplicativeModifiers = d.useMultiplicativeModifiers.State == unison.OnCheckState
-			d.syncSheet()
+			d.syncSheet(false)
 		})
 	d.useModifyDicePlusAdds = d.addCheckBox(panel, i18n.Text("Use Modifying Dice + Adds (B269)"),
 		s.UseModifyingDicePlusAdds, func() {
 			d.settings().UseModifyingDicePlusAdds = d.useModifyDicePlusAdds.State == unison.OnCheckState
-			d.syncSheet()
+			d.syncSheet(false)
 		})
 	content.AddChild(panel)
 }
@@ -170,7 +176,7 @@ func (d *sheetSettingsDockable) createUnitsOfMeasurement(content *unison.Panel) 
 		VSpacing: unison.StdVSpacing,
 	})
 	panel.SetLayoutData(&unison.FlexLayoutData{HAlign: unison.FillAlignment})
-	d.createHeader(panel, i18n.Text("Units of Measurement"))
+	d.createHeader(panel, i18n.Text("Units of Measurement"), 2)
 	d.lengthUnitsPopup = createSettingPopup(d, panel, i18n.Text("Length Units"), measure.AllLengthUnits,
 		s.DefaultLengthUnits, func(item measure.LengthUnits) { d.settings().DefaultLengthUnits = item })
 	d.weightUnitsPopup = createSettingPopup(d, panel, i18n.Text("Length Units"), measure.AllWeightUnits,
@@ -187,7 +193,7 @@ func (d *sheetSettingsDockable) createWhereToDisplay(content *unison.Panel) {
 		VSpacing: unison.StdVSpacing,
 	})
 	panel.SetLayoutData(&unison.FlexLayoutData{HAlign: unison.FillAlignment})
-	d.createHeader(panel, i18n.Text("Where to display…"))
+	d.createHeader(panel, i18n.Text("Where to display…"), 2)
 	d.userDescDisplayPopup = createSettingPopup(d, panel, i18n.Text("User Description"), display.AllOption,
 		s.UserDescriptionDisplay, func(option display.Option) { d.settings().UserDescriptionDisplay = option })
 	d.modifiersDisplayPopup = createSettingPopup(d, panel, i18n.Text("Modifiers"), display.AllOption,
@@ -208,19 +214,60 @@ func (d *sheetSettingsDockable) createPageSettings(content *unison.Panel) {
 		VSpacing: unison.StdVSpacing,
 	})
 	panel.SetLayoutData(&unison.FlexLayoutData{HAlign: unison.FillAlignment})
-	d.createHeader(panel, i18n.Text("Page Settings"))
+	d.createHeader(panel, i18n.Text("Page Settings"), 4)
 	d.paperSizePopup = createSettingPopup(d, panel, i18n.Text("Paper Size"), paper.AllSize,
 		s.Page.Size, func(option paper.Size) { d.settings().Page.Size = option })
 	d.orientationPopup = createSettingPopup(d, panel, i18n.Text("Orientation"), paper.AllOrientation,
 		s.Page.Orientation, func(option paper.Orientation) { d.settings().Page.Orientation = option })
-	d.createPaperMarginField(panel, i18n.Text("Top Margin"), s.Page.TopMargin,
+	d.topMarginField = d.createPaperMarginField(panel, i18n.Text("Top Margin"), s.Page.TopMargin,
 		func(value paper.Length) { d.settings().Page.TopMargin = value })
-	d.createPaperMarginField(panel, i18n.Text("Bottom Margin"), s.Page.BottomMargin,
+	d.bottomMarginField = d.createPaperMarginField(panel, i18n.Text("Bottom Margin"), s.Page.BottomMargin,
 		func(value paper.Length) { d.settings().Page.BottomMargin = value })
-	d.createPaperMarginField(panel, i18n.Text("Left Margin"), s.Page.LeftMargin,
+	d.leftMarginField = d.createPaperMarginField(panel, i18n.Text("Left Margin"), s.Page.LeftMargin,
 		func(value paper.Length) { d.settings().Page.LeftMargin = value })
-	d.createPaperMarginField(panel, i18n.Text("Right Margin"), s.Page.RightMargin,
+	d.rightMarginField = d.createPaperMarginField(panel, i18n.Text("Right Margin"), s.Page.RightMargin,
 		func(value paper.Length) { d.settings().Page.RightMargin = value })
+	content.AddChild(panel)
+}
+
+func (d *sheetSettingsDockable) createBlockLayout(content *unison.Panel) {
+	s := d.settings()
+	panel := unison.NewPanel()
+	panel.SetLayout(&unison.FlexLayout{
+		Columns:  1,
+		HSpacing: unison.StdHSpacing,
+		VSpacing: unison.StdVSpacing,
+	})
+	panel.SetLayoutData(&unison.FlexLayoutData{HAlign: unison.FillAlignment})
+	label := unison.NewLabel()
+	label.Text = i18n.Text("Block Layout")
+	desc := label.Font.Descriptor()
+	desc.Weight = unison.BoldFontWeight
+	label.Font = desc.Font()
+	panel.AddChild(label)
+	d.blockLayoutField = unison.NewMultiLineField()
+	lastBlockLayout := s.BlockLayout.String()
+	d.blockLayoutField.SetText(lastBlockLayout)
+	d.blockLayoutField.ValidateCallback = func() bool {
+		_, valid := gurps.NewBlockLayoutFromString(d.blockLayoutField.Text())
+		return valid
+	}
+	d.blockLayoutField.ModifiedCallback = func() {
+		if blockLayout, valid := gurps.NewBlockLayoutFromString(d.blockLayoutField.Text()); valid {
+			localSettings := d.settings()
+			currentBlockLayout := blockLayout.String()
+			if lastBlockLayout != currentBlockLayout {
+				lastBlockLayout = currentBlockLayout
+				localSettings.BlockLayout = blockLayout
+				d.syncSheet(true)
+			}
+		}
+	}
+	d.blockLayoutField.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		HGrab:  true,
+	})
+	panel.AddChild(d.blockLayoutField)
 	content.AddChild(panel)
 }
 
@@ -236,7 +283,7 @@ func (d *sheetSettingsDockable) createPaperMarginField(panel *unison.Panel, titl
 	field.ModifiedCallback = func() {
 		if value, err := paper.ParseLengthFromString(field.Text()); err == nil {
 			set(value)
-			d.syncSheet()
+			d.syncSheet(false)
 		}
 	}
 	field.SetLayoutData(&unison.FlexLayoutData{
@@ -257,23 +304,23 @@ func createSettingPopup[T comparable](d *sheetSettingsDockable, panel *unison.Pa
 	popup.Select(current)
 	popup.SelectionCallback = func(_ int, item T) {
 		set(item)
-		d.syncSheet()
+		d.syncSheet(false)
 	}
 	panel.AddChild(popup)
 	return popup
 }
 
-func (d *sheetSettingsDockable) createHeader(panel *unison.Panel, title string) {
+func (d *sheetSettingsDockable) createHeader(panel *unison.Panel, title string, hspan int) {
 	label := unison.NewLabel()
 	label.Text = title
 	desc := label.Font.Descriptor()
 	desc.Weight = unison.BoldFontWeight
 	label.Font = desc.Font()
-	label.SetLayoutData(&unison.FlexLayoutData{HSpan: 2})
+	label.SetLayoutData(&unison.FlexLayoutData{HSpan: hspan})
 	panel.AddChild(label)
 	sep := unison.NewSeparator()
 	sep.SetLayoutData(&unison.FlexLayoutData{
-		HSpan:  2,
+		HSpan:  hspan,
 		HAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
@@ -304,10 +351,17 @@ func (d *sheetSettingsDockable) sync() {
 	d.modifiersDisplayPopup.Select(s.ModifiersDisplay)
 	d.notesDisplayPopup.Select(s.NotesDisplay)
 	d.skillLevelAdjDisplayPopup.Select(s.SkillLevelAdjDisplay)
+	d.paperSizePopup.Select(s.Page.Size)
+	d.orientationPopup.Select(s.Page.Orientation)
+	d.topMarginField.SetText(s.Page.TopMargin.String())
+	d.leftMarginField.SetText(s.Page.LeftMargin.String())
+	d.bottomMarginField.SetText(s.Page.BottomMargin.String())
+	d.rightMarginField.SetText(s.Page.RightMargin.String())
+	d.blockLayoutField.SetText(s.BlockLayout.String())
 	d.MarkForRedraw()
 }
 
-func (d *sheetSettingsDockable) syncSheet() {
+func (d *sheetSettingsDockable) syncSheet(full bool) {
 	if d.entity != nil {
 		for _, wnd := range unison.Windows() {
 			if ws := workspace.FromWindow(wnd); ws != nil {
@@ -315,10 +369,10 @@ func (d *sheetSettingsDockable) syncSheet() {
 					for _, one := range dc.Dockables() {
 						type signature interface {
 							Entity() *gurps.Entity
-							MarkForRebuild()
+							MarkForRebuild(full bool)
 						}
 						if s, ok := one.(signature); ok && s.Entity() == d.entity {
-							s.MarkForRebuild()
+							s.MarkForRebuild(full)
 						}
 					}
 					return false

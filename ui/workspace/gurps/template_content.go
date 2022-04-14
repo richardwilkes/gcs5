@@ -37,7 +37,8 @@ func newTemplateContent() *templateContent {
 }
 
 func (p *templateContent) LayoutSizes(_ *unison.Panel, _ geom.Size[float32]) (min, pref, max geom.Size[float32]) {
-	w, _ := settings.Global().Sheet.Page.Size.Dimensions()
+	s := settings.Global().Sheet
+	w, _ := s.Page.Orientation.Dimensions(s.Page.Size.Dimensions())
 	_, size, _ := p.flex.LayoutSizes(p.AsPanel(), geom.Size[float32]{Width: w.Pixels()})
 	pref.Width = w.Pixels()
 	pref.Height = size.Height

@@ -60,6 +60,7 @@ type Sheet struct {
 	LiftingPanel       *LiftingPanel
 	DamagePanel        *DamagePanel
 	rebuild            bool
+	full               bool
 }
 
 // NewSheetFromFile loads a GURPS character sheet file and creates a new unison.Dockable for it.
@@ -92,7 +93,8 @@ func NewSheet(filePath string, entity *gurps.Entity) unison.Dockable {
 		Columns:  1,
 		VSpacing: 1,
 	})
-	s.pages.AddChild(s.createFirstPage())
+	s.pages.AddChild(s.createTopBlock())
+	s.createLists()
 	s.scroll.SetContent(s.pages, unison.UnmodifiedBehavior)
 	s.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
@@ -229,52 +231,10 @@ func (s *Sheet) AttemptClose() {
 	}
 }
 
-func (s *Sheet) createFirstPage() *Page {
+func (s *Sheet) createTopBlock() *Page {
 	p := NewPage(s.entity)
 	p.AddChild(s.createFirstRow())
 	p.AddChild(s.createSecondRow())
-
-	// Add the various blocks, based on the layout preference.
-	for _, col := range s.entity.SheetSettings.BlockLayout.ByRow() {
-		rowPanel := unison.NewPanel()
-		rowPanel.SetLayout(&unison.FlexLayout{
-			Columns:  len(col),
-			HSpacing: 1,
-			HAlign:   unison.FillAlignment,
-			VAlign:   unison.FillAlignment,
-		})
-		rowPanel.SetLayoutData(&unison.FlexLayoutData{
-			HAlign: unison.FillAlignment,
-			VAlign: unison.StartAlignment,
-			HGrab:  true,
-		})
-		for _, c := range col {
-			switch c {
-			case gurps.BlockLayoutReactionsKey:
-				rowPanel.AddChild(NewReactionsPageList(s.entity))
-			case gurps.BlockLayoutConditionalModifiersKey:
-				rowPanel.AddChild(NewConditionalModifiersPageList(s.entity))
-			case gurps.BlockLayoutMeleeKey:
-				rowPanel.AddChild(NewMeleeWeaponsPageList(s.entity))
-			case gurps.BlockLayoutRangedKey:
-				rowPanel.AddChild(NewRangedWeaponsPageList(s.entity))
-			case gurps.BlockLayoutAdvantagesKey:
-				rowPanel.AddChild(NewAdvantagesPageList(s.entity))
-			case gurps.BlockLayoutSkillsKey:
-				rowPanel.AddChild(NewSkillsPageList(s.entity))
-			case gurps.BlockLayoutSpellsKey:
-				rowPanel.AddChild(NewSpellsPageList(s.entity))
-			case gurps.BlockLayoutEquipmentKey:
-				rowPanel.AddChild(NewCarriedEquipmentPageList(s.entity))
-			case gurps.BlockLayoutOtherEquipmentKey:
-				rowPanel.AddChild(NewOtherEquipmentPageList(s.entity))
-			case gurps.BlockLayoutNotesKey:
-				rowPanel.AddChild(NewNotesPageList(s.entity))
-			}
-		}
-		p.AddChild(rowPanel)
-	}
-	p.ApplyPreferredSize()
 	return p
 }
 
@@ -362,6 +322,65 @@ func (s *Sheet) createSecondRow() *unison.Panel {
 	return p
 }
 
+func (s *Sheet) createLists() {
+	children := s.pages.Children()
+	if len(children) == 0 {
+		return
+	}
+	page, ok := children[0].Self.(*Page)
+	if !ok {
+		return
+	}
+	children = page.Children()
+	if len(children) < 2 {
+		return
+	}
+	for i := len(children) - 1; i > 1; i-- {
+		page.RemoveChildAtIndex(i)
+	}
+	// Add the various blocks, based on the layout preference.
+	for _, col := range s.entity.SheetSettings.BlockLayout.ByRow() {
+		rowPanel := unison.NewPanel()
+		rowPanel.SetLayout(&unison.FlexLayout{
+			Columns:  len(col),
+			HSpacing: 1,
+			HAlign:   unison.FillAlignment,
+			VAlign:   unison.FillAlignment,
+		})
+		rowPanel.SetLayoutData(&unison.FlexLayoutData{
+			HAlign: unison.FillAlignment,
+			VAlign: unison.StartAlignment,
+			HGrab:  true,
+		})
+		for _, c := range col {
+			switch c {
+			case gurps.BlockLayoutReactionsKey:
+				rowPanel.AddChild(NewReactionsPageList(s.entity))
+			case gurps.BlockLayoutConditionalModifiersKey:
+				rowPanel.AddChild(NewConditionalModifiersPageList(s.entity))
+			case gurps.BlockLayoutMeleeKey:
+				rowPanel.AddChild(NewMeleeWeaponsPageList(s.entity))
+			case gurps.BlockLayoutRangedKey:
+				rowPanel.AddChild(NewRangedWeaponsPageList(s.entity))
+			case gurps.BlockLayoutAdvantagesKey:
+				rowPanel.AddChild(NewAdvantagesPageList(s.entity))
+			case gurps.BlockLayoutSkillsKey:
+				rowPanel.AddChild(NewSkillsPageList(s.entity))
+			case gurps.BlockLayoutSpellsKey:
+				rowPanel.AddChild(NewSpellsPageList(s.entity))
+			case gurps.BlockLayoutEquipmentKey:
+				rowPanel.AddChild(NewCarriedEquipmentPageList(s.entity))
+			case gurps.BlockLayoutOtherEquipmentKey:
+				rowPanel.AddChild(NewOtherEquipmentPageList(s.entity))
+			case gurps.BlockLayoutNotesKey:
+				rowPanel.AddChild(NewNotesPageList(s.entity))
+			}
+		}
+		page.AddChild(rowPanel)
+	}
+	page.ApplyPreferredSize()
+}
+
 // MarkModified implements widget.ModifiableRoot.
 func (s *Sheet) MarkModified() {
 	s.MiscPanel.UpdateModified()
@@ -372,14 +391,23 @@ func (s *Sheet) MarkModified() {
 }
 
 // MarkForRebuild causes the sheet to rebuild itself from the underlying data at the next available opportunity.
-func (s *Sheet) MarkForRebuild() {
+func (s *Sheet) MarkForRebuild(full bool) {
+	if full {
+		s.full = full
+	}
 	if !s.rebuild {
 		s.rebuild = true
 		unison.InvokeTaskAfter(func() {
+			doFull := s.full
 			s.rebuild = false
+			s.full = false
 			s.entity.Recalculate()
-			widget.DeepSync(s)
-			// TODO: Probably need to actually rebuild
+			if doFull {
+				s.createLists()
+				s.MarkForLayoutAndRedraw()
+			} else {
+				widget.DeepSync(s)
+			}
 		}, 50*time.Millisecond)
 	}
 }
