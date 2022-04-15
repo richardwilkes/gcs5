@@ -20,7 +20,6 @@ import (
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -44,13 +43,13 @@ func NewDescriptionPanel(entity *gurps.Entity) *DescriptionPanel {
 		VAlign: unison.StartAlignment,
 		HGrab:  true,
 	})
-	d.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Description")}, unison.NewEmptyBorder(geom.Insets[float32]{
+	d.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Description")}, unison.NewEmptyBorder(unison.Insets{
 		Top:    1,
 		Left:   2,
 		Bottom: 1,
 		Right:  2,
 	})))
-	d.DrawCallback = func(gc *unison.Canvas, rect geom.Rect[float32]) {
+	d.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) {
 		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
 	}
 	d.AddChild(d.createColumn1())

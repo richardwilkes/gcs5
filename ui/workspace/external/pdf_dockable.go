@@ -25,7 +25,6 @@ import (
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio/fs"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -61,7 +60,7 @@ type PDFDockable struct {
 	lastPageButton     *unison.Button
 	page               *pdf.Page
 	link               *pdf.Link
-	rolloverRect       geom.Rect[float32]
+	rolloverRect       unison.Rect
 	scale              int
 	historyPos         int
 	history            []int
@@ -185,8 +184,8 @@ func NewPDFDockable(filePath string) (unison.Dockable, error) {
 	d.matchesLabel.Tooltip = unison.NewTooltipWithText(i18n.Text("Number of matches found"))
 
 	toolbar := unison.NewPanel()
-	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, geom.Insets[float32]{Bottom: 1}, false),
-		unison.NewEmptyBorder(geom.Insets[float32]{
+	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, unison.Insets{Bottom: 1}, false),
+		unison.NewEmptyBorder(unison.Insets{
 			Top:    unison.StdVSpacing,
 			Left:   unison.StdHSpacing,
 			Bottom: unison.StdVSpacing,
@@ -314,7 +313,7 @@ func (d *PDFDockable) pageLoaded() {
 	d.link = nil
 }
 
-func (d *PDFDockable) overLink(where geom.Point[float32]) (rect geom.Rect[float32], link *pdf.Link) {
+func (d *PDFDockable) overLink(where unison.Point) (rect unison.Rect, link *pdf.Link) {
 	if d.page != nil && d.page.Links != nil {
 		for _, link = range d.page.Links {
 			if link.Bounds.ContainsPoint(where) {
@@ -325,7 +324,7 @@ func (d *PDFDockable) overLink(where geom.Point[float32]) (rect geom.Rect[float3
 	return rect, nil
 }
 
-func (d *PDFDockable) checkForLinkAt(where geom.Point[float32]) {
+func (d *PDFDockable) checkForLinkAt(where unison.Point) {
 	r, link := d.overLink(where)
 	if r != d.rolloverRect || link != d.link {
 		d.rolloverRect = r
@@ -334,17 +333,17 @@ func (d *PDFDockable) checkForLinkAt(where geom.Point[float32]) {
 	}
 }
 
-func (d *PDFDockable) mouseDown(_ geom.Point[float32], _, _ int, _ unison.Modifiers) bool {
+func (d *PDFDockable) mouseDown(_ unison.Point, _, _ int, _ unison.Modifiers) bool {
 	d.RequestFocus()
 	return true
 }
 
-func (d *PDFDockable) mouseMove(where geom.Point[float32], _ unison.Modifiers) bool {
+func (d *PDFDockable) mouseMove(where unison.Point, _ unison.Modifiers) bool {
 	d.checkForLinkAt(where)
 	return true
 }
 
-func (d *PDFDockable) mouseUp(where geom.Point[float32], button int, _ unison.Modifiers) bool {
+func (d *PDFDockable) mouseUp(where unison.Point, button int, _ unison.Modifiers) bool {
 	d.checkForLinkAt(where)
 	if button == unison.ButtonLeft && d.link != nil {
 		if d.link.PageNumber >= 0 {
@@ -407,23 +406,23 @@ func (d *PDFDockable) keyDown(keyCode unison.KeyCode, _ unison.Modifiers, _ bool
 	return true
 }
 
-func (d *PDFDockable) docSizer(_ geom.Size[float32]) (min, pref, max geom.Size[float32]) {
+func (d *PDFDockable) docSizer(_ unison.Size) (min, pref, max unison.Size) {
 	if d.page == nil || d.page.Error != nil {
 		pref.Width = 400
 		pref.Height = 300
 	} else {
 		pref = d.page.Image.LogicalSize()
 	}
-	return geom.NewSize[float32](50, 50), pref, unison.MaxSize(pref)
+	return unison.NewSize(50, 50), pref, unison.MaxSize(pref)
 }
 
-func (d *PDFDockable) draw(gc *unison.Canvas, dirty geom.Rect[float32]) {
+func (d *PDFDockable) draw(gc *unison.Canvas, dirty unison.Rect) {
 	gc.DrawRect(dirty, unison.ContentColor.Paint(gc, dirty, unison.Fill))
 	if d.page == nil {
 		return
 	}
 	if d.page.Image != nil {
-		r := geom.Rect[float32]{Size: d.page.Image.LogicalSize()}
+		r := unison.Rect{Size: d.page.Image.LogicalSize()}
 		gc.DrawRect(r, unison.White.Paint(gc, r, unison.Fill))
 		gc.DrawImageInRect(d.page.Image, r, nil, nil)
 		if len(d.page.Matches) != 0 {
@@ -445,7 +444,7 @@ func (d *PDFDockable) draw(gc *unison.Canvas, dirty geom.Rect[float32]) {
 	}
 }
 
-func (d *PDFDockable) drawOverlay(gc *unison.Canvas, dirty geom.Rect[float32]) {
+func (d *PDFDockable) drawOverlay(gc *unison.Canvas, dirty unison.Rect) {
 	if d.page != nil && d.page.Error != nil {
 		d.drawOverlayMsg(gc, dirty, fmt.Sprintf("%s", d.page.Error), true) //nolint:gocritic // I want the extra processing %s does in this case
 	}
@@ -458,7 +457,7 @@ func (d *PDFDockable) drawOverlay(gc *unison.Canvas, dirty geom.Rect[float32]) {
 	}
 }
 
-func (d *PDFDockable) drawOverlayMsg(gc *unison.Canvas, dirty geom.Rect[float32], msg string, forError bool) {
+func (d *PDFDockable) drawOverlayMsg(gc *unison.Canvas, dirty unison.Rect, msg string, forError bool) {
 	var fgInk, bgInk unison.Ink
 	var icon unison.Drawable
 	font := unison.SystemFont.Face().Font(24)
@@ -468,7 +467,7 @@ func (d *PDFDockable) drawOverlayMsg(gc *unison.Canvas, dirty geom.Rect[float32]
 		bgInk = unison.ErrorColor.GetColor().SetAlphaIntensity(0.7)
 		icon = &unison.DrawableSVG{
 			SVG:  unison.CircledExclamationSVG(),
-			Size: geom.NewSize[float32](baseline, baseline),
+			Size: unison.NewSize(baseline, baseline),
 		}
 	} else {
 		fgInk = unison.OnContentColor
@@ -483,7 +482,7 @@ func (d *PDFDockable) drawOverlayMsg(gc *unison.Canvas, dirty geom.Rect[float32]
 	cy := r.CenterY()
 	width := text.Width()
 	height := text.Height()
-	var iconSize geom.Size[float32]
+	var iconSize unison.Size
 	if icon != nil {
 		iconSize = icon.LogicalSize()
 		width += iconSize.Width + unison.StdHSpacing
@@ -504,14 +503,14 @@ func (d *PDFDockable) drawOverlayMsg(gc *unison.Canvas, dirty geom.Rect[float32]
 	gc.DrawRoundedRect(r, 10, 10, bgInk.Paint(gc, dirty, unison.Fill))
 	x := r.X + (r.Width-width)/2
 	if icon != nil {
-		icon.DrawInRect(gc, geom.NewRect[float32](x, r.Y+(r.Height-iconSize.Height)/2, iconSize.Width, iconSize.Height), nil, decoration.Paint)
+		icon.DrawInRect(gc, unison.NewRect(x, r.Y+(r.Height-iconSize.Height)/2, iconSize.Width, iconSize.Height), nil, decoration.Paint)
 		x += iconSize.Width + unison.StdHSpacing
 	}
 	text.Draw(gc, x, r.Y+(r.Height-height)/2+baseline)
 }
 
 // TitleIcon implements workspace.FileBackedDockable
-func (d *PDFDockable) TitleIcon(suggestedSize geom.Size[float32]) unison.Drawable {
+func (d *PDFDockable) TitleIcon(suggestedSize unison.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
 		Size: suggestedSize,

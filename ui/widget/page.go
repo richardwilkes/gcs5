@@ -18,7 +18,6 @@ import (
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -38,7 +37,7 @@ func NewPageHeader(title string, hSpan int) *unison.Label {
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,
 	})
-	label.DrawCallback = func(gc *unison.Canvas, rect geom.Rect[float32]) {
+	label.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) {
 		gc.DrawRect(rect, theme.HeaderColor.Paint(gc, rect, unison.Fill))
 		label.DefaultDraw(gc, rect)
 	}
@@ -55,7 +54,7 @@ func NewPageLabel(title string) *unison.Label {
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,
 	})
-	label.SetBorder(unison.NewEmptyBorder(geom.Insets[float32]{Bottom: 1})) // To match field underline spacing
+	label.SetBorder(unison.NewEmptyBorder(unison.Insets{Bottom: 1})) // To match field underline spacing
 	return label
 }
 
@@ -70,7 +69,7 @@ func NewPageLabelEnd(title string) *unison.Label {
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,
 	})
-	label.SetBorder(unison.NewEmptyBorder(geom.Insets[float32]{Bottom: 1})) // To match field underline spacing
+	label.SetBorder(unison.NewEmptyBorder(unison.Insets{Bottom: 1})) // To match field underline spacing
 	return label
 }
 
@@ -85,7 +84,7 @@ func NewPageLabelCenter(title string) *unison.Label {
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,
 	})
-	label.SetBorder(unison.NewEmptyBorder(geom.Insets[float32]{Bottom: 1})) // To match field underline spacing
+	label.SetBorder(unison.NewEmptyBorder(unison.Insets{Bottom: 1})) // To match field underline spacing
 	return label
 }
 
@@ -108,7 +107,7 @@ func NewPageLabelWithRandomizer(title, tooltip string, clickCallback func()) *un
 	b.HideBase = true
 	b.SetFocusable(false)
 	baseline := theme.PageLabelPrimaryFont.Baseline()
-	size := geom.NewSize[float32](baseline, baseline)
+	size := unison.NewSize(baseline, baseline)
 	b.Drawable = &unison.DrawableSVG{
 		SVG:  res.RandomizeSVG,
 		Size: *size.GrowToInteger(),
@@ -127,8 +126,8 @@ func NewPageLabelWithRandomizer(title, tooltip string, clickCallback func()) *un
 func NewStringPageField(undoID int, undoTitle string, get func() string, set func(string)) *StringField {
 	field := NewStringField(undoID, undoTitle, get, set)
 	field.Font = theme.PageFieldPrimaryFont
-	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom.Insets[float32]{Bottom: 1}, false)
-	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom.Insets[float32]{Bottom: 1}, false)
+	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, unison.Insets{Bottom: 1}, false)
+	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, unison.Insets{Bottom: 1}, false)
 	field.SetBorder(field.UnfocusedBorder)
 	field.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
@@ -142,8 +141,8 @@ func NewStringPageField(undoID int, undoTitle string, get func() string, set fun
 func NewStringPageFieldNoGrab(undoID int, undoTitle string, get func() string, set func(string)) *StringField {
 	field := NewStringField(undoID, undoTitle, get, set)
 	field.Font = theme.PageFieldPrimaryFont
-	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom.Insets[float32]{Bottom: 1}, false)
-	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom.Insets[float32]{Bottom: 1}, false)
+	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, unison.Insets{Bottom: 1}, false)
+	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, unison.Insets{Bottom: 1}, false)
 	field.SetBorder(field.UnfocusedBorder)
 	field.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
@@ -156,8 +155,8 @@ func NewStringPageFieldNoGrab(undoID int, undoTitle string, get func() string, s
 func NewHeightPageField(undoID int, undoTitle string, entity *gurps.Entity, get func() measure.Length, set func(measure.Length), min, max measure.Length) *HeightField {
 	field := NewHeightField(undoID, undoTitle, entity, get, set, min, max)
 	field.Font = theme.PageFieldPrimaryFont
-	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom.Insets[float32]{Bottom: 1}, false)
-	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom.Insets[float32]{Bottom: 1}, false)
+	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, unison.Insets{Bottom: 1}, false)
+	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, unison.Insets{Bottom: 1}, false)
 	field.SetBorder(field.UnfocusedBorder)
 	field.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
@@ -170,8 +169,8 @@ func NewHeightPageField(undoID int, undoTitle string, entity *gurps.Entity, get 
 func NewWeightPageField(undoID int, undoTitle string, entity *gurps.Entity, get func() measure.Weight, set func(measure.Weight), min, max measure.Weight) *WeightField {
 	field := NewWeightField(undoID, undoTitle, entity, get, set, min, max)
 	field.Font = theme.PageFieldPrimaryFont
-	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom.Insets[float32]{Bottom: 1}, false)
-	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom.Insets[float32]{Bottom: 1}, false)
+	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, unison.Insets{Bottom: 1}, false)
+	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, unison.Insets{Bottom: 1}, false)
 	field.SetBorder(field.UnfocusedBorder)
 	field.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
@@ -185,8 +184,8 @@ func NewIntegerPageField(undoID int, undoTitle string, get func() int, set func(
 	field := NewIntegerField(undoID, undoTitle, get, set, min, max, showSign)
 	field.HAlign = unison.EndAlignment
 	field.Font = theme.PageFieldPrimaryFont
-	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom.Insets[float32]{Bottom: 1}, false)
-	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom.Insets[float32]{Bottom: 1}, false)
+	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, unison.Insets{Bottom: 1}, false)
+	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, unison.Insets{Bottom: 1}, false)
 	field.SetBorder(field.UnfocusedBorder)
 	field.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
@@ -200,8 +199,8 @@ func NewNumericPageField(undoID int, undoTitle string, get func() f64d4.Int, set
 	field := NewNumericField(undoID, undoTitle, get, set, min, max, noMinWidth)
 	field.HAlign = unison.EndAlignment
 	field.Font = theme.PageFieldPrimaryFont
-	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, geom.Insets[float32]{Bottom: 1}, false)
-	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, geom.Insets[float32]{Bottom: 1}, false)
+	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, unison.Insets{Bottom: 1}, false)
+	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, unison.Insets{Bottom: 1}, false)
 	field.SetBorder(field.UnfocusedBorder)
 	if !noMinWidth && min != f64d4.Min && max != f64d4.Max {
 		// Override to ignore fractional values

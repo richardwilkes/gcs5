@@ -65,7 +65,8 @@ linters:
     - errorlint
     - exportloopref
     - goconst
-    - gocritic
+# Re-enable once golangci-lint works correctly with Go 1.18+
+#    - gocritic
     - gofumpt
     - goimports
     - gosec

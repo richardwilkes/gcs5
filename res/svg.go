@@ -13,7 +13,6 @@ package res
 
 import (
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -58,7 +57,7 @@ var (
 )
 
 func mustSVG(width, height float32, svgStr string) *unison.SVG {
-	s, err := unison.NewSVG(geom.NewSize[float32](width, height), svgStr)
+	s, err := unison.NewSVG(unison.NewSize(width, height), svgStr)
 	jot.FatalIfErr(err)
 	return s
 }

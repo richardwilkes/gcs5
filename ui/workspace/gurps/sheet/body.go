@@ -20,7 +20,6 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -48,12 +47,12 @@ func NewBodyPanel(entity *gurps.Entity) *BodyPanel {
 	})
 	locations := gurps.SheetSettingsFor(entity).HitLocations
 	p.crc = locations.CRC64()
-	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: locations.Name}, unison.NewEmptyBorder(geom.Insets[float32]{
+	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: locations.Name}, unison.NewEmptyBorder(unison.Insets{
 		Left:   2,
 		Bottom: 1,
 		Right:  2,
 	})))
-	p.DrawCallback = func(gc *unison.Canvas, rect geom.Rect[float32]) {
+	p.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) {
 		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
 		r := p.Children()[0].FrameRect()
 		r.X = rect.X

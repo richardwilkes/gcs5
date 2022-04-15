@@ -20,7 +20,6 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -70,24 +69,24 @@ func (w *aboutWindow) prepare() error {
 	return nil
 }
 
-func (w *aboutWindow) LayoutSizes(_ *unison.Panel, _ geom.Size[float32]) (min, pref, max geom.Size[float32]) {
+func (w *aboutWindow) LayoutSizes(_ *unison.Panel, _ unison.Size) (min, pref, max unison.Size) {
 	pref = w.img.LogicalSize()
 	return pref, pref, pref
 }
 
 func (w *aboutWindow) PerformLayout(target *unison.Panel) {
-	target.SetFrameRect(geom.Rect[float32]{Size: w.img.LogicalSize()})
+	target.SetFrameRect(unison.Rect{Size: w.img.LogicalSize()})
 }
 
-func (w *aboutWindow) drawContentBackground(gc *unison.Canvas, _ geom.Rect[float32]) {
+func (w *aboutWindow) drawContentBackground(gc *unison.Canvas, _ unison.Rect) {
 	r := w.Content().ContentRect(true)
 	gc.DrawImageInRect(w.img, r, nil, nil)
-	gc.DrawRect(r, unison.NewEvenlySpacedGradient(geom.Point[float32]{Y: 0.25}, geom.Point[float32]{Y: 1}, 0, 0,
+	gc.DrawRect(r, unison.NewEvenlySpacedGradient(unison.Point{Y: 0.25}, unison.Point{Y: 1}, 0, 0,
 		unison.Transparent, unison.Black).Paint(gc, r, unison.Fill))
 
 	face := unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.NormalFontWeight, unison.StandardSpacing, unison.NoSlant)
 	boldFace := unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.BlackFontWeight, unison.StandardSpacing, unison.NoSlant)
-	paint := unison.Gray.Paint(gc, geom.Rect[float32]{}, unison.Fill)
+	paint := unison.Gray.Paint(gc, unison.Rect{}, unison.Fill)
 	dec := &unison.TextDecoration{
 		Font:  face.Font(7),
 		Paint: paint,
@@ -116,7 +115,7 @@ func (w *aboutWindow) drawContentBackground(gc *unison.Canvas, _ geom.Rect[float
 	lineHeight := text.Height()
 	y -= lineHeight * 1.5
 
-	paint = unison.RGB(204, 204, 204).Paint(gc, geom.Rect[float32]{}, unison.Fill)
+	paint = unison.RGB(204, 204, 204).Paint(gc, unison.Rect{}, unison.Fill)
 	text = unison.NewText(cmdline.Copyright(), &unison.TextDecoration{
 		Font:  font,
 		Paint: paint,
@@ -136,14 +135,14 @@ func (w *aboutWindow) drawContentBackground(gc *unison.Canvas, _ geom.Rect[float
 	versionText := unison.NewText(t, &unison.TextDecoration{
 		Font: unison.MatchFontFace(unison.DefaultSystemFamilyName, unison.BlackFontWeight,
 			unison.StandardSpacing, unison.NoSlant).Font(10),
-		Paint: unison.White.Paint(gc, geom.Rect[float32]{}, unison.Fill),
+		Paint: unison.White.Paint(gc, unison.Rect{}, unison.Fill),
 	})
 
 	const (
 		hMargin = 8
 		vMargin = 4
 	)
-	var backing geom.Rect[float32]
+	var backing unison.Rect
 	backing.Width = xmath.Max(versionText.Width(), buildText.Width()) + hMargin*2
 	backing.Height = versionText.Height() + buildText.Height() + vMargin*2
 	backing.X = (r.Width - backing.Width) / 2

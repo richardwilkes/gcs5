@@ -13,7 +13,6 @@ package sheet
 
 import (
 	"github.com/richardwilkes/gcs/model/theme"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -25,8 +24,8 @@ type TitledBorder struct {
 }
 
 // Insets implements unison.Border
-func (t *TitledBorder) Insets() geom.Insets[float32] {
-	return geom.Insets[float32]{
+func (t *TitledBorder) Insets() unison.Insets {
+	return unison.Insets{
 		Top:    theme.PageLabelPrimaryFont.LineHeight() + 2,
 		Left:   1,
 		Bottom: 1,
@@ -35,7 +34,7 @@ func (t *TitledBorder) Insets() geom.Insets[float32] {
 }
 
 // Draw implements unison.Border
-func (t *TitledBorder) Draw(gc *unison.Canvas, rect geom.Rect[float32]) {
+func (t *TitledBorder) Draw(gc *unison.Canvas, rect unison.Rect) {
 	clip := rect
 	clip.Inset(t.Insets())
 	path := unison.NewPath()

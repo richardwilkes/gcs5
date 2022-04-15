@@ -23,7 +23,6 @@ import (
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -87,7 +86,7 @@ func (d *Dockable) Setup(ws *workspace.Workspace, dc *unison.DockContainer, addT
 	d.SetLayout(&unison.FlexLayout{Columns: 1})
 	d.AddChild(d.createToolbar(addToStartToolbar, addToEndToolbar))
 	content := unison.NewPanel()
-	content.SetBorder(unison.NewEmptyBorder(geom.NewUniformInsets[float32](unison.StdHSpacing * 2)))
+	content.SetBorder(unison.NewEmptyBorder(unison.NewUniformInsets(unison.StdHSpacing * 2)))
 	initContent(content)
 	scroller := unison.NewScrollPanel()
 	scroller.SetContent(content, unison.FillBehavior)
@@ -111,7 +110,7 @@ func (d *Dockable) Setup(ws *workspace.Workspace, dc *unison.DockContainer, addT
 }
 
 // TitleIcon implements unison.Dockable
-func (d *Dockable) TitleIcon(suggestedSize geom.Size[float32]) unison.Drawable {
+func (d *Dockable) TitleIcon(suggestedSize unison.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  res.SettingsSVG,
 		Size: suggestedSize,
@@ -151,8 +150,8 @@ func (d *Dockable) createToolbar(addToStartToolbar, addToEndToolbar func(*unison
 		HAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
-	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, geom.Insets[float32]{Bottom: 1}, false),
-		unison.NewEmptyBorder(geom.Insets[float32]{
+	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, unison.Insets{Bottom: 1}, false),
+		unison.NewEmptyBorder(unison.Insets{
 			Top:    unison.StdVSpacing,
 			Left:   unison.StdHSpacing,
 			Bottom: unison.StdVSpacing,

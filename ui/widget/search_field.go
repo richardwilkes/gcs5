@@ -13,7 +13,6 @@ package widget
 
 import (
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -29,7 +28,7 @@ func NewSearchField() *unison.Field {
 	b := unison.NewSVGButton(unison.CircledXSVG())
 	b.OnSelectionInk = f.OnEditableInk
 	b.SetEnabled(false)
-	b.UpdateCursorCallback = func(_ geom.Point[float32]) *unison.Cursor { return unison.ArrowCursor() }
+	b.UpdateCursorCallback = func(_ unison.Point) *unison.Cursor { return unison.ArrowCursor() }
 	b.ClickCallback = func() { f.SetText("") }
 	f.ModifiedCallback = func() { b.SetEnabled(f.Text() != "") }
 	f.AddChild(b)

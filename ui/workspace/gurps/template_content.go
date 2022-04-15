@@ -13,7 +13,6 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/settings"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -31,15 +30,15 @@ func newTemplateContent() *templateContent {
 		},
 	}
 	p.Self = p
-	p.SetBorder(unison.NewEmptyBorder(geom.NewUniformInsets[float32](4)))
+	p.SetBorder(unison.NewEmptyBorder(unison.NewUniformInsets(4)))
 	p.SetLayout(p)
 	return p
 }
 
-func (p *templateContent) LayoutSizes(_ *unison.Panel, _ geom.Size[float32]) (min, pref, max geom.Size[float32]) {
+func (p *templateContent) LayoutSizes(_ *unison.Panel, _ unison.Size) (min, pref, max unison.Size) {
 	s := settings.Global().Sheet
 	w, _ := s.Page.Orientation.Dimensions(s.Page.Size.Dimensions())
-	_, size, _ := p.flex.LayoutSizes(p.AsPanel(), geom.Size[float32]{Width: w.Pixels()})
+	_, size, _ := p.flex.LayoutSizes(p.AsPanel(), unison.Size{Width: w.Pixels()})
 	pref.Width = w.Pixels()
 	pref.Height = size.Height
 	return pref, pref, pref
@@ -52,7 +51,7 @@ func (p *templateContent) PerformLayout(_ *unison.Panel) {
 // ApplyPreferredSize to this panel.
 func (p *templateContent) ApplyPreferredSize() {
 	r := p.FrameRect()
-	_, pref, _ := p.Sizes(geom.Size[float32]{})
+	_, pref, _ := p.Sizes(unison.Size{})
 	r.Size = pref
 	p.SetFrameRect(r)
 	p.ValidateLayout()

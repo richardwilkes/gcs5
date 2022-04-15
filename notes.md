@@ -22,10 +22,8 @@
   - Melee Weapons
   - Ranged Weapons
 - Settings editors
-  - Sheet
   - Attributes
   - Body Type
-  - Support for the variances between initial defaults and per-sheet variants of each of these
 - Library configuration dialogs
 - Prompt to save when closing a modified document
 - General completion of menu item actions (many are currently placeholders)
@@ -71,8 +69,6 @@
     - Update <library> to <version>
     - Change Library Locations
   - Settings
-    - Sheet Settings...
-    - Default Sheet Settings...
     - Attributes...
     - Default Attributes...
     - Body Type...

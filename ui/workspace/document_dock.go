@@ -13,7 +13,6 @@ package workspace
 
 import (
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -34,7 +33,7 @@ func NewDocumentDock() *DocumentDock {
 }
 
 // TitleIcon implements unison.Dockable
-func (d *DocumentDock) TitleIcon(suggestedSize geom.Size[float32]) unison.Drawable {
+func (d *DocumentDock) TitleIcon(suggestedSize unison.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  unison.DocumentSVG(),
 		Size: suggestedSize,

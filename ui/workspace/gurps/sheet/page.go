@@ -20,7 +20,6 @@ import (
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -29,7 +28,7 @@ type Page struct {
 	unison.Panel
 	flex       *unison.FlexLayout
 	entity     *gurps.Entity
-	lastInsets geom.Insets[float32]
+	lastInsets unison.Insets
 }
 
 // NewPage creates a new page.
@@ -51,14 +50,14 @@ func NewPage(entity *gurps.Entity) *Page {
 }
 
 // LayoutSizes implements unison.Layout
-func (p *Page) LayoutSizes(_ *unison.Panel, _ geom.Size[float32]) (min, pref, max geom.Size[float32]) {
+func (p *Page) LayoutSizes(_ *unison.Panel, _ unison.Size) (min, pref, max unison.Size) {
 	s := gurps.SheetSettingsFor(p.entity)
 	w, _ := s.Page.Orientation.Dimensions(s.Page.Size.Dimensions())
 	if insets := p.insets(); insets != p.lastInsets {
 		p.lastInsets = insets
 		p.SetBorder(unison.NewEmptyBorder(insets))
 	}
-	_, size, _ := p.flex.LayoutSizes(p.AsPanel(), geom.Size[float32]{Width: w.Pixels()})
+	_, size, _ := p.flex.LayoutSizes(p.AsPanel(), unison.Size{Width: w.Pixels()})
 	pref.Width = w.Pixels()
 	pref.Height = size.Height
 	return pref, pref, pref
@@ -72,15 +71,15 @@ func (p *Page) PerformLayout(_ *unison.Panel) {
 // ApplyPreferredSize to this panel.
 func (p *Page) ApplyPreferredSize() {
 	r := p.FrameRect()
-	_, pref, _ := p.Sizes(geom.Size[float32]{})
+	_, pref, _ := p.Sizes(unison.Size{})
 	r.Size = pref
 	p.SetFrameRect(r)
 	p.ValidateLayout()
 }
 
-func (p *Page) insets() geom.Insets[float32] {
+func (p *Page) insets() unison.Insets {
 	sheetSettings := gurps.SheetSettingsFor(p.entity)
-	insets := geom.Insets[float32]{
+	insets := unison.Insets{
 		Top:    sheetSettings.Page.TopMargin.Pixels(),
 		Left:   sheetSettings.Page.LeftMargin.Pixels(),
 		Bottom: sheetSettings.Page.BottomMargin.Pixels(),
@@ -91,10 +90,10 @@ func (p *Page) insets() geom.Insets[float32] {
 	return insets
 }
 
-func (p *Page) drawSelf(gc *unison.Canvas, _ geom.Rect[float32]) {
+func (p *Page) drawSelf(gc *unison.Canvas, _ unison.Rect) {
 	insets := p.insets()
-	_, prefSize, _ := p.LayoutSizes(nil, geom.Size[float32]{})
-	r := geom.Rect[float32]{Size: prefSize}
+	_, prefSize, _ := p.LayoutSizes(nil, unison.Size{})
+	r := unison.Rect{Size: prefSize}
 	gc.DrawRect(r, theme.PageColor.Paint(gc, r, unison.Fill))
 	r.X += insets.Left
 	r.Width -= insets.Left + insets.Right

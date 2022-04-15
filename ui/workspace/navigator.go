@@ -19,7 +19,6 @@ import (
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -101,7 +100,7 @@ func (n *Navigator) adjustTableSize() {
 }
 
 // TitleIcon implements unison.Dockable
-func (n *Navigator) TitleIcon(suggestedSize geom.Size[float32]) unison.Drawable {
+func (n *Navigator) TitleIcon(suggestedSize unison.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  unison.DocumentSVG(),
 		Size: suggestedSize,
@@ -248,7 +247,7 @@ func createNodeCell(ext, title string, selected bool) *unison.Panel {
 	label.Text = title
 	label.Drawable = &unison.DrawableSVG{
 		SVG:  fi.SVG,
-		Size: geom.NewSize[float32](size, size),
+		Size: unison.NewSize(size, size),
 	}
 	if selected {
 		label.LabelTheme.OnBackgroundInk = unison.OnSelectionColor

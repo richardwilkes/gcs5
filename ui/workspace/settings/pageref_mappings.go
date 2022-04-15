@@ -24,7 +24,6 @@ import (
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/gcs/ui/workspace/external"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -152,14 +151,14 @@ func (d *pageRefMappingsDockable) createIDField(ref *settings.PageRef) {
 	p.Text = ref.ID
 	p.HAlign = unison.MiddleAlignment
 	p.OnBackgroundInk = unison.DefaultTooltipTheme.Label.OnBackgroundInk
-	p.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, geom.NewUniformInsets[float32](1), false),
-		unison.NewEmptyBorder(geom.Insets[float32]{
+	p.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, unison.NewUniformInsets(1), false),
+		unison.NewEmptyBorder(unison.Insets{
 			Top:    1,
 			Left:   unison.StdHSpacing,
 			Bottom: 1,
 			Right:  unison.StdHSpacing,
 		})))
-	p.DrawCallback = func(gc *unison.Canvas, rect geom.Rect[float32]) {
+	p.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) {
 		gc.DrawRect(rect, unison.DefaultTooltipTheme.BackgroundInk.Paint(gc, rect, unison.Fill))
 		p.DefaultDraw(gc, rect)
 	}

@@ -23,7 +23,6 @@ import (
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -133,7 +132,7 @@ func newPageList(provider tbl.TableProvider) *PageList {
 		HGrab:  true,
 		VGrab:  true,
 	})
-	p.SetBorder(unison.NewLineBorder(theme.HeaderColor, 0, geom.NewUniformInsets[float32](1), false))
+	p.SetBorder(unison.NewLineBorder(theme.HeaderColor, 0, unison.NewUniformInsets(1), false))
 	p.table.DividerInk = theme.HeaderColor
 	p.table.MinimumRowHeight = theme.PageFieldPrimaryFont.LineHeight()
 	p.table.Padding.Top = 0
@@ -144,7 +143,7 @@ func newPageList(provider tbl.TableProvider) *PageList {
 	headers := provider.Headers()
 	p.table.ColumnSizes = make([]unison.ColumnSize, len(headers))
 	for i := range p.table.ColumnSizes {
-		_, pref, _ := headers[i].AsPanel().Sizes(geom.Size[float32]{})
+		_, pref, _ := headers[i].AsPanel().Sizes(unison.Size{})
 		pref.Width += p.table.Padding.Left + p.table.Padding.Right
 		p.table.ColumnSizes[i].AutoMinimum = pref.Width
 		p.table.ColumnSizes[i].AutoMaximum = 800
@@ -157,7 +156,7 @@ func newPageList(provider tbl.TableProvider) *PageList {
 		HGrab:  true,
 		VGrab:  true,
 	})
-	p.table.MouseDownCallback = func(where geom.Point[float32], button, clickCount int, mod unison.Modifiers) bool {
+	p.table.MouseDownCallback = func(where unison.Point, button, clickCount int, mod unison.Modifiers) bool {
 		p.table.RequestFocus()
 		return p.table.DefaultMouseDown(where, button, clickCount, mod)
 	}
@@ -178,7 +177,7 @@ func newPageList(provider tbl.TableProvider) *PageList {
 	p.tableHeader = unison.NewTableHeader(p.table, headers...)
 	p.tableHeader.BackgroundInk = theme.HeaderColor
 	p.tableHeader.DividerInk = theme.HeaderColor
-	p.tableHeader.HeaderBorder = unison.NewLineBorder(theme.HeaderColor, 0, geom.Insets[float32]{Bottom: 1}, false)
+	p.tableHeader.HeaderBorder = unison.NewLineBorder(theme.HeaderColor, 0, unison.Insets{Bottom: 1}, false)
 	p.tableHeader.SetBorder(p.tableHeader.HeaderBorder)
 	p.tableHeader.Less = func(s1, s2 string) bool {
 		if n1, err := f64d4.FromString(s1); err == nil {
@@ -194,7 +193,7 @@ func newPageList(provider tbl.TableProvider) *PageList {
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
-	p.tableHeader.DrawCallback = func(gc *unison.Canvas, dirty geom.Rect[float32]) {
+	p.tableHeader.DrawCallback = func(gc *unison.Canvas, dirty unison.Rect) {
 		sortedOn := -1
 		for i, hdr := range p.tableHeader.ColumnHeaders {
 			if hdr.SortState().Order == 0 {

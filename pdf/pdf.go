@@ -19,7 +19,6 @@ import (
 
 	"github.com/richardwilkes/pdf"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -27,7 +26,7 @@ import (
 type TOC struct {
 	Title        string
 	PageNumber   int
-	PageLocation geom.Point[float32]
+	PageLocation unison.Point
 	Children     []*TOC
 }
 
@@ -38,14 +37,14 @@ type Page struct {
 	Image      *unison.Image
 	TOC        []*TOC
 	Links      []*Link
-	Matches    []geom.Rect[float32]
+	Matches    []unison.Rect
 }
 
 // Link holds a single link on a page. If PageNumber if >= 0, then this is an internal link and the URI will be empty.
 type Link struct {
-	Bounds       geom.Rect[float32]
+	Bounds       unison.Rect
 	PageNumber   int
-	PageLocation geom.Point[float32]
+	PageLocation unison.Point
 	URI          string
 }
 
@@ -271,22 +270,22 @@ func convertLinks(pageLinks []*pdf.PageLink, displayScaleAdjust float32) []*Link
 	return links
 }
 
-func convertMatches(hits []image.Rectangle, displayScaleAdjust float32) []geom.Rect[float32] {
+func convertMatches(hits []image.Rectangle, displayScaleAdjust float32) []unison.Rect {
 	if len(hits) == 0 {
 		return nil
 	}
-	matches := make([]geom.Rect[float32], len(hits))
+	matches := make([]unison.Rect, len(hits))
 	for i, hit := range hits {
 		matches[i] = rectFromPageRect(hit, displayScaleAdjust)
 	}
 	return matches
 }
 
-func pointFromPagePoint(x, y int, displayScaleAdjust float32) geom.Point[float32] {
-	return geom.NewPoint(float32(x)*displayScaleAdjust, float32(y)*displayScaleAdjust)
+func pointFromPagePoint(x, y int, displayScaleAdjust float32) unison.Point {
+	return unison.NewPoint(float32(x)*displayScaleAdjust, float32(y)*displayScaleAdjust)
 }
 
-func rectFromPageRect(r image.Rectangle, displayScaleAdjust float32) geom.Rect[float32] {
-	return geom.NewRect(float32(r.Min.X)*displayScaleAdjust, float32(r.Min.Y)*displayScaleAdjust,
+func rectFromPageRect(r image.Rectangle, displayScaleAdjust float32) unison.Rect {
+	return unison.NewRect(float32(r.Min.X)*displayScaleAdjust, float32(r.Min.Y)*displayScaleAdjust,
 		float32(r.Dx())*displayScaleAdjust, float32(r.Dy())*displayScaleAdjust)
 }

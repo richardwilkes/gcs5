@@ -14,7 +14,6 @@ package sheet
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -25,10 +24,10 @@ type portraitLayout struct {
 	rest     *unison.Panel
 }
 
-func (p *portraitLayout) LayoutSizes(_ *unison.Panel, hint geom.Size[float32]) (min, pref, max geom.Size[float32]) {
+func (p *portraitLayout) LayoutSizes(_ *unison.Panel, hint unison.Size) (min, pref, max unison.Size) {
 	var width, height float32
 	insets := p.portrait.Border().Insets()
-	_, pref, _ = p.rest.Sizes(geom.Size[float32]{})
+	_, pref, _ = p.rest.Sizes(unison.Size{})
 	if height -= insets.Top + insets.Bottom; height > 0 {
 		width = height * 0.75
 	} else {

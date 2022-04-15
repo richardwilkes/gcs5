@@ -271,8 +271,7 @@ func (d *sheetSettingsDockable) createBlockLayout(content *unison.Panel) {
 	content.AddChild(panel)
 }
 
-func (d *sheetSettingsDockable) createPaperMarginField(panel *unison.Panel, title string, current paper.Length,
-	set func(value paper.Length)) *unison.Field {
+func (d *sheetSettingsDockable) createPaperMarginField(panel *unison.Panel, title string, current paper.Length, set func(value paper.Length)) *unison.Field {
 	panel.AddChild(widget.NewFieldLeadingLabel(title))
 	field := unison.NewField()
 	field.SetText(current.String())
@@ -294,8 +293,7 @@ func (d *sheetSettingsDockable) createPaperMarginField(panel *unison.Panel, titl
 	return field
 }
 
-func createSettingPopup[T comparable](d *sheetSettingsDockable, panel *unison.Panel, title string, choices []T,
-	current T, set func(option T)) *unison.PopupMenu[T] {
+func createSettingPopup[T comparable](d *sheetSettingsDockable, panel *unison.Panel, title string, choices []T, current T, set func(option T)) *unison.PopupMenu[T] {
 	panel.AddChild(widget.NewFieldLeadingLabel(title))
 	popup := unison.NewPopupMenu[T]()
 	for _, one := range choices {
