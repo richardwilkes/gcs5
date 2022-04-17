@@ -22,8 +22,7 @@ import (
 // MiscPanel holds the contents of the miscellaneous block on the sheet.
 type MiscPanel struct {
 	unison.Panel
-	entity   *gurps.Entity
-	Modified bool
+	entity *gurps.Entity
 }
 
 // NewMiscPanel creates a new miscellaneous panel.
@@ -75,7 +74,6 @@ func NewMiscPanel(entity *gurps.Entity) *MiscPanel {
 
 // UpdateModified updates the current modification timestamp.
 func (m *MiscPanel) UpdateModified() {
-	m.Modified = true
 	m.entity.ModifiedOn = jio.Now()
 }
 

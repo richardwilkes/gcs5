@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package sheet
 
 import (
 	"github.com/richardwilkes/gcs/model/settings"

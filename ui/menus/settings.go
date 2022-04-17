@@ -14,8 +14,8 @@ package menus
 import (
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/settings"
-	"github.com/richardwilkes/gcs/ui/workspace/gurps"
 	uisettings "github.com/richardwilkes/gcs/ui/workspace/settings"
+	"github.com/richardwilkes/gcs/ui/workspace/sheet"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -57,9 +57,9 @@ var PerSheetSettings = &unison.Action{
 	ID:              constants.PerSheetSettingsItemID,
 	Title:           i18n.Text("Sheet Settings…"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyComma, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: func(_ *unison.Action, _ interface{}) bool { return gurps.ActiveEntity() != nil },
+	EnabledCallback: func(_ *unison.Action, _ interface{}) bool { return sheet.ActiveEntity() != nil },
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		if entity := gurps.ActiveEntity(); entity != nil {
+		if entity := sheet.ActiveEntity(); entity != nil {
 			uisettings.ShowSheetSettings(entity)
 		}
 	},

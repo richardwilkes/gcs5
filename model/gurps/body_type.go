@@ -14,14 +14,12 @@ package gurps
 import (
 	"context"
 	"embed"
-	"encoding/binary"
-	"hash"
-	"hash/crc64"
 	"io/fs"
 	"path"
 	"sort"
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/crc"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/rpgtools/dice"
@@ -206,18 +204,15 @@ func (b *BodyType) LookupLocationByID(entity *Entity, idStr string) *HitLocation
 
 // CRC64 calculates a CRC-64 for this data.
 func (b *BodyType) CRC64() uint64 {
-	h := crc64.New(crc64.MakeTable(crc64.ECMA))
-	b.crc64(h)
-	return h.Sum64()
+	return b.crc64(0)
 }
 
-func (b *BodyType) crc64(h hash.Hash64) {
-	h.Write([]byte(b.Name))
-	h.Write([]byte(b.Roll.String()))
-	var buffer [8]byte
-	binary.LittleEndian.PutUint64(buffer[:], uint64(len(b.Locations)))
-	h.Write(buffer[:])
+func (b *BodyType) crc64(c uint64) uint64 {
+	c = crc.String(c, b.Name)
+	c = crc.String(c, b.Roll.String())
+	c = crc.Number(c, len(b.Locations))
 	for _, loc := range b.Locations {
-		loc.crc64(h)
+		c = loc.crc64(c)
 	}
+	return c
 }

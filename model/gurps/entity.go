@@ -12,6 +12,7 @@
 package gurps
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/fs"
@@ -21,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/richardwilkes/gcs/model/crc"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/ancestry"
@@ -1187,4 +1189,17 @@ func (e *Entity) SpellList() []*Spell {
 // NoteList implements ListProvider
 func (e *Entity) NoteList() []*Note {
 	return e.Notes
+}
+
+// CRC64 computes a CRC-64 value for the canonical disk format of the data. The ModifiedOn field is ignored for this
+// calculation.
+func (e *Entity) CRC64() uint64 {
+	var buffer bytes.Buffer
+	saved := e.ModifiedOn
+	e.ModifiedOn = jio.Time{}
+	defer func() { e.ModifiedOn = saved }()
+	if err := jio.Save(context.Background(), &buffer, e); err != nil {
+		return 0
+	}
+	return crc.Bytes(0, buffer.Bytes())
 }

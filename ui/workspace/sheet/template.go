@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package sheet
 
 import (
 	"os"
@@ -23,7 +23,6 @@ import (
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
-	"github.com/richardwilkes/gcs/ui/workspace/gurps/sheet"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio/fs"
@@ -44,6 +43,7 @@ type Template struct {
 	undoMgr    *unison.UndoManager
 	scroll     *unison.ScrollPanel
 	template   *gurps.Template
+	crc        uint64
 	scale      int
 	content    *templateContent
 	scaleField *widget.PercentageField
@@ -68,6 +68,7 @@ func NewTemplate(filePath string, template *gurps.Template) unison.Dockable {
 		scroll:   unison.NewScrollPanel(),
 		template: template,
 		scale:    settings.Global().General.InitialSheetUIScale,
+		crc:      template.CRC64(),
 	}
 	t.Self = t
 	t.SetLayout(&unison.FlexLayout{
@@ -158,7 +159,7 @@ func (d *Template) BackingFilePath() string {
 
 // Modified implements workspace.FileBackedDockable
 func (d *Template) Modified() bool {
-	return false // TODO: Implement
+	return d.crc != d.template.CRC64()
 }
 
 // MarkModified implements widget.ModifiableRoot.
@@ -193,15 +194,15 @@ func (d *Template) createLists() {
 		for _, c := range col {
 			switch c {
 			case gurps.BlockLayoutAdvantagesKey:
-				rowPanel.AddChild(sheet.NewAdvantagesPageList(d.template))
+				rowPanel.AddChild(NewAdvantagesPageList(d.template))
 			case gurps.BlockLayoutSkillsKey:
-				rowPanel.AddChild(sheet.NewSkillsPageList(d.template))
+				rowPanel.AddChild(NewSkillsPageList(d.template))
 			case gurps.BlockLayoutSpellsKey:
-				rowPanel.AddChild(sheet.NewSpellsPageList(d.template))
+				rowPanel.AddChild(NewSpellsPageList(d.template))
 			case gurps.BlockLayoutEquipmentKey:
-				rowPanel.AddChild(sheet.NewCarriedEquipmentPageList(d.template))
+				rowPanel.AddChild(NewCarriedEquipmentPageList(d.template))
 			case gurps.BlockLayoutNotesKey:
-				rowPanel.AddChild(sheet.NewNotesPageList(d, d.template))
+				rowPanel.AddChild(NewNotesPageList(d, d.template))
 			}
 		}
 		if len(rowPanel.Children()) != 0 {

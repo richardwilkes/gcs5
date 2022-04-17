@@ -16,13 +16,13 @@ import (
 	"github.com/richardwilkes/gcs/ui/menus"
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/gcs/ui/workspace/external"
-	"github.com/richardwilkes/gcs/ui/workspace/gurps"
+	"github.com/richardwilkes/gcs/ui/workspace/lists"
 )
 
 // Setup the application. This code is here to break circular dependencies.
 func Setup() {
 	workspace.RegisterFileTypes()
 	external.RegisterFileTypes()
-	gurps.RegisterFileTypes()
+	lists.RegisterFileTypes()
 	trampolines.MenuSetup = menus.Setup
 }

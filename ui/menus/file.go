@@ -18,8 +18,8 @@ import (
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/workspace"
-	gurpsui "github.com/richardwilkes/gcs/ui/workspace/gurps"
-	"github.com/richardwilkes/gcs/ui/workspace/gurps/sheet"
+	gurpsui "github.com/richardwilkes/gcs/ui/workspace/lists"
+	"github.com/richardwilkes/gcs/ui/workspace/sheet"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )

@@ -13,12 +13,11 @@ package gurps
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
-	"hash"
 	"strconv"
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/crc"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/id"
@@ -205,19 +204,16 @@ func (h *HitLocation) updateRollRange(start int) int {
 	return start + h.Slots
 }
 
-func (h *HitLocation) crc64(hsh hash.Hash64) {
-	hsh.Write([]byte(h.LocID))
-	hsh.Write([]byte(h.ChoiceName))
-	hsh.Write([]byte(h.TableName))
-	var buffer [8]byte
-	binary.LittleEndian.PutUint64(buffer[:], uint64(h.Slots))
-	hsh.Write(buffer[:])
-	binary.LittleEndian.PutUint64(buffer[:], uint64(h.HitPenalty))
-	hsh.Write(buffer[:])
-	binary.LittleEndian.PutUint64(buffer[:], uint64(h.DRBonus))
-	hsh.Write(buffer[:])
-	hsh.Write([]byte(h.Description))
+func (h *HitLocation) crc64(c uint64) uint64 {
+	c = crc.String(c, h.LocID)
+	c = crc.String(c, h.ChoiceName)
+	c = crc.String(c, h.TableName)
+	c = crc.Number(c, h.Slots)
+	c = crc.Number(c, h.HitPenalty)
+	c = crc.Number(c, h.DRBonus)
+	c = crc.String(c, h.Description)
 	if h.SubTable != nil {
-		h.SubTable.crc64(hsh)
+		c = h.SubTable.crc64(c)
 	}
+	return c
 }

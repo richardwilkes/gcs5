@@ -12,11 +12,10 @@
 package gurps
 
 import (
-	"encoding/binary"
-	"hash"
 	"strconv"
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/crc"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
@@ -109,20 +108,17 @@ func (a *AttributeDef) ComputeCost(entity *Entity, value, costReduction f64d4.In
 	return cost.Round()
 }
 
-func (a *AttributeDef) crc64(h hash.Hash64) {
-	h.Write([]byte(a.DefID))
-	h.Write([]byte{byte(a.Type)})
-	h.Write([]byte(a.Name))
-	h.Write([]byte(a.FullName))
-	h.Write([]byte(a.AttributeBase))
-	var buffer [8]byte
-	binary.LittleEndian.PutUint64(buffer[:], uint64(a.CostPerPoint))
-	h.Write(buffer[:])
-	binary.LittleEndian.PutUint64(buffer[:], uint64(a.CostAdjPercentPerSM))
-	h.Write(buffer[:])
-	binary.LittleEndian.PutUint64(buffer[:], uint64(len(a.Thresholds)))
-	h.Write(buffer[:])
+func (a *AttributeDef) crc64(c uint64) uint64 {
+	c = crc.String(c, a.DefID)
+	c = crc.Byte(c, byte(a.Type))
+	c = crc.String(c, a.Name)
+	c = crc.String(c, a.FullName)
+	c = crc.String(c, a.AttributeBase)
+	c = crc.Number(c, a.CostPerPoint)
+	c = crc.Number(c, a.CostAdjPercentPerSM)
+	c = crc.Number(c, len(a.Thresholds))
 	for _, one := range a.Thresholds {
-		one.crc64(h)
+		c = one.crc64(c)
 	}
+	return c
 }

@@ -12,10 +12,12 @@
 package gurps
 
 import (
+	"bytes"
 	"context"
 	"io/fs"
 
 	"github.com/google/uuid"
+	"github.com/richardwilkes/gcs/model/crc"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
@@ -95,4 +97,13 @@ func (t *Template) SpellList() []*Spell {
 // NoteList implements ListProvider
 func (t *Template) NoteList() []*Note {
 	return t.Notes
+}
+
+// CRC64 computes a CRC-64 value for the canonical disk format of the data.
+func (t *Template) CRC64() uint64 {
+	var buffer bytes.Buffer
+	if err := jio.Save(context.Background(), &buffer, t); err != nil {
+		return 0
+	}
+	return crc.Bytes(0, buffer.Bytes())
 }

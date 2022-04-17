@@ -9,19 +9,19 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package lists
 
 import (
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/res"
-	"github.com/richardwilkes/gcs/ui/workspace/gurps/sheet"
+	"github.com/richardwilkes/gcs/ui/workspace/sheet"
 	"github.com/richardwilkes/unison"
 )
 
 // RegisterFileTypes registers GCS file types.
 func RegisterFileTypes() {
 	registerExportableGCSFileInfo(".gcs", res.GCSSheetSVG, sheet.NewSheetFromFile)
-	registerGCSFileInfo(".gct", []string{".gct"}, res.GCSTemplateSVG, NewTemplateFromFile)
+	registerGCSFileInfo(".gct", []string{".gct"}, res.GCSTemplateSVG, sheet.NewTemplateFromFile)
 	groupWith := []string{".adq", ".adm", ".eqp", ".eqm", ".skl", ".spl", ".not"}
 	registerGCSFileInfo(".adq", groupWith, res.GCSAdvantagesSVG, NewAdvantageTableDockableFromFile)
 	registerGCSFileInfo(".adm", groupWith, res.GCSAdvantageModifiersSVG, NewAdvantageModifierTableDockableFromFile)

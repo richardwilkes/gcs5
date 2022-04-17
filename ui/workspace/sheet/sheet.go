@@ -45,6 +45,7 @@ type Sheet struct {
 	undoMgr            *unison.UndoManager
 	scroll             *unison.ScrollPanel
 	entity             *gurps.Entity
+	crc                uint64
 	scale              int
 	scaleField         *widget.PercentageField
 	pages              *unison.Panel
@@ -64,6 +65,18 @@ type Sheet struct {
 	full               bool
 }
 
+// ActiveEntity returns the currently active entity.
+func ActiveEntity() *gurps.Entity {
+	d := workspace.ActiveDockable()
+	if d == nil {
+		return nil
+	}
+	if s, ok := d.(*Sheet); ok {
+		return s.Entity()
+	}
+	return nil
+}
+
 // NewSheetFromFile loads a GURPS character sheet file and creates a new unison.Dockable for it.
 func NewSheetFromFile(filePath string) (unison.Dockable, error) {
 	entity, err := gurps.NewEntityFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
@@ -80,6 +93,7 @@ func NewSheet(filePath string, entity *gurps.Entity) unison.Dockable {
 		undoMgr: unison.NewUndoManager(200, func(err error) { jot.Error(err) }),
 		scroll:  unison.NewScrollPanel(),
 		entity:  entity,
+		crc:     entity.CRC64(),
 		scale:   settings.Global().General.InitialSheetUIScale,
 		pages:   unison.NewPanel(),
 	}
@@ -188,7 +202,7 @@ func (s *Sheet) BackingFilePath() string {
 
 // Modified implements workspace.FileBackedDockable
 func (s *Sheet) Modified() bool {
-	return s.MiscPanel.Modified
+	return s.crc != s.entity.CRC64()
 }
 
 type closeWithEntity interface {

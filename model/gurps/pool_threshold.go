@@ -12,9 +12,7 @@
 package gurps
 
 import (
-	"encoding/binary"
-	"hash"
-
+	"github.com/richardwilkes/gcs/model/crc"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
@@ -60,19 +58,15 @@ func (p *PoolThreshold) ContainsOp(op attribute.ThresholdOp) bool {
 	return false
 }
 
-func (p *PoolThreshold) crc64(h hash.Hash64) {
-	h.Write([]byte(p.State))
-	h.Write([]byte(p.Explanation))
-	var buffer [8]byte
-	binary.LittleEndian.PutUint64(buffer[:], uint64(p.Multiplier))
-	h.Write(buffer[:])
-	binary.LittleEndian.PutUint64(buffer[:], uint64(p.Divisor))
-	h.Write(buffer[:])
-	binary.LittleEndian.PutUint64(buffer[:], uint64(p.Addition))
-	h.Write(buffer[:])
-	binary.LittleEndian.PutUint64(buffer[:], uint64(len(p.Ops)))
-	h.Write(buffer[:])
+func (p *PoolThreshold) crc64(c uint64) uint64 {
+	c = crc.String(c, p.State)
+	c = crc.String(c, p.Explanation)
+	c = crc.Number(c, p.Multiplier)
+	c = crc.Number(c, p.Divisor)
+	c = crc.Number(c, p.Addition)
+	c = crc.Number(c, len(p.Ops))
 	for _, one := range p.Ops {
-		h.Write([]byte{byte(one)})
+		c = crc.Byte(c, byte(one))
 	}
+	return c
 }
