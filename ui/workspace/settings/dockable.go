@@ -22,7 +22,6 @@ import (
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
 
@@ -43,44 +42,6 @@ type Dockable struct {
 	Resetter  func()
 }
 
-// ActiveDockable returns the currently active dockable in the active window.
-func ActiveDockable() unison.Dockable {
-	ws := workspace.FromWindow(unison.ActiveWindow())
-	if ws == nil {
-		return nil
-	}
-	dc := ws.CurrentlyFocusedDockContainer()
-	if dc == nil {
-		return nil
-	}
-	return dc.CurrentDockable()
-}
-
-// Activate attempts to locate an existing dockable that 'matcher' returns true for. If found, it will have been
-// activated and focused.
-func Activate(matcher func(d unison.Dockable) bool) (ws *workspace.Workspace, dc *unison.DockContainer, found bool) {
-	if ws = workspace.Any(); ws == nil {
-		jot.Error("no workspace available")
-		return nil, nil, false
-	}
-	dc = ws.CurrentlyFocusedDockContainer()
-	ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(container *unison.DockContainer) bool {
-		for _, one := range container.Dockables() {
-			if matcher(one) {
-				found = true
-				container.SetCurrentDockable(one)
-				container.AcquireFocus()
-				return true
-			}
-			if dc == nil {
-				dc = container
-			}
-		}
-		return false
-	})
-	return ws, dc, found
-}
-
 // Setup the dockable and display it.
 func (d *Dockable) Setup(ws *workspace.Workspace, dc *unison.DockContainer, addToStartToolbar, addToEndToolbar, initContent func(*unison.Panel)) {
 	d.SetLayout(&unison.FlexLayout{Columns: 1})
@@ -89,7 +50,7 @@ func (d *Dockable) Setup(ws *workspace.Workspace, dc *unison.DockContainer, addT
 	content.SetBorder(unison.NewEmptyBorder(unison.NewUniformInsets(unison.StdHSpacing * 2)))
 	initContent(content)
 	scroller := unison.NewScrollPanel()
-	scroller.SetContent(content, unison.FillBehavior)
+	scroller.SetContent(content, unison.FillBehavior, unison.FillBehavior)
 	scroller.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,

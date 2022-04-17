@@ -18,7 +18,6 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/unison"
@@ -27,7 +26,7 @@ import (
 // IntegerField holds the value for an integer field.
 type IntegerField struct {
 	*unison.Field
-	undoID    int
+	undoID    int64
 	undoTitle string
 	get       func() int
 	set       func(int)
@@ -38,10 +37,10 @@ type IntegerField struct {
 }
 
 // NewIntegerField creates a new field that holds an integer.
-func NewIntegerField(undoID int, undoTitle string, get func() int, set func(int), min, max int, showSign bool) *IntegerField {
+func NewIntegerField(undoTitle string, get func() int, set func(int), min, max int, showSign bool) *IntegerField {
 	f := &IntegerField{
 		Field:     unison.NewField(),
-		undoID:    undoID,
+		undoID:    unison.NextUndoID(),
 		undoTitle: undoTitle,
 		get:       get,
 		set:       set,
@@ -91,7 +90,7 @@ func (f *IntegerField) validate() bool {
 
 func (f *IntegerField) modified() {
 	text := f.Text()
-	if !f.inUndo && f.undoID != gid.FieldNone {
+	if !f.inUndo && f.undoID != unison.NoUndoID {
 		if mgr := unison.UndoManagerFor(f); mgr != nil {
 			mgr.Add(&unison.UndoEdit[string]{
 				ID:       f.undoID,

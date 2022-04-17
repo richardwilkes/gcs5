@@ -13,7 +13,6 @@
   - Advantage Modifiers
   - Equipment
   - Equipment Modifiers
-  - Notes
   - Skills
   - Spells
   - Features

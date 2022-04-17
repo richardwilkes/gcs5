@@ -12,25 +12,35 @@
 package widget
 
 import (
-	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/unison"
 )
 
 // StringField holds the value for a string field.
 type StringField struct {
 	*unison.Field
-	undoID    int
+	undoID    int64
 	undoTitle string
 	get       func() string
 	set       func(string)
 	inUndo    bool
 }
 
+// NewMultiLineStringField creates a new field for editing a string.
+func NewMultiLineStringField(undoTitle string, get func() string, set func(string)) *StringField {
+	f := newStringField(unison.NewMultiLineField(), undoTitle, get, set)
+	f.SetWrap(true)
+	return f
+}
+
 // NewStringField creates a new field for editing a string.
-func NewStringField(undoID int, undoTitle string, get func() string, set func(string)) *StringField {
+func NewStringField(undoTitle string, get func() string, set func(string)) *StringField {
+	return newStringField(unison.NewField(), undoTitle, get, set)
+}
+
+func newStringField(field *unison.Field, undoTitle string, get func() string, set func(string)) *StringField {
 	f := &StringField{
-		Field:     unison.NewField(),
-		undoID:    undoID,
+		Field:     field,
+		undoID:    unison.NextUndoID(),
 		undoTitle: undoTitle,
 		get:       get,
 		set:       set,
@@ -47,7 +57,7 @@ func NewStringField(undoID int, undoTitle string, get func() string, set func(st
 
 func (f *StringField) modified() {
 	text := f.Text()
-	if !f.inUndo && f.undoID != gid.FieldNone {
+	if !f.inUndo && f.undoID != unison.NoUndoID {
 		if mgr := unison.UndoManagerFor(f); mgr != nil {
 			mgr.Add(&unison.UndoEdit[string]{
 				ID:       f.undoID,

@@ -123,8 +123,8 @@ func NewPageLabelWithRandomizer(title, tooltip string, clickCallback func()) *un
 }
 
 // NewStringPageField creates a new text entry field for a sheet page.
-func NewStringPageField(undoID int, undoTitle string, get func() string, set func(string)) *StringField {
-	field := NewStringField(undoID, undoTitle, get, set)
+func NewStringPageField(undoTitle string, get func() string, set func(string)) *StringField {
+	field := NewStringField(undoTitle, get, set)
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, unison.Insets{Bottom: 1}, false)
 	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, unison.Insets{Bottom: 1}, false)
@@ -138,8 +138,8 @@ func NewStringPageField(undoID int, undoTitle string, get func() string, set fun
 }
 
 // NewStringPageFieldNoGrab creates a new text entry field for a sheet page, but with HGrab set to false.
-func NewStringPageFieldNoGrab(undoID int, undoTitle string, get func() string, set func(string)) *StringField {
-	field := NewStringField(undoID, undoTitle, get, set)
+func NewStringPageFieldNoGrab(undoTitle string, get func() string, set func(string)) *StringField {
+	field := NewStringField(undoTitle, get, set)
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, unison.Insets{Bottom: 1}, false)
 	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, unison.Insets{Bottom: 1}, false)
@@ -152,8 +152,8 @@ func NewStringPageFieldNoGrab(undoID int, undoTitle string, get func() string, s
 }
 
 // NewHeightPageField creates a new height entry field for a sheet page.
-func NewHeightPageField(undoID int, undoTitle string, entity *gurps.Entity, get func() measure.Length, set func(measure.Length), min, max measure.Length) *HeightField {
-	field := NewHeightField(undoID, undoTitle, entity, get, set, min, max)
+func NewHeightPageField(undoTitle string, entity *gurps.Entity, get func() measure.Length, set func(measure.Length), min, max measure.Length) *HeightField {
+	field := NewHeightField(undoTitle, entity, get, set, min, max)
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, unison.Insets{Bottom: 1}, false)
 	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, unison.Insets{Bottom: 1}, false)
@@ -166,8 +166,8 @@ func NewHeightPageField(undoID int, undoTitle string, entity *gurps.Entity, get 
 }
 
 // NewWeightPageField creates a new weight entry field for a sheet page.
-func NewWeightPageField(undoID int, undoTitle string, entity *gurps.Entity, get func() measure.Weight, set func(measure.Weight), min, max measure.Weight) *WeightField {
-	field := NewWeightField(undoID, undoTitle, entity, get, set, min, max)
+func NewWeightPageField(undoTitle string, entity *gurps.Entity, get func() measure.Weight, set func(measure.Weight), min, max measure.Weight) *WeightField {
+	field := NewWeightField(undoTitle, entity, get, set, min, max)
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, unison.Insets{Bottom: 1}, false)
 	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, unison.Insets{Bottom: 1}, false)
@@ -180,8 +180,8 @@ func NewWeightPageField(undoID int, undoTitle string, entity *gurps.Entity, get 
 }
 
 // NewIntegerPageField creates a new integer entry field for a sheet page.
-func NewIntegerPageField(undoID int, undoTitle string, get func() int, set func(int), min, max int, showSign bool) *IntegerField {
-	field := NewIntegerField(undoID, undoTitle, get, set, min, max, showSign)
+func NewIntegerPageField(undoTitle string, get func() int, set func(int), min, max int, showSign bool) *IntegerField {
+	field := NewIntegerField(undoTitle, get, set, min, max, showSign)
 	field.HAlign = unison.EndAlignment
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, unison.Insets{Bottom: 1}, false)
@@ -195,8 +195,8 @@ func NewIntegerPageField(undoID int, undoTitle string, get func() int, set func(
 }
 
 // NewNumericPageField creates a new numeric text entry field for a sheet page.
-func NewNumericPageField(undoID int, undoTitle string, get func() f64d4.Int, set func(f64d4.Int), min, max f64d4.Int, noMinWidth bool) *NumericField {
-	field := NewNumericField(undoID, undoTitle, get, set, min, max, noMinWidth)
+func NewNumericPageField(undoTitle string, get func() f64d4.Int, set func(f64d4.Int), min, max f64d4.Int, noMinWidth bool) *NumericField {
+	field := NewNumericField(undoTitle, get, set, min, max, noMinWidth)
 	field.HAlign = unison.EndAlignment
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, unison.Insets{Bottom: 1}, false)

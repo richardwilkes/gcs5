@@ -11,7 +11,9 @@
 
 package gurps
 
-import "github.com/richardwilkes/gcs/model/gurps/weapon"
+import (
+	"github.com/richardwilkes/gcs/model/gurps/weapon"
+)
 
 // ListProvider defines the methods needed to access list data.
 type ListProvider interface {

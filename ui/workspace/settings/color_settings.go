@@ -19,6 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -30,7 +31,7 @@ type colorSettingsDockable struct {
 
 // ShowColorSettings shows the Color settings.
 func ShowColorSettings() {
-	ws, dc, found := Activate(func(d unison.Dockable) bool {
+	ws, dc, found := workspace.Activate(func(d unison.Dockable) bool {
 		_, ok := d.(*colorSettingsDockable)
 		return ok
 	})

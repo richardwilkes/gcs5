@@ -16,7 +16,6 @@ import (
 
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
-	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -62,7 +61,7 @@ func NewPointPoolsPanel(entity *gurps.Entity) *PointPoolsPanel {
 
 func (p *PointPoolsPanel) rebuild(attrs *gurps.AttributeDefs) {
 	p.RemoveAllChildren()
-	for i, def := range attrs.List() {
+	for _, def := range attrs.List() {
 		if def.Type != attribute.Pool {
 			continue
 		}
@@ -74,7 +73,7 @@ func (p *PointPoolsPanel) rebuild(attrs *gurps.AttributeDefs) {
 		p.AddChild(p.createPointsField(attr))
 
 		var currentField *widget.NumericField
-		currentField = widget.NewNumericPageField(gid.FieldPointPoolCurrentBase+i, i18n.Text("Point Pool Current"),
+		currentField = widget.NewNumericPageField(i18n.Text("Point Pool Current"),
 			func() f64d4.Int {
 				if currentField != nil {
 					currentField.SetMaximum(attr.Maximum())
@@ -85,7 +84,7 @@ func (p *PointPoolsPanel) rebuild(attrs *gurps.AttributeDefs) {
 
 		p.AddChild(widget.NewPageLabel(i18n.Text("of")))
 
-		maximumField := widget.NewNumericPageField(gid.FieldPointPoolMaximumBase+i, i18n.Text("Point Pool Maximum"),
+		maximumField := widget.NewNumericPageField(i18n.Text("Point Pool Maximum"),
 			func() f64d4.Int { return attr.Maximum() },
 			func(v f64d4.Int) {
 				attr.SetMaximum(v)

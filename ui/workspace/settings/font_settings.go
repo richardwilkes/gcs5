@@ -15,11 +15,11 @@ import (
 	"fmt"
 	"io/fs"
 
-	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
@@ -33,7 +33,7 @@ type fontSettingsDockable struct {
 
 // ShowFontSettings shows the Font settings.
 func ShowFontSettings() {
-	ws, dc, found := Activate(func(d unison.Dockable) bool {
+	ws, dc, found := workspace.Activate(func(d unison.Dockable) bool {
 		_, ok := d.(*fontSettingsDockable)
 		return ok
 	})
@@ -117,7 +117,7 @@ func (d *fontSettingsDockable) createFamilyField(index int) {
 }
 
 func (d *fontSettingsDockable) createSizeField(index int) {
-	field := widget.NewNumericField(gid.FieldFontSize, i18n.Text("Font Size"), func() f64d4.Int {
+	field := widget.NewNumericField(i18n.Text("Font Size"), func() f64d4.Int {
 		return f64d4.FromFloat32(theme.CurrentFonts[index].Font.Size())
 	}, func(v f64d4.Int) {
 		if !d.noUpdate {

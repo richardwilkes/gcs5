@@ -16,11 +16,11 @@ import (
 	"strconv"
 
 	"github.com/richardwilkes/gcs/model/gurps"
-	"github.com/richardwilkes/gcs/model/gurps/gid"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
@@ -45,7 +45,7 @@ type generalSettingsDockable struct {
 
 // ShowGeneralSettings the General Settings window.
 func ShowGeneralSettings() {
-	ws, dc, found := Activate(func(d unison.Dockable) bool {
+	ws, dc, found := workspace.Activate(func(d unison.Dockable) bool {
 		_, ok := d.(*generalSettingsDockable)
 		return ok
 	})
@@ -93,7 +93,7 @@ func (d *generalSettingsDockable) initContent(content *unison.Panel) {
 func (d *generalSettingsDockable) createPlayerAndDescFields(content *unison.Panel) {
 	title := i18n.Text("Default Player Name")
 	content.AddChild(widget.NewFieldLeadingLabel(title))
-	d.nameField = widget.NewStringField(gid.FieldDefaultPlayerName, title,
+	d.nameField = widget.NewStringField(title,
 		func() string { return settings.Global().General.DefaultPlayerName },
 		func(s string) { settings.Global().General.DefaultPlayerName = s })
 	content.AddChild(d.nameField)
@@ -106,7 +106,7 @@ func (d *generalSettingsDockable) createPlayerAndDescFields(content *unison.Pane
 func (d *generalSettingsDockable) createInitialPointsFields(content *unison.Panel) {
 	title := i18n.Text("Initial Points")
 	content.AddChild(widget.NewFieldLeadingLabel(title))
-	d.pointsField = widget.NewNumericField(gid.FieldInitialPoints, title,
+	d.pointsField = widget.NewNumericField(title,
 		func() f64d4.Int { return settings.Global().General.InitialPoints },
 		func(v f64d4.Int) { settings.Global().General.InitialPoints = v }, gsettings.InitialPointsMin,
 		gsettings.InitialPointsMax, false)
@@ -120,7 +120,7 @@ func (d *generalSettingsDockable) createInitialPointsFields(content *unison.Pane
 func (d *generalSettingsDockable) createTechLevelField(content *unison.Panel) {
 	title := i18n.Text("Default Tech Level")
 	content.AddChild(widget.NewFieldLeadingLabel(title))
-	d.techLevelField = widget.NewStringField(gid.FieldDefaultTechLevel, title,
+	d.techLevelField = widget.NewStringField(title,
 		func() string { return settings.Global().General.DefaultTechLevel },
 		func(s string) { settings.Global().General.DefaultTechLevel = s })
 	d.techLevelField.Tooltip = unison.NewTooltipWithText(gurps.TechLevelInfo)
@@ -149,7 +149,7 @@ func (d *generalSettingsDockable) createCalendarPopup(content *unison.Panel) {
 func (d *generalSettingsDockable) createImageResolutionField(content *unison.Panel) {
 	title := i18n.Text("Image Export Resolution")
 	content.AddChild(widget.NewFieldLeadingLabel(title))
-	d.exportResolutionField = widget.NewIntegerField(gid.FieldImageExportResolution, title,
+	d.exportResolutionField = widget.NewIntegerField(title,
 		func() int { return settings.Global().General.ImageResolution },
 		func(v int) { settings.Global().General.ImageResolution = v },
 		gsettings.ImageResolutionMin, gsettings.ImageResolutionMax, false)
@@ -159,7 +159,7 @@ func (d *generalSettingsDockable) createImageResolutionField(content *unison.Pan
 func (d *generalSettingsDockable) createTooltipDelayField(content *unison.Panel) {
 	title := i18n.Text("Tooltip Delay")
 	content.AddChild(widget.NewFieldLeadingLabel(title))
-	d.tooltipDelayField = widget.NewNumericField(gid.FieldTooltipDelay, title, func() f64d4.Int { return settings.Global().General.TooltipDelay },
+	d.tooltipDelayField = widget.NewNumericField(title, func() f64d4.Int { return settings.Global().General.TooltipDelay },
 		func(v f64d4.Int) {
 			general := settings.Global().General
 			general.TooltipDelay = v
@@ -171,7 +171,7 @@ func (d *generalSettingsDockable) createTooltipDelayField(content *unison.Panel)
 func (d *generalSettingsDockable) createTooltipDismissalField(content *unison.Panel) {
 	title := i18n.Text("Tooltip Dismissal")
 	content.AddChild(widget.NewFieldLeadingLabel(title))
-	d.tooltipDismissalField = widget.NewNumericField(gid.FieldTooltipDismissal, title, func() f64d4.Int {
+	d.tooltipDismissalField = widget.NewNumericField(title, func() f64d4.Int {
 		return settings.Global().General.TooltipDismissal
 	}, func(v f64d4.Int) {
 		general := settings.Global().General
@@ -192,7 +192,7 @@ func (d *generalSettingsDockable) createGCalcKeyField(content *unison.Panel) {
 		Size: unison.NewSize(baseline, baseline),
 	}
 	button.ClickCallback = d.findGCalcKey
-	d.gCalcKeyField = widget.NewStringField(gid.FieldGCalcKey, title,
+	d.gCalcKeyField = widget.NewStringField(title,
 		func() string { return settings.Global().General.GCalcKey },
 		func(s string) { settings.Global().General.GCalcKey = s })
 	content.AddChild(widget.WrapWithSpan(2, d.gCalcKeyField, button))

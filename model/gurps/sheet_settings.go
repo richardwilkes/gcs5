@@ -34,6 +34,14 @@ var SettingsProvider interface {
 	Libraries() library.Libraries
 }
 
+// SheetSettingsResponder defines the method required to be notified of updates to the SheetSettings.
+type SheetSettingsResponder interface {
+	// SheetSettingsUpdated will be called when the SheetSettings have been updated. The provided Entity will be nil if
+	// it was the default SheetSettings that was updated rather than one attached to a specific entity. blockLayout will
+	// be true if the BlockLayout was altered, which usually requires a full rebuild.
+	SheetSettingsUpdated(entity *Entity, blockLayout bool)
+}
+
 // SheetSettingsData holds the SheetSettings data that is written to disk.
 type SheetSettingsData struct {
 	Page                       *settings.Page              `json:"page,omitempty"`

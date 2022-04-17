@@ -15,7 +15,6 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/gcs/model/gurps"
-	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath"
@@ -25,7 +24,7 @@ import (
 // WeightField holds the value for a weight field.
 type WeightField struct {
 	*unison.Field
-	undoID    int
+	undoID    int64
 	undoTitle string
 	entity    *gurps.Entity
 	get       func() measure.Weight
@@ -36,10 +35,10 @@ type WeightField struct {
 }
 
 // NewWeightField creates a new field that holds a weight.
-func NewWeightField(undoID int, undoTitle string, entity *gurps.Entity, get func() measure.Weight, set func(measure.Weight), min, max measure.Weight) *WeightField {
+func NewWeightField(undoTitle string, entity *gurps.Entity, get func() measure.Weight, set func(measure.Weight), min, max measure.Weight) *WeightField {
 	f := &WeightField{
 		Field:     unison.NewField(),
-		undoID:    undoID,
+		undoID:    unison.NextUndoID(),
 		undoTitle: undoTitle,
 		entity:    entity,
 		get:       get,
@@ -83,7 +82,7 @@ func (f *WeightField) validate() bool {
 
 func (f *WeightField) modified() {
 	text := f.Text()
-	if !f.inUndo && f.undoID != gid.FieldNone {
+	if !f.inUndo && f.undoID != unison.NoUndoID {
 		if mgr := unison.UndoManagerFor(f); mgr != nil {
 			mgr.Add(&unison.UndoEdit[string]{
 				ID:       f.undoID,

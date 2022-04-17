@@ -15,7 +15,6 @@ import (
 	"strconv"
 
 	"github.com/richardwilkes/gcs/model/gurps"
-	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/widget"
@@ -76,7 +75,7 @@ func (d *DescriptionPanel) createColumn1() *unison.Panel {
 	column := createColumn()
 
 	title := i18n.Text("Gender")
-	genderField := widget.NewStringPageField(gid.FieldGender, title, func() string { return d.entity.Profile.Gender },
+	genderField := widget.NewStringPageField(title, func() string { return d.entity.Profile.Gender },
 		func(s string) { d.entity.Profile.Gender = s })
 	column.AddChild(widget.NewPageLabelWithRandomizer(title,
 		i18n.Text("Randomize the gender using the current ancestry"), func() {
@@ -86,7 +85,7 @@ func (d *DescriptionPanel) createColumn1() *unison.Panel {
 	column.AddChild(genderField)
 
 	title = i18n.Text("Age")
-	ageField := widget.NewStringPageField(gid.FieldAge, title, func() string { return d.entity.Profile.Age },
+	ageField := widget.NewStringPageField(title, func() string { return d.entity.Profile.Age },
 		func(s string) { d.entity.Profile.Age = s })
 	column.AddChild(widget.NewPageLabelWithRandomizer(title,
 		i18n.Text("Randomize the age using the current ancestry"), func() {
@@ -97,7 +96,7 @@ func (d *DescriptionPanel) createColumn1() *unison.Panel {
 	column.AddChild(ageField)
 
 	title = i18n.Text("Birthday")
-	birthdayField := widget.NewStringPageField(gid.FieldBirthday, title, func() string { return d.entity.Profile.Birthday },
+	birthdayField := widget.NewStringPageField(title, func() string { return d.entity.Profile.Birthday },
 		func(s string) { d.entity.Profile.Birthday = s })
 	column.AddChild(widget.NewPageLabelWithRandomizer(title,
 		i18n.Text("Randomize the birthday using the current calendar"), func() {
@@ -109,7 +108,7 @@ func (d *DescriptionPanel) createColumn1() *unison.Panel {
 
 	title = i18n.Text("Religion")
 	column.AddChild(widget.NewPageLabelEnd(title))
-	column.AddChild(widget.NewStringPageField(gid.FieldReligion, title, func() string { return d.entity.Profile.Religion },
+	column.AddChild(widget.NewStringPageField(title, func() string { return d.entity.Profile.Religion },
 		func(s string) { d.entity.Profile.Religion = s }))
 
 	return column
@@ -119,7 +118,7 @@ func (d *DescriptionPanel) createColumn2() *unison.Panel {
 	column := createColumn()
 
 	title := i18n.Text("Height")
-	heightField := widget.NewHeightPageField(gid.FieldHeight, title, d.entity,
+	heightField := widget.NewHeightPageField(title, d.entity,
 		func() measure.Length { return d.entity.Profile.Height },
 		func(v measure.Length) { d.entity.Profile.Height = v }, 0, 0)
 	column.AddChild(widget.NewPageLabelWithRandomizer(title,
@@ -130,7 +129,7 @@ func (d *DescriptionPanel) createColumn2() *unison.Panel {
 	column.AddChild(heightField)
 
 	title = i18n.Text("Weight")
-	weightField := widget.NewWeightPageField(gid.FieldWeight, title, d.entity,
+	weightField := widget.NewWeightPageField(title, d.entity,
 		func() measure.Weight { return d.entity.Profile.Weight },
 		func(v measure.Weight) { d.entity.Profile.Weight = v }, 0, 0)
 	column.AddChild(widget.NewPageLabelWithRandomizer(title,
@@ -142,7 +141,7 @@ func (d *DescriptionPanel) createColumn2() *unison.Panel {
 
 	title = i18n.Text("Size")
 	column.AddChild(widget.NewPageLabelEnd(title))
-	field := widget.NewIntegerPageField(gid.FieldSize, title,
+	field := widget.NewIntegerPageField(title,
 		func() int { return d.entity.Profile.AdjustedSizeModifier() },
 		func(v int) { d.entity.Profile.SetAdjustedSizeModifier(v) }, -99, 99, true)
 	field.HAlign = unison.StartAlignment
@@ -150,7 +149,7 @@ func (d *DescriptionPanel) createColumn2() *unison.Panel {
 
 	title = i18n.Text("TL")
 	column.AddChild(widget.NewPageLabelEnd(title))
-	column.AddChild(widget.NewStringPageField(gid.FieldTechLevel, title, func() string { return d.entity.Profile.TechLevel },
+	column.AddChild(widget.NewStringPageField(title, func() string { return d.entity.Profile.TechLevel },
 		func(s string) { d.entity.Profile.TechLevel = s }))
 
 	return column
@@ -160,7 +159,7 @@ func (d *DescriptionPanel) createColumn3() *unison.Panel {
 	column := createColumn()
 
 	title := i18n.Text("Hair")
-	hairField := widget.NewStringPageField(gid.FieldHair, title, func() string { return d.entity.Profile.Hair },
+	hairField := widget.NewStringPageField(title, func() string { return d.entity.Profile.Hair },
 		func(s string) { d.entity.Profile.Hair = s })
 	column.AddChild(widget.NewPageLabelWithRandomizer(title,
 		i18n.Text("Randomize the hair using the current ancestry"), func() {
@@ -170,7 +169,7 @@ func (d *DescriptionPanel) createColumn3() *unison.Panel {
 	column.AddChild(hairField)
 
 	title = i18n.Text("Eyes")
-	eyesField := widget.NewStringPageField(gid.FieldEyes, title, func() string { return d.entity.Profile.Eyes },
+	eyesField := widget.NewStringPageField(title, func() string { return d.entity.Profile.Eyes },
 		func(s string) { d.entity.Profile.Eyes = s })
 	column.AddChild(widget.NewPageLabelWithRandomizer(title,
 		i18n.Text("Randomize the eyes using the current ancestry"), func() {
@@ -180,7 +179,7 @@ func (d *DescriptionPanel) createColumn3() *unison.Panel {
 	column.AddChild(eyesField)
 
 	title = i18n.Text("Skin")
-	skinField := widget.NewStringPageField(gid.FieldSkin, title, func() string { return d.entity.Profile.Skin },
+	skinField := widget.NewStringPageField(title, func() string { return d.entity.Profile.Skin },
 		func(s string) { d.entity.Profile.Skin = s })
 	column.AddChild(widget.NewPageLabelWithRandomizer(title,
 		i18n.Text("Randomize the skin using the current ancestry"), func() {
@@ -190,7 +189,7 @@ func (d *DescriptionPanel) createColumn3() *unison.Panel {
 	column.AddChild(skinField)
 
 	title = i18n.Text("Hand")
-	handField := widget.NewStringPageField(gid.FieldHand, title, func() string { return d.entity.Profile.Handedness },
+	handField := widget.NewStringPageField(title, func() string { return d.entity.Profile.Handedness },
 		func(s string) { d.entity.Profile.Handedness = s })
 	column.AddChild(widget.NewPageLabelWithRandomizer(title,
 		i18n.Text("Randomize the handedness using the current ancestry"), func() {

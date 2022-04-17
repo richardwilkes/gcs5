@@ -14,6 +14,7 @@ package gurps
 import (
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/richardwilkes/gcs/model/gurps"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
@@ -24,20 +25,30 @@ import (
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/gcs/ui/workspace/gurps/sheet"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/unison"
 )
 
-var _ workspace.FileBackedDockable = &Template{}
+var (
+	_ workspace.FileBackedDockable = &Template{}
+	_ unison.UndoManagerProvider   = &Template{}
+	_ widget.ModifiableRoot        = &Template{}
+	_ widget.Rebuildable           = &Template{}
+)
 
 // Template holds the view for a GURPS character template.
 type Template struct {
 	unison.Panel
 	path       string
+	undoMgr    *unison.UndoManager
 	scroll     *unison.ScrollPanel
 	template   *gurps.Template
 	scale      int
+	content    *templateContent
 	scaleField *widget.PercentageField
+	rebuild    bool
+	full       bool
 }
 
 // NewTemplateFromFile loads a GURPS template file and creates a new unison.Dockable for it.
@@ -53,6 +64,7 @@ func NewTemplateFromFile(filePath string) (unison.Dockable, error) {
 func NewTemplate(filePath string, template *gurps.Template) unison.Dockable {
 	t := &Template{
 		path:     filePath,
+		undoMgr:  unison.NewUndoManager(200, func(err error) { jot.Error(err) }),
 		scroll:   unison.NewScrollPanel(),
 		template: template,
 		scale:    settings.Global().General.InitialSheetUIScale,
@@ -64,7 +76,7 @@ func NewTemplate(filePath string, template *gurps.Template) unison.Dockable {
 		VAlign:  unison.FillAlignment,
 	})
 
-	t.scroll.SetContent(t.createContent(), unison.UnmodifiedBehavior)
+	t.scroll.SetContent(t.createContent(), unison.UnmodifiedBehavior, unison.UnmodifiedBehavior)
 	t.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
@@ -112,6 +124,11 @@ func (d *Template) applyScale() {
 	d.scroll.Sync()
 }
 
+// UndoManager implements undo.Provider
+func (d *Template) UndoManager() *unison.UndoManager {
+	return d.undoMgr
+}
+
 // TitleIcon implements workspace.FileBackedDockable
 func (d *Template) TitleIcon(suggestedSize unison.Size) unison.Drawable {
 	return &unison.DrawableSVG{
@@ -123,6 +140,10 @@ func (d *Template) TitleIcon(suggestedSize unison.Size) unison.Drawable {
 // Title implements workspace.FileBackedDockable
 func (d *Template) Title() string {
 	return fs.BaseName(d.path)
+}
+
+func (d *Template) String() string {
+	return d.Title()
 }
 
 // Tooltip implements workspace.FileBackedDockable
@@ -140,6 +161,13 @@ func (d *Template) Modified() bool {
 	return false // TODO: Implement
 }
 
+// MarkModified implements widget.ModifiableRoot.
+func (d *Template) MarkModified() {
+	if dc := unison.DockContainerFor(d); dc != nil {
+		dc.UpdateTitle(d)
+	}
+}
+
 // MayAttemptClose implements unison.TabCloser
 func (d *Template) MayAttemptClose() bool {
 	return true
@@ -153,9 +181,13 @@ func (d *Template) AttemptClose() {
 }
 
 func (d *Template) createContent() unison.Paneler {
-	content := newTemplateContent()
+	d.content = newTemplateContent()
+	d.createLists()
+	return d.content
+}
 
-	// Add the various blocks, based on the layout preference.
+func (d *Template) createLists() {
+	d.content.RemoveAllChildren()
 	for _, col := range settings.Global().Sheet.BlockLayout.ByRow() {
 		rowPanel := unison.NewPanel()
 		for _, c := range col {
@@ -169,7 +201,7 @@ func (d *Template) createContent() unison.Paneler {
 			case gurps.BlockLayoutEquipmentKey:
 				rowPanel.AddChild(sheet.NewCarriedEquipmentPageList(d.template))
 			case gurps.BlockLayoutNotesKey:
-				rowPanel.AddChild(sheet.NewNotesPageList(d.template))
+				rowPanel.AddChild(sheet.NewNotesPageList(d, d.template))
 			}
 		}
 		if len(rowPanel.Children()) != 0 {
@@ -184,9 +216,36 @@ func (d *Template) createContent() unison.Paneler {
 				VAlign: unison.StartAlignment,
 				HGrab:  true,
 			})
-			content.AddChild(rowPanel)
+			d.content.AddChild(rowPanel)
 		}
 	}
-	content.ApplyPreferredSize()
-	return content
+	d.content.ApplyPreferredSize()
+}
+
+// SheetSettingsUpdated implements gurps.SheetSettingsResponder.
+func (d *Template) SheetSettingsUpdated(entity *gurps.Entity, blockLayout bool) {
+	if entity == nil {
+		d.MarkForRebuild(blockLayout)
+	}
+}
+
+// MarkForRebuild implements widget.Rebuildable.
+func (d *Template) MarkForRebuild(full bool) {
+	if full {
+		d.full = full
+	}
+	if !d.rebuild {
+		d.rebuild = true
+		unison.InvokeTaskAfter(func() {
+			doFull := d.full
+			d.rebuild = false
+			d.full = false
+			if doFull {
+				d.createLists()
+				d.MarkForLayoutAndRedraw()
+			} else {
+				widget.DeepSync(d)
+			}
+		}, 50*time.Millisecond)
+	}
 }

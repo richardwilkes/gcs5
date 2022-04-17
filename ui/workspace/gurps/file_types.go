@@ -20,16 +20,16 @@ import (
 
 // RegisterFileTypes registers GCS file types.
 func RegisterFileTypes() {
-	registerExportableGCSFileInfo(".gcs", res.GCSSheet, sheet.NewSheetFromFile)
-	registerGCSFileInfo(".gct", []string{".gct"}, res.GCSTemplate, NewTemplateFromFile)
+	registerExportableGCSFileInfo(".gcs", res.GCSSheetSVG, sheet.NewSheetFromFile)
+	registerGCSFileInfo(".gct", []string{".gct"}, res.GCSTemplateSVG, NewTemplateFromFile)
 	groupWith := []string{".adq", ".adm", ".eqp", ".eqm", ".skl", ".spl", ".not"}
-	registerGCSFileInfo(".adq", groupWith, res.GCSAdvantages, NewAdvantageTableDockableFromFile)
-	registerGCSFileInfo(".adm", groupWith, res.GCSAdvantageModifiers, NewAdvantageModifierTableDockableFromFile)
-	registerGCSFileInfo(".eqp", groupWith, res.GCSEquipment, NewEquipmentTableDockableFromFile)
-	registerGCSFileInfo(".eqm", groupWith, res.GCSEquipmentModifiers, NewEquipmentModifierTableDockableFromFile)
-	registerGCSFileInfo(".skl", groupWith, res.GCSSkills, NewSkillTableDockableFromFile)
-	registerGCSFileInfo(".spl", groupWith, res.GCSSpells, NewSpellTableDockableFromFile)
-	registerGCSFileInfo(".not", groupWith, res.GCSNotes, NewNoteTableDockableFromFile)
+	registerGCSFileInfo(".adq", groupWith, res.GCSAdvantagesSVG, NewAdvantageTableDockableFromFile)
+	registerGCSFileInfo(".adm", groupWith, res.GCSAdvantageModifiersSVG, NewAdvantageModifierTableDockableFromFile)
+	registerGCSFileInfo(".eqp", groupWith, res.GCSEquipmentSVG, NewEquipmentTableDockableFromFile)
+	registerGCSFileInfo(".eqm", groupWith, res.GCSEquipmentModifiersSVG, NewEquipmentModifierTableDockableFromFile)
+	registerGCSFileInfo(".skl", groupWith, res.GCSSkillsSVG, NewSkillTableDockableFromFile)
+	registerGCSFileInfo(".spl", groupWith, res.GCSSpellsSVG, NewSpellTableDockableFromFile)
+	registerGCSFileInfo(".not", groupWith, res.GCSNotesSVG, NewNoteTableDockableFromFile)
 }
 
 func registerGCSFileInfo(ext string, groupWith []string, svg *unison.SVG, loader func(filePath string) (unison.Dockable, error)) {

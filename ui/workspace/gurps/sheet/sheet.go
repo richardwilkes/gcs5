@@ -34,6 +34,8 @@ import (
 var (
 	_ workspace.FileBackedDockable = &Sheet{}
 	_ unison.UndoManagerProvider   = &Sheet{}
+	_ widget.ModifiableRoot        = &Sheet{}
+	_ widget.Rebuildable           = &Sheet{}
 )
 
 // Sheet holds the view for a GURPS character sheet.
@@ -94,7 +96,7 @@ func NewSheet(filePath string, entity *gurps.Entity) unison.Dockable {
 	})
 	s.pages.AddChild(s.createTopBlock())
 	s.createLists()
-	s.scroll.SetContent(s.pages, unison.UnmodifiedBehavior)
+	s.scroll.SetContent(s.pages, unison.UnmodifiedBehavior, unison.UnmodifiedBehavior)
 	s.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
@@ -168,6 +170,10 @@ func (s *Sheet) TitleIcon(suggestedSize unison.Size) unison.Drawable {
 // Title implements workspace.FileBackedDockable
 func (s *Sheet) Title() string {
 	return fs.BaseName(s.path)
+}
+
+func (s *Sheet) String() string {
+	return s.Title()
 }
 
 // Tooltip implements workspace.FileBackedDockable
@@ -372,7 +378,7 @@ func (s *Sheet) createLists() {
 			case gurps.BlockLayoutOtherEquipmentKey:
 				rowPanel.AddChild(NewOtherEquipmentPageList(s.entity))
 			case gurps.BlockLayoutNotesKey:
-				rowPanel.AddChild(NewNotesPageList(s.entity))
+				rowPanel.AddChild(NewNotesPageList(s, s.entity))
 			}
 		}
 		page.AddChild(rowPanel)
@@ -389,7 +395,14 @@ func (s *Sheet) MarkModified() {
 	}
 }
 
-// MarkForRebuild causes the sheet to rebuild itself from the underlying data at the next available opportunity.
+// SheetSettingsUpdated implements gurps.SheetSettingsResponder.
+func (s *Sheet) SheetSettingsUpdated(entity *gurps.Entity, blockLayout bool) {
+	if s.entity == entity {
+		s.MarkForRebuild(blockLayout)
+	}
+}
+
+// MarkForRebuild implements widget.Rebuildable.
 func (s *Sheet) MarkForRebuild(full bool) {
 	if full {
 		s.full = full

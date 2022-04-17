@@ -78,7 +78,7 @@ func NewImageDockable(filePath string) (unison.Dockable, error) {
 		HGrab:  true,
 		VGrab:  true,
 	})
-	d.scroll.SetContent(d.imgPanel, unison.FillBehavior)
+	d.scroll.SetContent(d.imgPanel, unison.FillBehavior, unison.FillBehavior)
 
 	d.scaleField = widget.NewPercentageField(func() int { return d.scale }, func(v int) {
 		viewRect := d.scroll.ContentView().ContentRect(false)

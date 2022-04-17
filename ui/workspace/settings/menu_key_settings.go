@@ -18,6 +18,7 @@ import (
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -30,7 +31,7 @@ type menuKeySettingsDockable struct {
 
 // ShowMenuKeySettings shows the Menu Key settings.
 func ShowMenuKeySettings() {
-	ws, dc, found := Activate(func(d unison.Dockable) bool {
+	ws, dc, found := workspace.Activate(func(d unison.Dockable) bool {
 		_, ok := d.(*menuKeySettingsDockable)
 		return ok
 	})

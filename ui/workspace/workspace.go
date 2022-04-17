@@ -18,6 +18,7 @@ import (
 
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
 
@@ -34,6 +35,44 @@ type Workspace struct {
 // ShowUnableToLocateWorkspaceError displays an error dialog.
 func ShowUnableToLocateWorkspaceError() {
 	unison.ErrorDialogWithMessage(i18n.Text("Unable to locate workspace"), "")
+}
+
+// Activate attempts to locate an existing dockable that 'matcher' returns true for. If found, it will have been
+// activated and focused.
+func Activate(matcher func(d unison.Dockable) bool) (ws *Workspace, dc *unison.DockContainer, found bool) {
+	if ws = Any(); ws == nil {
+		jot.Error("no workspace available")
+		return nil, nil, false
+	}
+	dc = ws.CurrentlyFocusedDockContainer()
+	ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(container *unison.DockContainer) bool {
+		for _, one := range container.Dockables() {
+			if matcher(one) {
+				found = true
+				container.SetCurrentDockable(one)
+				container.AcquireFocus()
+				return true
+			}
+			if dc == nil {
+				dc = container
+			}
+		}
+		return false
+	})
+	return ws, dc, found
+}
+
+// ActiveDockable returns the currently active dockable in the active window.
+func ActiveDockable() unison.Dockable {
+	ws := FromWindow(unison.ActiveWindow())
+	if ws == nil {
+		return nil
+	}
+	dc := ws.CurrentlyFocusedDockContainer()
+	if dc == nil {
+		return nil
+	}
+	return dc.CurrentDockable()
 }
 
 // FromWindowOrAny first calls FromWindow(wnd) and if that fails to find a Workspace, then calls Any().

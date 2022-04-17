@@ -19,12 +19,15 @@ import (
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/editors"
 	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
+
+var _ widget.Syncer = &PageList{}
 
 // PageList holds a list for a sheet page.
 type PageList struct {
@@ -93,8 +96,18 @@ func NewSpellsPageList(provider gurps.SpellListProvider) *PageList {
 }
 
 // NewNotesPageList creates the notes page list.
-func NewNotesPageList(provider gurps.ListProvider) *PageList {
-	return newPageList(tbl.NewNotesProvider(provider, true))
+func NewNotesPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
+	p := newPageList(tbl.NewNotesProvider(provider, true))
+	p.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
+		for _, row := range p.table.SelectedRows(false) {
+			if node, ok := row.(*tbl.Node); ok {
+				if note, ok2 := node.Data().(*gurps.Note); ok2 {
+					editors.EditNote(owner, note)
+				}
+			}
+		}
+	})
+	return p
 }
 
 // NewConditionalModifiersPageList creates the conditional modifiers page list.
@@ -172,6 +185,11 @@ func newPageList(provider tbl.TableProvider) *PageList {
 	p.table.PerformCmdCallback = func(_ interface{}, id int) {
 		if f, ok := p.performMap[id]; ok {
 			f()
+		}
+	}
+	p.table.SelectionDoubleClickCallback = func() {
+		if p.table.CanPerformCmdCallback(nil, constants.OpenEditorItemID) {
+			p.table.PerformCmdCallback(nil, constants.OpenEditorItemID)
 		}
 	}
 	p.tableHeader = unison.NewTableHeader(p.table, headers...)

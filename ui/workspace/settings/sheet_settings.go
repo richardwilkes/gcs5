@@ -53,7 +53,7 @@ type sheetSettingsDockable struct {
 
 // ShowSheetSettings the Sheet Settings window.
 func ShowSheetSettings(entity *gurps.Entity) {
-	ws, dc, found := Activate(func(d unison.Dockable) bool {
+	ws, dc, found := workspace.Activate(func(d unison.Dockable) bool {
 		if s, ok := d.(*sheetSettingsDockable); ok && s.entity == entity {
 			return true
 		}
@@ -360,22 +360,16 @@ func (d *sheetSettingsDockable) sync() {
 }
 
 func (d *sheetSettingsDockable) syncSheet(full bool) {
-	if d.entity != nil {
-		for _, wnd := range unison.Windows() {
-			if ws := workspace.FromWindow(wnd); ws != nil {
-				ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
-					for _, one := range dc.Dockables() {
-						type signature interface {
-							Entity() *gurps.Entity
-							MarkForRebuild(full bool)
-						}
-						if s, ok := one.(signature); ok && s.Entity() == d.entity {
-							s.MarkForRebuild(full)
-						}
+	for _, wnd := range unison.Windows() {
+		if ws := workspace.FromWindow(wnd); ws != nil {
+			ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
+				for _, one := range dc.Dockables() {
+					if s, ok := one.(gurps.SheetSettingsResponder); ok {
+						s.SheetSettingsUpdated(d.entity, full)
 					}
-					return false
-				})
-			}
+				}
+				return false
+			})
 		}
 	}
 }

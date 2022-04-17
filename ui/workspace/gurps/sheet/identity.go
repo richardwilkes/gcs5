@@ -14,7 +14,6 @@ package sheet
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/ancestry"
-	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -51,7 +50,7 @@ func NewIdentityPanel(entity *gurps.Entity) *IdentityPanel {
 	}
 
 	title := i18n.Text("Name")
-	field := widget.NewStringPageField(gid.FieldName, title, func() string { return p.entity.Profile.Name },
+	field := widget.NewStringPageField(title, func() string { return p.entity.Profile.Name },
 		func(s string) { p.entity.Profile.Name = s })
 	p.AddChild(widget.NewPageLabelWithRandomizer(title,
 		i18n.Text("Randomize the name using the current ancestry"), func() {
@@ -63,12 +62,12 @@ func NewIdentityPanel(entity *gurps.Entity) *IdentityPanel {
 
 	title = i18n.Text("Title")
 	p.AddChild(widget.NewPageLabelEnd(title))
-	p.AddChild(widget.NewStringPageField(gid.FieldTitle, title, func() string { return p.entity.Profile.Title },
+	p.AddChild(widget.NewStringPageField(title, func() string { return p.entity.Profile.Title },
 		func(s string) { p.entity.Profile.Title = s }))
 
 	title = i18n.Text("Organization")
 	p.AddChild(widget.NewPageLabelEnd(title))
-	p.AddChild(widget.NewStringPageField(gid.FieldOrganization, title,
+	p.AddChild(widget.NewStringPageField(title,
 		func() string { return p.entity.Profile.Organization },
 		func(s string) { p.entity.Profile.Organization = s }))
 	return p

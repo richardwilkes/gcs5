@@ -9,22 +9,13 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package gurps
+package widget
 
-import (
-	"github.com/richardwilkes/gcs/model/gurps"
-	"github.com/richardwilkes/gcs/ui/workspace"
-	"github.com/richardwilkes/gcs/ui/workspace/gurps/sheet"
-)
+import "fmt"
 
-// ActiveEntity returns the currently active entity.
-func ActiveEntity() *gurps.Entity {
-	d := workspace.ActiveDockable()
-	if d == nil {
-		return nil
-	}
-	if s, ok := d.(*sheet.Sheet); ok {
-		return s.Entity()
-	}
-	return nil
+// Rebuildable defines the methods a rebuildable panel should provide.
+type Rebuildable interface {
+	fmt.Stringer
+	// MarkForRebuild causes the panel to rebuild itself from the underlying data at the next available opportunity.
+	MarkForRebuild(full bool)
 }

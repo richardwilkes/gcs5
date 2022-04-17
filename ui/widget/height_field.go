@@ -15,7 +15,6 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/gcs/model/gurps"
-	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath"
@@ -25,7 +24,7 @@ import (
 // HeightField holds the value for a height field.
 type HeightField struct {
 	*unison.Field
-	undoID    int
+	undoID    int64
 	undoTitle string
 	entity    *gurps.Entity
 	get       func() measure.Length
@@ -36,10 +35,10 @@ type HeightField struct {
 }
 
 // NewHeightField creates a new field that holds a height.
-func NewHeightField(undoID int, undoTitle string, entity *gurps.Entity, get func() measure.Length, set func(measure.Length), min, max measure.Length) *HeightField {
+func NewHeightField(undoTitle string, entity *gurps.Entity, get func() measure.Length, set func(measure.Length), min, max measure.Length) *HeightField {
 	f := &HeightField{
 		Field:     unison.NewField(),
-		undoID:    undoID,
+		undoID:    unison.NextUndoID(),
 		undoTitle: undoTitle,
 		entity:    entity,
 		get:       get,
@@ -83,7 +82,7 @@ func (f *HeightField) validate() bool {
 
 func (f *HeightField) modified() {
 	text := f.Text()
-	if !f.inUndo && f.undoID != gid.FieldNone {
+	if !f.inUndo && f.undoID != unison.NoUndoID {
 		if mgr := unison.UndoManagerFor(f); mgr != nil {
 			mgr.Add(&unison.UndoEdit[string]{
 				ID:       f.undoID,

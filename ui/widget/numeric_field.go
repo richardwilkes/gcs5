@@ -17,7 +17,6 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
@@ -27,7 +26,7 @@ import (
 // NumericField holds the value for a numeric field.
 type NumericField struct {
 	*unison.Field
-	undoID     int
+	undoID     int64
 	undoTitle  string
 	get        func() f64d4.Int
 	set        func(f64d4.Int)
@@ -38,10 +37,10 @@ type NumericField struct {
 }
 
 // NewNumericField creates a new field that holds a fixed-point number.
-func NewNumericField(undoID int, undoTitle string, get func() f64d4.Int, set func(f64d4.Int), min, max f64d4.Int, noMinWidth bool) *NumericField {
+func NewNumericField(undoTitle string, get func() f64d4.Int, set func(f64d4.Int), min, max f64d4.Int, noMinWidth bool) *NumericField {
 	f := &NumericField{
 		Field:      unison.NewField(),
-		undoID:     undoID,
+		undoID:     unison.NextUndoID(),
 		undoTitle:  undoTitle,
 		get:        get,
 		set:        set,
@@ -90,7 +89,7 @@ func (f *NumericField) validate() bool {
 
 func (f *NumericField) modified() {
 	text := f.Text()
-	if !f.inUndo && f.undoID != gid.FieldNone {
+	if !f.inUndo && f.undoID != unison.NoUndoID {
 		if mgr := unison.UndoManagerFor(f); mgr != nil {
 			mgr.Add(&unison.UndoEdit[string]{
 				ID:       f.undoID,

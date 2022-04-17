@@ -17,12 +17,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/gurps"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace/gurps/editors"
 	"github.com/richardwilkes/gcs/ui/workspace/gurps/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
@@ -31,11 +33,15 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+var _ widget.Rebuildable = &TableDockable{}
+
 // TableDockable holds the view for a file that contains a (potentially hierarchical) list of data.
 type TableDockable struct {
 	unison.Panel
 	path            string
 	provider        tbl.TableProvider
+	canPerformMap   map[int]func() bool
+	performMap      map[int]func()
 	lockButton      *unison.Button
 	hierarchyButton *unison.Button
 	sizeToFitButton *unison.Button
@@ -211,17 +217,29 @@ func NewNoteTableDockableFromFile(filePath string) (unison.Dockable, error) {
 
 // NewNoteTableDockable creates a new unison.Dockable for note list files.
 func NewNoteTableDockable(filePath string, notes []*gurps.Note) unison.Dockable {
-	return NewTableDockable(filePath, tbl.NewNotesProvider(&noteListProvider{notes: notes}, false))
+	t := NewTableDockable(filePath, tbl.NewNotesProvider(&noteListProvider{notes: notes}, false))
+	t.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
+		for _, row := range t.table.SelectedRows(false) {
+			if node, ok := row.(*tbl.Node); ok {
+				if note, ok2 := node.Data().(*gurps.Note); ok2 {
+					editors.EditNote(t, note)
+				}
+			}
+		}
+	})
+	return t
 }
 
 // NewTableDockable creates a new TableDockable for list data files.
 func NewTableDockable(filePath string, provider tbl.TableProvider) *TableDockable {
 	d := &TableDockable{
-		path:     filePath,
-		provider: provider,
-		scroll:   unison.NewScrollPanel(),
-		table:    unison.NewTable(),
-		scale:    settings.Global().General.InitialListUIScale,
+		path:          filePath,
+		provider:      provider,
+		canPerformMap: make(map[int]func() bool),
+		performMap:    make(map[int]func()),
+		scroll:        unison.NewScrollPanel(),
+		table:         unison.NewTable(),
+		scale:         settings.Global().General.InitialListUIScale,
 	}
 	d.Self = d
 	d.SetLayout(&unison.FlexLayout{Columns: 1})
@@ -238,6 +256,22 @@ func NewTableDockable(filePath string, provider tbl.TableProvider) *TableDockabl
 	d.table.HierarchyColumnIndex = provider.HierarchyColumnIndex()
 	d.table.SetTopLevelRows(provider.RowData(d.table))
 	d.table.SizeColumnsToFit(true)
+	d.table.CanPerformCmdCallback = func(_ interface{}, id int) bool {
+		if f, ok := d.canPerformMap[id]; ok {
+			return f()
+		}
+		return false
+	}
+	d.table.PerformCmdCallback = func(_ interface{}, id int) {
+		if f, ok := d.performMap[id]; ok {
+			f()
+		}
+	}
+	d.table.SelectionDoubleClickCallback = func() {
+		if d.table.CanPerformCmdCallback(nil, constants.OpenEditorItemID) {
+			d.table.PerformCmdCallback(nil, constants.OpenEditorItemID)
+		}
+	}
 
 	d.tableHeader = unison.NewTableHeader(d.table, headers...)
 	d.tableHeader.Less = func(s1, s2 string) bool {
@@ -250,7 +284,7 @@ func NewTableDockable(filePath string, provider tbl.TableProvider) *TableDockabl
 		return txt.NaturalLess(s1, s2, true)
 	}
 	d.scroll.SetColumnHeader(d.tableHeader)
-	d.scroll.SetContent(d.table, unison.FillBehavior)
+	d.scroll.SetContent(d.table, unison.FillBehavior, unison.FillBehavior)
 	d.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
@@ -344,6 +378,11 @@ func NewTableDockable(filePath string, provider tbl.TableProvider) *TableDockabl
 	return d
 }
 
+func (d *TableDockable) installPerformHandlers(id int, can func() bool, do func()) {
+	d.canPerformMap[id] = can
+	d.performMap[id] = do
+}
+
 func (d *TableDockable) applyScale() {
 	s := float32(d.scale) / 100
 	d.tableHeader.SetScale(s)
@@ -362,6 +401,10 @@ func (d *TableDockable) TitleIcon(suggestedSize unison.Size) unison.Drawable {
 // Title implements workspace.FileBackedDockable
 func (d *TableDockable) Title() string {
 	return fs.BaseName(d.path)
+}
+
+func (d *TableDockable) String() string {
+	return d.Title()
 }
 
 // Tooltip implements workspace.FileBackedDockable
@@ -486,4 +529,9 @@ func (d *TableDockable) adjustForMatch() {
 		d.matchesLabel.Text = "-"
 	}
 	d.matchesLabel.Parent().MarkForLayoutAndRedraw()
+}
+
+// MarkForRebuild implements widget.Rebuildable.
+func (d *TableDockable) MarkForRebuild(_ bool) {
+	d.table.EventuallySyncToModel()
 }

@@ -101,7 +101,7 @@ func NewPDFDockable(filePath string) (unison.Dockable, error) {
 		HGrab:  true,
 		VGrab:  true,
 	})
-	d.scroll.SetContent(d.docPanel, unison.FillBehavior)
+	d.scroll.SetContent(d.docPanel, unison.FillBehavior, unison.FillBehavior)
 	d.scroll.ContentView().DrawOverCallback = d.drawOverlay
 
 	d.backButton = unison.NewSVGButton(res.BackSVG)

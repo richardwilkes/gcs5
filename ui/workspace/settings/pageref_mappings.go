@@ -17,7 +17,6 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
@@ -101,7 +100,7 @@ func RefreshPageRefMappingsView() {
 
 // ShowPageRefMappings shows the Page Reference Mappings.
 func ShowPageRefMappings() {
-	ws, dc, found := Activate(func(d unison.Dockable) bool {
+	ws, dc, found := workspace.Activate(func(d unison.Dockable) bool {
 		_, ok := d.(*pageRefMappingsDockable)
 		return ok
 	})
@@ -170,7 +169,7 @@ func (d *pageRefMappingsDockable) createIDField(ref *settings.PageRef) {
 }
 
 func (d *pageRefMappingsDockable) createOffsetField(ref *settings.PageRef) {
-	p := widget.NewIntegerField(gid.FieldPageOffset, i18n.Text("Page Offset"), func() int { return ref.Offset },
+	p := widget.NewIntegerField(i18n.Text("Page Offset"), func() int { return ref.Offset },
 		func(v int) {
 			ref.Offset = v
 			settings.Global().PageRefs.Set(ref)

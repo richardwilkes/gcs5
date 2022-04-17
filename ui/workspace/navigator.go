@@ -75,7 +75,7 @@ func newNavigator() *Navigator {
 	n.ApplyDisclosedPaths(globalSettings.LibraryExplorer.OpenRowKeys)
 	n.table.SizeColumnsToFit(true)
 
-	n.scroll.SetContent(n.table, unison.FillBehavior)
+	n.scroll.SetContent(n.table, unison.FillBehavior, unison.FillBehavior)
 	n.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
