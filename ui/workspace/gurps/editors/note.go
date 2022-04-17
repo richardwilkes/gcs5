@@ -31,7 +31,7 @@ type noteEditor struct {
 func EditNote(owner widget.Rebuildable, note *gurps.Note) {
 	ws, dc, found := workspace.Activate(func(d unison.Dockable) bool {
 		if editor, ok := d.(*noteEditor); ok {
-			return editor.note == note
+			return editor.owner == owner && editor.note == note
 		}
 		return false
 	})
@@ -50,6 +50,25 @@ func EditNote(owner widget.Rebuildable, note *gurps.Note) {
 			return e.note.Text != e.noteText || e.note.PageRef != e.pageRef
 		}
 		e.ApplyCallback = func() {
+			if mgr := unison.UndoManagerFor(e.owner); mgr != nil {
+				mgr.Add(&unison.UndoEdit[[]string]{
+					ID:       unison.NextUndoID(),
+					EditName: i18n.Text("Note Changes"),
+					EditCost: 1,
+					UndoFunc: func(edit *unison.UndoEdit[[]string]) {
+						note.Text = edit.BeforeData[0]
+						note.PageRef = edit.BeforeData[1]
+						owner.MarkForRebuild(false)
+					},
+					RedoFunc: func(edit *unison.UndoEdit[[]string]) {
+						note.Text = edit.AfterData[0]
+						note.PageRef = edit.AfterData[1]
+						owner.MarkForRebuild(false)
+					},
+					BeforeData: []string{note.Text, note.PageRef},
+					AfterData:  []string{e.noteText, e.pageRef},
+				})
+			}
 			e.note.Text = e.noteText
 			e.note.PageRef = e.pageRef
 			e.owner.MarkForRebuild(false)

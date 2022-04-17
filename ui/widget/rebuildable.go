@@ -11,10 +11,15 @@
 
 package widget
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/richardwilkes/unison"
+)
 
 // Rebuildable defines the methods a rebuildable panel should provide.
 type Rebuildable interface {
+	unison.Paneler
 	fmt.Stringer
 	// MarkForRebuild causes the panel to rebuild itself from the underlying data at the next available opportunity.
 	MarkForRebuild(full bool)
