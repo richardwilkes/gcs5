@@ -290,7 +290,8 @@ var OpenEditor = &unison.Action{
 	ID:              constants.OpenEditorItemID,
 	Title:           i18n.Text("Open Detail Editor"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyI, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // CopyToSheet copies the selected items to the foremost character sheet.

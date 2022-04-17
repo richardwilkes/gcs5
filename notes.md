@@ -57,7 +57,6 @@
     - New Equipment Modifier Container
     - New Note
     - New Note Container
-    - Open Detail Editor
     - Copy to Character Sheet
     - Copy to Template
     - Apply Template to Character Sheet
