@@ -15,6 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
+	"github.com/richardwilkes/gcs/ui/workspace/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -95,10 +96,14 @@ func (e *noteEditor) initContent(content *unison.Panel) {
 	content.AddChild(noteField)
 
 	pageLabel := i18n.Text("Page")
-	content.AddChild(widget.NewFieldLeadingLabel(pageLabel))
-	content.AddChild(widget.NewStringField(pageLabel, func() string { return e.pageRef },
+	label := widget.NewFieldLeadingLabel(pageLabel)
+	label.Tooltip = unison.NewTooltipWithText(tbl.PageRefTooltipText)
+	content.AddChild(label)
+	field := widget.NewStringField(pageLabel, func() string { return e.pageRef },
 		func(value string) {
 			e.pageRef = value
 			widget.MarkModified(content)
-		}))
+		})
+	field.Tooltip = unison.NewTooltipWithText(tbl.PageRefTooltipText)
+	content.AddChild(field)
 }

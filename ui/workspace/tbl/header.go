@@ -19,6 +19,9 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+// PageRefTooltipText holds the tooltip text that should be used for the page references.
+var PageRefTooltipText = i18n.Text(`A reference to the book and page the item appears on e.g. B22 would refer to "Basic Set", page 22`)
+
 // NewHeader creates a new list header.
 func NewHeader(title, tooltip string, forPage bool) unison.TableColumnHeader {
 	if forPage {
@@ -71,9 +74,7 @@ func NewSVGPairHeader(leftSVG, rightSVG *unison.SVG, tooltip string, forPage boo
 
 // NewPageRefHeader creates a new page reference header.
 func NewPageRefHeader(forPage bool) unison.TableColumnHeader {
-	return NewSVGHeader(res.BookmarkSVG,
-		i18n.Text(`A reference to the book and page the item appears on e.g. B22 would refer to "Basic Set", page 22`),
-		forPage)
+	return NewSVGHeader(res.BookmarkSVG, PageRefTooltipText, forPage)
 }
 
 // NewEquippedHeader creates a new equipped header.
