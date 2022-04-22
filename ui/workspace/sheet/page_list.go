@@ -657,6 +657,7 @@ func (p *PageList) installDecrementTechLevelHandler() {
 	})
 }
 
+// RecordSelection collects the currently selected row UUIDs.
 func (p *PageList) RecordSelection() map[uuid.UUID]bool {
 	if p == nil {
 		return nil
@@ -671,12 +672,15 @@ func (p *PageList) RecordSelection() map[uuid.UUID]bool {
 	return selection
 }
 
+// ApplySelection locates the rows with the given UUIDs and selects them, replacing any existing selection.
 func (p *PageList) ApplySelection(selection map[uuid.UUID]bool) {
 	if len(selection) != 0 {
 		_, indexes := p.collectRowMappings(0, make([]int, 0, len(selection)), selection, p.table.TopLevelRows())
 		if len(indexes) != 0 {
 			p.table.SelectByIndex(indexes...)
 		}
+	} else {
+		p.table.ClearSelection()
 	}
 }
 

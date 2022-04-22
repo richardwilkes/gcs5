@@ -13,7 +13,10 @@ package editors
 
 import (
 	"fmt"
+	"reflect"
 
+	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
@@ -25,56 +28,80 @@ import (
 const editorGroup = "editors"
 
 var (
-	_ unison.Dockable            = &Editor{}
-	_ unison.TabCloser           = &Editor{}
-	_ widget.ModifiableRoot      = &Editor{}
-	_ unison.UndoManagerProvider = &Editor{}
+	_ unison.Dockable            = &editor[*gurps.Note, *noteEditorData]{}
+	_ unison.TabCloser           = &editor[*gurps.Note, *noteEditorData]{}
+	_ widget.ModifiableRoot      = &editor[*gurps.Note, *noteEditorData]{}
+	_ unison.UndoManagerProvider = &editor[*gurps.Note, *noteEditorData]{}
 )
 
-// Editor provides the base editor functionality.
-type Editor struct {
-	unison.Panel
-	TabTitle           string
-	IsModifiedCallback func() bool
-	ApplyCallback      func()
-	owner              widget.Rebuildable
-	undoMgr            *unison.UndoManager
-	applyButton        *unison.Button
-	cancelButton       *unison.Button
-	promptForSave      bool
+type editorData[T node.Node] interface {
+	From(T)
+	Apply(T)
 }
 
-// Setup the editor and display it.
-func (e *Editor) Setup(ws *workspace.Workspace, dc *unison.DockContainer, initContent func(*unison.Panel)) {
-	e.undoMgr = unison.NewUndoManager(100, func(err error) { jot.Error(err) })
-	e.SetLayout(&unison.FlexLayout{Columns: 1})
-	e.AddChild(e.createToolbar())
-	content := unison.NewPanel()
-	content.SetBorder(unison.NewEmptyBorder(unison.NewUniformInsets(unison.StdHSpacing * 2)))
-	initContent(content)
-	scroller := unison.NewScrollPanel()
-	scroller.SetContent(content, unison.HintedFillBehavior, unison.FillBehavior)
-	scroller.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		VAlign: unison.FillAlignment,
-		HGrab:  true,
-		VGrab:  true,
+type editor[N node.Node, D editorData[N]] struct {
+	unison.Panel
+	owner         widget.Rebuildable
+	target        N
+	undoMgr       *unison.UndoManager
+	applyButton   *unison.Button
+	cancelButton  *unison.Button
+	beforeData    D
+	editorData    D
+	promptForSave bool
+}
+
+func displayEditor[N node.Node, D editorData[N]](owner widget.Rebuildable, target N, initContent func(*editor[N, D], *unison.Panel)) {
+	lookFor := target.UUID()
+	ws, dc, found := workspace.Activate(func(d unison.Dockable) bool {
+		if e, ok := d.(*editor[N, D]); ok {
+			return e.owner == owner && e.target.UUID() == lookFor
+		}
+		return false
 	})
-	e.AddChild(scroller)
-	e.promptForSave = true
-	if dc != nil && dc.Group == editorGroup {
-		dc.Stack(e, -1)
-	} else if dc = ws.DocumentDock.ContainerForGroup(editorGroup); dc != nil {
-		dc.Stack(e, -1)
-	} else {
-		ws.DocumentDock.DockTo(e, nil, unison.RightSide)
-		if dc = unison.DockContainerFor(e); dc != nil && dc.Group == "" {
-			dc.Group = editorGroup
+	if !found && ws != nil {
+		e := &editor[N, D]{
+			owner:  owner,
+			target: target,
+		}
+		e.Self = e
+
+		reflect.ValueOf(&e.beforeData).Elem().Set(reflect.New(reflect.TypeOf(e.beforeData).Elem()))
+		e.beforeData.From(target)
+
+		reflect.ValueOf(&e.editorData).Elem().Set(reflect.New(reflect.TypeOf(e.editorData).Elem()))
+		e.editorData.From(target)
+
+		e.undoMgr = unison.NewUndoManager(100, func(err error) { jot.Error(err) })
+		e.SetLayout(&unison.FlexLayout{Columns: 1})
+		e.AddChild(e.createToolbar())
+		content := unison.NewPanel()
+		content.SetBorder(unison.NewEmptyBorder(unison.NewUniformInsets(unison.StdHSpacing * 2)))
+		initContent(e, content)
+		scroller := unison.NewScrollPanel()
+		scroller.SetContent(content, unison.HintedFillBehavior, unison.FillBehavior)
+		scroller.SetLayoutData(&unison.FlexLayoutData{
+			HAlign: unison.FillAlignment,
+			VAlign: unison.FillAlignment,
+			HGrab:  true,
+			VGrab:  true,
+		})
+		e.AddChild(scroller)
+		e.promptForSave = true
+		if dc != nil && dc.Group == editorGroup {
+			dc.Stack(e, -1)
+		} else if dc = ws.DocumentDock.ContainerForGroup(editorGroup); dc != nil {
+			dc.Stack(e, -1)
+		} else {
+			ws.DocumentDock.DockTo(e, nil, unison.RightSide)
+			if dc = unison.DockContainerFor(e); dc != nil && dc.Group == "" {
+				dc.Group = editorGroup
+			}
 		}
 	}
 }
 
-func (e *Editor) createToolbar() unison.Paneler {
+func (e *editor[N, D]) createToolbar() unison.Paneler {
 	toolbar := unison.NewPanel()
 	toolbar.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
@@ -91,9 +118,7 @@ func (e *Editor) createToolbar() unison.Paneler {
 	e.applyButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Apply Changes"))
 	e.applyButton.SetEnabled(false)
 	e.applyButton.ClickCallback = func() {
-		if e.ApplyCallback != nil {
-			e.ApplyCallback()
-		}
+		e.apply()
 		e.promptForSave = false
 		e.AttemptClose()
 	}
@@ -113,52 +138,42 @@ func (e *Editor) createToolbar() unison.Paneler {
 	return toolbar
 }
 
-// TitleIcon implements unison.Dockable
-func (e *Editor) TitleIcon(suggestedSize unison.Size) unison.Drawable {
+func (e *editor[N, D]) TitleIcon(suggestedSize unison.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  res.GCSNotesSVG,
 		Size: suggestedSize,
 	}
 }
 
-// Title implements unison.Dockable
-func (e *Editor) Title() string {
-	return e.TabTitle
+func (e *editor[N, D]) Title() string {
+	return fmt.Sprintf(i18n.Text("%s Editor for %s"), e.target.Kind(), e.owner.String())
 }
 
-// Tooltip implements unison.Dockable
-func (e *Editor) Tooltip() string {
+func (e *editor[N, D]) Tooltip() string {
 	return ""
 }
 
-// Modified implements unison.Dockable
-func (e *Editor) Modified() bool {
-	if e.IsModifiedCallback == nil {
-		return false
-	}
-	modified := e.IsModifiedCallback()
+func (e *editor[N, D]) Modified() bool {
+	modified := !reflect.DeepEqual(e.beforeData, e.editorData)
 	e.applyButton.SetEnabled(modified)
 	e.cancelButton.SetEnabled(modified)
 	return modified
 }
 
-// MarkModified implements widget.ModifiableRoot.
-func (e *Editor) MarkModified() {
+func (e *editor[N, D]) MarkModified() {
 	if dc := unison.DockContainerFor(e); dc != nil {
 		dc.UpdateTitle(e)
 	}
 }
 
-// MayAttemptClose implements unison.TabCloser
-func (e *Editor) MayAttemptClose() bool {
+func (e *editor[N, D]) MayAttemptClose() bool {
 	return true
 }
 
-// AttemptClose implements unison.TabCloser
-func (e *Editor) AttemptClose() {
-	if e.promptForSave && e.ApplyCallback != nil && e.IsModifiedCallback != nil && e.IsModifiedCallback() {
+func (e *editor[N, D]) AttemptClose() {
+	if e.promptForSave && !reflect.DeepEqual(e.beforeData, e.editorData) {
 		if unison.QuestionDialog(fmt.Sprintf(i18n.Text("Save changes made to\n%s?"), e.Title()), "") == unison.ModalResponseOK {
-			e.ApplyCallback()
+			e.apply()
 		}
 	}
 	if dc := unison.DockContainerFor(e); dc != nil {
@@ -166,7 +181,30 @@ func (e *Editor) AttemptClose() {
 	}
 }
 
-// UndoManager implements undo.Provider
-func (e *Editor) UndoManager() *unison.UndoManager {
+func (e *editor[N, D]) UndoManager() *unison.UndoManager {
 	return e.undoMgr
+}
+
+func (e *editor[N, D]) apply() {
+	if mgr := unison.UndoManagerFor(e.owner); mgr != nil {
+		owner := e.owner
+		target := e.target
+		mgr.Add(&unison.UndoEdit[D]{
+			ID:       unison.NextUndoID(),
+			EditName: fmt.Sprintf(i18n.Text("%s Changes"), target.Kind()),
+			EditCost: 1,
+			UndoFunc: func(edit *unison.UndoEdit[D]) {
+				edit.BeforeData.Apply(target)
+				owner.MarkForRebuild(true)
+			},
+			RedoFunc: func(edit *unison.UndoEdit[D]) {
+				edit.AfterData.Apply(target)
+				owner.MarkForRebuild(true)
+			},
+			BeforeData: e.beforeData,
+			AfterData:  e.editorData,
+		})
+	}
+	e.editorData.Apply(e.target)
+	e.owner.MarkForRebuild(true)
 }

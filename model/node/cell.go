@@ -16,12 +16,12 @@ import "github.com/richardwilkes/unison"
 // CellData holds data for creating a cell's visual representation.
 type CellData struct {
 	Type      CellType
+	Disabled  bool
 	Checked   bool
 	Alignment unison.Alignment
 	Primary   string
 	Secondary string
 	Tooltip   string
-	Disabled  bool
 }
 
 // ForSort returns a string that can be used to sort or search against for this data.
