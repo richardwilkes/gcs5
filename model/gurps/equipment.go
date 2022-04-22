@@ -226,6 +226,19 @@ func (e *Equipment) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// UUID returns the UUID of this data.
+func (e *Equipment) UUID() uuid.UUID {
+	return e.ID
+}
+
+// Kind returns the kind of data.
+func (e *Equipment) Kind() string {
+	if e.Container() {
+		return i18n.Text("Equipment Container")
+	}
+	return i18n.Text("Equipment")
+}
+
 // Container returns true if this is a container.
 func (e *Equipment) Container() bool {
 	return strings.HasSuffix(e.Type, commonContainerKeyPostfix)
@@ -313,7 +326,7 @@ func (e *Equipment) CellData(column int, data *node.CellData) {
 		data.Alignment = unison.EndAlignment
 	case EquipmentCategoryColumn:
 		data.Type = node.Text
-		data.Primary = strings.Join(e.Categories, ", ")
+		data.Primary = CombineTags(e.Categories)
 	case EquipmentReferenceColumn:
 		data.Type = node.PageRef
 		data.Primary = e.PageRef

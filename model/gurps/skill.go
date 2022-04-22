@@ -217,6 +217,19 @@ func (s *Skill) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// UUID returns the UUID of this data.
+func (s *Skill) UUID() uuid.UUID {
+	return s.ID
+}
+
+// Kind returns the kind of data.
+func (s *Skill) Kind() string {
+	if s.Container() {
+		return i18n.Text("Skill Container")
+	}
+	return i18n.Text("Skill")
+}
+
 // Container returns true if this is a container.
 func (s *Skill) Container() bool {
 	return strings.HasSuffix(s.Type, commonContainerKeyPostfix)
@@ -263,7 +276,7 @@ func (s *Skill) CellData(column int, data *node.CellData) {
 		}
 	case SkillCategoryColumn:
 		data.Type = node.Text
-		data.Primary = strings.Join(s.Categories, ", ")
+		data.Primary = CombineTags(s.Categories)
 	case SkillReferenceColumn:
 		data.Type = node.PageRef
 		data.Primary = s.PageRef

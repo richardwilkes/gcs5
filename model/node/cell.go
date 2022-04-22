@@ -21,6 +21,7 @@ type CellData struct {
 	Primary   string
 	Secondary string
 	Tooltip   string
+	Disabled  bool
 }
 
 // ForSort returns a string that can be used to sort or search against for this data.

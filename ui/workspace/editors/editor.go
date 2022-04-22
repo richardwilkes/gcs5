@@ -37,6 +37,7 @@ type Editor struct {
 	TabTitle           string
 	IsModifiedCallback func() bool
 	ApplyCallback      func()
+	owner              widget.Rebuildable
 	undoMgr            *unison.UndoManager
 	applyButton        *unison.Button
 	cancelButton       *unison.Button
@@ -52,7 +53,7 @@ func (e *Editor) Setup(ws *workspace.Workspace, dc *unison.DockContainer, initCo
 	content.SetBorder(unison.NewEmptyBorder(unison.NewUniformInsets(unison.StdHSpacing * 2)))
 	initContent(content)
 	scroller := unison.NewScrollPanel()
-	scroller.SetContent(content, unison.FollowBehavior, unison.FillBehavior)
+	scroller.SetContent(content, unison.HintedFillBehavior, unison.FillBehavior)
 	scroller.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,

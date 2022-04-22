@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/library"
@@ -47,6 +48,7 @@ type Template struct {
 	scale      int
 	content    *templateContent
 	scaleField *widget.PercentageField
+	Lists      [listCount]*PageList
 	rebuild    bool
 	full       bool
 }
@@ -194,15 +196,20 @@ func (d *Template) createLists() {
 		for _, c := range col {
 			switch c {
 			case gurps.BlockLayoutAdvantagesKey:
-				rowPanel.AddChild(NewAdvantagesPageList(d.template))
+				d.Lists[advantagesListIndex] = NewAdvantagesPageList(d, d.template)
+				rowPanel.AddChild(d.Lists[advantagesListIndex])
 			case gurps.BlockLayoutSkillsKey:
-				rowPanel.AddChild(NewSkillsPageList(d.template))
+				d.Lists[skillsListIndex] = NewSkillsPageList(d.template)
+				rowPanel.AddChild(d.Lists[skillsListIndex])
 			case gurps.BlockLayoutSpellsKey:
-				rowPanel.AddChild(NewSpellsPageList(d.template))
+				d.Lists[spellsListIndex] = NewSpellsPageList(d.template)
+				rowPanel.AddChild(d.Lists[spellsListIndex])
 			case gurps.BlockLayoutEquipmentKey:
-				rowPanel.AddChild(NewCarriedEquipmentPageList(d.template))
+				d.Lists[carriedEquipmentListIndex] = NewCarriedEquipmentPageList(d.template)
+				rowPanel.AddChild(d.Lists[carriedEquipmentListIndex])
 			case gurps.BlockLayoutNotesKey:
-				rowPanel.AddChild(NewNotesPageList(d, d.template))
+				d.Lists[notesListIndex] = NewNotesPageList(d, d.template)
+				rowPanel.AddChild(d.Lists[notesListIndex])
 			}
 		}
 		if len(rowPanel.Children()) != 0 {
@@ -242,11 +249,18 @@ func (d *Template) MarkForRebuild(full bool) {
 			d.rebuild = false
 			d.full = false
 			if doFull {
+				selMap := make([]map[uuid.UUID]bool, listCount)
+				for i, one := range d.Lists {
+					selMap[i] = one.RecordSelection()
+				}
+				defer func() {
+					for i, one := range d.Lists {
+						one.ApplySelection(selMap[i])
+					}
+				}()
 				d.createLists()
-				d.MarkForLayoutAndRedraw()
-			} else {
-				widget.DeepSync(d)
 			}
+			widget.DeepSync(d)
 		}, 50*time.Millisecond)
 	}
 }

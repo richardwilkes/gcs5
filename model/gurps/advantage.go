@@ -201,6 +201,19 @@ func (a *Advantage) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// UUID returns the UUID of this data.
+func (a *Advantage) UUID() uuid.UUID {
+	return a.ID
+}
+
+// Kind returns the kind of data.
+func (a *Advantage) Kind() string {
+	if a.Container() {
+		return i18n.Text("Advantage Container")
+	}
+	return i18n.Text("Advantage")
+}
+
 // Container returns true if this is a container.
 func (a *Advantage) Container() bool {
 	return strings.HasSuffix(a.Type, commonContainerKeyPostfix)
@@ -240,6 +253,7 @@ func (a *Advantage) CellData(column int, data *node.CellData) {
 		data.Type = node.Text
 		data.Primary = a.String()
 		data.Secondary = a.SecondaryText()
+		data.Disabled = a.Disabled
 	case AdvantagePointsColumn:
 		data.Type = node.Text
 		data.Primary = a.AdjustedPoints().String()
@@ -249,7 +263,7 @@ func (a *Advantage) CellData(column int, data *node.CellData) {
 		data.Primary = a.TypeAsText()
 	case AdvantageCategoryColumn:
 		data.Type = node.Text
-		data.Primary = strings.Join(a.Categories, ", ")
+		data.Primary = CombineTags(a.Categories)
 	case AdvantageReferenceColumn:
 		data.Type = node.PageRef
 		data.Primary = a.PageRef
@@ -386,7 +400,7 @@ func (a *Advantage) TypeAsText() string {
 	if a.Supernatural {
 		list = append(list, i18n.Text("Supernatural"))
 	}
-	return strings.Join(list, ", ")
+	return CombineTags(list)
 }
 
 // Description returns a description, which doesn't include any levels.
@@ -516,6 +530,22 @@ func HasCategory(category string, categories []string) bool {
 		}
 	}
 	return false
+}
+
+// CombineTags combines multiple tags into a single string.
+func CombineTags(tags []string) string {
+	return strings.Join(tags, ", ")
+}
+
+// ExtractTags from a combined tags string.
+func ExtractTags(tags string) []string {
+	var list []string
+	for _, one := range strings.Split(tags, ",") {
+		if one = strings.TrimSpace(one); one != "" {
+			list = append(list, one)
+		}
+	}
+	return list
 }
 
 // AdjustedPoints returns the total points, taking levels and modifiers into account. 'entity' may be nil.

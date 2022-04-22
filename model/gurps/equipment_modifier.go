@@ -165,6 +165,19 @@ func (e *EquipmentModifier) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// UUID returns the UUID of this data.
+func (e *EquipmentModifier) UUID() uuid.UUID {
+	return e.ID
+}
+
+// Kind returns the kind of data.
+func (e *EquipmentModifier) Kind() string {
+	if e.Container() {
+		return i18n.Text("Equipment Modifier Container")
+	}
+	return i18n.Text("Equipment Modifier")
+}
+
 // Container returns true if this is a container.
 func (e *EquipmentModifier) Container() bool {
 	return strings.HasSuffix(e.Type, commonContainerKeyPostfix)
@@ -221,7 +234,7 @@ func (e *EquipmentModifier) CellData(column int, data *node.CellData) {
 		}
 	case EquipmentModifierCategoryColumn:
 		data.Type = node.Text
-		data.Primary = strings.Join(e.Categories, ", ")
+		data.Primary = CombineTags(e.Categories)
 	case EquipmentModifierReferenceColumn:
 		data.Type = node.PageRef
 		data.Primary = e.PageRef

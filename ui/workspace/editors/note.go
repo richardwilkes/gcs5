@@ -12,6 +12,8 @@
 package editors
 
 import (
+	"fmt"
+
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
@@ -22,57 +24,54 @@ import (
 
 type noteEditor struct {
 	Editor
-	owner    widget.Rebuildable
-	note     *gurps.Note
-	noteText string
-	pageRef  string
+	target     *gurps.Note
+	beforeData noteEditorData
+	editorData noteEditorData
 }
 
 // EditNote displays the editor for a note.
 func EditNote(owner widget.Rebuildable, note *gurps.Note) {
 	ws, dc, found := workspace.Activate(func(d unison.Dockable) bool {
 		if editor, ok := d.(*noteEditor); ok {
-			return editor.owner == owner && editor.note == note
+			return editor.owner == owner && editor.target == note
 		}
 		return false
 	})
 	if !found && ws != nil {
 		e := &noteEditor{
-			owner:    owner,
-			note:     note,
-			noteText: note.Text,
-			pageRef:  note.PageRef,
+			Editor: Editor{
+				owner: owner,
+			},
+			target: note,
 		}
 		e.Self = e
-		e.TabTitle = i18n.Text("Note Editor")
-		e.TabTitle += i18n.Text(" for ") + owner.String()
+		e.beforeData.From(note)
+		e.editorData = e.beforeData
+		e.TabTitle = fmt.Sprintf(i18n.Text("%s Editor for %s"), note.Kind(), owner.String())
 		e.Setup(ws, dc, e.initContent)
-		e.IsModifiedCallback = func() bool {
-			return e.note.Text != e.noteText || e.note.PageRef != e.pageRef
-		}
+		e.IsModifiedCallback = func() bool { return e.beforeData != e.editorData }
 		e.ApplyCallback = func() {
 			if mgr := unison.UndoManagerFor(e.owner); mgr != nil {
-				mgr.Add(&unison.UndoEdit[[]string]{
+				before := e.beforeData
+				after := e.editorData
+				mgr.Add(&unison.UndoEdit[*noteEditorData]{
 					ID:       unison.NextUndoID(),
-					EditName: i18n.Text("Note Changes"),
+					EditName: fmt.Sprintf(i18n.Text("%s Changes"), note.Kind()),
 					EditCost: 1,
-					UndoFunc: func(edit *unison.UndoEdit[[]string]) {
-						note.Text = edit.BeforeData[0]
-						note.PageRef = edit.BeforeData[1]
-						owner.MarkForRebuild(false)
+					UndoFunc: func(edit *unison.UndoEdit[*noteEditorData]) {
+						edit.BeforeData.Apply(note)
+						owner.MarkForRebuild(true)
 					},
-					RedoFunc: func(edit *unison.UndoEdit[[]string]) {
-						note.Text = edit.AfterData[0]
-						note.PageRef = edit.AfterData[1]
-						owner.MarkForRebuild(false)
+					RedoFunc: func(edit *unison.UndoEdit[*noteEditorData]) {
+						edit.AfterData.Apply(note)
+						owner.MarkForRebuild(true)
 					},
-					BeforeData: []string{note.Text, note.PageRef},
-					AfterData:  []string{e.noteText, e.pageRef},
+					BeforeData: &before,
+					AfterData:  &after,
 				})
 			}
-			e.note.Text = e.noteText
-			e.note.PageRef = e.pageRef
-			e.owner.MarkForRebuild(false)
+			e.editorData.Apply(e.target)
+			e.owner.MarkForRebuild(true)
 		}
 	}
 }
@@ -86,9 +85,9 @@ func (e *noteEditor) initContent(content *unison.Panel) {
 
 	noteLabel := i18n.Text("Note")
 	content.AddChild(widget.NewFieldLeadingLabel(noteLabel))
-	noteField := widget.NewMultiLineStringField(noteLabel, func() string { return e.noteText },
+	noteField := widget.NewMultiLineStringField(noteLabel, func() string { return e.editorData.note },
 		func(value string) {
-			e.noteText = value
+			e.editorData.note = value
 			content.MarkForLayoutAndRedraw()
 			widget.MarkModified(content)
 		})
@@ -99,9 +98,9 @@ func (e *noteEditor) initContent(content *unison.Panel) {
 	label := widget.NewFieldLeadingLabel(pageLabel)
 	label.Tooltip = unison.NewTooltipWithText(tbl.PageRefTooltipText)
 	content.AddChild(label)
-	field := widget.NewStringField(pageLabel, func() string { return e.pageRef },
+	field := widget.NewStringField(pageLabel, func() string { return e.editorData.pageRef },
 		func(value string) {
-			e.pageRef = value
+			e.editorData.pageRef = value
 			widget.MarkModified(content)
 		})
 	field.Tooltip = unison.NewTooltipWithText(tbl.PageRefTooltipText)

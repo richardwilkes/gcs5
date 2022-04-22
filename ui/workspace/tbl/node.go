@@ -149,7 +149,7 @@ func (n *Node) Match(text string) bool {
 func (n *Node) CellFromCellData(c *node.CellData, width float32, selected bool) unison.Paneler {
 	switch c.Type {
 	case node.Text:
-		return n.createLabelCell(c, width, selected)
+		return n.createLabelCell(c, width, selected, c.Disabled)
 	case node.Toggle:
 		return n.createToggleCell(c, selected)
 	case node.PageRef:
@@ -159,15 +159,15 @@ func (n *Node) CellFromCellData(c *node.CellData, width float32, selected bool) 
 	}
 }
 
-func (n *Node) createLabelCell(c *node.CellData, width float32, selected bool) unison.Paneler {
+func (n *Node) createLabelCell(c *node.CellData, width float32, selected, strikeThrough bool) unison.Paneler {
 	p := unison.NewPanel()
 	p.SetLayout(&unison.FlexLayout{
 		Columns: 1,
 		HAlign:  c.Alignment,
 	})
-	n.addLabelCell(c, p, width, c.Primary, n.primaryFieldFont(), selected)
+	n.addLabelCell(c, p, width, c.Primary, n.primaryFieldFont(), selected, strikeThrough)
 	if c.Secondary != "" {
-		n.addLabelCell(c, p, width, c.Secondary, n.secondaryFieldFont(), selected)
+		n.addLabelCell(c, p, width, c.Secondary, n.secondaryFieldFont(), selected, false)
 	}
 	if c.Tooltip != "" {
 		p.Tooltip = unison.NewTooltipWithText(c.Tooltip)
@@ -175,8 +175,11 @@ func (n *Node) createLabelCell(c *node.CellData, width float32, selected bool) u
 	return p
 }
 
-func (n *Node) addLabelCell(c *node.CellData, parent *unison.Panel, width float32, text string, f unison.Font, selected bool) {
-	decoration := &unison.TextDecoration{Font: f}
+func (n *Node) addLabelCell(c *node.CellData, parent *unison.Panel, width float32, text string, f unison.Font, selected, strikeThrough bool) {
+	decoration := &unison.TextDecoration{
+		Font:          f,
+		StrikeThrough: strikeThrough,
+	}
 	var lines []*unison.Text
 	if width > 0 {
 		lines = unison.NewTextWrappedLines(text, decoration, width)
@@ -187,6 +190,7 @@ func (n *Node) addLabelCell(c *node.CellData, parent *unison.Panel, width float3
 		label := unison.NewLabel()
 		label.Text = line.String()
 		label.Font = f
+		label.StrikeThrough = strikeThrough
 		label.HAlign = c.Alignment
 		if selected {
 			label.OnBackgroundInk = unison.OnSelectionColor

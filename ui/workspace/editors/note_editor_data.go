@@ -9,17 +9,21 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package node
+package editors
 
-import "github.com/google/uuid"
+import "github.com/richardwilkes/gcs/model/gurps"
 
-// Node defines the methods required of nodes in our tables.
-type Node interface {
-	UUID() uuid.UUID
-	Kind() string
-	Container() bool
-	NodeChildren() []Node
-	Open() bool
-	SetOpen(open bool)
-	CellData(column int, data *CellData)
+type noteEditorData struct {
+	note    string
+	pageRef string
+}
+
+func (d *noteEditorData) From(note *gurps.Note) {
+	d.note = note.Text
+	d.pageRef = note.PageRef
+}
+
+func (d *noteEditorData) Apply(note *gurps.Note) {
+	note.Text = d.note
+	note.PageRef = d.pageRef
 }

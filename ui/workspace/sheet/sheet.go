@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/library"
@@ -29,6 +30,20 @@ import (
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/unison"
+)
+
+const (
+	reactionsListIndex = iota
+	conditionalModifiersListIndex
+	meleeWeaponsListIndex
+	rangedWeaponsListIndex
+	advantagesListIndex
+	skillsListIndex
+	spellsListIndex
+	carriedEquipmentListIndex
+	otherEquipmentListIndex
+	notesListIndex
+	listCount
 )
 
 var (
@@ -61,6 +76,7 @@ type Sheet struct {
 	EncumbrancePanel   *EncumbrancePanel
 	LiftingPanel       *LiftingPanel
 	DamagePanel        *DamagePanel
+	Lists              [listCount]*PageList
 	rebuild            bool
 	full               bool
 }
@@ -374,25 +390,35 @@ func (s *Sheet) createLists() {
 		for _, c := range col {
 			switch c {
 			case gurps.BlockLayoutReactionsKey:
-				rowPanel.AddChild(NewReactionsPageList(s.entity))
+				s.Lists[reactionsListIndex] = NewReactionsPageList(s.entity)
+				rowPanel.AddChild(s.Lists[reactionsListIndex])
 			case gurps.BlockLayoutConditionalModifiersKey:
-				rowPanel.AddChild(NewConditionalModifiersPageList(s.entity))
+				s.Lists[conditionalModifiersListIndex] = NewConditionalModifiersPageList(s.entity)
+				rowPanel.AddChild(s.Lists[conditionalModifiersListIndex])
 			case gurps.BlockLayoutMeleeKey:
-				rowPanel.AddChild(NewMeleeWeaponsPageList(s.entity))
+				s.Lists[meleeWeaponsListIndex] = NewMeleeWeaponsPageList(s.entity)
+				rowPanel.AddChild(s.Lists[meleeWeaponsListIndex])
 			case gurps.BlockLayoutRangedKey:
-				rowPanel.AddChild(NewRangedWeaponsPageList(s.entity))
+				s.Lists[rangedWeaponsListIndex] = NewRangedWeaponsPageList(s.entity)
+				rowPanel.AddChild(s.Lists[rangedWeaponsListIndex])
 			case gurps.BlockLayoutAdvantagesKey:
-				rowPanel.AddChild(NewAdvantagesPageList(s.entity))
+				s.Lists[advantagesListIndex] = NewAdvantagesPageList(s, s.entity)
+				rowPanel.AddChild(s.Lists[advantagesListIndex])
 			case gurps.BlockLayoutSkillsKey:
-				rowPanel.AddChild(NewSkillsPageList(s.entity))
+				s.Lists[skillsListIndex] = NewSkillsPageList(s.entity)
+				rowPanel.AddChild(s.Lists[skillsListIndex])
 			case gurps.BlockLayoutSpellsKey:
-				rowPanel.AddChild(NewSpellsPageList(s.entity))
+				s.Lists[spellsListIndex] = NewSpellsPageList(s.entity)
+				rowPanel.AddChild(s.Lists[spellsListIndex])
 			case gurps.BlockLayoutEquipmentKey:
-				rowPanel.AddChild(NewCarriedEquipmentPageList(s.entity))
+				s.Lists[carriedEquipmentListIndex] = NewCarriedEquipmentPageList(s.entity)
+				rowPanel.AddChild(s.Lists[carriedEquipmentListIndex])
 			case gurps.BlockLayoutOtherEquipmentKey:
-				rowPanel.AddChild(NewOtherEquipmentPageList(s.entity))
+				s.Lists[otherEquipmentListIndex] = NewOtherEquipmentPageList(s.entity)
+				rowPanel.AddChild(s.Lists[otherEquipmentListIndex])
 			case gurps.BlockLayoutNotesKey:
-				rowPanel.AddChild(NewNotesPageList(s, s.entity))
+				s.Lists[notesListIndex] = NewNotesPageList(s, s.entity)
+				rowPanel.AddChild(s.Lists[notesListIndex])
 			}
 		}
 		page.AddChild(rowPanel)
@@ -429,11 +455,18 @@ func (s *Sheet) MarkForRebuild(full bool) {
 			s.full = false
 			s.entity.Recalculate()
 			if doFull {
+				selMap := make([]map[uuid.UUID]bool, listCount)
+				for i, one := range s.Lists {
+					selMap[i] = one.RecordSelection()
+				}
+				defer func() {
+					for i, one := range s.Lists {
+						one.ApplySelection(selMap[i])
+					}
+				}()
 				s.createLists()
-				s.MarkForLayoutAndRedraw()
-			} else {
-				widget.DeepSync(s)
 			}
+			widget.DeepSync(s)
 		}, 50*time.Millisecond)
 	}
 }

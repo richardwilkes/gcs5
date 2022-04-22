@@ -229,6 +229,19 @@ func (s *Spell) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// UUID returns the UUID of this data.
+func (s *Spell) UUID() uuid.UUID {
+	return s.ID
+}
+
+// Kind returns the kind of data.
+func (s *Spell) Kind() string {
+	if s.Container() {
+		return i18n.Text("Spell Container")
+	}
+	return i18n.Text("Spell")
+}
+
 // Container returns true if this is a container.
 func (s *Spell) Container() bool {
 	return strings.HasSuffix(s.Type, commonContainerKeyPostfix)
@@ -310,7 +323,7 @@ func (s *Spell) CellData(column int, data *node.CellData) {
 		}
 	case SpellCategoryColumn:
 		data.Type = node.Text
-		data.Primary = strings.Join(s.Categories, ", ")
+		data.Primary = CombineTags(s.Categories)
 	case SpellReferenceColumn:
 		data.Type = node.PageRef
 		data.Primary = s.PageRef

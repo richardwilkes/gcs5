@@ -19,6 +19,7 @@ import (
 	"strings"
 	"unsafe"
 
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/datafile"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
@@ -162,6 +163,16 @@ func (w *Weapon) MarshalJSON() ([]byte, error) {
 		data.Calc.Range = w.ResolvedRange()
 	}
 	return json.Marshal(&data)
+}
+
+// UUID returns the UUID of this data.
+func (w *Weapon) UUID() uuid.UUID {
+	return uuid.UUID{}
+}
+
+// Kind returns the kind of data.
+func (w *Weapon) Kind() string {
+	return w.Type.String()
 }
 
 func (w *Weapon) String() string {

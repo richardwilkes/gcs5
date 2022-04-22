@@ -12,7 +12,9 @@
 package gurps
 
 import (
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/node"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
@@ -69,6 +71,16 @@ func (m *ConditionalModifier) Less(other *ConditionalModifier) bool {
 		return true
 	}
 	return false
+}
+
+// UUID returns the UUID of this data.
+func (m *ConditionalModifier) UUID() uuid.UUID {
+	return uuid.UUID{}
+}
+
+// Kind returns the kind of data.
+func (m *ConditionalModifier) Kind() string {
+	return i18n.Text("Conditional Modifier")
 }
 
 // Container returns true if this is a container.

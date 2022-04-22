@@ -1065,7 +1065,7 @@ func (ex *legacyExporter) processEquipmentLoop(buffer []byte, carried bool) {
 				case "LEGALITY_CLASS", "LC":
 					ex.writeEncodedText(eqp.LegalityClass)
 				case "CATEGORIES":
-					ex.writeEncodedText(strings.Join(eqp.Categories, ", "))
+					ex.writeEncodedText(gurps.CombineTags(eqp.Categories))
 				case "LOCATION":
 					if eqp.Parent != nil {
 						ex.writeEncodedText(eqp.Parent.Name)

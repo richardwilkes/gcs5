@@ -160,6 +160,19 @@ func (a *AdvantageModifier) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// UUID returns the UUID of this data.
+func (a *AdvantageModifier) UUID() uuid.UUID {
+	return a.ID
+}
+
+// Kind returns the kind of data.
+func (a *AdvantageModifier) Kind() string {
+	if a.Container() {
+		return i18n.Text("Advantage Modifier Container")
+	}
+	return i18n.Text("Advantage Modifier")
+}
+
 // Container returns true if this is a container.
 func (a *AdvantageModifier) Container() bool {
 	return strings.HasSuffix(a.Type, commonContainerKeyPostfix)
@@ -206,7 +219,7 @@ func (a *AdvantageModifier) CellData(column int, data *node.CellData) {
 		}
 	case AdvantageModifierCategoryColumn:
 		data.Type = node.Text
-		data.Primary = strings.Join(a.Categories, ", ")
+		data.Primary = CombineTags(a.Categories)
 	case AdvantageModifierReferenceColumn:
 		data.Type = node.PageRef
 		data.Primary = a.PageRef

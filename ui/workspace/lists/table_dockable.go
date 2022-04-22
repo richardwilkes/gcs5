@@ -25,7 +25,7 @@ import (
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/editors"
-	tbl2 "github.com/richardwilkes/gcs/ui/workspace/tbl"
+	"github.com/richardwilkes/gcs/ui/workspace/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio/fs"
@@ -39,7 +39,7 @@ var _ widget.Rebuildable = &TableDockable{}
 type TableDockable struct {
 	unison.Panel
 	path            string
-	provider        tbl2.TableProvider
+	provider        tbl.TableProvider
 	canPerformMap   map[int]func() bool
 	performMap      map[int]func()
 	lockButton      *unison.Button
@@ -78,7 +78,17 @@ func NewAdvantageTableDockableFromFile(filePath string) (unison.Dockable, error)
 
 // NewAdvantageTableDockable creates a new unison.Dockable for advantage list files.
 func NewAdvantageTableDockable(filePath string, advantages []*gurps.Advantage) unison.Dockable {
-	return NewTableDockable(filePath, tbl2.NewAdvantagesProvider(&advantageListProvider{advantages: advantages}, false))
+	t := NewTableDockable(filePath, tbl.NewAdvantagesProvider(&advantageListProvider{advantages: advantages}, false))
+	t.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
+		for _, row := range t.table.SelectedRows(false) {
+			if node, ok := row.(*tbl.Node); ok {
+				if advantage, ok2 := node.Data().(*gurps.Advantage); ok2 {
+					editors.EditAdvantage(t, advantage)
+				}
+			}
+		}
+	})
+	return t
 }
 
 type advantageModifierListProvider struct {
@@ -101,7 +111,7 @@ func NewAdvantageModifierTableDockableFromFile(filePath string) (unison.Dockable
 
 // NewAdvantageModifierTableDockable creates a new unison.Dockable for advantage modifier list files.
 func NewAdvantageModifierTableDockable(filePath string, modifiers []*gurps.AdvantageModifier) unison.Dockable {
-	return NewTableDockable(filePath, tbl2.NewAdvantageModifiersProvider(&advantageModifierListProvider{modifiers: modifiers}))
+	return NewTableDockable(filePath, tbl.NewAdvantageModifiersProvider(&advantageModifierListProvider{modifiers: modifiers}))
 }
 
 type equipmentListProvider struct {
@@ -128,7 +138,7 @@ func NewEquipmentTableDockableFromFile(filePath string) (unison.Dockable, error)
 
 // NewEquipmentTableDockable creates a new unison.Dockable for equipment list files.
 func NewEquipmentTableDockable(filePath string, equipment []*gurps.Equipment) unison.Dockable {
-	return NewTableDockable(filePath, tbl2.NewEquipmentProvider(&equipmentListProvider{other: equipment}, false, false))
+	return NewTableDockable(filePath, tbl.NewEquipmentProvider(&equipmentListProvider{other: equipment}, false, false))
 }
 
 type equipmentModifierListProvider struct {
@@ -151,7 +161,7 @@ func NewEquipmentModifierTableDockableFromFile(filePath string) (unison.Dockable
 
 // NewEquipmentModifierTableDockable creates a new unison.Dockable for equipment modifier list files.
 func NewEquipmentModifierTableDockable(filePath string, modifiers []*gurps.EquipmentModifier) unison.Dockable {
-	return NewTableDockable(filePath, tbl2.NewEquipmentModifiersProvider(&equipmentModifierListProvider{modifiers: modifiers}))
+	return NewTableDockable(filePath, tbl.NewEquipmentModifiersProvider(&equipmentModifierListProvider{modifiers: modifiers}))
 }
 
 type skillListProvider struct {
@@ -173,7 +183,7 @@ func NewSkillTableDockableFromFile(filePath string) (unison.Dockable, error) {
 
 // NewSkillTableDockable creates a new unison.Dockable for skill list files.
 func NewSkillTableDockable(filePath string, skills []*gurps.Skill) unison.Dockable {
-	return NewTableDockable(filePath, tbl2.NewSkillsProvider(&skillListProvider{skills: skills}, false))
+	return NewTableDockable(filePath, tbl.NewSkillsProvider(&skillListProvider{skills: skills}, false))
 }
 
 type spellListProvider struct {
@@ -195,7 +205,7 @@ func NewSpellTableDockableFromFile(filePath string) (unison.Dockable, error) {
 
 // NewSpellTableDockable creates a new unison.Dockable for spell list files.
 func NewSpellTableDockable(filePath string, spells []*gurps.Spell) unison.Dockable {
-	return NewTableDockable(filePath, tbl2.NewSpellsProvider(&spellListProvider{spells: spells}, false))
+	return NewTableDockable(filePath, tbl.NewSpellsProvider(&spellListProvider{spells: spells}, false))
 }
 
 type noteListProvider struct {
@@ -217,10 +227,10 @@ func NewNoteTableDockableFromFile(filePath string) (unison.Dockable, error) {
 
 // NewNoteTableDockable creates a new unison.Dockable for note list files.
 func NewNoteTableDockable(filePath string, notes []*gurps.Note) unison.Dockable {
-	t := NewTableDockable(filePath, tbl2.NewNotesProvider(&noteListProvider{notes: notes}, false))
+	t := NewTableDockable(filePath, tbl.NewNotesProvider(&noteListProvider{notes: notes}, false))
 	t.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
 		for _, row := range t.table.SelectedRows(false) {
-			if node, ok := row.(*tbl2.Node); ok {
+			if node, ok := row.(*tbl.Node); ok {
 				if note, ok2 := node.Data().(*gurps.Note); ok2 {
 					editors.EditNote(t, note)
 				}
@@ -231,7 +241,7 @@ func NewNoteTableDockable(filePath string, notes []*gurps.Note) unison.Dockable 
 }
 
 // NewTableDockable creates a new TableDockable for list data files.
-func NewTableDockable(filePath string, provider tbl2.TableProvider) *TableDockable {
+func NewTableDockable(filePath string, provider tbl.TableProvider) *TableDockable {
 	d := &TableDockable{
 		path:          filePath,
 		provider:      provider,
@@ -488,7 +498,7 @@ func (d *TableDockable) searchModified() {
 }
 
 func (d *TableDockable) search(text string, row unison.TableRowData) {
-	if matcher, ok := row.(tbl2.Matcher); ok {
+	if matcher, ok := row.(tbl.Matcher); ok {
 		if matcher.Match(text) {
 			d.searchResult = append(d.searchResult, row)
 		}

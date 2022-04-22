@@ -23,6 +23,7 @@ import (
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/i18n"
 )
 
 var _ node.Node = &Note{}
@@ -128,6 +129,19 @@ func (n *Note) UnmarshalJSON(data []byte) error {
 		}
 	}
 	return nil
+}
+
+// UUID returns the UUID of this data.
+func (n *Note) UUID() uuid.UUID {
+	return n.ID
+}
+
+// Kind returns the kind of data.
+func (n *Note) Kind() string {
+	if n.Container() {
+		return i18n.Text("Note Container")
+	}
+	return i18n.Text("Note")
 }
 
 // Container returns true if this is a container.
