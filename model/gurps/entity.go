@@ -230,19 +230,11 @@ func (e *Entity) processFeatures() {
 	TraverseAdvantages(func(a *Advantage) bool {
 		if !a.Container() {
 			for _, f := range a.Features {
-				var levels f64d4.Int
-				if a.Levels != nil {
-					levels = a.Levels.Max(0)
-				}
-				processFeature(a, m, f, levels)
+				processFeature(a, m, f, a.Levels.Max(0))
 			}
 		}
 		for _, f := range a.CRAdj.Features(a.CR) {
-			var levels f64d4.Int
-			if a.Levels != nil {
-				levels = a.Levels.Max(0)
-			}
-			processFeature(a, m, f, levels)
+			processFeature(a, m, f, a.Levels.Max(0))
 		}
 		for _, mod := range a.Modifiers {
 			if !mod.Disabled {
@@ -998,7 +990,7 @@ func (e *Entity) Ancestry() *ancestry.Ancestry {
 		return false
 	}, true, e.Advantages...)
 	if anc == nil {
-		if anc = ancestry.Lookup("Human", SettingsProvider.Libraries()); anc == nil {
+		if anc = ancestry.Lookup(ancestry.Default, SettingsProvider.Libraries()); anc == nil {
 			jot.Fatal(1, "unable to load default ancestry (Human)")
 		}
 	}

@@ -17,7 +17,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var _ Prereq = &AdvantagePrereq{}
@@ -88,11 +87,7 @@ func (a *AdvantagePrereq) Satisfied(entity *Entity, exclude interface{}, tooltip
 		if !a.NotesCriteria.Matches(notes) {
 			return false
 		}
-		var levels f64d4.Int
-		if adq.Levels != nil {
-			levels = adq.Levels.Max(0)
-		}
-		satisfied = a.LevelCriteria.Matches(levels)
+		satisfied = a.LevelCriteria.Matches(adq.Levels.Max(0))
 		return satisfied
 	}, true, entity.Advantages...)
 	if !a.Has {

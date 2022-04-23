@@ -13,7 +13,6 @@ package widget
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"unicode"
 
@@ -146,7 +145,7 @@ func (f *NumericField) runeTyped(ch rune) bool {
 			return false
 		}
 		if text := f.trimmed(string(f.RunesIfPasted([]rune{ch}))); text != "-" {
-			if _, err := strconv.Atoi(text); err != nil {
+			if _, err := f64d4.FromString(text); err != nil {
 				unison.Beep()
 				return false
 			}

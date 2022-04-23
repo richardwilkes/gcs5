@@ -53,8 +53,8 @@ const (
 
 // AdvantageItem holds the Advantage data that only exists in non-containers.
 type AdvantageItem struct {
-	Levels         *f64d4.Int       `json:"levels,omitempty"`
 	BasePoints     f64d4.Int        `json:"base_points,omitempty"`
+	Levels         f64d4.Int        `json:"levels,omitempty"`
 	PointsPerLevel f64d4.Int        `json:"points_per_level,omitempty"`
 	Prereq         *PrereqList      `json:"prereqs,omitempty"`
 	Weapons        []*Weapon        `json:"weapons,omitempty"`
@@ -311,7 +311,7 @@ func (a *Advantage) Notes() string {
 
 // IsLeveled returns true if the Advantage is capable of having levels.
 func (a *Advantage) IsLeveled() bool {
-	return !a.Container() && a.Levels != nil
+	return !a.Container() && a.PointsPerLevel != 0
 }
 
 // AdjustedPoints returns the total points, taking levels and modifiers into account.
@@ -320,11 +320,7 @@ func (a *Advantage) AdjustedPoints() f64d4.Int {
 		return 0
 	}
 	if !a.Container() {
-		var levels f64d4.Int
-		if a.Levels != nil {
-			levels = *a.Levels
-		}
-		return AdjustedPoints(a.Entity, a.BasePoints, levels, a.PointsPerLevel, a.CR, a.AllModifiers(), a.RoundCostDown)
+		return AdjustedPoints(a.Entity, a.BasePoints, a.Levels, a.PointsPerLevel, a.CR, a.AllModifiers(), a.RoundCostDown)
 	}
 	var points f64d4.Int
 	if a.ContainerType == advantage.AlternativeAbilities {
@@ -412,7 +408,7 @@ func (a *Advantage) Description() string {
 func (a *Advantage) String() string {
 	var buffer strings.Builder
 	buffer.WriteString(a.Name)
-	if a.IsLeveled() && *a.Levels > 0 {
+	if a.IsLeveled() && a.Levels > 0 {
 		buffer.WriteByte(' ')
 		buffer.WriteString(a.Levels.String())
 	}

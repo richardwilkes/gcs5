@@ -12,9 +12,11 @@
 package editors
 
 import (
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/advantage"
+	"github.com/richardwilkes/gcs/model/gurps/ancestry"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -24,123 +26,91 @@ func EditAdvantage(owner widget.Rebuildable, advantage *gurps.Advantage) {
 	displayEditor[*gurps.Advantage, *advantageEditorData](owner, advantage, initAdvantageEditor)
 }
 
-func initAdvantageEditor(e *editor[*gurps.Advantage, *advantageEditorData], content *unison.Panel) {
-	content.SetLayout(&unison.FlexLayout{
-		Columns:  2,
-		HSpacing: unison.StdHSpacing,
-		VSpacing: unison.StdVSpacing,
-	})
-
+func initAdvantageEditor(e *editor[*gurps.Advantage, *advantageEditorData], content *unison.Panel) func() {
 	content.AddChild(unison.NewPanel())
-	content.AddChild(widget.NewCheckBox(i18n.Text("Enabled"), !e.editorData.disabled, func(b bool) {
-		e.editorData.disabled = !b
-		widget.MarkModified(content)
-	}))
-
-	labelText := i18n.Text("Name")
-	content.AddChild(widget.NewFieldLeadingLabel(labelText))
-	field := widget.NewStringField(labelText, func() string { return e.editorData.name },
-		func(value string) {
-			e.editorData.name = value
-			widget.MarkModified(content)
-		})
-	content.AddChild(field)
-
-	labelText = i18n.Text("Notes")
-	content.AddChild(widget.NewFieldLeadingLabel(labelText))
-	field = widget.NewMultiLineStringField(labelText, func() string { return e.editorData.notes },
-		func(value string) {
-			e.editorData.notes = value
-			content.MarkForLayoutAndRedraw()
-			widget.MarkModified(content)
-		})
-	field.AutoScroll = false
-	content.AddChild(field)
-
-	labelText = i18n.Text("VTT Notes")
-	tooltip := i18n.Text("Any notes for VTT use; see the instructions for your VVT to determine if/how these can be used")
-	label := widget.NewFieldLeadingLabel(labelText)
-	label.Tooltip = unison.NewTooltipWithText(tooltip)
-	content.AddChild(label)
-	field = widget.NewMultiLineStringField(labelText, func() string { return e.editorData.vttNotes },
-		func(value string) {
-			e.editorData.vttNotes = value
-			content.MarkForLayoutAndRedraw()
-			widget.MarkModified(content)
-		})
-	field.Tooltip = unison.NewTooltipWithText(tooltip)
-	field.AutoScroll = false
-	content.AddChild(field)
-
-	labelText = i18n.Text("User Description")
-	tooltip = i18n.Text("Additional notes for your own reference. These only exist in character sheets and will be removed if transferred to a data list or template")
-	label = widget.NewFieldLeadingLabel(labelText)
-	label.Tooltip = unison.NewTooltipWithText(tooltip)
-	content.AddChild(label)
-	field = widget.NewMultiLineStringField(labelText, func() string { return e.editorData.userDesc },
-		func(value string) {
-			e.editorData.userDesc = value
-			content.MarkForLayoutAndRedraw()
-			widget.MarkModified(content)
-		})
-	field.Tooltip = unison.NewTooltipWithText(tooltip)
-	field.AutoScroll = false
-	content.AddChild(field)
-
-	labelText = i18n.Text("Tags")
-	tooltip = i18n.Text("Separate multiple tags with commas")
-	label = widget.NewFieldLeadingLabel(labelText)
-	label.Tooltip = unison.NewTooltipWithText(tooltip)
-	content.AddChild(label)
-	field = widget.NewMultiLineStringField(labelText, func() string { return e.editorData.tags },
-		func(value string) {
-			e.editorData.tags = value
-			content.MarkForLayoutAndRedraw()
-			widget.MarkModified(content)
-		})
-	field.Tooltip = unison.NewTooltipWithText(tooltip)
-	field.AutoScroll = false
-	content.AddChild(field)
-
+	addInvertedCheckBox(content, i18n.Text("Enabled"), &e.editorData.disabled)
+	addNameLabelAndField(content, &e.editorData.name)
+	addNotesLabelAndField(content, &e.editorData.notes)
+	addVTTNotesLabelAndField(content, &e.editorData.vttNotes)
+	addUserDescLabelAndField(content, &e.editorData.userDesc)
+	addTagsLabelAndField(content, &e.editorData.tags)
+	var levelField *widget.NumericField
 	if !e.target.Container() {
-		content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Type")))
-		wrapper := unison.NewPanel()
-		wrapper.SetLayout(&unison.FlowLayout{
-			HSpacing: unison.StdHSpacing,
-			VSpacing: unison.StdVSpacing,
+		wrapper := addFlowWrapper(content, i18n.Text("Type"), 5)
+		addCheckBox(wrapper, i18n.Text("Mental"), &e.editorData.mental)
+		addCheckBox(wrapper, i18n.Text("Physical"), &e.editorData.physical)
+		addCheckBox(wrapper, i18n.Text("Social"), &e.editorData.social)
+		addCheckBox(wrapper, i18n.Text("Exotic"), &e.editorData.exotic)
+		addCheckBox(wrapper, i18n.Text("Supernatural"), &e.editorData.supernatural)
+		wrapper = addFlowWrapper(content, i18n.Text("Point Cost"), 8)
+		pointCost := widget.NewNonEditableField(func(field *widget.NonEditableField) {
+			field.Text = fxp.ApplyRounding(e.editorData.basePoints+e.editorData.levels.Mul(e.editorData.pointsPerLevel),
+				e.editorData.roundCostDown).String()
+			field.MarkForLayoutAndRedraw()
 		})
-		content.AddChild(wrapper)
-		wrapper.AddChild(widget.NewCheckBox(i18n.Text("Mental"), e.editorData.mental, func(b bool) {
-			e.editorData.mental = b
-			widget.MarkModified(content)
-		}))
-		wrapper.AddChild(widget.NewCheckBox(i18n.Text("Physical"), e.editorData.physical, func(b bool) {
-			e.editorData.physical = b
-			widget.MarkModified(content)
-		}))
-		wrapper.AddChild(widget.NewCheckBox(i18n.Text("Social"), e.editorData.social, func(b bool) {
-			e.editorData.social = b
-			widget.MarkModified(content)
-		}))
-		wrapper.AddChild(widget.NewCheckBox(i18n.Text("Exotic"), e.editorData.exotic, func(b bool) {
-			e.editorData.exotic = b
-			widget.MarkModified(content)
-		}))
-		wrapper.AddChild(widget.NewCheckBox(i18n.Text("Supernatural"), e.editorData.supernatural, func(b bool) {
-			e.editorData.supernatural = b
-			widget.MarkModified(content)
-		}))
+		insets := pointCost.Border().Insets()
+		pointCost.SetLayoutData(&unison.FlexLayoutData{
+			MinSize: unison.NewSize(pointCost.Font.SimpleWidth((-fxp.MaxBasePoints*2).String())+insets.Left+insets.Right, 0),
+		})
+		wrapper.AddChild(pointCost)
+		addCheckBox(wrapper, i18n.Text("Round Down"), &e.editorData.roundCostDown)
+		baseCost := i18n.Text("Base Cost")
+		wrapper = addFlowWrapper(content, baseCost, 8)
+		addNumericField(wrapper, baseCost, "", &e.editorData.basePoints, -fxp.MaxBasePoints,
+			fxp.MaxBasePoints)
+		addLabelAndNumericField(wrapper, i18n.Text("Per Level"), "", &e.editorData.pointsPerLevel, -fxp.MaxBasePoints,
+			fxp.MaxBasePoints)
+		levelField = addLabelAndNumericField(wrapper, i18n.Text("Level"), "", &e.editorData.levels, 0, fxp.MaxBasePoints)
+		if e.editorData.pointsPerLevel == 0 {
+			disableAndBlankField(levelField)
+		}
 	}
-
-	labelText = i18n.Text("Page")
-	label = widget.NewFieldLeadingLabel(labelText)
-	label.Tooltip = unison.NewTooltipWithText(tbl.PageRefTooltipText)
-	content.AddChild(label)
-	field = widget.NewStringField(labelText, func() string { return e.editorData.pageRef },
-		func(value string) {
-			e.editorData.pageRef = value
-			widget.MarkModified(content)
-		})
-	field.Tooltip = unison.NewTooltipWithText(tbl.PageRefTooltipText)
-	content.AddChild(field)
+	addLabelAndPopup(content, i18n.Text("Self-Control Roll"), "", advantage.AllSelfControlRolls, &e.editorData.cr)
+	crAdjPopup := addLabelAndPopup(content, i18n.Text("CR Adjustment"), "", gurps.AllSelfControlRollAdj, &e.editorData.crAdj)
+	if e.editorData.cr == advantage.None {
+		crAdjPopup.SetEnabled(false)
+	}
+	var ancestryPopup *unison.PopupMenu[string]
+	if e.target.Container() {
+		addLabelAndPopup(content, i18n.Text("Container Type"), "", advantage.AllContainerType, &e.editorData.containerType)
+		var choices []string
+		for _, lib := range ancestry.AvailableAncestries(gurps.SettingsProvider.Libraries()) {
+			for _, one := range lib.List {
+				choices = append(choices, one.Name)
+			}
+		}
+		ancestryPopup = addLabelAndPopup(content, i18n.Text("Ancestry"), "", choices, &e.editorData.ancestry)
+		if e.editorData.containerType != advantage.Race {
+			disableAndBlankPopup(ancestryPopup)
+		}
+	}
+	addPageRefLabelAndField(content, &e.editorData.pageRef)
+	return func() {
+		if levelField != nil {
+			if e.editorData.pointsPerLevel == 0 {
+				disableAndBlankField(levelField)
+			} else {
+				enableAndUnblankField(levelField)
+			}
+		}
+		if e.editorData.cr == advantage.None {
+			crAdjPopup.SetEnabled(false)
+			crAdjPopup.Select(gurps.NoCRAdj)
+		} else {
+			crAdjPopup.SetEnabled(true)
+		}
+		if ancestryPopup != nil {
+			if e.editorData.containerType == advantage.Race {
+				if !ancestryPopup.Enabled() {
+					enableAndUnblankPopup(ancestryPopup)
+					if ancestryPopup.IndexOfItem(e.editorData.ancestry) == -1 {
+						e.editorData.ancestry = ancestry.Default
+					}
+					ancestryPopup.Select(e.editorData.ancestry)
+				}
+			} else {
+				disableAndBlankPopup(ancestryPopup)
+			}
+		}
+	}
 }

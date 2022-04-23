@@ -14,8 +14,6 @@ package editors
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/tbl"
-	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
 
@@ -24,33 +22,8 @@ func EditNote(owner widget.Rebuildable, note *gurps.Note) {
 	displayEditor[*gurps.Note, *noteEditorData](owner, note, initNoteEditor)
 }
 
-func initNoteEditor(e *editor[*gurps.Note, *noteEditorData], content *unison.Panel) {
-	content.SetLayout(&unison.FlexLayout{
-		Columns:  2,
-		HSpacing: unison.StdHSpacing,
-		VSpacing: unison.StdVSpacing,
-	})
-
-	noteLabel := i18n.Text("Note")
-	content.AddChild(widget.NewFieldLeadingLabel(noteLabel))
-	noteField := widget.NewMultiLineStringField(noteLabel, func() string { return e.editorData.note },
-		func(value string) {
-			e.editorData.note = value
-			content.MarkForLayoutAndRedraw()
-			widget.MarkModified(content)
-		})
-	noteField.AutoScroll = false
-	content.AddChild(noteField)
-
-	pageLabel := i18n.Text("Page")
-	label := widget.NewFieldLeadingLabel(pageLabel)
-	label.Tooltip = unison.NewTooltipWithText(tbl.PageRefTooltipText)
-	content.AddChild(label)
-	field := widget.NewStringField(pageLabel, func() string { return e.editorData.pageRef },
-		func(value string) {
-			e.editorData.pageRef = value
-			widget.MarkModified(content)
-		})
-	field.Tooltip = unison.NewTooltipWithText(tbl.PageRefTooltipText)
-	content.AddChild(field)
+func initNoteEditor(e *editor[*gurps.Note, *noteEditorData], content *unison.Panel) func() {
+	addNotesLabelAndField(content, &e.editorData.note)
+	addPageRefLabelAndField(content, &e.editorData.pageRef)
+	return nil
 }

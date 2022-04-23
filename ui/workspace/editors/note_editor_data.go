@@ -13,6 +13,8 @@ package editors
 
 import "github.com/richardwilkes/gcs/model/gurps"
 
+var _ editorData[*gurps.Note] = &noteEditorData{}
+
 type noteEditorData struct {
 	note    string
 	pageRef string

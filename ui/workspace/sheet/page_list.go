@@ -317,8 +317,7 @@ func (p *PageList) installIncrementHandler() {
 				switch item := n.Data().(type) {
 				case *gurps.Advantage:
 					if item.IsLeveled() {
-						levels := increment(*item.Levels)
-						item.Levels = &levels
+						item.Levels = increment(item.Levels)
 						entity = item.Entity
 					}
 				case *gurps.Equipment:
@@ -350,7 +349,7 @@ func (p *PageList) installDecrementHandler() {
 			if n, ok := row.(*tbl.Node); ok {
 				switch item := n.Data().(type) {
 				case *gurps.Advantage:
-					if item.IsLeveled() && *item.Levels > 0 {
+					if item.IsLeveled() && item.Levels > 0 {
 						return true
 					}
 				case *gurps.Equipment:
@@ -376,8 +375,7 @@ func (p *PageList) installDecrementHandler() {
 				switch item := n.Data().(type) {
 				case *gurps.Advantage:
 					if item.IsLeveled() {
-						levels := decrement(*item.Levels)
-						item.Levels = &levels
+						item.Levels = decrement(item.Levels).Max(0)
 						entity = item.Entity
 					}
 				case *gurps.Equipment:

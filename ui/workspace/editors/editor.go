@@ -41,17 +41,18 @@ type editorData[T node.Node] interface {
 
 type editor[N node.Node, D editorData[N]] struct {
 	unison.Panel
-	owner         widget.Rebuildable
-	target        N
-	undoMgr       *unison.UndoManager
-	applyButton   *unison.Button
-	cancelButton  *unison.Button
-	beforeData    D
-	editorData    D
-	promptForSave bool
+	owner                widget.Rebuildable
+	target               N
+	undoMgr              *unison.UndoManager
+	applyButton          *unison.Button
+	cancelButton         *unison.Button
+	beforeData           D
+	editorData           D
+	modificationCallback func()
+	promptForSave        bool
 }
 
-func displayEditor[N node.Node, D editorData[N]](owner widget.Rebuildable, target N, initContent func(*editor[N, D], *unison.Panel)) {
+func displayEditor[N node.Node, D editorData[N]](owner widget.Rebuildable, target N, initContent func(*editor[N, D], *unison.Panel) func()) {
 	lookFor := target.UUID()
 	ws, dc, found := workspace.Activate(func(d unison.Dockable) bool {
 		if e, ok := d.(*editor[N, D]); ok {
@@ -77,7 +78,12 @@ func displayEditor[N node.Node, D editorData[N]](owner widget.Rebuildable, targe
 		e.AddChild(e.createToolbar())
 		content := unison.NewPanel()
 		content.SetBorder(unison.NewEmptyBorder(unison.NewUniformInsets(unison.StdHSpacing * 2)))
-		initContent(e, content)
+		content.SetLayout(&unison.FlexLayout{
+			Columns:  2,
+			HSpacing: unison.StdHSpacing,
+			VSpacing: unison.StdVSpacing,
+		})
+		e.modificationCallback = initContent(e, content)
 		scroller := unison.NewScrollPanel()
 		scroller.SetContent(content, unison.HintedFillBehavior, unison.FillBehavior)
 		scroller.SetLayoutData(&unison.FlexLayoutData{
@@ -163,6 +169,10 @@ func (e *editor[N, D]) Modified() bool {
 func (e *editor[N, D]) MarkModified() {
 	if dc := unison.DockContainerFor(e); dc != nil {
 		dc.UpdateTitle(e)
+	}
+	widget.DeepSync(e)
+	if e.modificationCallback != nil {
+		e.modificationCallback()
 	}
 }
 

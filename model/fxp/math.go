@@ -15,13 +15,20 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
-// ApplyRounding truncates if 'roundDown' is true and performs a ceil() if false.
+// ApplyRounding rounds in the positive direction of roundDown is false, or in the negative direction if roundDown is
+// true.
 func ApplyRounding(value f64d4.Int, roundDown bool) f64d4.Int {
-	if roundDown {
-		return value.Trunc()
-	}
-	if value.Trunc() != value {
-		return value.Trunc() + f64d4.One
+	if truncated := value.Trunc(); value != truncated {
+		if roundDown {
+			if value < 0 {
+				return truncated - f64d4.One
+			}
+		} else {
+			if value > 0 {
+				return truncated + f64d4.One
+			}
+		}
+		return truncated
 	}
 	return value
 }

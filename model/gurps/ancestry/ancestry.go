@@ -24,6 +24,9 @@ import (
 	xfs "github.com/richardwilkes/toolbox/xio/fs"
 )
 
+// Default holds the name of the default ancestry.
+const Default = "Human"
+
 // Ancestry holds details necessary to generate ancestry-specific customizations.
 type Ancestry struct {
 	Name          string                     `json:"name,omitempty"`

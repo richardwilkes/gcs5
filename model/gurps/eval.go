@@ -78,7 +78,7 @@ func evalAdvantageLevel(e *eval.Evaluator, arguments string) (interface{}, error
 	TraverseAdvantages(func(adq *Advantage) bool {
 		if strings.EqualFold(adq.Name, arguments) {
 			if adq.IsLeveled() {
-				levels = *adq.Levels
+				levels = adq.Levels
 			}
 			return true
 		}
