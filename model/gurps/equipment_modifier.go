@@ -29,6 +29,7 @@ import (
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
@@ -135,6 +136,29 @@ func NewEquipmentModifier(entity *Entity, container bool) *EquipmentModifier {
 		}
 	}
 	return &a
+}
+
+// Clone creates a copy of this data.
+func (e *EquipmentModifier) Clone() *EquipmentModifier {
+	other := *e
+	other.Tags = txt.CloneStringSlice(e.Tags)
+	if e.EquipmentModifierItem != nil {
+		item := *e.EquipmentModifierItem
+		item.Features = e.Features.Clone()
+		other.EquipmentModifierItem = &item
+	}
+	if e.EquipmentModifierContainer != nil {
+		container := *e.EquipmentModifierContainer
+		container.Children = nil
+		if len(e.Children) != 0 {
+			container.Children = make([]*EquipmentModifier, 0, len(e.Children))
+			for _, one := range e.Children {
+				container.Children = append(container.Children, one.Clone())
+			}
+		}
+		other.EquipmentModifierContainer = &container
+	}
+	return &other
 }
 
 // MarshalJSON implements json.Marshaler.

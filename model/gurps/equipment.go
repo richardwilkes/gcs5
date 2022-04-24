@@ -17,13 +17,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
-	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
@@ -31,6 +29,7 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
+	"golang.org/x/exp/slices"
 )
 
 var (
@@ -75,37 +74,6 @@ const (
 	equipmentTypeKey     = "equipment"
 )
 
-// EquipmentContainer holds the Equipment data that only exists in containers.
-type EquipmentContainer struct {
-	Children []*Equipment `json:"children,omitempty"`
-	Open     bool         `json:"open,omitempty"`
-}
-
-// EquipmentData holds the Equipment data that is written to disk.
-type EquipmentData struct {
-	Type                   string               `json:"type"`
-	ID                     uuid.UUID            `json:"id"`
-	Name                   string               `json:"description,omitempty"`
-	PageRef                string               `json:"reference,omitempty"`
-	LocalNotes             string               `json:"notes,omitempty"`
-	VTTNotes               string               `json:"vtt_notes,omitempty"`
-	TechLevel              string               `json:"tech_level,omitempty"`
-	LegalityClass          string               `json:"legality_class,omitempty"`
-	Quantity               f64d4.Int            `json:"quantity,omitempty"`
-	Value                  f64d4.Int            `json:"value,omitempty"`
-	Weight                 measure.Weight       `json:"weight,omitempty"`
-	MaxUses                int                  `json:"max_uses,omitempty"`
-	Uses                   int                  `json:"uses,omitempty"`
-	Weapons                []*Weapon            `json:"weapons,omitempty"`
-	Modifiers              []*EquipmentModifier `json:"modifiers,omitempty"`
-	Features               feature.Features     `json:"features,omitempty"`
-	Prereq                 *PrereqList          `json:"prereqs,omitempty"`
-	Tags                   []string             `json:"categories,omitempty"` // TODO: use tags key instead
-	Equipped               bool                 `json:"equipped,omitempty"`
-	WeightIgnoredForSkills bool                 `json:"ignore_weight_for_skills,omitempty"`
-	*EquipmentContainer    `json:",omitempty"`
-}
-
 // Equipment holds a piece of equipment.
 type Equipment struct {
 	EquipmentData
@@ -149,21 +117,17 @@ func SaveEquipment(equipment []*Equipment, filePath string) error {
 func NewEquipment(entity *Entity, parent *Equipment, container bool) *Equipment {
 	e := Equipment{
 		EquipmentData: EquipmentData{
-			Type:          equipmentTypeKey,
-			ID:            id.NewUUID(),
-			Name:          i18n.Text("Equipment"),
-			LegalityClass: "4",
-			Prereq:        NewPrereqList(),
-			Quantity:      f64d4.One,
-			Equipped:      true,
+			ContainerBase: newContainerBase[*Equipment](equipmentTypeKey, container),
+			EquipmentEditData: EquipmentEditData{
+				LegalityClass: "4",
+				Quantity:      f64d4.One,
+				Equipped:      true,
+			},
 		},
 		Entity: entity,
 		Parent: parent,
 	}
-	if container {
-		e.Type += containerKeyPostfix
-		e.EquipmentContainer = &EquipmentContainer{Open: true}
-	}
+	e.Name = e.Kind()
 	return &e
 }
 
@@ -174,6 +138,7 @@ func (e *Equipment) MarshalJSON() ([]byte, error) {
 		ExtendedWeight          measure.Weight  `json:"extended_weight"`
 		ExtendedWeightForSkills *measure.Weight `json:"extended_weight_for_skills,omitempty"`
 	}
+	e.ClearUnusedFieldsForType()
 	defUnits := SheetSettingsFor(e.Entity).DefaultWeightUnits
 	data := struct {
 		EquipmentData
@@ -190,25 +155,24 @@ func (e *Equipment) MarshalJSON() ([]byte, error) {
 		w := e.ExtendedWeight(true, defUnits)
 		data.Calc.ExtendedWeightForSkills = &w
 	}
-	if !e.Container() {
-		data.EquipmentContainer = nil
-	}
 	return json.Marshal(&data)
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (e *Equipment) UnmarshalJSON(data []byte) error {
-	e.EquipmentData = EquipmentData{}
-	if err := json.Unmarshal(data, &e.EquipmentData); err != nil {
+	var localData struct {
+		EquipmentData
+		// Old data fields
+		Categories []string `json:"categories"`
+	}
+	if err := json.Unmarshal(data, &localData); err != nil {
 		return err
 	}
-	if e.Prereq == nil {
-		e.Prereq = NewPrereqList()
-	}
+	localData.ClearUnusedFieldsForType()
+	e.EquipmentData = localData.EquipmentData
+	e.Tags = convertOldCategoriesToTags(e.Tags, localData.Categories)
+	slices.Sort(e.Tags)
 	if e.Container() {
-		if e.EquipmentContainer == nil {
-			e.EquipmentContainer = &EquipmentContainer{}
-		}
 		if e.Quantity == 0 {
 			// Old formats omitted the quantity for containers. Try to see if it was omitted or if it was explicitly
 			// set to zero.
@@ -222,51 +186,6 @@ func (e *Equipment) UnmarshalJSON(data []byte) error {
 		for _, one := range e.Children {
 			one.Parent = e
 		}
-	}
-	return nil
-}
-
-// UUID returns the UUID of this data.
-func (e *Equipment) UUID() uuid.UUID {
-	return e.ID
-}
-
-// Kind returns the kind of data.
-func (e *Equipment) Kind() string {
-	if e.Container() {
-		return i18n.Text("Equipment Container")
-	}
-	return i18n.Text("Equipment")
-}
-
-// Container returns true if this is a container.
-func (e *Equipment) Container() bool {
-	return strings.HasSuffix(e.Type, containerKeyPostfix)
-}
-
-// Open returns true if this node is currently open.
-func (e *Equipment) Open() bool {
-	if e.Container() {
-		return e.EquipmentContainer.Open
-	}
-	return false
-}
-
-// SetOpen sets the current open state for this node.
-func (e *Equipment) SetOpen(open bool) {
-	if e.Container() {
-		e.EquipmentContainer.Open = open
-	}
-}
-
-// NodeChildren returns the children of this node, if any.
-func (e *Equipment) NodeChildren() []node.Node {
-	if e.Container() {
-		children := make([]node.Node, len(e.Children))
-		for i, child := range e.Children {
-			children[i] = child
-		}
-		return children
 	}
 	return nil
 }
@@ -485,7 +404,9 @@ func (e *Equipment) FillWithNameableKeys(m map[string]string) {
 	nameables.Extract(e.Name, m)
 	nameables.Extract(e.LocalNotes, m)
 	nameables.Extract(e.VTTNotes, m)
-	e.Prereq.FillWithNameableKeys(m)
+	if e.Prereq != nil {
+		e.Prereq.FillWithNameableKeys(m)
+	}
 	for _, one := range e.Features {
 		one.FillWithNameableKeys(m)
 	}
@@ -502,7 +423,9 @@ func (e *Equipment) ApplyNameableKeys(m map[string]string) {
 	e.Name = nameables.Apply(e.Name, m)
 	e.LocalNotes = nameables.Apply(e.LocalNotes, m)
 	e.VTTNotes = nameables.Apply(e.VTTNotes, m)
-	e.Prereq.ApplyNameableKeys(m)
+	if e.Prereq != nil {
+		e.Prereq.ApplyNameableKeys(m)
+	}
 	for _, one := range e.Features {
 		one.ApplyNameableKeys(m)
 	}
