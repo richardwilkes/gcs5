@@ -137,7 +137,7 @@ func NewSkill(entity *Entity, parent *Skill, container bool) *Skill {
 		Parent: parent,
 	}
 	if container {
-		s.Type += commonContainerKeyPostfix
+		s.Type += containerKeyPostfix
 		s.SkillContainer = &SkillContainer{Open: true}
 	} else {
 		s.SkillItem = &SkillItem{
@@ -232,7 +232,7 @@ func (s *Skill) Kind() string {
 
 // Container returns true if this is a container.
 func (s *Skill) Container() bool {
-	return strings.HasSuffix(s.Type, commonContainerKeyPostfix)
+	return strings.HasSuffix(s.Type, containerKeyPostfix)
 }
 
 // Open returns true if this node is currently open.

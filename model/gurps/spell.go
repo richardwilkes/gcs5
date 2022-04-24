@@ -148,7 +148,7 @@ func NewSpell(entity *Entity, parent *Spell, container bool) *Spell {
 		Parent: parent,
 	}
 	if container {
-		s.Type += commonContainerKeyPostfix
+		s.Type += containerKeyPostfix
 		s.SpellContainer = &SpellContainer{Open: true}
 	} else {
 		s.SpellItem = &SpellItem{
@@ -244,7 +244,7 @@ func (s *Spell) Kind() string {
 
 // Container returns true if this is a container.
 func (s *Spell) Container() bool {
-	return strings.HasSuffix(s.Type, commonContainerKeyPostfix)
+	return strings.HasSuffix(s.Type, containerKeyPostfix)
 }
 
 // Open returns true if this node is currently open.

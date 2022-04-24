@@ -21,7 +21,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
-	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
@@ -91,10 +90,9 @@ func SaveAdvantages(advantages []*Advantage, filePath string) error {
 
 // NewAdvantage creates a new Advantage.
 func NewAdvantage(entity *Entity, parent *Advantage, container bool) *Advantage {
-	a := Advantage{
+	return &Advantage{
 		AdvantageData: AdvantageData{
-			Type: advantageTypeKey,
-			ID:   id.NewUUID(),
+			ContainerBase: newContainerBase[*Advantage](advantageTypeKey, container),
 			AdvantageEditData: AdvantageEditData{
 				Name: i18n.Text("Advantage"),
 			},
@@ -102,11 +100,6 @@ func NewAdvantage(entity *Entity, parent *Advantage, container bool) *Advantage 
 		Entity: entity,
 		Parent: parent,
 	}
-	if container {
-		a.Type += commonContainerKeyPostfix
-		a.IsOpen = true
-	}
-	return &a
 }
 
 // MarshalJSON implements json.Marshaler.

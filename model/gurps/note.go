@@ -16,7 +16,6 @@ import (
 	"io/fs"
 
 	"github.com/richardwilkes/gcs/model/gurps/gid"
-	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
@@ -74,18 +73,12 @@ func SaveNotes(notes []*Note, filePath string) error {
 
 // NewNote creates a new Note.
 func NewNote(parent *Note, container bool) *Note {
-	n := Note{
+	return &Note{
 		NoteData: NoteData{
-			Type: noteTypeKey,
-			ID:   id.NewUUID(),
+			ContainerBase: newContainerBase[*Note](noteTypeKey, container),
 		},
 		Parent: parent,
 	}
-	if container {
-		n.Type += commonContainerKeyPostfix
-		n.IsOpen = true
-	}
-	return &n
 }
 
 // MarshalJSON implements json.Marshaler.

@@ -122,7 +122,7 @@ func NewAdvantageModifier(entity *Entity, container bool) *AdvantageModifier {
 		Entity: entity,
 	}
 	if container {
-		a.Type += commonContainerKeyPostfix
+		a.Type += containerKeyPostfix
 		a.AdvantageModifierContainer = &AdvantageModifierContainer{Open: true}
 	} else {
 		affects := advantage.Total
@@ -203,7 +203,7 @@ func (a *AdvantageModifier) Kind() string {
 
 // Container returns true if this is a container.
 func (a *AdvantageModifier) Container() bool {
-	return strings.HasSuffix(a.Type, commonContainerKeyPostfix)
+	return strings.HasSuffix(a.Type, containerKeyPostfix)
 }
 
 // Open returns true if this node is currently open.

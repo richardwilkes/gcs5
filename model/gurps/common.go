@@ -13,10 +13,6 @@ package gurps
 
 import "github.com/richardwilkes/toolbox/i18n"
 
-const (
-	commonContainerKeyPostfix = "_container"
-)
-
 // String constants
 var (
 	NoAdditionalModifiers = i18n.Text("No additional modifiers")

@@ -161,7 +161,7 @@ func NewEquipment(entity *Entity, parent *Equipment, container bool) *Equipment 
 		Parent: parent,
 	}
 	if container {
-		e.Type += commonContainerKeyPostfix
+		e.Type += containerKeyPostfix
 		e.EquipmentContainer = &EquipmentContainer{Open: true}
 	}
 	return &e
@@ -241,7 +241,7 @@ func (e *Equipment) Kind() string {
 
 // Container returns true if this is a container.
 func (e *Equipment) Container() bool {
-	return strings.HasSuffix(e.Type, commonContainerKeyPostfix)
+	return strings.HasSuffix(e.Type, containerKeyPostfix)
 }
 
 // Open returns true if this node is currently open.

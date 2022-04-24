@@ -126,7 +126,7 @@ func NewEquipmentModifier(entity *Entity, container bool) *EquipmentModifier {
 		Entity: entity,
 	}
 	if container {
-		a.Type += commonContainerKeyPostfix
+		a.Type += containerKeyPostfix
 		a.EquipmentModifierContainer = &EquipmentModifierContainer{Open: true}
 	} else {
 		a.EquipmentModifierItem = &EquipmentModifierItem{
@@ -180,7 +180,7 @@ func (e *EquipmentModifier) Kind() string {
 
 // Container returns true if this is a container.
 func (e *EquipmentModifier) Container() bool {
-	return strings.HasSuffix(e.Type, commonContainerKeyPostfix)
+	return strings.HasSuffix(e.Type, containerKeyPostfix)
 }
 
 // Open returns true if this node is currently open.
