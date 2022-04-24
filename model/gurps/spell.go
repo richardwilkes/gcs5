@@ -18,13 +18,11 @@ import (
 	"math"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/datafile"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
-	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
@@ -33,6 +31,7 @@ import (
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
+	"golang.org/x/exp/slices"
 )
 
 var _ node.Node = &Spell{}
@@ -57,44 +56,6 @@ const (
 )
 
 const spellListTypeKey = "spell_list"
-
-// SpellItem holds the Spell data that only exists in non-containers.
-type SpellItem struct {
-	TechLevel         *string             `json:"tech_level,omitempty"`
-	Difficulty        AttributeDifficulty `json:"difficulty"`
-	College           CollegeList         `json:"college,omitempty"`
-	PowerSource       string              `json:"power_source,omitempty"`
-	Class             string              `json:"spell_class,omitempty"`
-	Resist            string              `json:"resist,omitempty"`
-	CastingCost       string              `json:"casting_cost,omitempty"`
-	MaintenanceCost   string              `json:"maintenance_cost,omitempty"`
-	CastingTime       string              `json:"casting_time,omitempty"`
-	Duration          string              `json:"duration,omitempty"`
-	RitualSkillName   string              `json:"base_skill,omitempty"`
-	RitualPrereqCount int                 `json:"prereq_count,omitempty"`
-	Points            f64d4.Int           `json:"points,omitempty"`
-	Prereq            *PrereqList         `json:"prereqs,omitempty"`
-	Weapons           []*Weapon           `json:"weapons,omitempty"`
-}
-
-// SpellContainer holds the Spell data that only exists in containers.
-type SpellContainer struct {
-	Children []*Spell `json:"children,omitempty"`
-	Open     bool     `json:"open,omitempty"`
-}
-
-// SpellData holds the Spell data that is written to disk.
-type SpellData struct {
-	Type            string    `json:"type"`
-	ID              uuid.UUID `json:"id"`
-	Name            string    `json:"name,omitempty"`
-	PageRef         string    `json:"reference,omitempty"`
-	LocalNotes      string    `json:"notes,omitempty"`
-	VTTNotes        string    `json:"vtt_notes,omitempty"`
-	Tags            []string  `json:"categories,omitempty"` // TODO: use tags key instead
-	*SpellItem      `json:",omitempty"`
-	*SpellContainer `json:",omitempty"`
-}
 
 // Spell holds the data for a spell.
 type Spell struct {
@@ -138,138 +99,82 @@ func SaveSpells(spells []*Spell, filePath string) error {
 
 // NewSpell creates a new Spell.
 func NewSpell(entity *Entity, parent *Spell, container bool) *Spell {
-	s := Spell{
-		SpellData: SpellData{
-			Type: gid.Spell,
-			ID:   id.NewUUID(),
-			Name: i18n.Text("Spell"),
-		},
-		Entity: entity,
-		Parent: parent,
-	}
-	if container {
-		s.Type += containerKeyPostfix
-		s.SpellContainer = &SpellContainer{Open: true}
-	} else {
-		s.SpellItem = &SpellItem{
-			Difficulty: AttributeDifficulty{
-				Attribute:  AttributeIDFor(entity, gid.Intelligence),
-				Difficulty: skill.Hard,
-			},
-			PowerSource: i18n.Text("Arcane"),
-			Class:       i18n.Text("Regular"),
-			CastingCost: "1",
-			CastingTime: "1 sec",
-			Duration:    "Instant",
-			Points:      f64d4.One,
-			Prereq:      NewPrereqList(),
-		}
-	}
+	s := newSpell(entity, parent, gid.Spell, container)
 	s.UpdateLevel()
-	return &s
+	return s
 }
 
 // NewRitualMagicSpell creates a new Ritual Magic Spell.
 func NewRitualMagicSpell(entity *Entity, parent *Spell) *Spell {
-	s := NewSpell(entity, parent, false)
-	s.Type = gid.RitualMagicSpell
+	s := newSpell(entity, parent, gid.RitualMagicSpell, false)
 	s.RitualSkillName = "Ritual Magic"
 	s.Points = 0
 	s.UpdateLevel()
 	return s
 }
 
+func newSpell(entity *Entity, parent *Spell, typeKey string, container bool) *Spell {
+	s := Spell{
+		SpellData: SpellData{
+			ContainerBase: newContainerBase[*Spell](typeKey, container),
+		},
+		Entity: entity,
+		Parent: parent,
+	}
+	if !container {
+		s.Difficulty.Attribute = AttributeIDFor(entity, gid.Intelligence)
+		s.Difficulty.Difficulty = skill.Hard
+		s.PowerSource = i18n.Text("Arcane")
+		s.Class = i18n.Text("Regular")
+		s.CastingCost = "1"
+		s.CastingTime = "1 sec"
+		s.Duration = "Instant"
+		s.Points = f64d4.One
+	}
+	s.Name = s.Kind()
+	return &s
+}
+
 // MarshalJSON implements json.Marshaler.
 func (s *Spell) MarshalJSON() ([]byte, error) {
-	if s.Container() {
-		s.SpellItem = nil
-	} else {
-		s.SpellContainer = nil
-		if s.LevelData.Level > 0 {
-			type calc struct {
-				Level              f64d4.Int `json:"level"`
-				RelativeSkillLevel string    `json:"rsl"`
-			}
-			return json.Marshal(&struct {
-				SpellData
-				Calc calc `json:"calc"`
-			}{
-				SpellData: s.SpellData,
-				Calc: calc{
-					Level:              s.LevelData.Level,
-					RelativeSkillLevel: s.RelativeLevel(),
-				},
-			})
-		}
+	s.ClearUnusedFieldsForType()
+	if s.Container() || s.LevelData.Level <= 0 {
+		return json.Marshal(&s.SpellData)
 	}
-	return json.Marshal(&s.SpellData)
+	type calc struct {
+		Level              f64d4.Int `json:"level"`
+		RelativeSkillLevel string    `json:"rsl"`
+	}
+	return json.Marshal(&struct {
+		SpellData
+		Calc calc `json:"calc"`
+	}{
+		SpellData: s.SpellData,
+		Calc: calc{
+			Level:              s.LevelData.Level,
+			RelativeSkillLevel: s.RelativeLevel(),
+		},
+	})
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (s *Spell) UnmarshalJSON(data []byte) error {
-	s.SpellData = SpellData{}
-	if err := json.Unmarshal(data, &s.SpellData); err != nil {
+	var localData struct {
+		SpellData
+		// Old data fields
+		Categories []string `json:"categories"`
+	}
+	if err := json.Unmarshal(data, &localData); err != nil {
 		return err
 	}
+	localData.ClearUnusedFieldsForType()
+	s.SpellData = localData.SpellData
+	s.Tags = convertOldCategoriesToTags(s.Tags, localData.Categories)
+	slices.Sort(s.Tags)
 	if s.Container() {
-		if s.SpellContainer == nil {
-			s.SpellContainer = &SpellContainer{}
-		}
 		for _, one := range s.Children {
 			one.Parent = s
 		}
-	} else {
-		if s.SpellItem == nil {
-			s.SpellItem = &SpellItem{}
-		}
-		if s.Prereq == nil {
-			s.Prereq = NewPrereqList()
-		}
-	}
-	return nil
-}
-
-// UUID returns the UUID of this data.
-func (s *Spell) UUID() uuid.UUID {
-	return s.ID
-}
-
-// Kind returns the kind of data.
-func (s *Spell) Kind() string {
-	if s.Container() {
-		return i18n.Text("Spell Container")
-	}
-	return i18n.Text("Spell")
-}
-
-// Container returns true if this is a container.
-func (s *Spell) Container() bool {
-	return strings.HasSuffix(s.Type, containerKeyPostfix)
-}
-
-// Open returns true if this node is currently open.
-func (s *Spell) Open() bool {
-	if s.Container() {
-		return s.SpellContainer.Open
-	}
-	return false
-}
-
-// SetOpen sets the current open state for this node.
-func (s *Spell) SetOpen(open bool) {
-	if s.Container() {
-		s.SpellContainer.Open = open
-	}
-}
-
-// NodeChildren returns the children of this node, if any.
-func (s *Spell) NodeChildren() []node.Node {
-	if s.Container() {
-		children := make([]node.Node, len(s.Children))
-		for i, child := range s.Children {
-			children[i] = child
-		}
-		return children
 	}
 	return nil
 }

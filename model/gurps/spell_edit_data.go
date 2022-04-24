@@ -1,0 +1,74 @@
+/*
+ * Copyright ©1998-2022 by Richard A. Wilkes. All rights reserved.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, version 2.0. If a copy of the MPL was not distributed with
+ * this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, version 2.0.
+ */
+
+package gurps
+
+import (
+	"github.com/richardwilkes/gcs/model/node"
+	"github.com/richardwilkes/toolbox/txt"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+)
+
+var _ node.EditorData[*Spell] = &SpellEditData{}
+
+// SpellEditData holds the Spell data that can be edited by the UI detail editor.
+type SpellEditData struct {
+	Name              string              `json:"name,omitempty"`
+	PageRef           string              `json:"reference,omitempty"`
+	LocalNotes        string              `json:"notes,omitempty"`
+	VTTNotes          string              `json:"vtt_notes,omitempty"`
+	Tags              []string            `json:"tags,omitempty"`
+	TechLevel         *string             `json:"tech_level,omitempty"`       // Non-container only
+	Difficulty        AttributeDifficulty `json:"difficulty"`                 // Non-container only
+	College           CollegeList         `json:"college,omitempty"`          // Non-container only
+	PowerSource       string              `json:"power_source,omitempty"`     // Non-container only
+	Class             string              `json:"spell_class,omitempty"`      // Non-container only
+	Resist            string              `json:"resist,omitempty"`           // Non-container only
+	CastingCost       string              `json:"casting_cost,omitempty"`     // Non-container only
+	MaintenanceCost   string              `json:"maintenance_cost,omitempty"` // Non-container only
+	CastingTime       string              `json:"casting_time,omitempty"`     // Non-container only
+	Duration          string              `json:"duration,omitempty"`         // Non-container only
+	RitualSkillName   string              `json:"base_skill,omitempty"`       // Non-container only
+	RitualPrereqCount int                 `json:"prereq_count,omitempty"`     // Non-container only
+	Points            f64d4.Int           `json:"points,omitempty"`           // Non-container only
+	Prereq            *PrereqList         `json:"prereqs,omitempty"`          // Non-container only
+	Weapons           []*Weapon           `json:"weapons,omitempty"`          // Non-container only
+}
+
+// CopyFrom implements node.EditorData.
+func (d *SpellEditData) CopyFrom(s *Spell) {
+	d.copyFrom(&s.SpellEditData)
+}
+
+// ApplyTo implements node.EditorData.
+func (d *SpellEditData) ApplyTo(s *Spell) {
+	s.SpellEditData.copyFrom(d)
+}
+
+func (d *SpellEditData) copyFrom(other *SpellEditData) {
+	*d = *other
+	d.Tags = txt.CloneStringSlice(d.Tags)
+	if other.TechLevel != nil {
+		tl := *other.TechLevel
+		d.TechLevel = &tl
+	}
+	d.College = txt.CloneStringSlice(d.College)
+	if d.Prereq != nil {
+		d.Prereq = d.Prereq.CloneAsPrereqList(nil)
+	}
+	d.Weapons = nil
+	if len(other.Weapons) != 0 {
+		d.Weapons = make([]*Weapon, 0, len(other.Weapons))
+		for _, one := range other.Weapons {
+			d.Weapons = append(d.Weapons, one.Clone())
+		}
+	}
+}

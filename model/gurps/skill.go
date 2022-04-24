@@ -91,9 +91,26 @@ func SaveSkills(skills []*Skill, filePath string) error {
 
 // NewSkill creates a new Skill.
 func NewSkill(entity *Entity, parent *Skill, container bool) *Skill {
+	return newSkill(entity, parent, gid.Skill, container)
+}
+
+// NewTechnique creates a new technique (i.e. a specialized use of a Skill). All parameters may be nil or empty.
+func NewTechnique(entity *Entity, parent *Skill, skillName string) *Skill {
+	if skillName == "" {
+		skillName = i18n.Text("Skill")
+	}
+	s := newSkill(entity, parent, gid.Technique, false)
+	s.TechniqueDefault = &SkillDefault{
+		DefaultType: gid.Skill,
+		Name:        skillName,
+	}
+	return s
+}
+
+func newSkill(entity *Entity, parent *Skill, typeKey string, container bool) *Skill {
 	s := Skill{
 		SkillData: SkillData{
-			ContainerBase: newContainerBase[*Skill](gid.Skill, container),
+			ContainerBase: newContainerBase[*Skill](typeKey, container),
 		},
 		Entity: entity,
 		Parent: parent,
@@ -102,33 +119,6 @@ func NewSkill(entity *Entity, parent *Skill, container bool) *Skill {
 		s.Difficulty.Attribute = AttributeIDFor(entity, gid.Dexterity)
 		s.Difficulty.Difficulty = skill.Average
 		s.Points = f64d4.One
-	}
-	s.Name = s.Kind()
-	return &s
-}
-
-// NewTechnique creates a new technique (i.e. a specialized use of a Skill). All parameters may be nil or empty.
-func NewTechnique(entity *Entity, parent *Skill, skillName string) *Skill {
-	if skillName == "" {
-		skillName = i18n.Text("Skill")
-	}
-	s := Skill{
-		SkillData: SkillData{
-			ContainerBase: newContainerBase[*Skill](gid.Technique, false),
-			SkillEditData: SkillEditData{
-				Difficulty: AttributeDifficulty{
-					Attribute:  AttributeIDFor(entity, gid.Dexterity),
-					Difficulty: skill.Average,
-				},
-				Points: f64d4.One,
-				TechniqueDefault: &SkillDefault{
-					DefaultType: gid.Skill,
-					Name:        skillName,
-				},
-			},
-		},
-		Entity: entity,
-		Parent: parent,
 	}
 	s.Name = s.Kind()
 	return &s
