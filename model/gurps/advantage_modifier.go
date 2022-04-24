@@ -193,11 +193,11 @@ func (a *AdvantageModifier) String() string {
 func (a *AdvantageModifier) SecondaryText() string {
 	var buffer strings.Builder
 	settings := SheetSettingsFor(a.Entity)
-	if a.Notes != "" && settings.NotesDisplay.Inline() {
+	if a.LocalNotes != "" && settings.NotesDisplay.Inline() {
 		if buffer.Len() != 0 {
 			buffer.WriteByte('\n')
 		}
-		buffer.WriteString(a.Notes)
+		buffer.WriteString(a.LocalNotes)
 	}
 	return buffer.String()
 }
@@ -206,9 +206,9 @@ func (a *AdvantageModifier) SecondaryText() string {
 func (a *AdvantageModifier) FullDescription() string {
 	var buffer strings.Builder
 	buffer.WriteString(a.String())
-	if a.Notes != "" {
+	if a.LocalNotes != "" {
 		buffer.WriteString(" (")
-		buffer.WriteString(a.Notes)
+		buffer.WriteString(a.LocalNotes)
 		buffer.WriteByte(')')
 	}
 	if SheetSettingsFor(a.Entity).ShowAdvantageModifierAdj {
@@ -248,7 +248,7 @@ func (a *AdvantageModifier) CostDescription() string {
 func (a *AdvantageModifier) FillWithNameableKeys(m map[string]string) {
 	if !a.Disabled {
 		nameables.Extract(a.Name, m)
-		nameables.Extract(a.Notes, m)
+		nameables.Extract(a.LocalNotes, m)
 		nameables.Extract(a.VTTNotes, m)
 		for _, one := range a.Features {
 			one.FillWithNameableKeys(m)
@@ -260,7 +260,7 @@ func (a *AdvantageModifier) FillWithNameableKeys(m map[string]string) {
 func (a *AdvantageModifier) ApplyNameableKeys(m map[string]string) {
 	if !a.Disabled {
 		a.Name = nameables.Apply(a.Name, m)
-		a.Notes = nameables.Apply(a.Notes, m)
+		a.LocalNotes = nameables.Apply(a.LocalNotes, m)
 		a.VTTNotes = nameables.Apply(a.VTTNotes, m)
 		for _, one := range a.Features {
 			one.ApplyNameableKeys(m)

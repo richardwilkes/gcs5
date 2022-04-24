@@ -188,11 +188,11 @@ func (e *EquipmentModifier) String() string {
 func (e *EquipmentModifier) SecondaryText() string {
 	var buffer strings.Builder
 	settings := SheetSettingsFor(e.Entity)
-	if e.Notes != "" && settings.NotesDisplay.Inline() {
+	if e.LocalNotes != "" && settings.NotesDisplay.Inline() {
 		if buffer.Len() != 0 {
 			buffer.WriteByte('\n')
 		}
-		buffer.WriteString(e.Notes)
+		buffer.WriteString(e.LocalNotes)
 	}
 	return buffer.String()
 }
@@ -201,9 +201,9 @@ func (e *EquipmentModifier) SecondaryText() string {
 func (e *EquipmentModifier) FullDescription() string {
 	var buffer strings.Builder
 	buffer.WriteString(e.String())
-	if e.Notes != "" {
+	if e.LocalNotes != "" {
 		buffer.WriteString(" (")
-		buffer.WriteString(e.Notes)
+		buffer.WriteString(e.LocalNotes)
 		buffer.WriteByte(')')
 	}
 	if SheetSettingsFor(e.Entity).ShowEquipmentModifierAdj {
@@ -244,7 +244,7 @@ func (e *EquipmentModifier) WeightDescription() string {
 func (e *EquipmentModifier) FillWithNameableKeys(m map[string]string) {
 	if !e.Disabled {
 		nameables.Extract(e.Name, m)
-		nameables.Extract(e.Notes, m)
+		nameables.Extract(e.LocalNotes, m)
 		nameables.Extract(e.VTTNotes, m)
 		for _, one := range e.Features {
 			one.FillWithNameableKeys(m)
@@ -256,7 +256,7 @@ func (e *EquipmentModifier) FillWithNameableKeys(m map[string]string) {
 func (e *EquipmentModifier) ApplyNameableKeys(m map[string]string) {
 	if !e.Disabled {
 		e.Name = nameables.Apply(e.Name, m)
-		e.Notes = nameables.Apply(e.Notes, m)
+		e.LocalNotes = nameables.Apply(e.LocalNotes, m)
 		e.VTTNotes = nameables.Apply(e.VTTNotes, m)
 		for _, one := range e.Features {
 			one.ApplyNameableKeys(m)

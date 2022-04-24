@@ -24,7 +24,7 @@ var _ node.EditorData[*EquipmentModifier] = &EquipmentModifierEditData{}
 type EquipmentModifierEditData struct {
 	Name         string                       `json:"name,omitempty"`
 	PageRef      string                       `json:"reference,omitempty"`
-	Notes        string                       `json:"notes,omitempty"`
+	LocalNotes   string                       `json:"notes,omitempty"`
 	VTTNotes     string                       `json:"vtt_notes,omitempty"`
 	Tags         []string                     `json:"tags,omitempty"`
 	CostType     equipment.ModifierCostType   `json:"cost_type,omitempty"`   // Non-container only

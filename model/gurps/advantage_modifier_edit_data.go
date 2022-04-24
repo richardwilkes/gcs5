@@ -23,17 +23,17 @@ var _ node.EditorData[*AdvantageModifier] = &AdvantageModifierEditData{}
 
 // AdvantageModifierEditData holds the AdvantageModifier data that can be edited by the UI detail editor.
 type AdvantageModifierEditData struct {
-	Name     string                     `json:"name,omitempty"`
-	PageRef  string                     `json:"reference,omitempty"`
-	Notes    string                     `json:"notes,omitempty"`
-	VTTNotes string                     `json:"vtt_notes,omitempty"`
-	Tags     []string                   `json:"tags,omitempty"`
-	Cost     f64d4.Int                  `json:"cost,omitempty"`      // Non-container only
-	Levels   f64d4.Int                  `json:"levels,omitempty"`    // Non-container only
-	Affects  advantage.Affects          `json:"affects,omitempty"`   // Non-container only
-	CostType advantage.ModifierCostType `json:"cost_type,omitempty"` // Non-container only
-	Disabled bool                       `json:"disabled,omitempty"`  // Non-container only
-	Features feature.Features           `json:"features,omitempty"`  // Non-container only
+	Name       string                     `json:"name,omitempty"`
+	PageRef    string                     `json:"reference,omitempty"`
+	LocalNotes string                     `json:"notes,omitempty"`
+	VTTNotes   string                     `json:"vtt_notes,omitempty"`
+	Tags       []string                   `json:"tags,omitempty"`
+	Cost       f64d4.Int                  `json:"cost,omitempty"`      // Non-container only
+	Levels     f64d4.Int                  `json:"levels,omitempty"`    // Non-container only
+	Affects    advantage.Affects          `json:"affects,omitempty"`   // Non-container only
+	CostType   advantage.ModifierCostType `json:"cost_type,omitempty"` // Non-container only
+	Disabled   bool                       `json:"disabled,omitempty"`  // Non-container only
+	Features   feature.Features           `json:"features,omitempty"`  // Non-container only
 }
 
 // CopyFrom implements node.EditorData.

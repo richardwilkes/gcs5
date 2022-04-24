@@ -834,7 +834,7 @@ func (ex *legacyExporter) processAdvantagesLoop(buffer []byte, f func(*gurps.Adv
 						ex.writeWithOptionalParens(key, adq.Notes())
 					case strings.HasPrefix(key, "MODIFIER_NOTES_FOR_"):
 						if mod := adq.ActiveModifierFor(key[len("MODIFIER_NOTES_FOR_"):]); mod != nil {
-							ex.writeEncodedText(mod.Notes)
+							ex.writeEncodedText(mod.LocalNotes)
 						}
 					case strings.HasPrefix(key, "DEPTHx"):
 						ex.handlePrefixDepth(key, adq.Depth())
@@ -1086,7 +1086,7 @@ func (ex *legacyExporter) processEquipmentLoop(buffer []byte, carried bool) {
 						ex.writeWithOptionalParens(key, eqp.Notes())
 					case strings.HasPrefix(key, "MODIFIER_NOTES_FOR_"):
 						if mod := eqp.ActiveModifierFor(key[len("MODIFIER_NOTES_FOR_"):]); mod != nil {
-							ex.writeEncodedText(mod.Notes)
+							ex.writeEncodedText(mod.LocalNotes)
 						}
 					case strings.HasPrefix(key, "DEPTHx"):
 						ex.handlePrefixDepth(key, eqp.Depth())
