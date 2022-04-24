@@ -16,21 +16,18 @@ import (
 	"io/fs"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/equipment"
-	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
-	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+	"golang.org/x/exp/slices"
 )
 
 var _ node.Node = &EquipmentModifier{}
@@ -49,36 +46,6 @@ const (
 	equipmentModifierListTypeKey = "eqp_modifier_list"
 	equipmentModifierTypeKey     = "eqp_modifier"
 )
-
-// EquipmentModifierItem holds the EquipmentModifier data that only exists in non-containers.
-type EquipmentModifierItem struct {
-	CostType     equipment.ModifierCostType   `json:"cost_type"`
-	WeightType   equipment.ModifierWeightType `json:"weight_type"`
-	Disabled     bool                         `json:"disabled,omitempty"`
-	TechLevel    string                       `json:"tech_level,omitempty"`
-	CostAmount   string                       `json:"cost,omitempty"`
-	WeightAmount string                       `json:"weight,omitempty"`
-	Features     feature.Features             `json:"features,omitempty"`
-}
-
-// EquipmentModifierContainer holds the EquipmentModifier data that only exists in containers.
-type EquipmentModifierContainer struct {
-	Children []*EquipmentModifier `json:"children,omitempty"`
-	Open     bool                 `json:"open,omitempty"`
-}
-
-// EquipmentModifierData holds the EquipmentModifier data that is written to disk.
-type EquipmentModifierData struct {
-	Type                        string    `json:"type"`
-	ID                          uuid.UUID `json:"id"`
-	Name                        string    `json:"name,omitempty"`
-	PageRef                     string    `json:"reference,omitempty"`
-	Notes                       string    `json:"notes,omitempty"`
-	VTTNotes                    string    `json:"vtt_notes,omitempty"`
-	Tags                        []string  `json:"categories,omitempty"` // TODO: use tags key instead
-	*EquipmentModifierItem      `json:",omitempty"`
-	*EquipmentModifierContainer `json:",omitempty"`
-}
 
 // EquipmentModifier holds a modifier to a piece of Equipment.
 type EquipmentModifier struct {
@@ -118,119 +85,51 @@ func SaveEquipmentModifiers(modifiers []*EquipmentModifier, filePath string) err
 
 // NewEquipmentModifier creates an EquipmentModifier.
 func NewEquipmentModifier(entity *Entity, container bool) *EquipmentModifier {
-	a := EquipmentModifier{
+	a := &EquipmentModifier{
 		EquipmentModifierData: EquipmentModifierData{
-			Type: equipmentModifierTypeKey,
-			ID:   id.NewUUID(),
-			Name: i18n.Text("Advantage Modifier"),
+			ContainerBase: newContainerBase[*EquipmentModifier](equipmentModifierTypeKey, container),
 		},
 		Entity: entity,
 	}
-	if container {
-		a.Type += containerKeyPostfix
-		a.EquipmentModifierContainer = &EquipmentModifierContainer{Open: true}
-	} else {
-		a.EquipmentModifierItem = &EquipmentModifierItem{
-			CostType:   equipment.OriginalCost,
-			WeightType: equipment.OriginalWeight,
-		}
-	}
-	return &a
+	a.Name = a.Kind()
+	return a
 }
 
 // Clone creates a copy of this data.
 func (e *EquipmentModifier) Clone() *EquipmentModifier {
 	other := *e
 	other.Tags = txt.CloneStringSlice(e.Tags)
-	if e.EquipmentModifierItem != nil {
-		item := *e.EquipmentModifierItem
-		item.Features = e.Features.Clone()
-		other.EquipmentModifierItem = &item
-	}
-	if e.EquipmentModifierContainer != nil {
-		container := *e.EquipmentModifierContainer
-		container.Children = nil
-		if len(e.Children) != 0 {
-			container.Children = make([]*EquipmentModifier, 0, len(e.Children))
-			for _, one := range e.Children {
-				container.Children = append(container.Children, one.Clone())
-			}
+	other.Features = e.Features.Clone()
+	other.Children = nil
+	if len(e.Children) != 0 {
+		other.Children = make([]*EquipmentModifier, 0, len(e.Children))
+		for _, one := range e.Children {
+			other.Children = append(other.Children, one.Clone())
 		}
-		other.EquipmentModifierContainer = &container
 	}
 	return &other
 }
 
 // MarshalJSON implements json.Marshaler.
 func (e *EquipmentModifier) MarshalJSON() ([]byte, error) {
-	if e.Container() {
-		e.EquipmentModifierItem = nil
-	} else {
-		e.EquipmentModifierContainer = nil
-	}
+	e.ClearUnusedFieldsForType()
 	return json.Marshal(&e.EquipmentModifierData)
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (e *EquipmentModifier) UnmarshalJSON(data []byte) error {
-	e.EquipmentModifierData = EquipmentModifierData{}
-	if err := json.Unmarshal(data, &e.EquipmentModifierData); err != nil {
+	var localData struct {
+		EquipmentModifierData
+		// Old data fields
+		Categories []string `json:"categories"`
+	}
+	if err := json.Unmarshal(data, &localData); err != nil {
 		return err
 	}
-	if e.Container() {
-		if e.EquipmentModifierContainer == nil {
-			e.EquipmentModifierContainer = &EquipmentModifierContainer{}
-		}
-	} else {
-		if e.EquipmentModifierItem == nil {
-			e.EquipmentModifierItem = &EquipmentModifierItem{}
-		}
-	}
-	return nil
-}
-
-// UUID returns the UUID of this data.
-func (e *EquipmentModifier) UUID() uuid.UUID {
-	return e.ID
-}
-
-// Kind returns the kind of data.
-func (e *EquipmentModifier) Kind() string {
-	if e.Container() {
-		return i18n.Text("Equipment Modifier Container")
-	}
-	return i18n.Text("Equipment Modifier")
-}
-
-// Container returns true if this is a container.
-func (e *EquipmentModifier) Container() bool {
-	return strings.HasSuffix(e.Type, containerKeyPostfix)
-}
-
-// Open returns true if this node is currently open.
-func (e *EquipmentModifier) Open() bool {
-	if e.Container() {
-		return e.EquipmentModifierContainer.Open
-	}
-	return false
-}
-
-// SetOpen sets the current open state for this node.
-func (e *EquipmentModifier) SetOpen(open bool) {
-	if e.Container() {
-		e.EquipmentModifierContainer.Open = open
-	}
-}
-
-// NodeChildren returns the children of this node, if any.
-func (e *EquipmentModifier) NodeChildren() []node.Node {
-	if e.Container() {
-		children := make([]node.Node, len(e.Children))
-		for i, child := range e.Children {
-			children[i] = child
-		}
-		return children
-	}
+	localData.ClearUnusedFieldsForType()
+	e.EquipmentModifierData = localData.EquipmentModifierData
+	e.Tags = convertOldCategoriesToTags(e.Tags, localData.Categories)
+	slices.Sort(e.Tags)
 	return nil
 }
 
