@@ -510,32 +510,39 @@ func main() {
 		StandAlone: true,
 		Values: []enumValue{
 			{
-				Name: "List",
-				Key:  "prereq_list",
+				Name:   "List",
+				Key:    "prereq_list",
+				String: "Prerequisite List",
 			},
 			{
-				Name: "Advantage",
-				Key:  "advantage_prereq",
+				Name:   "Advantage",
+				Key:    "advantage_prereq",
+				String: "Advantage Prerequisite",
 			},
 			{
-				Name: "Attribute",
-				Key:  "attribute_prereq",
+				Name:   "Attribute",
+				Key:    "attribute_prereq",
+				String: "Attribute Prerequisite",
 			},
 			{
-				Name: "ContainedQuantity",
-				Key:  "contained_quantity_prereq",
+				Name:   "ContainedQuantity",
+				Key:    "contained_quantity_prereq",
+				String: "Contained Quantity Prerequisite",
 			},
 			{
-				Name: "ContainedWeight",
-				Key:  "contained_weight_prereq",
+				Name:   "ContainedWeight",
+				Key:    "contained_weight_prereq",
+				String: "Contained Weight Prerequisite",
 			},
 			{
-				Name: "Skill",
-				Key:  "skill_prereq",
+				Name:   "Skill",
+				Key:    "skill_prereq",
+				String: "Skill Prerequisite",
 			},
 			{
-				Name: "Spell",
-				Key:  "spell_prereq",
+				Name:   "Spell",
+				Key:    "spell_prereq",
+				String: "Spell Prerequisite",
 			},
 		},
 	})
