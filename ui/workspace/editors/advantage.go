@@ -37,16 +37,17 @@ func initAdvantageEditor(e *editor[*gurps.Advantage, *gurps.AdvantageEditData], 
 	var levelField *widget.NumericField
 	if !e.target.Container() {
 		wrapper := addFlowWrapper(content, i18n.Text("Point Cost"), 8)
-		pointCost := widget.NewNonEditableField(func(field *widget.NonEditableField) {
+		cost := widget.NewNonEditableField(func(field *widget.NonEditableField) {
 			field.Text = gurps.AdjustedPoints(e.target.Entity, e.editorData.BasePoints, e.editorData.Levels,
-				e.editorData.PointsPerLevel, e.editorData.CR, e.editorData.Modifiers, e.editorData.RoundCostDown).String()
+				e.editorData.PointsPerLevel, e.editorData.CR, e.editorData.Modifiers,
+				e.editorData.RoundCostDown).String()
 			field.MarkForLayoutAndRedraw()
 		})
-		insets := pointCost.Border().Insets()
-		pointCost.SetLayoutData(&unison.FlexLayoutData{
-			MinSize: unison.NewSize(pointCost.Font.SimpleWidth((-fxp.MaxBasePoints*2).String())+insets.Left+insets.Right, 0),
+		insets := cost.Border().Insets()
+		cost.SetLayoutData(&unison.FlexLayoutData{
+			MinSize: unison.NewSize(cost.Font.SimpleWidth((-fxp.MaxBasePoints*2).String())+insets.Left+insets.Right, 0),
 		})
-		wrapper.AddChild(pointCost)
+		wrapper.AddChild(cost)
 		addCheckBox(wrapper, i18n.Text("Round Down"), &e.editorData.RoundCostDown)
 		baseCost := i18n.Text("Base Cost")
 		wrapper = addFlowWrapper(content, baseCost, 8)
@@ -54,19 +55,22 @@ func initAdvantageEditor(e *editor[*gurps.Advantage, *gurps.AdvantageEditData], 
 			fxp.MaxBasePoints)
 		addLabelAndNumericField(wrapper, i18n.Text("Per Level"), "", &e.editorData.PointsPerLevel, -fxp.MaxBasePoints,
 			fxp.MaxBasePoints)
-		levelField = addLabelAndNumericField(wrapper, i18n.Text("Level"), "", &e.editorData.Levels, 0, fxp.MaxBasePoints)
+		levelField = addLabelAndNumericField(wrapper, i18n.Text("Level"), "", &e.editorData.Levels, 0,
+			fxp.MaxBasePoints)
 		if e.editorData.PointsPerLevel == 0 {
 			disableAndBlankField(levelField)
 		}
 	}
 	addLabelAndPopup(content, i18n.Text("Self-Control Roll"), "", advantage.AllSelfControlRolls, &e.editorData.CR)
-	crAdjPopup := addLabelAndPopup(content, i18n.Text("CR Adjustment"), "", gurps.AllSelfControlRollAdj, &e.editorData.CRAdj)
+	crAdjPopup := addLabelAndPopup(content, i18n.Text("CR Adjustment"), i18n.Text("Self-Control Roll Adjustment"),
+		gurps.AllSelfControlRollAdj, &e.editorData.CRAdj)
 	if e.editorData.CR == advantage.None {
 		crAdjPopup.SetEnabled(false)
 	}
 	var ancestryPopup *unison.PopupMenu[string]
 	if e.target.Container() {
-		addLabelAndPopup(content, i18n.Text("Container Type"), "", advantage.AllContainerType, &e.editorData.ContainerType)
+		addLabelAndPopup(content, i18n.Text("Container Type"), "", advantage.AllContainerType,
+			&e.editorData.ContainerType)
 		var choices []string
 		for _, lib := range ancestry.AvailableAncestries(gurps.SettingsProvider.Libraries()) {
 			for _, one := range lib.List {

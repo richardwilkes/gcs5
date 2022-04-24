@@ -98,13 +98,8 @@ func NewTemplate(filePath string, template *gurps.Template) unison.Dockable {
 	t.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
 
 	toolbar := unison.NewPanel()
-	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, unison.Insets{Bottom: 1}, false),
-		unison.NewEmptyBorder(unison.Insets{
-			Top:    unison.StdVSpacing,
-			Left:   unison.StdHSpacing,
-			Bottom: unison.StdVSpacing,
-			Right:  unison.StdHSpacing,
-		})))
+	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, unison.Insets{Bottom: 1},
+		false), unison.NewEmptyBorder(unison.StdInsets())))
 	toolbar.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		HGrab:  true,

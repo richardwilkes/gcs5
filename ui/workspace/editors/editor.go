@@ -108,13 +108,8 @@ func (e *editor[N, D]) createToolbar() unison.Paneler {
 		HAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
-	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, unison.Insets{Bottom: 1}, false),
-		unison.NewEmptyBorder(unison.Insets{
-			Top:    unison.StdVSpacing,
-			Left:   unison.StdHSpacing,
-			Bottom: unison.StdVSpacing,
-			Right:  unison.StdHSpacing,
-		})))
+	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, unison.Insets{Bottom: 1},
+		false), unison.NewEmptyBorder(unison.StdInsets())))
 	e.applyButton = unison.NewSVGButton(res.CheckmarkSVG)
 	e.applyButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Apply Changes"))
 	e.applyButton.SetEnabled(false)
@@ -177,7 +172,8 @@ func (e *editor[N, D]) MayAttemptClose() bool {
 
 func (e *editor[N, D]) AttemptClose() {
 	if e.promptForSave && !reflect.DeepEqual(e.beforeData, e.editorData) {
-		if unison.QuestionDialog(fmt.Sprintf(i18n.Text("Save changes made to\n%s?"), e.Title()), "") == unison.ModalResponseOK {
+		msg := fmt.Sprintf(i18n.Text("Save changes made to\n%s?"), e.Title())
+		if unison.QuestionDialog(msg, "") == unison.ModalResponseOK {
 			e.apply()
 		}
 	}
