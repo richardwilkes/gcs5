@@ -62,6 +62,12 @@ func NewSpellPointBonus() *SpellPointBonus {
 	}
 }
 
+// Clone implements Feature.
+func (s *SpellPointBonus) Clone() Feature {
+	other := *s
+	return &other
+}
+
 // FeatureMapKey implements Feature.
 func (s *SpellPointBonus) FeatureMapKey() string {
 	if s.CategoryCriteria.Compare != criteria.Any {

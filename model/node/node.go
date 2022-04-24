@@ -23,3 +23,11 @@ type Node interface {
 	SetOpen(open bool)
 	CellData(column int, data *CellData)
 }
+
+// EditorData defines the methods required of editor data.
+type EditorData[T Node] interface {
+	// CopyFrom copies the corresponding data from the node into this editor data.
+	CopyFrom(T)
+	// ApplyTo copes he editor data into the provided node.
+	ApplyTo(T)
+}

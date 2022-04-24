@@ -19,11 +19,11 @@ import (
 
 // EditNote displays the editor for a note.
 func EditNote(owner widget.Rebuildable, note *gurps.Note) {
-	displayEditor[*gurps.Note, *noteEditorData](owner, note, initNoteEditor)
+	displayEditor[*gurps.Note, *gurps.NoteEditData](owner, note, initNoteEditor)
 }
 
-func initNoteEditor(e *editor[*gurps.Note, *noteEditorData], content *unison.Panel) func() {
-	addNotesLabelAndField(content, &e.editorData.note)
-	addPageRefLabelAndField(content, &e.editorData.pageRef)
+func initNoteEditor(e *editor[*gurps.Note, *gurps.NoteEditData], content *unison.Panel) func() {
+	addNotesLabelAndField(content, &e.editorData.Text)
+	addPageRefLabelAndField(content, &e.editorData.PageRef)
 	return nil
 }

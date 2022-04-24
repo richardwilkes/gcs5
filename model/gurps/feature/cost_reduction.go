@@ -37,6 +37,12 @@ func NewCostReduction(attrID string) *CostReduction {
 	}
 }
 
+// Clone implements Feature.
+func (c *CostReduction) Clone() Feature {
+	other := *c
+	return &other
+}
+
 // FeatureMapKey implements Feature.
 func (c *CostReduction) FeatureMapKey() string {
 	return AttributeIDPrefix + c.Attribute

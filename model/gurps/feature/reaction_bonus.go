@@ -39,6 +39,12 @@ func NewReactionBonus() *ReactionBonus {
 	}
 }
 
+// Clone implements Feature.
+func (r *ReactionBonus) Clone() Feature {
+	other := *r
+	return &other
+}
+
 // FeatureMapKey implements Feature.
 func (r *ReactionBonus) FeatureMapKey() string {
 	return "reaction"

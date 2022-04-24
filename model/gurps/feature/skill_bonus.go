@@ -64,6 +64,12 @@ func NewSkillBonus() *SkillBonus {
 	}
 }
 
+// Clone implements Feature.
+func (s *SkillBonus) Clone() Feature {
+	other := *s
+	return &other
+}
+
 // FeatureMapKey implements Feature.
 func (s *SkillBonus) FeatureMapKey() string {
 	switch s.SelectionType {

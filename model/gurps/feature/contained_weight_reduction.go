@@ -34,6 +34,12 @@ func NewContainedWeightReduction() *ContainedWeightReduction {
 	}
 }
 
+// Clone implements Feature.
+func (c *ContainedWeightReduction) Clone() Feature {
+	other := *c
+	return &other
+}
+
 // FeatureMapKey implements Feature.
 func (c *ContainedWeightReduction) FeatureMapKey() string {
 	return "equipment.weight.sum"

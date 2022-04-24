@@ -27,6 +27,7 @@ import (
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
@@ -130,6 +131,33 @@ func NewAdvantageModifier(entity *Entity, container bool) *AdvantageModifier {
 		}
 	}
 	return &a
+}
+
+// Clone creates a copy of this data.
+func (a *AdvantageModifier) Clone() *AdvantageModifier {
+	other := *a
+	other.Categories = txt.CloneStringSlice(a.Categories)
+	if a.AdvantageModifierItem != nil {
+		item := *a.AdvantageModifierItem
+		if item.Affects != nil {
+			affects := *item.Affects
+			item.Affects = &affects
+		}
+		item.Features = a.Features.Clone()
+		other.AdvantageModifierItem = &item
+	}
+	if a.AdvantageModifierContainer != nil {
+		container := *a.AdvantageModifierContainer
+		container.Children = nil
+		if len(a.Children) != 0 {
+			container.Children = make([]*AdvantageModifier, 0, len(a.Children))
+			for _, one := range a.Children {
+				container.Children = append(container.Children, one.Clone())
+			}
+		}
+		other.AdvantageModifierContainer = &container
+	}
+	return &other
 }
 
 // MarshalJSON implements json.Marshaler.

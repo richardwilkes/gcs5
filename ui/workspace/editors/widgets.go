@@ -12,6 +12,7 @@
 package editors
 
 import (
+	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -43,9 +44,25 @@ func addUserDescLabelAndField(parent *unison.Panel, fieldData *string) {
 		fieldData)
 }
 
-func addTagsLabelAndField(parent *unison.Panel, fieldData *string) {
-	addLabelAndMultiLineStringField(parent, i18n.Text("Tags"), i18n.Text("Separate multiple tags with commas"),
-		fieldData)
+func addTagsLabelAndField(parent *unison.Panel, fieldData *[]string) {
+	labelText := i18n.Text("Tags")
+	tooltip := i18n.Text("Separate multiple tags with commas")
+	label := widget.NewFieldLeadingLabel(labelText)
+	if tooltip != "" {
+		label.Tooltip = unison.NewTooltipWithText(tooltip)
+	}
+	parent.AddChild(label)
+	field := widget.NewMultiLineStringField(labelText, func() string { return gurps.CombineTags(*fieldData) },
+		func(value string) {
+			*fieldData = gurps.ExtractTags(value)
+			parent.MarkForLayoutAndRedraw()
+			widget.MarkModified(parent)
+		})
+	if tooltip != "" {
+		field.Tooltip = unison.NewTooltipWithText(tooltip)
+	}
+	field.AutoScroll = false
+	parent.AddChild(field)
 }
 
 func addLabelAndStringField(parent *unison.Panel, labelText, tooltip string, fieldData *string) {

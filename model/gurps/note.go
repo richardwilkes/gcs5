@@ -14,16 +14,13 @@ package gurps
 import (
 	"context"
 	"io/fs"
-	"strings"
 
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/i18n"
 )
 
 var _ node.Node = &Note{}
@@ -38,21 +35,6 @@ const (
 	noteListTypeKey = "note_list"
 	noteTypeKey     = "note"
 )
-
-// NoteContainer holds the Note data that only exists in containers.
-type NoteContainer struct {
-	Children []*Note `json:"children,omitempty"`
-	Open     bool    `json:"open,omitempty"`
-}
-
-// NoteData holds the Note data that is written to disk.
-type NoteData struct {
-	Type           string    `json:"type"`
-	ID             uuid.UUID `json:"id"`
-	Text           string    `json:"text,omitempty"`
-	PageRef        string    `json:"reference,omitempty"`
-	*NoteContainer `json:",omitempty"`
-}
 
 // Note holds a note.
 type Note struct {
@@ -101,16 +83,14 @@ func NewNote(parent *Note, container bool) *Note {
 	}
 	if container {
 		n.Type += commonContainerKeyPostfix
-		n.NoteContainer = &NoteContainer{Open: true}
+		n.IsOpen = true
 	}
 	return &n
 }
 
 // MarshalJSON implements json.Marshaler.
 func (n *Note) MarshalJSON() ([]byte, error) {
-	if !n.Container() {
-		n.NoteContainer = nil
-	}
+	n.ClearUnusedFieldsForType()
 	return json.Marshal(&n.NoteData)
 }
 
@@ -120,58 +100,11 @@ func (n *Note) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &n.NoteData); err != nil {
 		return err
 	}
+	n.ClearUnusedFieldsForType()
 	if n.Container() {
-		if n.NoteContainer == nil {
-			n.NoteContainer = &NoteContainer{}
-		}
 		for _, one := range n.Children {
 			one.Parent = n
 		}
-	}
-	return nil
-}
-
-// UUID returns the UUID of this data.
-func (n *Note) UUID() uuid.UUID {
-	return n.ID
-}
-
-// Kind returns the kind of data.
-func (n *Note) Kind() string {
-	if n.Container() {
-		return i18n.Text("Note Container")
-	}
-	return i18n.Text("Note")
-}
-
-// Container returns true if this is a container.
-func (n *Note) Container() bool {
-	return strings.HasSuffix(n.Type, commonContainerKeyPostfix)
-}
-
-// Open returns true if this node is currently open.
-func (n *Note) Open() bool {
-	if n.Container() {
-		return n.NoteContainer.Open
-	}
-	return false
-}
-
-// SetOpen sets the current open state for this node.
-func (n *Note) SetOpen(open bool) {
-	if n.Container() {
-		n.NoteContainer.Open = open
-	}
-}
-
-// NodeChildren returns the children of this node, if any.
-func (n *Note) NodeChildren() []node.Node {
-	if n.Container() {
-		children := make([]node.Node, len(n.Children))
-		for i, child := range n.Children {
-			children[i] = child
-		}
-		return children
 	}
 	return nil
 }

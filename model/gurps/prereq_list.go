@@ -47,11 +47,16 @@ func NewPrereqList() *PrereqList {
 
 // ShouldOmit implements json.Omitter.
 func (p *PrereqList) ShouldOmit() bool {
-	return p.All && p.WhenTLCriteria.Compare == criteria.AtLeast && p.WhenTLCriteria.Qualifier == 0 && len(p.Prereqs) == 0
+	return p == nil || (p.All && p.WhenTLCriteria.Compare == criteria.AtLeast && p.WhenTLCriteria.Qualifier == 0 && len(p.Prereqs) == 0)
 }
 
 // Clone implements Prereq.
 func (p *PrereqList) Clone(parent *PrereqList) Prereq {
+	return p.CloneAsPrereqList(parent)
+}
+
+// CloneAsPrereqList clones this prereq list.
+func (p *PrereqList) CloneAsPrereqList(parent *PrereqList) *PrereqList {
 	clone := *p
 	clone.Parent = parent
 	clone.Prereqs = make(Prereqs, len(p.Prereqs))

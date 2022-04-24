@@ -39,6 +39,12 @@ func NewConditionalModifierBonus() *ConditionalModifier {
 	}
 }
 
+// Clone implements Feature.
+func (c *ConditionalModifier) Clone() Feature {
+	other := *c
+	return &other
+}
+
 // FeatureMapKey implements Feature.
 func (c *ConditionalModifier) FeatureMapKey() string {
 	return ConditionalModifierType.Key()

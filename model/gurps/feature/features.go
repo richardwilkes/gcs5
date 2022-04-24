@@ -20,6 +20,18 @@ import (
 // Features holds a list of features.
 type Features []Feature
 
+// Clone creates a copy of the features.
+func (f Features) Clone() Features {
+	if len(f) == 0 {
+		return nil
+	}
+	result := make([]Feature, 0, len(f))
+	for _, one := range f {
+		result = append(result, one.Clone())
+	}
+	return result
+}
+
 // UnmarshalJSON implements the json.Unmarshaler interface.
 func (f *Features) UnmarshalJSON(data []byte) error {
 	var s []*json.RawMessage
@@ -28,14 +40,14 @@ func (f *Features) UnmarshalJSON(data []byte) error {
 	}
 	*f = make([]Feature, len(s))
 	for i, one := range s {
-		var typeData struct {
+		var justTypeData struct {
 			Type Type `json:"type"`
 		}
-		if err := json.Unmarshal(*one, &typeData); err != nil {
+		if err := json.Unmarshal(*one, &justTypeData); err != nil {
 			return errs.Wrap(err)
 		}
 		var feature Feature
-		switch typeData.Type {
+		switch justTypeData.Type {
 		case AttributeBonusType:
 			feature = &AttributeBonus{}
 		case ConditionalModifierType:
@@ -59,7 +71,7 @@ func (f *Features) UnmarshalJSON(data []byte) error {
 		case WeaponBonusType:
 			feature = &WeaponDamageBonus{}
 		default:
-			return errs.Newf(i18n.Text("Unknown feature type: %s"), typeData.Type)
+			return errs.Newf(i18n.Text("Unknown feature type: %s"), justTypeData.Type)
 		}
 		if err := json.Unmarshal(*one, &feature); err != nil {
 			return errs.Wrap(err)

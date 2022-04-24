@@ -25,6 +25,7 @@ type Feature interface {
 	nameables.Nameables
 	// FeatureMapKey returns the key used for matching within the feature map.
 	FeatureMapKey() string
+	Clone() Feature
 }
 
 // Bonus is an extension of a Feature, which provides a numerical bonus or penalty.

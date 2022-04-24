@@ -307,7 +307,7 @@ func (e *Entity) processPrereqs() {
 	const prefix = "\n- "
 	notMetPrefix := i18n.Text("Prerequisites have not been met:")
 	TraverseAdvantages(func(a *Advantage) bool {
-		if a.Container() {
+		if a.Container() || a.Prereq == nil {
 			a.Satisfied = true
 			a.UnsatisfiedReason = ""
 		} else {
@@ -326,7 +326,11 @@ func (e *Entity) processPrereqs() {
 			s.UnsatisfiedReason = ""
 		} else {
 			var tooltip xio.ByteBuffer
-			s.Satisfied = s.Prereq.Satisfied(e, s, &tooltip, prefix)
+			if s.Prereq == nil {
+				s.Satisfied = true
+			} else {
+				s.Satisfied = s.Prereq.Satisfied(e, s, &tooltip, prefix)
+			}
 			if s.Satisfied && s.Type == gid.Technique {
 				s.Satisfied = s.TechniqueSatisfied(&tooltip, prefix)
 			}
@@ -344,7 +348,11 @@ func (e *Entity) processPrereqs() {
 			s.UnsatisfiedReason = ""
 		} else {
 			var tooltip xio.ByteBuffer
-			s.Satisfied = s.Prereq.Satisfied(e, s, &tooltip, prefix)
+			if s.Prereq == nil {
+				s.Satisfied = true
+			} else {
+				s.Satisfied = s.Prereq.Satisfied(e, s, &tooltip, prefix)
+			}
 			if s.Satisfied && s.Type == gid.RitualMagicSpell {
 				s.Satisfied = s.RitualMagicSatisfied(&tooltip, prefix)
 			}
@@ -357,11 +365,16 @@ func (e *Entity) processPrereqs() {
 		return false
 	}, e.Spells...)
 	equipmentFunc := func(eqp *Equipment) bool {
-		var tooltip xio.ByteBuffer
-		if eqp.Satisfied = eqp.Prereq.Satisfied(e, eqp, &tooltip, prefix); eqp.Satisfied {
+		if eqp.Prereq == nil {
+			eqp.Satisfied = true
 			eqp.UnsatisfiedReason = ""
 		} else {
-			eqp.UnsatisfiedReason = notMetPrefix + tooltip.String()
+			var tooltip xio.ByteBuffer
+			if eqp.Satisfied = eqp.Prereq.Satisfied(e, eqp, &tooltip, prefix); eqp.Satisfied {
+				eqp.UnsatisfiedReason = ""
+			} else {
+				eqp.UnsatisfiedReason = notMetPrefix + tooltip.String()
+			}
 		}
 		return false
 	}

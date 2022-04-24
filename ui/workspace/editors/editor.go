@@ -28,18 +28,13 @@ import (
 const editorGroup = "editors"
 
 var (
-	_ unison.Dockable            = &editor[*gurps.Note, *noteEditorData]{}
-	_ unison.TabCloser           = &editor[*gurps.Note, *noteEditorData]{}
-	_ widget.ModifiableRoot      = &editor[*gurps.Note, *noteEditorData]{}
-	_ unison.UndoManagerProvider = &editor[*gurps.Note, *noteEditorData]{}
+	_ unison.Dockable            = &editor[*gurps.Note, *gurps.NoteEditData]{}
+	_ unison.TabCloser           = &editor[*gurps.Note, *gurps.NoteEditData]{}
+	_ widget.ModifiableRoot      = &editor[*gurps.Note, *gurps.NoteEditData]{}
+	_ unison.UndoManagerProvider = &editor[*gurps.Note, *gurps.NoteEditData]{}
 )
 
-type editorData[T node.Node] interface {
-	From(T)
-	Apply(T)
-}
-
-type editor[N node.Node, D editorData[N]] struct {
+type editor[N node.Node, D node.EditorData[N]] struct {
 	unison.Panel
 	owner                widget.Rebuildable
 	target               N
@@ -52,7 +47,7 @@ type editor[N node.Node, D editorData[N]] struct {
 	promptForSave        bool
 }
 
-func displayEditor[N node.Node, D editorData[N]](owner widget.Rebuildable, target N, initContent func(*editor[N, D], *unison.Panel) func()) {
+func displayEditor[N node.Node, D node.EditorData[N]](owner widget.Rebuildable, target N, initContent func(*editor[N, D], *unison.Panel) func()) {
 	lookFor := target.UUID()
 	ws, dc, found := workspace.Activate(func(d unison.Dockable) bool {
 		if e, ok := d.(*editor[N, D]); ok {
@@ -68,10 +63,10 @@ func displayEditor[N node.Node, D editorData[N]](owner widget.Rebuildable, targe
 		e.Self = e
 
 		reflect.ValueOf(&e.beforeData).Elem().Set(reflect.New(reflect.TypeOf(e.beforeData).Elem()))
-		e.beforeData.From(target)
+		e.beforeData.CopyFrom(target)
 
 		reflect.ValueOf(&e.editorData).Elem().Set(reflect.New(reflect.TypeOf(e.editorData).Elem()))
-		e.editorData.From(target)
+		e.editorData.CopyFrom(target)
 
 		e.undoMgr = unison.NewUndoManager(100, func(err error) { jot.Error(err) })
 		e.SetLayout(&unison.FlexLayout{Columns: 1})
@@ -204,17 +199,17 @@ func (e *editor[N, D]) apply() {
 			EditName: fmt.Sprintf(i18n.Text("%s Changes"), target.Kind()),
 			EditCost: 1,
 			UndoFunc: func(edit *unison.UndoEdit[D]) {
-				edit.BeforeData.Apply(target)
+				edit.BeforeData.ApplyTo(target)
 				owner.MarkForRebuild(true)
 			},
 			RedoFunc: func(edit *unison.UndoEdit[D]) {
-				edit.AfterData.Apply(target)
+				edit.AfterData.ApplyTo(target)
 				owner.MarkForRebuild(true)
 			},
 			BeforeData: e.beforeData,
 			AfterData:  e.editorData,
 		})
 	}
-	e.editorData.Apply(e.target)
+	e.editorData.ApplyTo(e.target)
 	e.owner.MarkForRebuild(true)
 }

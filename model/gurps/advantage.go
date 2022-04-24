@@ -16,7 +16,6 @@ import (
 	"io/fs"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
@@ -50,48 +49,6 @@ const (
 	advantageListTypeKey = "advantage_list"
 	advantageTypeKey     = "advantage"
 )
-
-// AdvantageItem holds the Advantage data that only exists in non-containers.
-type AdvantageItem struct {
-	BasePoints     f64d4.Int        `json:"base_points,omitempty"`
-	Levels         f64d4.Int        `json:"levels,omitempty"`
-	PointsPerLevel f64d4.Int        `json:"points_per_level,omitempty"`
-	Prereq         *PrereqList      `json:"prereqs,omitempty"`
-	Weapons        []*Weapon        `json:"weapons,omitempty"`
-	Features       feature.Features `json:"features,omitempty"`
-	Mental         bool             `json:"mental,omitempty"`
-	Physical       bool             `json:"physical,omitempty"`
-	Social         bool             `json:"social,omitempty"`
-	Exotic         bool             `json:"exotic,omitempty"`
-	Supernatural   bool             `json:"supernatural,omitempty"`
-	RoundCostDown  bool             `json:"round_down,omitempty"`
-}
-
-// AdvantageContainer holds the Advantage data that only exists in containers.
-type AdvantageContainer struct {
-	ContainerType advantage.ContainerType `json:"container_type,omitempty"`
-	Open          bool                    `json:"open,omitempty"`
-	Ancestry      string                  `json:"ancestry,omitempty"`
-	Children      []*Advantage            `json:"children,omitempty"`
-}
-
-// AdvantageData holds the Advantage data that is written to disk.
-type AdvantageData struct {
-	Type                string                    `json:"type"`
-	ID                  uuid.UUID                 `json:"id"`
-	Name                string                    `json:"name,omitempty"`
-	PageRef             string                    `json:"reference,omitempty"`
-	LocalNotes          string                    `json:"notes,omitempty"`
-	VTTNotes            string                    `json:"vtt_notes,omitempty"`
-	CR                  advantage.SelfControlRoll `json:"cr,omitempty"`
-	CRAdj               SelfControlRollAdj        `json:"cr_adj,omitempty"`
-	Disabled            bool                      `json:"disabled,omitempty"`
-	Modifiers           []*AdvantageModifier      `json:"modifiers,omitempty"`
-	UserDesc            string                    `json:"userdesc,omitempty"`
-	Categories          []string                  `json:"categories,omitempty"`
-	*AdvantageItem      `json:",omitempty"`
-	*AdvantageContainer `json:",omitempty"`
-}
 
 // Advantage holds an advantage, disadvantage, quirk, or perk.
 type Advantage struct {
@@ -138,19 +95,16 @@ func NewAdvantage(entity *Entity, parent *Advantage, container bool) *Advantage 
 		AdvantageData: AdvantageData{
 			Type: advantageTypeKey,
 			ID:   id.NewUUID(),
-			Name: i18n.Text("Advantage"),
+			AdvantageEditData: AdvantageEditData{
+				Name: i18n.Text("Advantage"),
+			},
 		},
 		Entity: entity,
 		Parent: parent,
 	}
 	if container {
 		a.Type += commonContainerKeyPostfix
-		a.AdvantageContainer = &AdvantageContainer{Open: true}
-	} else {
-		a.AdvantageItem = &AdvantageItem{
-			Prereq:   NewPrereqList(),
-			Physical: true,
-		}
+		a.IsOpen = true
 	}
 	return &a
 }
@@ -160,6 +114,7 @@ func (a *Advantage) MarshalJSON() ([]byte, error) {
 	type calc struct {
 		Points f64d4.Int `json:"points"`
 	}
+	a.ClearUnusedFieldsForType()
 	data := struct {
 		AdvantageData
 		Calc calc `json:"calc"`
@@ -168,11 +123,6 @@ func (a *Advantage) MarshalJSON() ([]byte, error) {
 		Calc: calc{
 			Points: a.AdjustedPoints(),
 		},
-	}
-	if a.Container() {
-		data.AdvantageItem = nil
-	} else {
-		data.AdvantageContainer = nil
 	}
 	return json.Marshal(&data)
 }
@@ -183,65 +133,11 @@ func (a *Advantage) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &a.AdvantageData); err != nil {
 		return err
 	}
+	a.ClearUnusedFieldsForType()
 	if a.Container() {
-		if a.AdvantageContainer == nil {
-			a.AdvantageContainer = &AdvantageContainer{}
-		}
 		for _, one := range a.Children {
 			one.Parent = a
 		}
-	} else {
-		if a.AdvantageItem == nil {
-			a.AdvantageItem = &AdvantageItem{}
-		}
-		if a.Prereq == nil {
-			a.Prereq = NewPrereqList()
-		}
-	}
-	return nil
-}
-
-// UUID returns the UUID of this data.
-func (a *Advantage) UUID() uuid.UUID {
-	return a.ID
-}
-
-// Kind returns the kind of data.
-func (a *Advantage) Kind() string {
-	if a.Container() {
-		return i18n.Text("Advantage Container")
-	}
-	return i18n.Text("Advantage")
-}
-
-// Container returns true if this is a container.
-func (a *Advantage) Container() bool {
-	return strings.HasSuffix(a.Type, commonContainerKeyPostfix)
-}
-
-// Open returns true if this node is currently open.
-func (a *Advantage) Open() bool {
-	if a.Container() {
-		return a.AdvantageContainer.Open
-	}
-	return false
-}
-
-// SetOpen sets the current open state for this node.
-func (a *Advantage) SetOpen(open bool) {
-	if a.Container() {
-		a.AdvantageContainer.Open = open
-	}
-}
-
-// NodeChildren returns the children of this node, if any.
-func (a *Advantage) NodeChildren() []node.Node {
-	if a.Container() {
-		children := make([]node.Node, len(a.Children))
-		for i, child := range a.Children {
-			children[i] = child
-		}
-		return children
 	}
 	return nil
 }
@@ -430,7 +326,9 @@ func (a *Advantage) FillWithNameableKeys(m map[string]string) {
 	nameables.Extract(a.Name, m)
 	nameables.Extract(a.LocalNotes, m)
 	nameables.Extract(a.VTTNotes, m)
-	a.Prereq.FillWithNameableKeys(m)
+	if a.Prereq != nil {
+		a.Prereq.FillWithNameableKeys(m)
+	}
 	for _, one := range a.Features {
 		one.FillWithNameableKeys(m)
 	}
@@ -447,7 +345,9 @@ func (a *Advantage) ApplyNameableKeys(m map[string]string) {
 	a.Name = nameables.Apply(a.Name, m)
 	a.LocalNotes = nameables.Apply(a.LocalNotes, m)
 	a.VTTNotes = nameables.Apply(a.VTTNotes, m)
-	a.Prereq.ApplyNameableKeys(m)
+	if a.Prereq != nil {
+		a.Prereq.ApplyNameableKeys(m)
+	}
 	for _, one := range a.Features {
 		one.ApplyNameableKeys(m)
 	}

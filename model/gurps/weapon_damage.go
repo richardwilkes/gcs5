@@ -46,6 +46,21 @@ type WeaponDamage struct {
 	Owner *Weapon
 }
 
+// Clone creates a copy of this data.
+func (w *WeaponDamage) Clone(owner *Weapon) *WeaponDamage {
+	other := *w
+	other.Owner = owner
+	if other.Base != nil {
+		d := *other.Base
+		other.Base = &d
+	}
+	if other.Fragmentation != nil {
+		d := *other.Fragmentation
+		other.Fragmentation = &d
+	}
+	return &other
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 func (w *WeaponDamage) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &w.WeaponDamageData); err != nil {

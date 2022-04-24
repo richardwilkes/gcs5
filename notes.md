@@ -77,3 +77,4 @@
 - Printing support for sheets (requires support in unison first)
 - Make final decision on whether tables that have no content in the sheet should be hidden (complicates updates and makes it harder for users to discover they exist)
   - I'm currently thinking of just having a preference for making empty lists vanish when printing. That way they are discoverable in the UI, but don't clutter up the printed sheet if you don't want them to.
+- Fix jumping of sheet when clicking on a row in a table that is only partially shown

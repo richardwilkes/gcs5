@@ -74,6 +74,12 @@ func NewWeaponDamageBonus() *WeaponDamageBonus {
 	}
 }
 
+// Clone implements Feature.
+func (w *WeaponDamageBonus) Clone() Feature {
+	other := *w
+	return &other
+}
+
 // FeatureMapKey implements Feature.
 func (w *WeaponDamageBonus) FeatureMapKey() string {
 	switch w.SelectionType {

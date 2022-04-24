@@ -68,7 +68,7 @@ type WeaponOwner interface {
 // WeaponData holds the Weapon data that is written to disk.
 type WeaponData struct {
 	Type            weapon.Type     `json:"type"`
-	Damage          *WeaponDamage   `json:"damage,omitempty"`
+	Damage          *WeaponDamage   `json:"damage"`
 	MinimumStrength string          `json:"strength,omitempty"`
 	Usage           string          `json:"usage,omitempty"`
 	UsageNotes      string          `json:"usage_notes,omitempty"`
@@ -88,6 +88,20 @@ type WeaponData struct {
 type Weapon struct {
 	WeaponData
 	Owner WeaponOwner
+}
+
+// Clone creates a copy of this data.
+func (w *Weapon) Clone() *Weapon {
+	other := *w
+	other.Damage = other.Damage.Clone(&other)
+	if other.Defaults != nil {
+		other.Defaults = make([]*SkillDefault, 0, len(w.Defaults))
+		for _, one := range w.Defaults {
+			d := *one
+			other.Defaults = append(other.Defaults, &d)
+		}
+	}
+	return &other
 }
 
 // Less returns true if this weapon should be sorted above the other weapon.

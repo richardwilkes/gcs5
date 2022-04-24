@@ -53,6 +53,12 @@ func NewDRBonus() *DRBonus {
 	}
 }
 
+// Clone implements Feature.
+func (d *DRBonus) Clone() Feature {
+	other := *d
+	return &other
+}
+
 // Normalize adjusts the data to it preferred representation.
 func (d *DRBonus) Normalize() {
 	s := strings.TrimSpace(d.Specialization)

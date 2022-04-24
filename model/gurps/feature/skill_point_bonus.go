@@ -61,6 +61,12 @@ func NewSkillPointBonus() *SkillPointBonus {
 	}
 }
 
+// Clone implements Feature.
+func (s *SkillPointBonus) Clone() Feature {
+	other := *s
+	return &other
+}
+
 // FeatureMapKey implements Feature.
 func (s *SkillPointBonus) FeatureMapKey() string {
 	if s.NameCriteria.Compare == criteria.Is &&

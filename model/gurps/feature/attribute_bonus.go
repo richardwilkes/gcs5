@@ -40,6 +40,12 @@ func NewAttributeBonus(attrID string) *AttributeBonus {
 	}
 }
 
+// Clone implements Feature.
+func (a *AttributeBonus) Clone() Feature {
+	other := *a
+	return &other
+}
+
 // FeatureMapKey implements Feature.
 func (a *AttributeBonus) FeatureMapKey() string {
 	key := AttributeIDPrefix + a.Attribute
