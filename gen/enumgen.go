@@ -27,6 +27,7 @@ const (
 type enumValue struct {
 	Name       string
 	Key        string
+	OldKeys    []string
 	String     string
 	Alt        string
 	NoLocalize bool
@@ -602,7 +603,8 @@ func main() {
 				Key: "name",
 			},
 			{
-				Key: "category",
+				Key:     "tag",
+				OldKeys: []string{"category"},
 			},
 			{
 				Key: "college",
@@ -900,6 +902,7 @@ func processSourceTemplate(tmplName string, info *enumInfo) {
 		"emptyIfTrue":  emptyIfTrue,
 		"fileLeaf":     filepath.Base,
 		"firstToLower": txt.FirstToLower,
+		"join":         join,
 		"last":         last,
 		"toCamelCase":  txt.ToCamelCase,
 		"toIdentifier": toIdentifier,
@@ -928,6 +931,17 @@ func add(a, b int) int {
 	return a + b
 }
 
+func join(values []string) string {
+	var buffer strings.Builder
+	for i, one := range values {
+		if i != 0 {
+			buffer.WriteString(", ")
+		}
+		fmt.Fprintf(&buffer, "%q", one)
+	}
+	return buffer.String()
+}
+
 func (e *enumInfo) LocalType() string {
 	return txt.FirstToLower(toIdentifier(e.Name)) + "Data"
 }
@@ -946,6 +960,15 @@ func (e *enumInfo) IDFor(v enumValue) string {
 func (e *enumInfo) HasAlt() bool {
 	for _, one := range e.Values {
 		if one.Alt != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func (e *enumInfo) HasOldKeys() bool {
+	for _, one := range e.Values {
+		if len(one.OldKeys) != 0 {
 			return true
 		}
 	}

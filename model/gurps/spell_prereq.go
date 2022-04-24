@@ -93,8 +93,8 @@ func (s *SpellPrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xi
 			if s.QualifierCriteria.Matches(sp.Name) {
 				count++
 			}
-		case spell.Category:
-			for _, one := range sp.Categories {
+		case spell.Tag:
+			for _, one := range sp.Tags {
 				if s.QualifierCriteria.Matches(one) {
 					count++
 					break
@@ -145,8 +145,8 @@ func (s *SpellPrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xi
 				switch s.SubType {
 				case spell.Name:
 					tooltip.WriteString(" whose name ")
-				case spell.Category:
-					tooltip.WriteString(" whose category ")
+				case spell.Tag:
+					tooltip.WriteString(" whose tag ")
 				case spell.College:
 					tooltip.WriteString(" whose college ")
 				}

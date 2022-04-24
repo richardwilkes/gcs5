@@ -40,7 +40,7 @@ const (
 	EquipmentModifierTechLevelColumn
 	EquipmentModifierCostColumn
 	EquipmentModifierWeightColumn
-	EquipmentModifierCategoryColumn
+	EquipmentModifierTagsColumn
 	EquipmentModifierReferenceColumn
 )
 
@@ -74,7 +74,7 @@ type EquipmentModifierData struct {
 	PageRef                     string    `json:"reference,omitempty"`
 	Notes                       string    `json:"notes,omitempty"`
 	VTTNotes                    string    `json:"vtt_notes,omitempty"`
-	Categories                  []string  `json:"categories,omitempty"`
+	Tags                        []string  `json:"categories,omitempty"` // TODO: use tags key instead
 	*EquipmentModifierItem      `json:",omitempty"`
 	*EquipmentModifierContainer `json:",omitempty"`
 }
@@ -232,9 +232,9 @@ func (e *EquipmentModifier) CellData(column int, data *node.CellData) {
 			data.Type = node.Text
 			data.Primary = e.WeightDescription()
 		}
-	case EquipmentModifierCategoryColumn:
+	case EquipmentModifierTagsColumn:
 		data.Type = node.Text
-		data.Primary = CombineTags(e.Categories)
+		data.Primary = CombineTags(e.Tags)
 	case EquipmentModifierReferenceColumn:
 		data.Type = node.PageRef
 		data.Primary = e.PageRef

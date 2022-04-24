@@ -21,7 +21,7 @@ import (
 var advantageModifierColMap = map[int]int{
 	0: gurps.AdvantageModifierDescriptionColumn,
 	1: gurps.AdvantageModifierCostColumn,
-	2: gurps.AdvantageModifierCategoryColumn,
+	2: gurps.AdvantageModifierTagsColumn,
 	3: gurps.AdvantageModifierReferenceColumn,
 }
 
@@ -44,8 +44,8 @@ func (p *advModProvider) Headers() []unison.TableColumnHeader {
 			headers = append(headers, NewHeader(i18n.Text("Advantage Modifier"), "", false))
 		case gurps.AdvantageModifierCostColumn:
 			headers = append(headers, NewHeader(i18n.Text("Cost Modifier"), "", false))
-		case gurps.AdvantageModifierCategoryColumn:
-			headers = append(headers, NewHeader(i18n.Text("Category"), "", false))
+		case gurps.AdvantageModifierTagsColumn:
+			headers = append(headers, NewHeader(i18n.Text("Tags"), "", false))
 		case gurps.AdvantageModifierReferenceColumn:
 			headers = append(headers, NewPageRefHeader(false))
 		default:

@@ -28,7 +28,7 @@ var (
 		3: gurps.EquipmentLCColumn,
 		4: gurps.EquipmentCostColumn,
 		5: gurps.EquipmentWeightColumn,
-		6: gurps.EquipmentCategoryColumn,
+		6: gurps.EquipmentTagsColumn,
 		7: gurps.EquipmentReferenceColumn,
 	}
 	carriedEquipmentPageColMap = map[int]int{
@@ -110,8 +110,8 @@ func (p *equipmentProvider) Headers() []unison.TableColumnHeader {
 			headers = append(headers, NewWeightHeader(p.forPage))
 		case gurps.EquipmentExtendedWeightColumn:
 			headers = append(headers, NewExtendedWeightHeader(p.forPage))
-		case gurps.EquipmentCategoryColumn:
-			headers = append(headers, NewHeader(i18n.Text("Category"), "", p.forPage))
+		case gurps.EquipmentTagsColumn:
+			headers = append(headers, NewHeader(i18n.Text("Tags"), "", p.forPage))
 		case gurps.EquipmentReferenceColumn:
 			headers = append(headers, NewPageRefHeader(p.forPage))
 		default:

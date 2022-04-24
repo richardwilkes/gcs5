@@ -33,16 +33,10 @@ func initAdvantageEditor(e *editor[*gurps.Advantage, *gurps.AdvantageEditData], 
 	addNotesLabelAndField(content, &e.editorData.LocalNotes)
 	addVTTNotesLabelAndField(content, &e.editorData.VTTNotes)
 	addUserDescLabelAndField(content, &e.editorData.UserDesc)
-	addTagsLabelAndField(content, &e.editorData.Categories)
+	addTagsLabelAndField(content, &e.editorData.Tags)
 	var levelField *widget.NumericField
 	if !e.target.Container() {
-		wrapper := addFlowWrapper(content, i18n.Text("Type"), 5)
-		addCheckBox(wrapper, i18n.Text("Mental"), &e.editorData.Mental)
-		addCheckBox(wrapper, i18n.Text("Physical"), &e.editorData.Physical)
-		addCheckBox(wrapper, i18n.Text("Social"), &e.editorData.Social)
-		addCheckBox(wrapper, i18n.Text("Exotic"), &e.editorData.Exotic)
-		addCheckBox(wrapper, i18n.Text("Supernatural"), &e.editorData.Supernatural)
-		wrapper = addFlowWrapper(content, i18n.Text("Point Cost"), 8)
+		wrapper := addFlowWrapper(content, i18n.Text("Point Cost"), 8)
 		pointCost := widget.NewNonEditableField(func(field *widget.NonEditableField) {
 			field.Text = gurps.AdjustedPoints(e.target.Entity, e.editorData.BasePoints, e.editorData.Levels,
 				e.editorData.PointsPerLevel, e.editorData.CR, e.editorData.Modifiers, e.editorData.RoundCostDown).String()

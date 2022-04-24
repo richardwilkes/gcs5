@@ -60,8 +60,8 @@ type legacyExporter struct {
 	template           []byte
 	pos                int
 	exportPath         string
-	onlyCategories     map[string]bool
-	excludedCategories map[string]bool
+	onlyTags           map[string]bool
+	excludedTags       map[string]bool
 	out                *bufio.Writer
 	encodeText         bool
 	enhancedKeyParsing bool
@@ -70,11 +70,11 @@ type legacyExporter struct {
 // LegacyExport performs the text template export function that matches the old Java code base.
 func LegacyExport(entity *gurps.Entity, templatePath, exportPath string) (err error) {
 	ex := &legacyExporter{
-		entity:             entity,
-		exportPath:         exportPath,
-		onlyCategories:     make(map[string]bool),
-		excludedCategories: make(map[string]bool),
-		encodeText:         true,
+		entity:       entity,
+		exportPath:   exportPath,
+		onlyTags:     make(map[string]bool),
+		excludedTags: make(map[string]bool),
+		encodeText:   true,
 	}
 	if ex.template, err = os.ReadFile(templatePath); err != nil {
 		return errs.Wrap(err)
@@ -352,9 +352,9 @@ func (ex *legacyExporter) emitKey(key string) error {
 	case "HIT_LOCATION_LOOP_START":
 		ex.processHitLocationLoop(ex.extractUpToMarker("HIT_LOCATION_LOOP_END"))
 	case "ADVANTAGES_LOOP_COUNT":
-		ex.writeAdvantageLoopCount(ex.includeByAdvantageCategories)
+		ex.writeAdvantageLoopCount(ex.includeByAdvantageTags)
 	case "ADVANTAGES_LOOP_START":
-		ex.processAdvantagesLoop(ex.extractUpToMarker("ADVANTAGES_LOOP_END"), ex.includeByAdvantageCategories)
+		ex.processAdvantagesLoop(ex.extractUpToMarker("ADVANTAGES_LOOP_END"), ex.includeByAdvantageTags)
 	case "ADVANTAGES_ALL_LOOP_COUNT":
 		ex.writeAdvantageLoopCount(ex.includeAdvantagesAndPerks)
 	case "ADVANTAGES_ALL_LOOP_START":
@@ -420,7 +420,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 	case "EQUIPMENT_LOOP_COUNT":
 		count := 0
 		gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
-			if ex.includeByCategories(eqp.Categories) {
+			if ex.includeByTags(eqp.Tags) {
 				count++
 			}
 			return false
@@ -431,7 +431,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 	case "OTHER_EQUIPMENT_LOOP_COUNT":
 		count := 0
 		gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
-			if ex.includeByCategories(eqp.Categories) {
+			if ex.includeByTags(eqp.Tags) {
 				count++
 			}
 			return false
@@ -497,9 +497,13 @@ func (ex *legacyExporter) emitKey(key string) error {
 	default:
 		switch {
 		case strings.HasPrefix(key, "ONLY_CATEGORIES_"):
-			splitIntoMap(key, "ONLY_CATEGORIES_", ex.onlyCategories)
+			splitIntoMap(key, "ONLY_CATEGORIES_", ex.onlyTags)
+		case strings.HasPrefix(key, "ONLY_TAGS_"):
+			splitIntoMap(key, "ONLY_TAGS_", ex.onlyTags)
 		case strings.HasPrefix(key, "EXCLUDE_CATEGORIES_"):
-			splitIntoMap(key, "EXCLUDE_CATEGORIES_", ex.excludedCategories)
+			splitIntoMap(key, "EXCLUDE_CATEGORIES_", ex.excludedTags)
+		case strings.HasPrefix(key, "EXCLUDE_TAGS_"):
+			splitIntoMap(key, "EXCLUDE_TAGS_", ex.excludedTags)
 		case strings.HasPrefix(key, "COLOR_"):
 			ex.handleColor(key)
 		default:
@@ -638,57 +642,57 @@ func (ex *legacyExporter) writeAdvantageLoopCount(f func(*gurps.Advantage) bool)
 	ex.writeEncodedText(strconv.Itoa(count))
 }
 
-func (ex *legacyExporter) includeByCategories(categories []string) bool {
-	for cat := range ex.onlyCategories {
-		if gurps.HasCategory(cat, categories) {
+func (ex *legacyExporter) includeByTags(tags []string) bool {
+	for cat := range ex.onlyTags {
+		if gurps.HasTag(cat, tags) {
 			return true
 		}
 	}
-	if len(ex.onlyCategories) != 0 {
+	if len(ex.onlyTags) != 0 {
 		return false
 	}
-	for cat := range ex.excludedCategories {
-		if gurps.HasCategory(cat, categories) {
+	for cat := range ex.excludedTags {
+		if gurps.HasTag(cat, tags) {
 			return false
 		}
 	}
 	return true
 }
 
-func (ex *legacyExporter) includeByAdvantageCategories(adq *gurps.Advantage) bool {
-	return ex.includeByCategories(adq.Categories)
+func (ex *legacyExporter) includeByAdvantageTags(adq *gurps.Advantage) bool {
+	return ex.includeByTags(adq.Tags)
 }
 
 func (ex *legacyExporter) includeAdvantages(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() > f64d4.One && ex.includeByAdvantageCategories(adq)
+	return adq.AdjustedPoints() > f64d4.One && ex.includeByAdvantageTags(adq)
 }
 
 func (ex *legacyExporter) includePerks(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() == f64d4.One && ex.includeByAdvantageCategories(adq)
+	return adq.AdjustedPoints() == f64d4.One && ex.includeByAdvantageTags(adq)
 }
 
 func (ex *legacyExporter) includeAdvantagesAndPerks(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() > 0 && ex.includeByAdvantageCategories(adq)
+	return adq.AdjustedPoints() > 0 && ex.includeByAdvantageTags(adq)
 }
 
 func (ex *legacyExporter) includeDisadvantages(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() < fxp.NegOne && ex.includeByAdvantageCategories(adq)
+	return adq.AdjustedPoints() < fxp.NegOne && ex.includeByAdvantageTags(adq)
 }
 
 func (ex *legacyExporter) includeQuirks(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() == fxp.NegOne && ex.includeByAdvantageCategories(adq)
+	return adq.AdjustedPoints() == fxp.NegOne && ex.includeByAdvantageTags(adq)
 }
 
 func (ex *legacyExporter) includeDisadvantagesAndQuirks(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() < 0 && ex.includeByAdvantageCategories(adq)
+	return adq.AdjustedPoints() < 0 && ex.includeByAdvantageTags(adq)
 }
 
 func (ex *legacyExporter) includeLanguages(adq *gurps.Advantage) bool {
-	return gurps.HasCategory("Language", adq.Categories) && ex.includeByAdvantageCategories(adq)
+	return gurps.HasTag("Language", adq.Tags) && ex.includeByAdvantageTags(adq)
 }
 
 func (ex *legacyExporter) includeCulturalFamiliarities(adq *gurps.Advantage) bool {
-	return strings.HasPrefix(strings.ToLower(adq.Name), "cultural familiarity (") && ex.includeByAdvantageCategories(adq)
+	return strings.HasPrefix(strings.ToLower(adq.Name), "cultural familiarity (") && ex.includeByAdvantageTags(adq)
 }
 
 func (ex *legacyExporter) processEncumbranceLoop(buffer []byte) {
@@ -843,8 +847,8 @@ func (ex *legacyExporter) processAdvantagesLoop(buffer []byte, f func(*gurps.Adv
 		}
 		return false
 	}, true, ex.entity.Advantages...)
-	ex.onlyCategories = make(map[string]bool)
-	ex.excludedCategories = make(map[string]bool)
+	ex.onlyTags = make(map[string]bool)
+	ex.excludedTags = make(map[string]bool)
 }
 
 func (ex *legacyExporter) processSkillsLoop(buffer []byte) {
@@ -989,7 +993,7 @@ func (ex *legacyExporter) processEquipmentLoop(buffer []byte, carried bool) {
 		eqpList = ex.entity.OtherEquipment
 	}
 	gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
-		if ex.includeByCategories(eqp.Categories) {
+		if ex.includeByTags(eqp.Tags) {
 			ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
 				switch key {
 				case idKey:
@@ -1064,8 +1068,8 @@ func (ex *legacyExporter) processEquipmentLoop(buffer []byte, carried bool) {
 					ex.writeEncodedText(eqp.TechLevel)
 				case "LEGALITY_CLASS", "LC":
 					ex.writeEncodedText(eqp.LegalityClass)
-				case "CATEGORIES":
-					ex.writeEncodedText(gurps.CombineTags(eqp.Categories))
+				case "TAGS", "CATEGORIES":
+					ex.writeEncodedText(gurps.CombineTags(eqp.Tags))
 				case "LOCATION":
 					if eqp.Parent != nil {
 						ex.writeEncodedText(eqp.Parent.Name)
@@ -1095,8 +1099,8 @@ func (ex *legacyExporter) processEquipmentLoop(buffer []byte, carried bool) {
 		}
 		return false
 	}, eqpList...)
-	ex.onlyCategories = make(map[string]bool)
-	ex.excludedCategories = make(map[string]bool)
+	ex.onlyTags = make(map[string]bool)
+	ex.excludedTags = make(map[string]bool)
 }
 
 func (ex *legacyExporter) processNotesLoop(buffer []byte) {
@@ -1385,7 +1389,7 @@ func (ex *legacyExporter) processWeaponKeys(key string, currentID int, w *gurps.
 
 func (ex *legacyExporter) ammoFor(weaponEqp *gurps.Equipment) f64d4.Int {
 	uses := ""
-	for _, cat := range weaponEqp.CategoryList() {
+	for _, cat := range weaponEqp.TagList() {
 		if strings.HasPrefix(strings.ToLower(cat), "usesammotype:") {
 			uses = strings.ReplaceAll(cat[len("usesammotype:"):], " ", "")
 			break
@@ -1397,7 +1401,7 @@ func (ex *legacyExporter) ammoFor(weaponEqp *gurps.Equipment) f64d4.Int {
 	var total f64d4.Int
 	gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
 		if eqp.Equipped && eqp.Quantity > 0 {
-			for _, cat := range eqp.Categories {
+			for _, cat := range eqp.Tags {
 				if strings.HasPrefix(strings.ToLower(cat), "ammotype:") {
 					if uses == strings.ReplaceAll(cat[len("ammotype:"):], " ", "") {
 						total += eqp.Quantity

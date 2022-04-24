@@ -37,7 +37,7 @@ var _ node.Node = &AdvantageModifier{}
 const (
 	AdvantageModifierDescriptionColumn = iota
 	AdvantageModifierCostColumn
-	AdvantageModifierCategoryColumn
+	AdvantageModifierTagsColumn
 	AdvantageModifierReferenceColumn
 )
 
@@ -70,7 +70,7 @@ type AdvantageModifierData struct {
 	PageRef                     string    `json:"reference,omitempty"`
 	Notes                       string    `json:"notes,omitempty"`
 	VTTNotes                    string    `json:"vtt_notes,omitempty"`
-	Categories                  []string  `json:"categories,omitempty"`
+	Tags                        []string  `json:"categories,omitempty"` // TODO: use tags key instead
 	*AdvantageModifierItem      `json:",omitempty"`
 	*AdvantageModifierContainer `json:",omitempty"`
 }
@@ -136,7 +136,7 @@ func NewAdvantageModifier(entity *Entity, container bool) *AdvantageModifier {
 // Clone creates a copy of this data.
 func (a *AdvantageModifier) Clone() *AdvantageModifier {
 	other := *a
-	other.Categories = txt.CloneStringSlice(a.Categories)
+	other.Tags = txt.CloneStringSlice(a.Tags)
 	if a.AdvantageModifierItem != nil {
 		item := *a.AdvantageModifierItem
 		if item.Affects != nil {
@@ -245,9 +245,9 @@ func (a *AdvantageModifier) CellData(column int, data *node.CellData) {
 			data.Type = node.Text
 			data.Primary = a.CostDescription()
 		}
-	case AdvantageModifierCategoryColumn:
+	case AdvantageModifierTagsColumn:
 		data.Type = node.Text
-		data.Primary = CombineTags(a.Categories)
+		data.Primary = CombineTags(a.Tags)
 	case AdvantageModifierReferenceColumn:
 		data.Type = node.PageRef
 		data.Primary = a.PageRef

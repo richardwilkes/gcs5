@@ -33,7 +33,7 @@ type AdvantageEditData struct {
 	VTTNotes       string                    `json:"vtt_notes,omitempty"`
 	Ancestry       string                    `json:"ancestry,omitempty"` // Container only
 	UserDesc       string                    `json:"userdesc,omitempty"`
-	Categories     []string                  `json:"categories,omitempty"`
+	Tags           []string                  `json:"tags,omitempty"`
 	Modifiers      []*AdvantageModifier      `json:"modifiers,omitempty"`
 	BasePoints     f64d4.Int                 `json:"base_points,omitempty"`      // Non-container only
 	Levels         f64d4.Int                 `json:"levels,omitempty"`           // Non-container only
@@ -45,12 +45,7 @@ type AdvantageEditData struct {
 	CRAdj          SelfControlRollAdj        `json:"cr_adj,omitempty"`
 	ContainerType  advantage.ContainerType   `json:"container_type,omitempty"` // Container only
 	Disabled       bool                      `json:"disabled,omitempty"`
-	Mental         bool                      `json:"mental,omitempty"`       // Non-container only
-	Physical       bool                      `json:"physical,omitempty"`     // Non-container only
-	Social         bool                      `json:"social,omitempty"`       // Non-container only
-	Exotic         bool                      `json:"exotic,omitempty"`       // Non-container only
-	Supernatural   bool                      `json:"supernatural,omitempty"` // Non-container only
-	RoundCostDown  bool                      `json:"round_down,omitempty"`   // Non-container only
+	RoundCostDown  bool                      `json:"round_down,omitempty"` // Non-container only
 }
 
 // CopyFrom implements node.EditorData.
@@ -65,7 +60,7 @@ func (d *AdvantageEditData) ApplyTo(adv *Advantage) {
 
 func (d *AdvantageEditData) copyFrom(other *AdvantageEditData) {
 	*d = *other
-	d.Categories = txt.CloneStringSlice(d.Categories)
+	d.Tags = txt.CloneStringSlice(d.Tags)
 	d.Modifiers = nil
 	if len(other.Modifiers) != 0 {
 		d.Modifiers = make([]*AdvantageModifier, 0, len(other.Modifiers))
@@ -132,11 +127,6 @@ func (a *AdvantageData) ClearUnusedFieldsForType() {
 		a.Prereq = nil
 		a.Weapons = nil
 		a.Features = nil
-		a.Mental = false
-		a.Physical = false
-		a.Social = false
-		a.Exotic = false
-		a.Supernatural = false
 		a.RoundCostDown = false
 	} else {
 		a.ContainerType = 0

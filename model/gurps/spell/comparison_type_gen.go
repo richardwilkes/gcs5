@@ -17,12 +17,13 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/txt"
 )
 
 // Possible values.
 const (
 	Name ComparisonType = iota
-	Category
+	Tag
 	College
 	CollegeCount
 	Any
@@ -33,22 +34,24 @@ var (
 	// AllComparisonType holds all possible values.
 	AllComparisonType = []ComparisonType{
 		Name,
-		Category,
+		Tag,
 		College,
 		CollegeCount,
 		Any,
 	}
 	comparisonTypeData = []struct {
-		key    string
-		string string
+		key     string
+		oldKeys []string
+		string  string
 	}{
 		{
 			key:    "name",
 			string: i18n.Text("Name"),
 		},
 		{
-			key:    "category",
-			string: i18n.Text("Category"),
+			key:     "tag",
+			oldKeys: []string{"category"},
+			string:  i18n.Text("Tag"),
 		},
 		{
 			key:    "college",
@@ -89,7 +92,7 @@ func (enum ComparisonType) String() string {
 // ExtractComparisonType extracts the value from a string.
 func ExtractComparisonType(str string) ComparisonType {
 	for i, one := range comparisonTypeData {
-		if strings.EqualFold(one.key, str) {
+		if strings.EqualFold(one.key, str) || txt.CaselessSliceContains(one.oldKeys, str) {
 			return ComparisonType(i)
 		}
 	}

@@ -51,7 +51,7 @@ const (
 	EquipmentExtendedCostColumn
 	EquipmentWeightColumn
 	EquipmentExtendedWeightColumn
-	EquipmentCategoryColumn
+	EquipmentTagsColumn
 	EquipmentReferenceColumn
 )
 
@@ -100,7 +100,7 @@ type EquipmentData struct {
 	Modifiers              []*EquipmentModifier `json:"modifiers,omitempty"`
 	Features               feature.Features     `json:"features,omitempty"`
 	Prereq                 *PrereqList          `json:"prereqs,omitempty"`
-	Categories             []string             `json:"categories,omitempty"`
+	Tags                   []string             `json:"categories,omitempty"` // TODO: use tags key instead
 	Equipped               bool                 `json:"equipped,omitempty"`
 	WeightIgnoredForSkills bool                 `json:"ignore_weight_for_skills,omitempty"`
 	*EquipmentContainer    `json:",omitempty"`
@@ -324,9 +324,9 @@ func (e *Equipment) CellData(column int, data *node.CellData) {
 		units := SheetSettingsFor(e.Entity).DefaultWeightUnits
 		data.Primary = units.Format(e.ExtendedWeight(false, units))
 		data.Alignment = unison.EndAlignment
-	case EquipmentCategoryColumn:
+	case EquipmentTagsColumn:
 		data.Type = node.Text
-		data.Primary = CombineTags(e.Categories)
+		data.Primary = CombineTags(e.Tags)
 	case EquipmentReferenceColumn:
 		data.Type = node.PageRef
 		data.Primary = e.PageRef
@@ -404,9 +404,9 @@ func (e *Equipment) FeatureList() feature.Features {
 	return e.Features
 }
 
-// CategoryList returns the list of categories.
-func (e *Equipment) CategoryList() []string {
-	return e.Categories
+// TagList returns the list of tags.
+func (e *Equipment) TagList() []string {
+	return e.Tags
 }
 
 // AdjustedValue returns the value after adjustments for any modifiers. Does not include the value of children.

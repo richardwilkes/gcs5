@@ -35,11 +35,11 @@ var _ Bonus = &SpellPointBonus{}
 
 // SpellPointBonus holds an adjustment to a spell's points.
 type SpellPointBonus struct {
-	Parent           fmt.Stringer    `json:"-"`
-	Type             Type            `json:"type"`
-	SpellMatchType   spell.MatchType `json:"match"`
-	NameCriteria     criteria.String `json:"name,omitempty"`
-	CategoryCriteria criteria.String `json:"category,omitempty"`
+	Parent         fmt.Stringer    `json:"-"`
+	Type           Type            `json:"type"`
+	SpellMatchType spell.MatchType `json:"match"`
+	NameCriteria   criteria.String `json:"name,omitempty"`
+	TagsCriteria   criteria.String `json:"category,omitempty"` // TODO: use tags key instead
 	LeveledAmount
 }
 
@@ -53,7 +53,7 @@ func NewSpellPointBonus() *SpellPointBonus {
 				Compare: criteria.Is,
 			},
 		},
-		CategoryCriteria: criteria.String{
+		TagsCriteria: criteria.String{
 			StringData: criteria.StringData{
 				Compare: criteria.Any,
 			},
@@ -70,7 +70,7 @@ func (s *SpellPointBonus) Clone() Feature {
 
 // FeatureMapKey implements Feature.
 func (s *SpellPointBonus) FeatureMapKey() string {
-	if s.CategoryCriteria.Compare != criteria.Any {
+	if s.TagsCriteria.Compare != criteria.Any {
 		return SpellPointsID + "*"
 	}
 	switch s.SpellMatchType {
@@ -100,7 +100,7 @@ func (s *SpellPointBonus) FillWithNameableKeys(m map[string]string) {
 	if s.SpellMatchType != spell.AllColleges {
 		nameables.Extract(s.NameCriteria.Qualifier, m)
 	}
-	nameables.Extract(s.CategoryCriteria.Qualifier, m)
+	nameables.Extract(s.TagsCriteria.Qualifier, m)
 }
 
 // ApplyNameableKeys implements Feature.
@@ -108,7 +108,7 @@ func (s *SpellPointBonus) ApplyNameableKeys(m map[string]string) {
 	if s.SpellMatchType != spell.AllColleges {
 		s.NameCriteria.Qualifier = nameables.Apply(s.NameCriteria.Qualifier, m)
 	}
-	s.CategoryCriteria.Qualifier = nameables.Apply(s.CategoryCriteria.Qualifier, m)
+	s.TagsCriteria.Qualifier = nameables.Apply(s.TagsCriteria.Qualifier, m)
 }
 
 // SetParent implements Bonus.

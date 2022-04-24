@@ -14,5 +14,5 @@ package spell
 // UsesStringCriteria returns true if the comparison uses a string value.
 func (enum ComparisonType) UsesStringCriteria() bool {
 	v := enum.EnsureValid()
-	return v == Name || v == Category || v == College
+	return v == Name || v == Tag || v == College
 }

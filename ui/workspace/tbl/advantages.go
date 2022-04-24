@@ -22,9 +22,8 @@ var (
 	advantageListColMap = map[int]int{
 		0: gurps.AdvantageDescriptionColumn,
 		1: gurps.AdvantagePointsColumn,
-		2: gurps.AdvantageTypeColumn,
-		3: gurps.AdvantageCategoryColumn,
-		4: gurps.AdvantageReferenceColumn,
+		2: gurps.AdvantageTagsColumn,
+		3: gurps.AdvantageReferenceColumn,
 	}
 	advantagePageColMap = map[int]int{
 		0: gurps.AdvantageDescriptionColumn,
@@ -61,10 +60,8 @@ func (p *advantagesProvider) Headers() []unison.TableColumnHeader {
 			headers = append(headers, NewHeader(i18n.Text("Advantage / Disadvantage"), "", p.forPage))
 		case gurps.AdvantagePointsColumn:
 			headers = append(headers, NewHeader(i18n.Text("Pts"), i18n.Text("Points"), p.forPage))
-		case gurps.AdvantageTypeColumn:
-			headers = append(headers, NewHeader(i18n.Text("Type"), "", p.forPage))
-		case gurps.AdvantageCategoryColumn:
-			headers = append(headers, NewHeader(i18n.Text("Category"), "", p.forPage))
+		case gurps.AdvantageTagsColumn:
+			headers = append(headers, NewHeader(i18n.Text("Tags"), "", p.forPage))
 		case gurps.AdvantageReferenceColumn:
 			headers = append(headers, NewPageRefHeader(p.forPage))
 		default:

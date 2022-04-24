@@ -7,9 +7,10 @@ require (
 	github.com/richardwilkes/json v0.0.0-20220202023945-ac9125b86187
 	github.com/richardwilkes/pdf v0.0.0-20220414031719-fa3d49a402b1
 	github.com/richardwilkes/rpgtools v1.4.1
-	github.com/richardwilkes/toolbox v1.68.2-0.20220423195511-0a3af4c33d30
-	github.com/richardwilkes/unison v0.13.1-0.20220423200220-4a41205a3ba8
+	github.com/richardwilkes/toolbox v1.69.0
+	github.com/richardwilkes/unison v0.14.0
 	github.com/stretchr/testify v1.7.1
+	golang.org/x/exp v0.0.0-20220414153411-bcd21879b8fd
 	golang.org/x/text v0.3.7
 )
 
@@ -22,7 +23,6 @@ require (
 	github.com/pkg/term v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/yookoala/realpath v1.0.0 // indirect
-	golang.org/x/exp v0.0.0-20220414153411-bcd21879b8fd // indirect
 	golang.org/x/image v0.0.0-20220413100746-70e8d0d3baa9 // indirect
 	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect

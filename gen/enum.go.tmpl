@@ -19,6 +19,7 @@ import (
     {{- if .NeedI18N}}
 
 	"github.com/richardwilkes/toolbox/i18n"{{end}}
+	{{if .HasOldKeys}}"github.com/richardwilkes/toolbox/txt"{{end}}
 )
 
 // Possible values.
@@ -38,6 +39,9 @@ var (
     }
     {{$pname}} = []struct {
     	key string
+    	{{- if .HasOldKeys}}
+    	oldKeys []string
+    	{{- end}}
 	    string string
         {{- if .HasAlt}}
 	    alt string
@@ -46,6 +50,8 @@ var (
         {{- range .Values}}
         {
             key: "{{.Key}}",
+            {{- if .OldKeys}}
+            oldKeys: []string{ {{join .OldKeys}} },{{end}}
             string: {{if not .NoLocalize}}i18n.Text({{end}}{{printf "%q" .StringValue}}{{if not .NoLocalize}}){{end}},
             {{if .Alt}}alt: i18n.Text({{printf "%q" .Alt}}),{{end}}
         },
@@ -87,7 +93,7 @@ func Extract{{$name}}(str string) {{$name}} {
 	str = strings.TrimPrefix(strings.TrimPrefix(str, "na-"), "iso-") // For older files that had the Java prefixes
 {{- end}}
     for i, one := range {{$pname}} {
-        if strings.EqualFold(one.key, str) {
+        if strings.EqualFold(one.key, str){{if .HasOldKeys}} || txt.CaselessSliceContains(one.oldKeys, str){{end}} {
             return {{$name}}(i)
         }
     }

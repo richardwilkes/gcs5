@@ -41,7 +41,7 @@ type WeaponDamageBonus struct {
 	NameCriteria           criteria.String      `json:"name,omitempty"`
 	SpecializationCriteria criteria.String      `json:"specialization,omitempty"`
 	RelativeLevelCriteria  criteria.Numeric     `json:"level,omitempty"`
-	CategoryCriteria       criteria.String      `json:"category,omitempty"`
+	TagsCriteria           criteria.String      `json:"category,omitempty"` // TODO: use tags key instead
 	LeveledAmount
 }
 
@@ -65,7 +65,7 @@ func NewWeaponDamageBonus() *WeaponDamageBonus {
 				Compare: criteria.AtLeast,
 			},
 		},
-		CategoryCriteria: criteria.String{
+		TagsCriteria: criteria.String{
 			StringData: criteria.StringData{
 				Compare: criteria.Any,
 			},
@@ -97,7 +97,7 @@ func (w *WeaponDamageBonus) FeatureMapKey() string {
 
 func (w *WeaponDamageBonus) buildKey(prefix string) string {
 	if w.NameCriteria.Compare == criteria.Is &&
-		(w.SpecializationCriteria.Compare == criteria.Any && w.CategoryCriteria.Compare == criteria.Any) {
+		(w.SpecializationCriteria.Compare == criteria.Any && w.TagsCriteria.Compare == criteria.Any) {
 		return prefix + "/" + w.NameCriteria.Qualifier
 	}
 	return prefix + "*"
@@ -109,7 +109,7 @@ func (w *WeaponDamageBonus) FillWithNameableKeys(m map[string]string) {
 	if w.SelectionType != weapon.ThisWeapon {
 		nameables.Extract(w.NameCriteria.Qualifier, m)
 		nameables.Extract(w.SpecializationCriteria.Qualifier, m)
-		nameables.Extract(w.CategoryCriteria.Qualifier, m)
+		nameables.Extract(w.TagsCriteria.Qualifier, m)
 	}
 }
 
@@ -119,7 +119,7 @@ func (w *WeaponDamageBonus) ApplyNameableKeys(m map[string]string) {
 	if w.SelectionType != weapon.ThisWeapon {
 		w.NameCriteria.Qualifier = nameables.Apply(w.NameCriteria.Qualifier, m)
 		w.SpecializationCriteria.Qualifier = nameables.Apply(w.SpecializationCriteria.Qualifier, m)
-		w.CategoryCriteria.Qualifier = nameables.Apply(w.CategoryCriteria.Qualifier, m)
+		w.TagsCriteria.Qualifier = nameables.Apply(w.TagsCriteria.Qualifier, m)
 	}
 }
 

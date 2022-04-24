@@ -62,7 +62,7 @@ type WeaponOwner interface {
 	Description() string
 	Notes() string
 	FeatureList() feature.Features
-	CategoryList() []string
+	TagList() []string
 }
 
 // WeaponData holds the Weapon data that is written to disk.
@@ -279,11 +279,11 @@ func (w *Weapon) skillLevelBaseAdjustment(entity *Entity, tooltip *xio.ByteBuffe
 	}
 	nameQualifier := w.String()
 	for _, bonus := range entity.NamedWeaponSkillBonusesFor(feature.WeaponNamedIDPrefix+"*", nameQualifier, w.Usage,
-		w.Owner.CategoryList(), tooltip) {
+		w.Owner.TagList(), tooltip) {
 		adj += bonus.AdjustedAmount()
 	}
 	for _, bonus := range entity.NamedWeaponSkillBonusesFor(feature.WeaponNamedIDPrefix+"/"+nameQualifier,
-		nameQualifier, w.Usage, w.Owner.CategoryList(), tooltip) {
+		nameQualifier, w.Usage, w.Owner.TagList(), tooltip) {
 		adj += bonus.AdjustedAmount()
 	}
 	for _, f := range w.Owner.FeatureList() {
@@ -344,7 +344,7 @@ func (w *Weapon) extractSkillBonus(f feature.Feature, tooltip *xio.ByteBuffer) f
 			}
 		case skill.WeaponsWithName:
 			if w.Owner != nil && sb.NameCriteria.Matches(w.Owner.String()) &&
-				sb.SpecializationCriteria.Matches(w.Usage) && sb.CategoryCriteria.Matches(w.Owner.CategoryList()...) {
+				sb.SpecializationCriteria.Matches(w.Usage) && sb.TagsCriteria.Matches(w.Owner.TagList()...) {
 				sb.AddToTooltip(tooltip)
 				return sb.AdjustedAmount()
 			}

@@ -29,6 +29,7 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
+	"golang.org/x/exp/slices"
 )
 
 var (
@@ -40,8 +41,7 @@ var (
 const (
 	AdvantageDescriptionColumn = iota
 	AdvantagePointsColumn
-	AdvantageTypeColumn
-	AdvantageCategoryColumn
+	AdvantageTagsColumn
 	AdvantageReferenceColumn
 )
 
@@ -129,17 +129,40 @@ func (a *Advantage) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (a *Advantage) UnmarshalJSON(data []byte) error {
-	a.AdvantageData = AdvantageData{}
-	if err := json.Unmarshal(data, &a.AdvantageData); err != nil {
+	var localData struct {
+		AdvantageData
+		// Old data fields
+		Categories   []string `json:"categories"`
+		Mental       bool     `json:"mental"`
+		Physical     bool     `json:"physical"`
+		Social       bool     `json:"social"`
+		Exotic       bool     `json:"exotic"`
+		Supernatural bool     `json:"supernatural"`
+	}
+	if err := json.Unmarshal(data, &localData); err != nil {
 		return err
 	}
-	a.ClearUnusedFieldsForType()
+	localData.ClearUnusedFieldsForType()
+	a.AdvantageData = localData.AdvantageData
+	a.Tags = append(a.Tags, localData.Categories...)
+	a.transferOldTypeFlagToTags(i18n.Text("Mental"), localData.Mental)
+	a.transferOldTypeFlagToTags(i18n.Text("Physical"), localData.Physical)
+	a.transferOldTypeFlagToTags(i18n.Text("Social"), localData.Social)
+	a.transferOldTypeFlagToTags(i18n.Text("Exotic"), localData.Exotic)
+	a.transferOldTypeFlagToTags(i18n.Text("Supernatural"), localData.Supernatural)
+	slices.Sort(a.Tags)
 	if a.Container() {
 		for _, one := range a.Children {
 			one.Parent = a
 		}
 	}
 	return nil
+}
+
+func (a *Advantage) transferOldTypeFlagToTags(name string, flag bool) {
+	if flag && !slices.Contains(a.Tags, name) {
+		a.Tags = append(a.Tags, name)
+	}
 }
 
 // CellData returns the cell data information for the given column.
@@ -154,12 +177,9 @@ func (a *Advantage) CellData(column int, data *node.CellData) {
 		data.Type = node.Text
 		data.Primary = a.AdjustedPoints().String()
 		data.Alignment = unison.EndAlignment
-	case AdvantageTypeColumn:
+	case AdvantageTagsColumn:
 		data.Type = node.Text
-		data.Primary = a.TypeAsText()
-	case AdvantageCategoryColumn:
-		data.Type = node.Text
-		data.Primary = CombineTags(a.Categories)
+		data.Primary = CombineTags(a.Tags)
 	case AdvantageReferenceColumn:
 		data.Type = node.PageRef
 		data.Primary = a.PageRef
@@ -271,30 +291,6 @@ func (a *Advantage) Enabled() bool {
 	return true
 }
 
-// TypeAsText returns the set of type bits that are set if this isn't a container, or an empty string if it is.
-func (a *Advantage) TypeAsText() string {
-	if a.Container() {
-		return ""
-	}
-	list := make([]string, 0, 5)
-	if a.Mental {
-		list = append(list, i18n.Text("Mental"))
-	}
-	if a.Physical {
-		list = append(list, i18n.Text("Physical"))
-	}
-	if a.Social {
-		list = append(list, i18n.Text("Social"))
-	}
-	if a.Exotic {
-		list = append(list, i18n.Text("Exotic"))
-	}
-	if a.Supernatural {
-		list = append(list, i18n.Text("Supernatural"))
-	}
-	return CombineTags(list)
-}
-
 // Description returns a description, which doesn't include any levels.
 func (a *Advantage) Description() string {
 	return a.Name
@@ -316,9 +312,9 @@ func (a *Advantage) FeatureList() feature.Features {
 	return a.Features
 }
 
-// CategoryList returns the list of categories.
-func (a *Advantage) CategoryList() []string {
-	return a.Categories
+// TagList returns the list of tags.
+func (a *Advantage) TagList() []string {
+	return a.Tags
 }
 
 // FillWithNameableKeys adds any nameable keys found in this Advantage to the provided map.
@@ -414,13 +410,13 @@ func (a *Advantage) SecondaryText() string {
 	return buffer.String()
 }
 
-// HasCategory returns true if 'category' is present in 'categories'. This check both ignores case and can check for
-// subsets that are colon-separated.
-func HasCategory(category string, categories []string) bool {
-	category = strings.TrimSpace(category)
-	for _, one := range categories {
+// HasTag returns true if 'tag' is present in 'tags'. This check both ignores case and can check for subsets that are
+// colon-separated.
+func HasTag(tag string, tags []string) bool {
+	tag = strings.TrimSpace(tag)
+	for _, one := range tags {
 		for _, part := range strings.Split(one, ":") {
-			if strings.EqualFold(category, strings.TrimSpace(part)) {
+			if strings.EqualFold(tag, strings.TrimSpace(part)) {
 				return true
 			}
 		}

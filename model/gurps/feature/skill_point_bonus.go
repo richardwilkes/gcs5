@@ -34,7 +34,7 @@ type SkillPointBonus struct {
 	Parent                 fmt.Stringer    `json:"-"`
 	NameCriteria           criteria.String `json:"name"`
 	SpecializationCriteria criteria.String `json:"specialization"`
-	CategoryCriteria       criteria.String `json:"category"`
+	TagsCriteria           criteria.String `json:"category"` // TODO: use tags key instead
 	LeveledAmount
 }
 
@@ -52,7 +52,7 @@ func NewSkillPointBonus() *SkillPointBonus {
 				Compare: criteria.Any,
 			},
 		},
-		CategoryCriteria: criteria.String{
+		TagsCriteria: criteria.String{
 			StringData: criteria.StringData{
 				Compare: criteria.Any,
 			},
@@ -70,7 +70,7 @@ func (s *SkillPointBonus) Clone() Feature {
 // FeatureMapKey implements Feature.
 func (s *SkillPointBonus) FeatureMapKey() string {
 	if s.NameCriteria.Compare == criteria.Is &&
-		(s.SpecializationCriteria.Compare == criteria.Any && s.CategoryCriteria.Compare == criteria.Any) {
+		(s.SpecializationCriteria.Compare == criteria.Any && s.TagsCriteria.Compare == criteria.Any) {
 		return SkillPointsID + "/" + s.NameCriteria.Qualifier
 	}
 	return SkillPointsID + "*"
@@ -80,14 +80,14 @@ func (s *SkillPointBonus) FeatureMapKey() string {
 func (s *SkillPointBonus) FillWithNameableKeys(m map[string]string) {
 	nameables.Extract(s.NameCriteria.Qualifier, m)
 	nameables.Extract(s.SpecializationCriteria.Qualifier, m)
-	nameables.Extract(s.CategoryCriteria.Qualifier, m)
+	nameables.Extract(s.TagsCriteria.Qualifier, m)
 }
 
 // ApplyNameableKeys implements Feature.
 func (s *SkillPointBonus) ApplyNameableKeys(m map[string]string) {
 	s.NameCriteria.Qualifier = nameables.Apply(s.NameCriteria.Qualifier, m)
 	s.SpecializationCriteria.Qualifier = nameables.Apply(s.SpecializationCriteria.Qualifier, m)
-	s.CategoryCriteria.Qualifier = nameables.Apply(s.CategoryCriteria.Qualifier, m)
+	s.TagsCriteria.Qualifier = nameables.Apply(s.TagsCriteria.Qualifier, m)
 }
 
 // SetParent implements Bonus.

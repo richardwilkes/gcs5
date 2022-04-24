@@ -41,7 +41,7 @@ var _ node.Node = &Skill{}
 const (
 	SkillDescriptionColumn = iota
 	SkillDifficultyColumn
-	SkillCategoryColumn
+	SkillTagsColumn
 	SkillReferenceColumn
 	SkillLevelColumn
 	SkillRelativeLevelColumn
@@ -80,7 +80,7 @@ type SkillData struct {
 	PageRef         string    `json:"reference,omitempty"`
 	LocalNotes      string    `json:"notes,omitempty"`
 	VTTNotes        string    `json:"vtt_notes,omitempty"`
-	Categories      []string  `json:"categories,omitempty"`
+	Tags            []string  `json:"categories,omitempty"` // TODO: use tags key instead
 	*SkillItem      `json:",omitempty"`
 	*SkillContainer `json:",omitempty"`
 }
@@ -274,9 +274,9 @@ func (s *Skill) CellData(column int, data *node.CellData) {
 			data.Type = node.Text
 			data.Primary = s.Difficulty.Description(s.Entity)
 		}
-	case SkillCategoryColumn:
+	case SkillTagsColumn:
 		data.Type = node.Text
-		data.Primary = CombineTags(s.Categories)
+		data.Primary = CombineTags(s.Tags)
 	case SkillReferenceColumn:
 		data.Type = node.PageRef
 		data.Primary = s.PageRef
@@ -365,9 +365,9 @@ func (s *Skill) FeatureList() feature.Features {
 	return s.Features
 }
 
-// CategoryList returns the list of categories.
-func (s *Skill) CategoryList() []string {
-	return s.Categories
+// TagList returns the list of tags.
+func (s *Skill) TagList() []string {
+	return s.Tags
 }
 
 // Description implements WeaponOwner.
@@ -468,7 +468,7 @@ func (s *Skill) AdjustedPoints() f64d4.Int {
 	}
 	points := s.Points
 	if s.Entity != nil && s.Entity.Type == datafile.PC {
-		points += s.Entity.SkillPointComparedBonusFor(feature.SkillPointsID+"*", s.Name, s.Specialization, s.Categories, nil)
+		points += s.Entity.SkillPointComparedBonusFor(feature.SkillPointsID+"*", s.Name, s.Specialization, s.Tags, nil)
 		points += s.Entity.BonusFor(feature.SkillPointsID+"/"+strings.ToLower(s.Name), nil)
 		points = points.Max(0)
 	}
@@ -573,7 +573,7 @@ func (s *Skill) calculateLevel() skill.Level {
 				level = s.DefaultedFrom.AdjLevel
 			}
 			if s.Entity != nil {
-				bonus := s.Entity.SkillComparedBonusFor(feature.SkillNameID+"*", s.Name, s.Specialization, s.Categories, &tooltip)
+				bonus := s.Entity.SkillComparedBonusFor(feature.SkillNameID+"*", s.Name, s.Specialization, s.Tags, &tooltip)
 				level += bonus
 				relativeLevel += bonus
 				bonus = s.Entity.BonusFor(feature.SkillNameID+"/"+strings.ToLower(s.Name), &tooltip)
@@ -595,7 +595,7 @@ func (s *Skill) calculateLevel() skill.Level {
 }
 
 // CalculateTechniqueLevel returns the calculated level for a technique.
-func CalculateTechniqueLevel(entity *Entity, name, specialization string, categories []string, def *SkillDefault, difficulty skill.Difficulty, points f64d4.Int, requirePoints bool, limitModifier *f64d4.Int) skill.Level {
+func CalculateTechniqueLevel(entity *Entity, name, specialization string, tags []string, def *SkillDefault, difficulty skill.Difficulty, points f64d4.Int, requirePoints bool, limitModifier *f64d4.Int) skill.Level {
 	var tooltip xio.ByteBuffer
 	var relativeLevel f64d4.Int
 	level := f64d4.Min
@@ -619,7 +619,7 @@ func CalculateTechniqueLevel(entity *Entity, name, specialization string, catego
 			}
 			if level != f64d4.Min {
 				relativeLevel += entity.BonusFor(feature.SkillNameID+"/"+strings.ToLower(name), &tooltip)
-				relativeLevel += entity.SkillComparedBonusFor(feature.SkillNameID+"*", name, specialization, categories, &tooltip)
+				relativeLevel += entity.SkillComparedBonusFor(feature.SkillNameID+"*", name, specialization, tags, &tooltip)
 				level += relativeLevel
 			}
 			if limitModifier != nil {
@@ -645,7 +645,7 @@ func (s *Skill) UpdateLevel() bool {
 		s.LevelData = s.calculateLevel()
 	} else {
 		s.DefaultedFrom = nil
-		s.LevelData = CalculateTechniqueLevel(s.Entity, s.Name, s.Specialization, s.Categories, s.TechniqueDefault, s.Difficulty.Difficulty, s.AdjustedPoints(), true, s.TechniqueLimitModifier)
+		s.LevelData = CalculateTechniqueLevel(s.Entity, s.Name, s.Specialization, s.Tags, s.TechniqueDefault, s.Difficulty.Difficulty, s.AdjustedPoints(), true, s.TechniqueLimitModifier)
 	}
 	return saved != s.LevelData
 }
@@ -686,7 +686,7 @@ func (s *Skill) bestDefault(excluded *SkillDefault) *SkillDefault {
 		level := def.SkillLevel(s.Entity, true, excludes, s.Type != gid.Technique)
 		if def.SkillBased() {
 			if other := s.Entity.BestSkillNamed(def.Name, def.Specialization, true, excludes); other != nil {
-				level -= s.Entity.SkillComparedBonusFor(feature.SkillNameID+"*", def.Name, def.Specialization, s.Categories, nil)
+				level -= s.Entity.SkillComparedBonusFor(feature.SkillNameID+"*", def.Name, def.Specialization, s.Tags, nil)
 				level -= s.Entity.BonusFor(feature.SkillNameID+"/"+strings.ToLower(def.Name), nil)
 			}
 		}

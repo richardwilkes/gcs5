@@ -23,7 +23,7 @@ var equipmentModifierColMap = map[int]int{
 	1: gurps.EquipmentModifierTechLevelColumn,
 	2: gurps.EquipmentModifierCostColumn,
 	3: gurps.EquipmentModifierWeightColumn,
-	4: gurps.EquipmentModifierCategoryColumn,
+	4: gurps.EquipmentModifierTagsColumn,
 	5: gurps.EquipmentModifierReferenceColumn,
 }
 
@@ -50,8 +50,8 @@ func (p *eqpModProvider) Headers() []unison.TableColumnHeader {
 			headers = append(headers, NewHeader(i18n.Text("Cost Adjustment"), "", false))
 		case gurps.EquipmentModifierWeightColumn:
 			headers = append(headers, NewHeader(i18n.Text("Weight Adjustment"), "", false))
-		case gurps.EquipmentModifierCategoryColumn:
-			headers = append(headers, NewHeader(i18n.Text("Category"), "", false))
+		case gurps.EquipmentModifierTagsColumn:
+			headers = append(headers, NewHeader(i18n.Text("Tags"), "", false))
 		case gurps.EquipmentModifierReferenceColumn:
 			headers = append(headers, NewPageRefHeader(false))
 		default:

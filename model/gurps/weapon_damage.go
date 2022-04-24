@@ -213,18 +213,18 @@ func (w *WeaponDamage) ResolvedDamage(tooltip *xio.ByteBuffer) string {
 		}
 	}
 	bonusSet := make(map[*feature.WeaponDamageBonus]bool)
-	categories := w.Owner.Owner.CategoryList()
+	tags := w.Owner.Owner.TagList()
 	if bestDefault != nil {
 		pc.AddWeaponComparedDamageBonusesFor(feature.SkillNameID+"*", bestDefault.Name, bestDefault.Specialization,
-			categories, base.Count, tooltip, bonusSet)
+			tags, base.Count, tooltip, bonusSet)
 		pc.AddWeaponComparedDamageBonusesFor(feature.SkillNameID+"/"+bestDefault.Name, bestDefault.Name,
-			bestDefault.Specialization, categories, base.Count, tooltip, bonusSet)
+			bestDefault.Specialization, tags, base.Count, tooltip, bonusSet)
 	}
 	nameQualifier := w.Owner.String()
-	pc.AddNamedWeaponDamageBonusesFor(feature.WeaponNamedIDPrefix+"*", nameQualifier, w.Owner.Usage, categories,
+	pc.AddNamedWeaponDamageBonusesFor(feature.WeaponNamedIDPrefix+"*", nameQualifier, w.Owner.Usage, tags,
 		base.Count, tooltip, bonusSet)
 	pc.AddNamedWeaponDamageBonusesFor(feature.WeaponNamedIDPrefix+"/"+nameQualifier, nameQualifier, w.Owner.Usage,
-		categories, base.Count, tooltip, bonusSet)
+		tags, base.Count, tooltip, bonusSet)
 	for _, f := range w.Owner.Owner.FeatureList() {
 		w.extractWeaponDamageBonus(f, bonusSet, base.Count, tooltip)
 	}
@@ -322,7 +322,7 @@ func (w *WeaponDamage) extractWeaponDamageBonus(f feature.Feature, set map[*feat
 			}
 		case weapon.WithName:
 			if bonus.NameCriteria.Matches(w.Owner.String()) && bonus.SpecializationCriteria.Matches(w.Owner.Usage) &&
-				bonus.CategoryCriteria.Matches(w.Owner.Owner.CategoryList()...) {
+				bonus.TagsCriteria.Matches(w.Owner.Owner.TagList()...) {
 				if _, exists := set[bonus]; !exists {
 					set[bonus] = true
 					bonus.AddToTooltip(tooltip)

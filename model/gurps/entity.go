@@ -547,18 +547,18 @@ func (e *Entity) SwingFor(st int) *dice.Dice {
 
 // AddWeaponComparedDamageBonusesFor adds the bonuses for matching weapons that match to the map. If 'm' is nil, it will
 // be created. The provided map (or the newly created one) will be returned.
-func (e *Entity) AddWeaponComparedDamageBonusesFor(featureID, nameQualifier, specializationQualifier string, categoryQualifier []string, dieCount int, tooltip *xio.ByteBuffer, m map[*feature.WeaponDamageBonus]bool) map[*feature.WeaponDamageBonus]bool {
+func (e *Entity) AddWeaponComparedDamageBonusesFor(featureID, nameQualifier, specializationQualifier string, tagsQualifier []string, dieCount int, tooltip *xio.ByteBuffer, m map[*feature.WeaponDamageBonus]bool) map[*feature.WeaponDamageBonus]bool {
 	if m == nil {
 		m = make(map[*feature.WeaponDamageBonus]bool)
 	}
-	for _, one := range e.WeaponComparedDamageBonusesFor(featureID, nameQualifier, specializationQualifier, categoryQualifier, dieCount, tooltip) {
+	for _, one := range e.WeaponComparedDamageBonusesFor(featureID, nameQualifier, specializationQualifier, tagsQualifier, dieCount, tooltip) {
 		m[one] = true
 	}
 	return m
 }
 
 // WeaponComparedDamageBonusesFor returns the bonuses for matching weapons that match.
-func (e *Entity) WeaponComparedDamageBonusesFor(featureID, nameQualifier, specializationQualifier string, categoryQualifier []string, dieCount int, tooltip *xio.ByteBuffer) []*feature.WeaponDamageBonus {
+func (e *Entity) WeaponComparedDamageBonusesFor(featureID, nameQualifier, specializationQualifier string, tagsQualifier []string, dieCount int, tooltip *xio.ByteBuffer) []*feature.WeaponDamageBonus {
 	rsl := f64d4.Min
 	for _, sk := range e.SkillNamed(nameQualifier, specializationQualifier, true, nil) {
 		if rsl < sk.LevelData.RelativeLevel {
@@ -575,7 +575,7 @@ func (e *Entity) WeaponComparedDamageBonusesFor(featureID, nameQualifier, specia
 			bonus.NameCriteria.Matches(nameQualifier) &&
 			bonus.SpecializationCriteria.Matches(specializationQualifier) &&
 			bonus.RelativeLevelCriteria.Matches(rsl) &&
-			bonus.CategoryCriteria.Matches(categoryQualifier...) {
+			bonus.TagsCriteria.Matches(tagsQualifier...) {
 			bonuses = append(bonuses, bonus)
 			level := bonus.LeveledAmount.Level
 			bonus.LeveledAmount.Level = f64d4.FromInt(dieCount)
@@ -672,13 +672,13 @@ func (e *Entity) SkillNamed(name, specialization string, requirePoints bool, exc
 }
 
 // SkillComparedBonusFor returns the total bonus for the matching skill bonuses.
-func (e *Entity) SkillComparedBonusFor(featureID, name, specialization string, categories []string, tooltip *xio.ByteBuffer) f64d4.Int {
+func (e *Entity) SkillComparedBonusFor(featureID, name, specialization string, tags []string, tooltip *xio.ByteBuffer) f64d4.Int {
 	var total f64d4.Int
 	for _, f := range e.featureMap[strings.ToLower(featureID)] {
 		if bonus, ok := f.(*feature.SkillBonus); ok &&
 			bonus.NameCriteria.Matches(name) &&
 			bonus.SpecializationCriteria.Matches(specialization) &&
-			bonus.CategoryCriteria.Matches(categories...) {
+			bonus.TagsCriteria.Matches(tags...) {
 			total += bonus.AdjustedAmount()
 			bonus.AddToTooltip(tooltip)
 		}
@@ -687,13 +687,13 @@ func (e *Entity) SkillComparedBonusFor(featureID, name, specialization string, c
 }
 
 // SkillPointComparedBonusFor returns the total bonus for the matching skill point bonuses.
-func (e *Entity) SkillPointComparedBonusFor(featureID, name, specialization string, categories []string, tooltip *xio.ByteBuffer) f64d4.Int {
+func (e *Entity) SkillPointComparedBonusFor(featureID, name, specialization string, tags []string, tooltip *xio.ByteBuffer) f64d4.Int {
 	var total f64d4.Int
 	for _, f := range e.featureMap[strings.ToLower(featureID)] {
 		if bonus, ok := f.(*feature.SkillPointBonus); ok &&
 			bonus.NameCriteria.Matches(name) &&
 			bonus.SpecializationCriteria.Matches(specialization) &&
-			bonus.CategoryCriteria.Matches(categories...) {
+			bonus.TagsCriteria.Matches(tags...) {
 			total += bonus.AdjustedAmount()
 			bonus.AddToTooltip(tooltip)
 		}
@@ -702,20 +702,20 @@ func (e *Entity) SkillPointComparedBonusFor(featureID, name, specialization stri
 }
 
 // SpellPointBonusesFor returns the total point bonus for the matching spell.
-func (e *Entity) SpellPointBonusesFor(featureID, qualifier string, categories []string, tooltip *xio.ByteBuffer) f64d4.Int {
+func (e *Entity) SpellPointBonusesFor(featureID, qualifier string, tags []string, tooltip *xio.ByteBuffer) f64d4.Int {
 	level := e.BonusFor(featureID, tooltip)
 	level += e.BonusFor(featureID+"/"+strings.ToLower(qualifier), tooltip)
-	level += e.SpellPointComparedBonusFor(featureID+"*", qualifier, categories, tooltip)
+	level += e.SpellPointComparedBonusFor(featureID+"*", qualifier, tags, tooltip)
 	return level
 }
 
 // SpellComparedBonusFor returns the total bonus for the matching spell bonuses.
-func (e *Entity) SpellComparedBonusFor(featureID, name string, categories []string, tooltip *xio.ByteBuffer) f64d4.Int {
+func (e *Entity) SpellComparedBonusFor(featureID, name string, tags []string, tooltip *xio.ByteBuffer) f64d4.Int {
 	var total f64d4.Int
 	for _, f := range e.featureMap[strings.ToLower(featureID)] {
 		if bonus, ok := f.(*feature.SpellBonus); ok &&
 			bonus.NameCriteria.Matches(name) &&
-			bonus.CategoryCriteria.Matches(categories...) {
+			bonus.TagsCriteria.Matches(tags...) {
 			total += bonus.AdjustedAmount()
 			bonus.AddToTooltip(tooltip)
 		}
@@ -724,12 +724,12 @@ func (e *Entity) SpellComparedBonusFor(featureID, name string, categories []stri
 }
 
 // SpellPointComparedBonusFor returns the total bonus for the matching spell point bonuses.
-func (e *Entity) SpellPointComparedBonusFor(featureID, qualifier string, categories []string, tooltip *xio.ByteBuffer) f64d4.Int {
+func (e *Entity) SpellPointComparedBonusFor(featureID, qualifier string, tags []string, tooltip *xio.ByteBuffer) f64d4.Int {
 	var total f64d4.Int
 	for _, f := range e.featureMap[strings.ToLower(featureID)] {
 		if bonus, ok := f.(*feature.SpellPointBonus); ok &&
 			bonus.NameCriteria.Matches(qualifier) &&
-			bonus.CategoryCriteria.Matches(categories...) {
+			bonus.TagsCriteria.Matches(tags...) {
 			total += bonus.AdjustedAmount()
 			bonus.AddToTooltip(tooltip)
 		}
@@ -739,18 +739,18 @@ func (e *Entity) SpellPointComparedBonusFor(featureID, qualifier string, categor
 
 // AddNamedWeaponDamageBonusesFor adds the bonuses for matching weapons that match to the map. If 'm' is nil, it will
 // be created. The provided map (or the newly created one) will be returned.
-func (e *Entity) AddNamedWeaponDamageBonusesFor(featureID, nameQualifier, usageQualifier string, categoryQualifier []string, dieCount int, tooltip *xio.ByteBuffer, m map[*feature.WeaponDamageBonus]bool) map[*feature.WeaponDamageBonus]bool {
+func (e *Entity) AddNamedWeaponDamageBonusesFor(featureID, nameQualifier, usageQualifier string, tagsQualifier []string, dieCount int, tooltip *xio.ByteBuffer, m map[*feature.WeaponDamageBonus]bool) map[*feature.WeaponDamageBonus]bool {
 	if m == nil {
 		m = make(map[*feature.WeaponDamageBonus]bool)
 	}
-	for _, one := range e.NamedWeaponDamageBonusesFor(featureID, nameQualifier, usageQualifier, categoryQualifier, dieCount, tooltip) {
+	for _, one := range e.NamedWeaponDamageBonusesFor(featureID, nameQualifier, usageQualifier, tagsQualifier, dieCount, tooltip) {
 		m[one] = true
 	}
 	return m
 }
 
 // NamedWeaponDamageBonusesFor returns the bonuses for matching weapons.
-func (e *Entity) NamedWeaponDamageBonusesFor(featureID, nameQualifier, usageQualifier string, categoryQualifiers []string, dieCount int, tooltip *xio.ByteBuffer) []*feature.WeaponDamageBonus {
+func (e *Entity) NamedWeaponDamageBonusesFor(featureID, nameQualifier, usageQualifier string, tagsQualifier []string, dieCount int, tooltip *xio.ByteBuffer) []*feature.WeaponDamageBonus {
 	list := e.featureMap[strings.ToLower(featureID)]
 	if len(list) == 0 {
 		return nil
@@ -762,7 +762,7 @@ func (e *Entity) NamedWeaponDamageBonusesFor(featureID, nameQualifier, usageQual
 			bonus.SelectionType == weapon.WithName &&
 			bonus.NameCriteria.Matches(nameQualifier) &&
 			bonus.SpecializationCriteria.Matches(usageQualifier) &&
-			bonus.CategoryCriteria.Matches(categoryQualifiers...) {
+			bonus.TagsCriteria.Matches(tagsQualifier...) {
 			bonuses = append(bonuses, bonus)
 			level := bonus.LeveledAmount.Level
 			bonus.LeveledAmount.Level = f64d4.FromInt(dieCount)
@@ -774,7 +774,7 @@ func (e *Entity) NamedWeaponDamageBonusesFor(featureID, nameQualifier, usageQual
 }
 
 // NamedWeaponSkillBonusesFor returns the bonuses for matching weapons.
-func (e *Entity) NamedWeaponSkillBonusesFor(featureID, nameQualifier, usageQualifier string, categoryQualifiers []string, tooltip *xio.ByteBuffer) []*feature.SkillBonus {
+func (e *Entity) NamedWeaponSkillBonusesFor(featureID, nameQualifier, usageQualifier string, tagsQualifier []string, tooltip *xio.ByteBuffer) []*feature.SkillBonus {
 	list := e.featureMap[strings.ToLower(featureID)]
 	if len(list) == 0 {
 		return nil
@@ -785,7 +785,7 @@ func (e *Entity) NamedWeaponSkillBonusesFor(featureID, nameQualifier, usageQuali
 			bonus.SelectionType == skill.WeaponsWithName &&
 			bonus.NameCriteria.Matches(nameQualifier) &&
 			bonus.SpecializationCriteria.Matches(usageQualifier) &&
-			bonus.CategoryCriteria.Matches(categoryQualifiers...) {
+			bonus.TagsCriteria.Matches(tagsQualifier...) {
 			bonuses = append(bonuses, bonus)
 			bonus.AddToTooltip(tooltip)
 		}

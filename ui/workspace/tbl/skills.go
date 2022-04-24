@@ -22,7 +22,7 @@ var (
 	skillListColMap = map[int]int{
 		0: gurps.SkillDescriptionColumn,
 		1: gurps.SkillDifficultyColumn,
-		2: gurps.SkillCategoryColumn,
+		2: gurps.SkillTagsColumn,
 		3: gurps.SkillReferenceColumn,
 	}
 	entitySkillPageColMap = map[int]int{
@@ -71,8 +71,8 @@ func (p *skillsProvider) Headers() []unison.TableColumnHeader {
 			headers = append(headers, NewHeader(i18n.Text("Skill / Technique"), "", p.forPage))
 		case gurps.SkillDifficultyColumn:
 			headers = append(headers, NewHeader(i18n.Text("Diff"), i18n.Text("Difficulty"), p.forPage))
-		case gurps.SkillCategoryColumn:
-			headers = append(headers, NewHeader(i18n.Text("Category"), "", p.forPage))
+		case gurps.SkillTagsColumn:
+			headers = append(headers, NewHeader(i18n.Text("Tags"), "", p.forPage))
 		case gurps.SkillReferenceColumn:
 			headers = append(headers, NewPageRefHeader(p.forPage))
 		case gurps.SkillLevelColumn:

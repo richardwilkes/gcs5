@@ -29,7 +29,7 @@ var (
 		6:  gurps.SpellCastTimeColumn,
 		7:  gurps.SpellDurationColumn,
 		8:  gurps.SpellDifficultyColumn,
-		9:  gurps.SpellCategoryColumn,
+		9:  gurps.SpellTagsColumn,
 		10: gurps.SpellReferenceColumn,
 	}
 	entitySpellPageColMap = map[int]int{
@@ -98,8 +98,8 @@ func (p *spellsProvider) Headers() []unison.TableColumnHeader {
 			headers = append(headers, NewHeader(i18n.Text("Duration"), "", p.forPage))
 		case gurps.SpellDifficultyColumn:
 			headers = append(headers, NewHeader(i18n.Text("Diff"), i18n.Text("Difficulty"), p.forPage))
-		case gurps.SpellCategoryColumn:
-			headers = append(headers, NewHeader(i18n.Text("Category"), "", p.forPage))
+		case gurps.SpellTagsColumn:
+			headers = append(headers, NewHeader(i18n.Text("Tags"), "", p.forPage))
 		case gurps.SpellReferenceColumn:
 			headers = append(headers, NewPageRefHeader(p.forPage))
 		case gurps.SpellLevelColumn:

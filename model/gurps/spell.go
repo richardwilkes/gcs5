@@ -48,7 +48,7 @@ const (
 	SpellCastTimeColumn
 	SpellDurationColumn
 	SpellDifficultyColumn
-	SpellCategoryColumn
+	SpellTagsColumn
 	SpellReferenceColumn
 	SpellLevelColumn
 	SpellRelativeLevelColumn
@@ -91,7 +91,7 @@ type SpellData struct {
 	PageRef         string    `json:"reference,omitempty"`
 	LocalNotes      string    `json:"notes,omitempty"`
 	VTTNotes        string    `json:"vtt_notes,omitempty"`
-	Categories      []string  `json:"categories,omitempty"`
+	Tags            []string  `json:"categories,omitempty"` // TODO: use tags key instead
 	*SpellItem      `json:",omitempty"`
 	*SpellContainer `json:",omitempty"`
 }
@@ -321,9 +321,9 @@ func (s *Spell) CellData(column int, data *node.CellData) {
 			data.Type = node.Text
 			data.Primary = s.Difficulty.Description(s.Entity)
 		}
-	case SpellCategoryColumn:
+	case SpellTagsColumn:
 		data.Type = node.Text
-		data.Primary = CombineTags(s.Categories)
+		data.Primary = CombineTags(s.Tags)
 	case SpellReferenceColumn:
 		data.Type = node.PageRef
 		data.Primary = s.PageRef
@@ -528,9 +528,9 @@ func (s *Spell) calculateLevel() skill.Level {
 			relativeLevel += f64d4.One + pts.Div(fxp.Four).Trunc()
 		}
 		if level != f64d4.One {
-			relativeLevel += s.BestCollegeSpellBonus(s.Categories, s.College, &tooltip)
-			relativeLevel += s.SpellBonusesFor(feature.SpellPowerSourceID, s.PowerSource, s.Categories, &tooltip)
-			relativeLevel += s.SpellBonusesFor(feature.SpellNameID, s.Name, s.Categories, &tooltip)
+			relativeLevel += s.BestCollegeSpellBonus(s.Tags, s.College, &tooltip)
+			relativeLevel += s.SpellBonusesFor(feature.SpellPowerSourceID, s.PowerSource, s.Tags, &tooltip)
+			relativeLevel += s.SpellBonusesFor(feature.SpellNameID, s.Name, s.Tags, &tooltip)
 			relativeLevel = relativeLevel.Trunc()
 			level += relativeLevel
 		}
@@ -557,9 +557,9 @@ func (s *Spell) calculateRitualMagicLevel() skill.Level {
 	if s.Entity != nil {
 		tooltip := &xio.ByteBuffer{}
 		tooltip.WriteString(skillLevel.Tooltip)
-		levels := s.BestCollegeSpellBonus(s.Categories, s.College, tooltip)
-		levels += s.SpellBonusesFor(feature.SpellPowerSourceID, s.PowerSource, s.Categories, tooltip)
-		levels += s.SpellBonusesFor(feature.SpellNameID, s.Name, s.Categories, tooltip)
+		levels := s.BestCollegeSpellBonus(s.Tags, s.College, tooltip)
+		levels += s.SpellBonusesFor(feature.SpellPowerSourceID, s.PowerSource, s.Tags, tooltip)
+		levels += s.SpellBonusesFor(feature.SpellNameID, s.Name, s.Tags, tooltip)
 		levels = levels.Trunc()
 		skillLevel.Level += levels
 		skillLevel.RelativeLevel += levels
@@ -579,12 +579,12 @@ func (s *Spell) determineSkillLevelForCollege(college string) skill.Level {
 		def.Name = ""
 	}
 	var limit f64d4.Int
-	skillLevel := CalculateTechniqueLevel(s.Entity, s.Name, college, s.Categories, def, s.Difficulty.Difficulty, s.AdjustedPoints(), false, &limit)
+	skillLevel := CalculateTechniqueLevel(s.Entity, s.Name, college, s.Tags, def, s.Difficulty.Difficulty, s.AdjustedPoints(), false, &limit)
 	// CalculateTechniqueLevel() does not add the default skill modifier to the relative level, only to the final level
 	skillLevel.RelativeLevel += def.Modifier
 	def.Specialization = ""
 	def.Modifier -= fxp.Six
-	fallback := CalculateTechniqueLevel(s.Entity, s.Name, college, s.Categories, def, s.Difficulty.Difficulty, s.AdjustedPoints(), false, &limit)
+	fallback := CalculateTechniqueLevel(s.Entity, s.Name, college, s.Tags, def, s.Difficulty.Difficulty, s.AdjustedPoints(), false, &limit)
 	fallback.RelativeLevel += def.Modifier
 	if skillLevel.Level >= fallback.Level {
 		return skillLevel
@@ -593,7 +593,7 @@ func (s *Spell) determineSkillLevelForCollege(college string) skill.Level {
 }
 
 // BestCollegeSpellBonus returns the best college spell bonus for this spell.
-func (s *Spell) BestCollegeSpellBonus(categories, colleges []string, tooltip *xio.ByteBuffer) f64d4.Int {
+func (s *Spell) BestCollegeSpellBonus(tags, colleges []string, tooltip *xio.ByteBuffer) f64d4.Int {
 	best := f64d4.Min
 	var bestTooltip string
 	for _, college := range colleges {
@@ -601,7 +601,7 @@ func (s *Spell) BestCollegeSpellBonus(categories, colleges []string, tooltip *xi
 		if tooltip != nil {
 			buffer = &xio.ByteBuffer{}
 		}
-		if pts := s.SpellBonusesFor(feature.SpellCollegeID, college, categories, buffer); best < pts {
+		if pts := s.SpellBonusesFor(feature.SpellCollegeID, college, tags, buffer); best < pts {
 			best = pts
 			if buffer != nil {
 				bestTooltip = buffer.String()
@@ -618,10 +618,10 @@ func (s *Spell) BestCollegeSpellBonus(categories, colleges []string, tooltip *xi
 }
 
 // SpellBonusesFor returns the bonus for this spell.
-func (s *Spell) SpellBonusesFor(featureID, qualifier string, categories []string, tooltip *xio.ByteBuffer) f64d4.Int {
+func (s *Spell) SpellBonusesFor(featureID, qualifier string, tags []string, tooltip *xio.ByteBuffer) f64d4.Int {
 	level := s.Entity.BonusFor(featureID, tooltip)
 	level += s.Entity.BonusFor(featureID+"/"+strings.ToLower(qualifier), tooltip)
-	level += s.Entity.SpellComparedBonusFor(featureID+"*", qualifier, categories, tooltip)
+	level += s.Entity.SpellComparedBonusFor(featureID+"*", qualifier, tags, tooltip)
 	return level
 }
 
@@ -724,9 +724,9 @@ func (s *Spell) FeatureList() feature.Features {
 	return nil
 }
 
-// CategoryList returns the list of categories.
-func (s *Spell) CategoryList() []string {
-	return s.Categories
+// TagList returns the list of tags.
+func (s *Spell) TagList() []string {
+	return s.Tags
 }
 
 // Description implements WeaponOwner.
@@ -792,8 +792,8 @@ func (s *Spell) AdjustedPoints() f64d4.Int {
 	points := s.Points
 	if s.Entity != nil && s.Entity.Type == datafile.PC {
 		points += s.bestCollegeSpellPointBonus(nil)
-		points += s.Entity.SpellPointBonusesFor(feature.SpellPowerSourcePointsID, s.PowerSource, s.Categories, nil)
-		points += s.Entity.SpellPointBonusesFor(feature.SpellPointsID, s.Name, s.Categories, nil)
+		points += s.Entity.SpellPointBonusesFor(feature.SpellPowerSourcePointsID, s.PowerSource, s.Tags, nil)
+		points += s.Entity.SpellPointBonusesFor(feature.SpellPointsID, s.Name, s.Tags, nil)
 		points = points.Max(0)
 	}
 	return points
@@ -807,7 +807,7 @@ func (s *Spell) bestCollegeSpellPointBonus(tooltip *xio.ByteBuffer) f64d4.Int {
 		if tooltip != nil {
 			buffer = &xio.ByteBuffer{}
 		}
-		points := s.Entity.SpellPointBonusesFor(feature.SpellCollegePointsID, college, s.Categories, buffer)
+		points := s.Entity.SpellPointBonusesFor(feature.SpellCollegePointsID, college, s.Tags, buffer)
 		if best < points {
 			best = points
 			if buffer != nil {
