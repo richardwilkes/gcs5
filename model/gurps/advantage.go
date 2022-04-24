@@ -90,16 +90,15 @@ func SaveAdvantages(advantages []*Advantage, filePath string) error {
 
 // NewAdvantage creates a new Advantage.
 func NewAdvantage(entity *Entity, parent *Advantage, container bool) *Advantage {
-	return &Advantage{
+	a := &Advantage{
 		AdvantageData: AdvantageData{
 			ContainerBase: newContainerBase[*Advantage](advantageTypeKey, container),
-			AdvantageEditData: AdvantageEditData{
-				Name: i18n.Text("Advantage"),
-			},
 		},
 		Entity: entity,
 		Parent: parent,
 	}
+	a.Name = a.Kind()
+	return a
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -137,12 +136,12 @@ func (a *Advantage) UnmarshalJSON(data []byte) error {
 	}
 	localData.ClearUnusedFieldsForType()
 	a.AdvantageData = localData.AdvantageData
-	a.Tags = append(a.Tags, localData.Categories...)
 	a.transferOldTypeFlagToTags(i18n.Text("Mental"), localData.Mental)
 	a.transferOldTypeFlagToTags(i18n.Text("Physical"), localData.Physical)
 	a.transferOldTypeFlagToTags(i18n.Text("Social"), localData.Social)
 	a.transferOldTypeFlagToTags(i18n.Text("Exotic"), localData.Exotic)
 	a.transferOldTypeFlagToTags(i18n.Text("Supernatural"), localData.Supernatural)
+	a.Tags = convertOldCategoriesToTags(a.Tags, localData.Categories)
 	slices.Sort(a.Tags)
 	if a.Container() {
 		for _, one := range a.Children {

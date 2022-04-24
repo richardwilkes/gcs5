@@ -12,33 +12,41 @@
 package gurps
 
 import (
+	"strings"
+
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-// AdvantageData holds the Advantage data that is written to disk.
-type AdvantageData struct {
-	ContainerBase[*Advantage]
-	AdvantageEditData
+// SkillData holds the Skill data that is written to disk.
+type SkillData struct {
+	ContainerBase[*Skill]
+	SkillEditData
 }
 
 // Kind returns the kind of data.
-func (d *AdvantageData) Kind() string {
-	return d.kind(i18n.Text("Advantage"))
+func (d *SkillData) Kind() string {
+	if strings.HasPrefix(d.Type, gid.Skill) {
+		return d.kind(i18n.Text("Skill"))
+	}
+	return d.kind(i18n.Text("Technique"))
 }
 
 // ClearUnusedFieldsForType zeroes out the fields that are not applicable to this type (container vs not-container).
-func (d *AdvantageData) ClearUnusedFieldsForType() {
+func (d *SkillData) ClearUnusedFieldsForType() {
 	d.clearUnusedFields()
 	if d.Container() {
-		d.BasePoints = 0
-		d.Levels = 0
-		d.PointsPerLevel = 0
+		d.Specialization = ""
+		d.TechLevel = nil
+		d.Difficulty = AttributeDifficulty{}
+		d.Points = 0
+		d.EncumbrancePenaltyMultiplier = 0
+		d.DefaultedFrom = nil
+		d.Defaults = nil
+		d.TechniqueDefault = nil
+		d.TechniqueLimitModifier = nil
 		d.Prereq = nil
 		d.Weapons = nil
 		d.Features = nil
-		d.RoundCostDown = false
-	} else {
-		d.ContainerType = 0
-		d.Ancestry = ""
 	}
 }

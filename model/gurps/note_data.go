@@ -22,11 +22,11 @@ type NoteData struct {
 }
 
 // Kind returns the kind of data.
-func (n *NoteData) Kind() string {
-	return n.kind(i18n.Text("Note"))
+func (d *NoteData) Kind() string {
+	return d.kind(i18n.Text("Note"))
 }
 
 // ClearUnusedFieldsForType zeroes out the fields that are not applicable to this type (container vs not-container).
-func (n *NoteData) ClearUnusedFieldsForType() {
-	n.clearUnusedFields()
+func (d *NoteData) ClearUnusedFieldsForType() {
+	d.clearUnusedFields()
 }

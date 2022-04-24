@@ -73,12 +73,14 @@ func SaveNotes(notes []*Note, filePath string) error {
 
 // NewNote creates a new Note.
 func NewNote(parent *Note, container bool) *Note {
-	return &Note{
+	n := &Note{
 		NoteData: NoteData{
 			ContainerBase: newContainerBase[*Note](noteTypeKey, container),
 		},
 		Parent: parent,
 	}
+	n.Text = n.Kind()
+	return n
 }
 
 // MarshalJSON implements json.Marshaler.

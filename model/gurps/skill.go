@@ -18,13 +18,11 @@ import (
 	"math"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/datafile"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
-	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
@@ -33,6 +31,7 @@ import (
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
+	"golang.org/x/exp/slices"
 )
 
 var _ node.Node = &Skill{}
@@ -49,41 +48,6 @@ const (
 )
 
 const skillListTypeKey = "skill_list"
-
-// SkillItem holds the Skill data that only exists in non-containers.
-type SkillItem struct {
-	Specialization               string              `json:"specialization,omitempty"`
-	TechLevel                    *string             `json:"tech_level,omitempty"`
-	Difficulty                   AttributeDifficulty `json:"difficulty"`
-	Points                       f64d4.Int           `json:"points,omitempty"`
-	EncumbrancePenaltyMultiplier f64d4.Int           `json:"encumbrance_penalty_multiplier,omitempty"`
-	DefaultedFrom                *SkillDefault       `json:"defaulted_from,omitempty"`
-	Defaults                     []*SkillDefault     `json:"defaults,omitempty"`
-	TechniqueDefault             *SkillDefault       `json:"default,omitempty"`
-	TechniqueLimitModifier       *f64d4.Int          `json:"limit,omitempty"`
-	Prereq                       *PrereqList         `json:"prereqs,omitempty"`
-	Weapons                      []*Weapon           `json:"weapons,omitempty"`
-	Features                     feature.Features    `json:"features,omitempty"`
-}
-
-// SkillContainer holds the Skill data that only exists in containers.
-type SkillContainer struct {
-	Children []*Skill `json:"children,omitempty"`
-	Open     bool     `json:"open,omitempty"`
-}
-
-// SkillData holds the Skill data that is written to disk.
-type SkillData struct {
-	Type            string    `json:"type"`
-	ID              uuid.UUID `json:"id"`
-	Name            string    `json:"name,omitempty"`
-	PageRef         string    `json:"reference,omitempty"`
-	LocalNotes      string    `json:"notes,omitempty"`
-	VTTNotes        string    `json:"vtt_notes,omitempty"`
-	Tags            []string  `json:"categories,omitempty"` // TODO: use tags key instead
-	*SkillItem      `json:",omitempty"`
-	*SkillContainer `json:",omitempty"`
-}
 
 // Skill holds the data for a skill.
 type Skill struct {
@@ -129,135 +93,87 @@ func SaveSkills(skills []*Skill, filePath string) error {
 func NewSkill(entity *Entity, parent *Skill, container bool) *Skill {
 	s := Skill{
 		SkillData: SkillData{
-			Type: gid.Skill,
-			ID:   id.NewUUID(),
-			Name: i18n.Text("Skill"),
+			ContainerBase: newContainerBase[*Skill](gid.Skill, container),
 		},
 		Entity: entity,
 		Parent: parent,
 	}
-	if container {
-		s.Type += containerKeyPostfix
-		s.SkillContainer = &SkillContainer{Open: true}
-	} else {
-		s.SkillItem = &SkillItem{
-			Difficulty: AttributeDifficulty{
-				Attribute:  AttributeIDFor(entity, gid.Dexterity),
-				Difficulty: skill.Average,
-			},
-			Points: f64d4.One,
-			Prereq: NewPrereqList(),
-		}
+	if !container {
+		s.Difficulty.Attribute = AttributeIDFor(entity, gid.Dexterity)
+		s.Difficulty.Difficulty = skill.Average
+		s.Points = f64d4.One
 	}
+	s.Name = s.Kind()
 	return &s
 }
 
 // NewTechnique creates a new technique (i.e. a specialized use of a Skill). All parameters may be nil or empty.
 func NewTechnique(entity *Entity, parent *Skill, skillName string) *Skill {
-	t := NewSkill(entity, parent, false)
-	t.Type = gid.Technique
-	t.Name = i18n.Text("Technique")
 	if skillName == "" {
 		skillName = i18n.Text("Skill")
 	}
-	t.TechniqueDefault = &SkillDefault{
-		DefaultType: gid.Skill,
-		Name:        skillName,
+	s := Skill{
+		SkillData: SkillData{
+			ContainerBase: newContainerBase[*Skill](gid.Technique, false),
+			SkillEditData: SkillEditData{
+				Difficulty: AttributeDifficulty{
+					Attribute:  AttributeIDFor(entity, gid.Dexterity),
+					Difficulty: skill.Average,
+				},
+				Points: f64d4.One,
+				TechniqueDefault: &SkillDefault{
+					DefaultType: gid.Skill,
+					Name:        skillName,
+				},
+			},
+		},
+		Entity: entity,
+		Parent: parent,
 	}
-	return t
+	s.Name = s.Kind()
+	return &s
 }
 
 // MarshalJSON implements json.Marshaler.
 func (s *Skill) MarshalJSON() ([]byte, error) {
-	if s.Container() {
-		s.SkillItem = nil
-	} else {
-		s.SkillContainer = nil
-		if s.LevelData.Level > 0 {
-			type calc struct {
-				Level              f64d4.Int `json:"level"`
-				RelativeSkillLevel string    `json:"rsl"`
-			}
-			return json.Marshal(&struct {
-				SkillData
-				Calc calc `json:"calc"`
-			}{
-				SkillData: s.SkillData,
-				Calc: calc{
-					Level:              s.LevelData.Level,
-					RelativeSkillLevel: s.RelativeLevel(),
-				},
-			})
-		}
+	s.ClearUnusedFieldsForType()
+	if s.Container() || s.LevelData.Level <= 0 {
+		return json.Marshal(&s.SkillData)
 	}
-	return json.Marshal(&s.SkillData)
+	type calc struct {
+		Level              f64d4.Int `json:"level"`
+		RelativeSkillLevel string    `json:"rsl"`
+	}
+	return json.Marshal(&struct {
+		SkillData
+		Calc calc `json:"calc"`
+	}{
+		SkillData: s.SkillData,
+		Calc: calc{
+			Level:              s.LevelData.Level,
+			RelativeSkillLevel: s.RelativeLevel(),
+		},
+	})
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (s *Skill) UnmarshalJSON(data []byte) error {
-	s.SkillData = SkillData{}
-	if err := json.Unmarshal(data, &s.SkillData); err != nil {
+	var localData struct {
+		SkillData
+		// Old data fields
+		Categories []string `json:"categories"`
+	}
+	if err := json.Unmarshal(data, &localData); err != nil {
 		return err
 	}
+	localData.ClearUnusedFieldsForType()
+	s.SkillData = localData.SkillData
+	s.Tags = convertOldCategoriesToTags(s.Tags, localData.Categories)
+	slices.Sort(s.Tags)
 	if s.Container() {
-		if s.SkillContainer == nil {
-			s.SkillContainer = &SkillContainer{}
-		}
 		for _, one := range s.Children {
 			one.Parent = s
 		}
-	} else {
-		if s.SkillItem == nil {
-			s.SkillItem = &SkillItem{}
-		}
-		if s.Prereq == nil {
-			s.Prereq = NewPrereqList()
-		}
-	}
-	return nil
-}
-
-// UUID returns the UUID of this data.
-func (s *Skill) UUID() uuid.UUID {
-	return s.ID
-}
-
-// Kind returns the kind of data.
-func (s *Skill) Kind() string {
-	if s.Container() {
-		return i18n.Text("Skill Container")
-	}
-	return i18n.Text("Skill")
-}
-
-// Container returns true if this is a container.
-func (s *Skill) Container() bool {
-	return strings.HasSuffix(s.Type, containerKeyPostfix)
-}
-
-// Open returns true if this node is currently open.
-func (s *Skill) Open() bool {
-	if s.Container() {
-		return s.SkillContainer.Open
-	}
-	return false
-}
-
-// SetOpen sets the current open state for this node.
-func (s *Skill) SetOpen(open bool) {
-	if s.Container() {
-		s.SkillContainer.Open = open
-	}
-}
-
-// NodeChildren returns the children of this node, if any.
-func (s *Skill) NodeChildren() []node.Node {
-	if s.Container() {
-		children := make([]node.Node, len(s.Children))
-		for i, child := range s.Children {
-			children[i] = child
-		}
-		return children
 	}
 	return nil
 }

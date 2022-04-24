@@ -11,10 +11,32 @@
 
 package gurps
 
-import "github.com/richardwilkes/toolbox/i18n"
+import (
+	"strings"
+
+	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/txt"
+)
 
 // String constants
 var (
 	NoAdditionalModifiers = i18n.Text("No additional modifiers")
 	IncludesModifiersFrom = i18n.Text("Includes modifiers from")
 )
+
+func convertOldCategoriesToTags(tags, categories []string) []string {
+	if categories == nil {
+		return tags
+	}
+	for _, one := range categories {
+		parts := strings.Split(one, "/")
+		for _, part := range parts {
+			if part = strings.TrimSpace(part); part != "" {
+				if !txt.CaselessSliceContains(tags, part) {
+					tags = append(tags, part)
+				}
+			}
+		}
+	}
+	return tags
+}
