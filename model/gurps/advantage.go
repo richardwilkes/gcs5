@@ -437,11 +437,11 @@ func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel f64d4.Int
 	var baseEnh, levelEnh, baseLim, levelLim f64d4.Int
 	multiplier := cr.Multiplier()
 	for _, one := range modifiers {
-		if !one.Disabled {
+		if !one.Container() && !one.Disabled {
 			modifier := one.CostModifier()
 			switch one.CostType {
 			case advantage.Percentage:
-				switch *one.Affects {
+				switch one.Affects {
 				case advantage.Total:
 					if modifier < 0 {
 						baseLim += modifier
@@ -464,7 +464,7 @@ func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel f64d4.Int
 					}
 				}
 			case advantage.Points:
-				if *one.Affects == advantage.LevelsOnly {
+				if one.Affects == advantage.LevelsOnly {
 					pointsPerLevel += modifier
 				} else {
 					basePoints += modifier

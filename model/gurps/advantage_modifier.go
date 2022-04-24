@@ -16,19 +16,16 @@ import (
 	"io/fs"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
-	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
-	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+	"golang.org/x/exp/slices"
 )
 
 var _ node.Node = &AdvantageModifier{}
@@ -45,35 +42,6 @@ const (
 	advantageModifierListTypeKey = "modifier_list"
 	advantageModifierTypeKey     = "modifier"
 )
-
-// AdvantageModifierItem holds the AdvantageModifier data that only exists in non-containers.
-type AdvantageModifierItem struct {
-	CostType advantage.ModifierCostType `json:"cost_type"`
-	Disabled bool                       `json:"disabled,omitempty"`
-	Cost     f64d4.Int                  `json:"cost,omitempty"`
-	Levels   f64d4.Int                  `json:"levels,omitempty"`
-	Affects  *advantage.Affects         `json:"affects,omitempty"`
-	Features feature.Features           `json:"features,omitempty"`
-}
-
-// AdvantageModifierContainer holds the AdvantageModifier data that only exists in containers.
-type AdvantageModifierContainer struct {
-	Children []*AdvantageModifier `json:"children,omitempty"`
-	Open     bool                 `json:"open,omitempty"`
-}
-
-// AdvantageModifierData holds the AdvantageModifier data that is written to disk.
-type AdvantageModifierData struct {
-	Type                        string    `json:"type"`
-	ID                          uuid.UUID `json:"id"`
-	Name                        string    `json:"name,omitempty"`
-	PageRef                     string    `json:"reference,omitempty"`
-	Notes                       string    `json:"notes,omitempty"`
-	VTTNotes                    string    `json:"vtt_notes,omitempty"`
-	Tags                        []string  `json:"categories,omitempty"` // TODO: use tags key instead
-	*AdvantageModifierItem      `json:",omitempty"`
-	*AdvantageModifierContainer `json:",omitempty"`
-}
 
 // AdvantageModifier holds a modifier to an Advantage.
 type AdvantageModifier struct {
@@ -113,123 +81,51 @@ func SaveAdvantageModifiers(modifiers []*AdvantageModifier, filePath string) err
 
 // NewAdvantageModifier creates an AdvantageModifier.
 func NewAdvantageModifier(entity *Entity, container bool) *AdvantageModifier {
-	a := AdvantageModifier{
+	a := &AdvantageModifier{
 		AdvantageModifierData: AdvantageModifierData{
-			Type: advantageModifierTypeKey,
-			ID:   id.NewUUID(),
-			Name: i18n.Text("Advantage Modifier"),
+			ContainerBase: newContainerBase[*AdvantageModifier](advantageModifierTypeKey, container),
 		},
 		Entity: entity,
 	}
-	if container {
-		a.Type += containerKeyPostfix
-		a.AdvantageModifierContainer = &AdvantageModifierContainer{Open: true}
-	} else {
-		affects := advantage.Total
-		a.AdvantageModifierItem = &AdvantageModifierItem{
-			Affects: &affects,
-		}
-	}
-	return &a
+	a.Name = a.Kind()
+	return a
 }
 
 // Clone creates a copy of this data.
 func (a *AdvantageModifier) Clone() *AdvantageModifier {
 	other := *a
 	other.Tags = txt.CloneStringSlice(a.Tags)
-	if a.AdvantageModifierItem != nil {
-		item := *a.AdvantageModifierItem
-		if item.Affects != nil {
-			affects := *item.Affects
-			item.Affects = &affects
+	other.Features = a.Features.Clone()
+	other.Children = nil
+	if len(a.Children) != 0 {
+		other.Children = make([]*AdvantageModifier, 0, len(a.Children))
+		for _, one := range a.Children {
+			other.Children = append(other.Children, one.Clone())
 		}
-		item.Features = a.Features.Clone()
-		other.AdvantageModifierItem = &item
-	}
-	if a.AdvantageModifierContainer != nil {
-		container := *a.AdvantageModifierContainer
-		container.Children = nil
-		if len(a.Children) != 0 {
-			container.Children = make([]*AdvantageModifier, 0, len(a.Children))
-			for _, one := range a.Children {
-				container.Children = append(container.Children, one.Clone())
-			}
-		}
-		other.AdvantageModifierContainer = &container
 	}
 	return &other
 }
 
 // MarshalJSON implements json.Marshaler.
 func (a *AdvantageModifier) MarshalJSON() ([]byte, error) {
-	if a.Container() {
-		a.AdvantageModifierItem = nil
-	} else {
-		a.AdvantageModifierContainer = nil
-	}
+	a.ClearUnusedFieldsForType()
 	return json.Marshal(&a.AdvantageModifierData)
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (a *AdvantageModifier) UnmarshalJSON(data []byte) error {
-	a.AdvantageModifierData = AdvantageModifierData{}
-	if err := json.Unmarshal(data, &a.AdvantageModifierData); err != nil {
+	var localData struct {
+		AdvantageModifierData
+		// Old data fields
+		Categories []string `json:"categories"`
+	}
+	if err := json.Unmarshal(data, &localData); err != nil {
 		return err
 	}
-	if a.Container() {
-		if a.AdvantageModifierContainer == nil {
-			a.AdvantageModifierContainer = &AdvantageModifierContainer{}
-		}
-	} else {
-		if a.AdvantageModifierItem == nil {
-			a.AdvantageModifierItem = &AdvantageModifierItem{}
-		}
-	}
-	return nil
-}
-
-// UUID returns the UUID of this data.
-func (a *AdvantageModifier) UUID() uuid.UUID {
-	return a.ID
-}
-
-// Kind returns the kind of data.
-func (a *AdvantageModifier) Kind() string {
-	if a.Container() {
-		return i18n.Text("Advantage Modifier Container")
-	}
-	return i18n.Text("Advantage Modifier")
-}
-
-// Container returns true if this is a container.
-func (a *AdvantageModifier) Container() bool {
-	return strings.HasSuffix(a.Type, containerKeyPostfix)
-}
-
-// Open returns true if this node is currently open.
-func (a *AdvantageModifier) Open() bool {
-	if a.Container() {
-		return a.AdvantageModifierContainer.Open
-	}
-	return false
-}
-
-// SetOpen sets the current open state for this node.
-func (a *AdvantageModifier) SetOpen(open bool) {
-	if a.Container() {
-		a.AdvantageModifierContainer.Open = open
-	}
-}
-
-// NodeChildren returns the children of this node, if any.
-func (a *AdvantageModifier) NodeChildren() []node.Node {
-	if a.Container() {
-		children := make([]node.Node, len(a.Children))
-		for i, child := range a.Children {
-			children[i] = child
-		}
-		return children
-	}
+	localData.ClearUnusedFieldsForType()
+	a.AdvantageModifierData = localData.AdvantageModifierData
+	a.Tags = convertOldCategoriesToTags(a.Tags, localData.Categories)
+	slices.Sort(a.Tags)
 	return nil
 }
 
@@ -280,7 +176,7 @@ func (a *AdvantageModifier) CostModifier() f64d4.Int {
 
 // HasLevels returns true if this AdvantageModifier has levels.
 func (a *AdvantageModifier) HasLevels() bool {
-	return a.CostType == advantage.Percentage && a.Levels > 0
+	return !a.Container() && a.CostType == advantage.Percentage && a.Levels > 0
 }
 
 func (a *AdvantageModifier) String() string {
@@ -325,6 +221,9 @@ func (a *AdvantageModifier) FullDescription() string {
 
 // CostDescription returns the formatted cost.
 func (a *AdvantageModifier) CostDescription() string {
+	if a.Container() {
+		return ""
+	}
 	var buffer strings.Builder
 	if a.CostType == advantage.Multiplier {
 		buffer.WriteByte('x')
