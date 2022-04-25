@@ -10,7 +10,6 @@
 
 #### GCS-specific work that needs to be done
 
-- Wildcard skill difficulties are being calculated incorrectly
 - Detail editors
   - Advantages
   - Advantage Modifiers

@@ -15,7 +15,6 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"math"
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/fxp"
@@ -308,7 +307,7 @@ func (s *Spell) RelativeLevel() string {
 	}
 	rsl := s.AdjustedRelativeLevel()
 	switch {
-	case rsl == math.MinInt:
+	case rsl == f64d4.Min:
 		return "-"
 	case s.Type != gid.RitualMagicSpell:
 		return ResolveAttributeName(s.Entity, s.Difficulty.Attribute) + rsl.StringWithSign()
@@ -373,6 +372,7 @@ func (s *Spell) IncrementSkillLevel() {
 		oldLevel := s.Level()
 		for points := basePoints; points < maxPoints; points += f64d4.One {
 			s.Points = points
+			s.UpdateLevel()
 			if s.Level() > oldLevel {
 				break
 			}
@@ -394,6 +394,7 @@ func (s *Spell) DecrementSkillLevel() {
 		oldLevel := s.Level()
 		for points := basePoints; points >= minPoints; points -= f64d4.One {
 			s.Points = points
+			s.UpdateLevel()
 			if s.Level() < oldLevel {
 				break
 			}
@@ -402,6 +403,7 @@ func (s *Spell) DecrementSkillLevel() {
 			oldLevel = s.Level()
 			for s.Points > 0 {
 				s.Points -= f64d4.One
+				s.UpdateLevel()
 				if s.Level() != oldLevel {
 					s.Points += f64d4.One
 					break
@@ -416,7 +418,7 @@ func (s *Spell) calculateLevel() skill.Level {
 	relativeLevel := s.Difficulty.Difficulty.BaseRelativeLevel()
 	level := fxp.NegOne
 	if s.Entity != nil {
-		pts := s.Points
+		pts := s.Points.Trunc()
 		level = s.Entity.ResolveAttributeCurrent(s.Difficulty.Attribute)
 		if s.Difficulty.Difficulty == skill.Wildcard {
 			pts = pts.Div(fxp.Three).Trunc()

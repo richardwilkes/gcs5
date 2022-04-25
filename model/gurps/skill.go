@@ -15,7 +15,6 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"math"
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/fxp"
@@ -196,9 +195,14 @@ func (s *Skill) CellData(column int, data *node.CellData) {
 	case SkillRelativeLevelColumn:
 		if !s.Container() {
 			data.Type = node.Text
-			data.Primary = ResolveAttributeName(s.Entity, s.Difficulty.Attribute)
-			if rsl := s.AdjustedRelativeLevel(); rsl != 0 {
-				data.Primary += rsl.StringWithSign()
+			rsl := s.AdjustedRelativeLevel()
+			if rsl == f64d4.Min {
+				data.Primary = "-"
+			} else {
+				data.Primary = ResolveAttributeName(s.Entity, s.Difficulty.Attribute)
+				if rsl != 0 {
+					data.Primary += rsl.StringWithSign()
+				}
 			}
 		}
 	case SkillPointsColumn:
@@ -259,9 +263,11 @@ func (s *Skill) ModifierNotes() string {
 	if s.Type == gid.Technique {
 		return i18n.Text("Default: ") + s.TechniqueDefault.FullName(s.Entity) + s.TechniqueDefault.ModifierAsString()
 	}
-	defSkill := s.DefaultSkill()
-	if defSkill != nil && s.DefaultedFrom != nil {
-		return i18n.Text("Default: ") + defSkill.String() + s.DefaultedFrom.ModifierAsString()
+	if s.Difficulty.Difficulty != skill.Wildcard {
+		defSkill := s.DefaultSkill()
+		if defSkill != nil && s.DefaultedFrom != nil {
+			return i18n.Text("Default: ") + defSkill.String() + s.DefaultedFrom.ModifierAsString()
+		}
 	}
 	return ""
 }
@@ -339,7 +345,7 @@ func (s *Skill) RelativeLevel() string {
 	}
 	rsl := s.AdjustedRelativeLevel()
 	switch {
-	case rsl == math.MinInt:
+	case rsl == f64d4.Min:
 		return "-"
 	case s.Type != gid.Technique:
 		return ResolveAttributeName(s.Entity, s.Difficulty.Attribute) + rsl.StringWithSign()
@@ -411,6 +417,7 @@ func (s *Skill) IncrementSkillLevel() {
 		oldLevel := s.Level()
 		for points := basePoints; points < maxPoints; points += f64d4.One {
 			s.Points = points
+			s.UpdateLevel()
 			if s.Level() > oldLevel {
 				break
 			}
@@ -432,6 +439,7 @@ func (s *Skill) DecrementSkillLevel() {
 		oldLevel := s.Level()
 		for points := basePoints; points >= minPoints; points -= f64d4.One {
 			s.Points = points
+			s.UpdateLevel()
 			if s.Level() < oldLevel {
 				break
 			}
@@ -440,6 +448,7 @@ func (s *Skill) DecrementSkillLevel() {
 			oldLevel = s.Level()
 			for s.Points > 0 {
 				s.Points -= f64d4.One
+				s.UpdateLevel()
 				if s.Level() != oldLevel {
 					s.Points += f64d4.One
 					break
@@ -462,12 +471,12 @@ func (s *Skill) calculateLevel() skill.Level {
 		}
 		switch {
 		case pts == f64d4.One:
-		// relativeLevel is preset to this point value
-		case pts > 0 && pts < fxp.Four:
+			// relativeLevel is preset to this point value
+		case pts > f64d4.One && pts < fxp.Four:
 			relativeLevel += f64d4.One
-		case pts > 0:
+		case pts >= fxp.Four:
 			relativeLevel += f64d4.One + pts.Div(fxp.Four).Trunc()
-		case s.DefaultedFrom != nil && s.DefaultedFrom.Points < 0:
+		case s.Difficulty.Difficulty != skill.Wildcard && s.DefaultedFrom != nil && s.DefaultedFrom.Points < 0:
 			relativeLevel = s.DefaultedFrom.AdjLevel - level
 		default:
 			level = f64d4.Min
@@ -475,7 +484,7 @@ func (s *Skill) calculateLevel() skill.Level {
 		}
 		if level != f64d4.Min {
 			level += relativeLevel
-			if s.DefaultedFrom != nil && level < s.DefaultedFrom.AdjLevel {
+			if s.Difficulty.Difficulty != skill.Wildcard && s.DefaultedFrom != nil && level < s.DefaultedFrom.AdjLevel {
 				level = s.DefaultedFrom.AdjLevel
 			}
 			if s.Entity != nil {
@@ -559,8 +568,8 @@ func (s *Skill) UpdateLevel() bool {
 func (s *Skill) bestDefaultWithPoints(excluded *SkillDefault) *SkillDefault {
 	best := s.bestDefault(excluded)
 	if best != nil {
-		baseLine := s.Entity.ResolveAttributeCurrent(s.Difficulty.Attribute) + s.Difficulty.Difficulty.BaseRelativeLevel()
-		level := best.Level
+		baseLine := (s.Entity.ResolveAttributeCurrent(s.Difficulty.Attribute) + s.Difficulty.Difficulty.BaseRelativeLevel()).Trunc()
+		level := best.Level.Trunc()
 		best.AdjLevel = level
 		switch {
 		case level == baseLine:
