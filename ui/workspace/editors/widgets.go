@@ -24,8 +24,12 @@ func addNameLabelAndField(parent *unison.Panel, fieldData *string) {
 	addLabelAndStringField(parent, i18n.Text("Name"), "", fieldData)
 }
 
+func addSpecializationLabelAndField(parent *unison.Panel, fieldData *string) {
+	addLabelAndStringField(parent, i18n.Text("Specialization"), "", fieldData)
+}
+
 func addPageRefLabelAndField(parent *unison.Panel, fieldData *string) {
-	addLabelAndStringField(parent, i18n.Text("Page"), tbl.PageRefTooltipText, fieldData)
+	addLabelAndStringField(parent, i18n.Text("Page Reference"), tbl.PageRefTooltipText, fieldData)
 }
 
 func addNotesLabelAndField(parent *unison.Panel, fieldData *string) {
@@ -42,6 +46,57 @@ func addUserDescLabelAndField(parent *unison.Panel, fieldData *string) {
 	addLabelAndMultiLineStringField(parent, i18n.Text("User Description"),
 		i18n.Text("Additional notes for your own reference. These only exist in character sheets and will be removed if transferred to a data list or template"),
 		fieldData)
+}
+
+func addTechLevelRequired(parent *unison.Panel, fieldData **string, includeField bool) {
+	tl := i18n.Text("Tech Level")
+	var field *widget.StringField
+	if includeField {
+		wrapper := addFlowWrapper(parent, tl, 2)
+		field = widget.NewStringField(tl, func() string {
+			if *fieldData == nil {
+				return ""
+			}
+			return **fieldData
+		}, func(value string) {
+			if *fieldData == nil {
+				return
+			}
+			**fieldData = value
+			widget.MarkModified(parent)
+		})
+		if *fieldData == nil {
+			field.SetEnabled(false)
+		}
+		insets := field.Border().Insets()
+		field.MinimumTextWidth = field.Font.SimpleWidth("12^") + insets.Width()
+		wrapper.AddChild(field)
+		parent = wrapper
+	} else {
+		parent.AddChild(widget.NewFieldLeadingLabel(tl))
+	}
+	last := *fieldData
+	required := last != nil
+	parent.AddChild(widget.NewCheckBox(i18n.Text("Required"), required, func(b bool) {
+		required = b
+		if b {
+			if last == nil {
+				var data string
+				last = &data
+			}
+			*fieldData = last
+			if field != nil {
+				field.SetEnabled(true)
+			}
+		} else {
+			last = *fieldData
+			*fieldData = nil
+			if field != nil {
+				field.SetEnabled(false)
+			}
+		}
+		widget.MarkModified(parent)
+	}))
 }
 
 func addTagsLabelAndField(parent *unison.Panel, fieldData *[]string) {
@@ -71,6 +126,10 @@ func addLabelAndStringField(parent *unison.Panel, labelText, tooltip string, fie
 		label.Tooltip = unison.NewTooltipWithText(tooltip)
 	}
 	parent.AddChild(label)
+	addStringField(parent, labelText, tooltip, fieldData)
+}
+
+func addStringField(parent *unison.Panel, labelText, tooltip string, fieldData *string) *widget.StringField {
 	field := widget.NewStringField(labelText, func() string { return *fieldData },
 		func(value string) {
 			*fieldData = value
@@ -80,6 +139,7 @@ func addLabelAndStringField(parent *unison.Panel, labelText, tooltip string, fie
 		field.Tooltip = unison.NewTooltipWithText(tooltip)
 	}
 	parent.AddChild(field)
+	return field
 }
 
 func addLabelAndMultiLineStringField(parent *unison.Panel, labelText, tooltip string, fieldData *string) {
@@ -164,6 +224,10 @@ func addLabelAndPopup[T comparable](parent *unison.Panel, labelText, tooltip str
 		label.Tooltip = unison.NewTooltipWithText(tooltip)
 	}
 	parent.AddChild(label)
+	return addPopup[T](parent, choices, fieldData)
+}
+
+func addPopup[T comparable](parent *unison.Panel, choices []T, fieldData *T) *unison.PopupMenu[T] {
 	popup := unison.NewPopupMenu[T]()
 	for _, one := range choices {
 		popup.AddItem(one)

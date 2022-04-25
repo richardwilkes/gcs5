@@ -29,6 +29,7 @@ var (
 	Six           = f64d4.FromInt(6)
 	Seven         = f64d4.FromInt(7)
 	Eight         = f64d4.FromInt(8)
+	Nine          = f64d4.FromInt(9)
 	Ten           = f64d4.FromInt(10)
 	Twelve        = f64d4.FromInt(12)
 	Fifteen       = f64d4.FromInt(15)

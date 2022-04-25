@@ -35,6 +35,7 @@ var (
 	_ unison.UndoManagerProvider   = &Template{}
 	_ widget.ModifiableRoot        = &Template{}
 	_ widget.Rebuildable           = &Template{}
+	_ widget.DockableKind          = &Template{}
 )
 
 // Template holds the view for a GURPS character template.
@@ -117,6 +118,11 @@ func NewTemplate(filePath string, template *gurps.Template) unison.Dockable {
 	return t
 }
 
+// DockableKind implements widget.DockableKind
+func (d *Template) DockableKind() string {
+	return widget.TemplateDockableKind
+}
+
 func (d *Template) applyScale() {
 	d.scroll.Content().AsPanel().SetScale(float32(d.scale) / 100)
 	d.scroll.Sync()
@@ -194,7 +200,7 @@ func (d *Template) createLists() {
 				d.Lists[advantagesListIndex] = NewAdvantagesPageList(d, d.template)
 				rowPanel.AddChild(d.Lists[advantagesListIndex])
 			case gurps.BlockLayoutSkillsKey:
-				d.Lists[skillsListIndex] = NewSkillsPageList(d.template)
+				d.Lists[skillsListIndex] = NewSkillsPageList(d, d.template)
 				rowPanel.AddChild(d.Lists[skillsListIndex])
 			case gurps.BlockLayoutSpellsKey:
 				d.Lists[spellsListIndex] = NewSpellsPageList(d.template)
@@ -246,11 +252,15 @@ func (d *Template) MarkForRebuild(full bool) {
 			if doFull {
 				selMap := make([]map[uuid.UUID]bool, listCount)
 				for i, one := range d.Lists {
-					selMap[i] = one.RecordSelection()
+					if one != nil {
+						selMap[i] = one.RecordSelection()
+					}
 				}
 				defer func() {
 					for i, one := range d.Lists {
-						one.ApplySelection(selMap[i])
+						if one != nil {
+							one.ApplySelection(selMap[i])
+						}
 					}
 				}()
 				d.createLists()

@@ -33,7 +33,10 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-var _ widget.Rebuildable = &TableDockable{}
+var (
+	_ widget.Rebuildable  = &TableDockable{}
+	_ widget.DockableKind = &TableDockable{}
+)
 
 // TableDockable holds the view for a file that contains a (potentially hierarchical) list of data.
 type TableDockable struct {
@@ -183,7 +186,17 @@ func NewSkillTableDockableFromFile(filePath string) (unison.Dockable, error) {
 
 // NewSkillTableDockable creates a new unison.Dockable for skill list files.
 func NewSkillTableDockable(filePath string, skills []*gurps.Skill) unison.Dockable {
-	return NewTableDockable(filePath, tbl.NewSkillsProvider(&skillListProvider{skills: skills}, false))
+	t := NewTableDockable(filePath, tbl.NewSkillsProvider(&skillListProvider{skills: skills}, false))
+	t.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
+		for _, row := range t.table.SelectedRows(false) {
+			if node, ok := row.(*tbl.Node); ok {
+				if skill, ok2 := node.Data().(*gurps.Skill); ok2 {
+					editors.EditSkill(t, skill)
+				}
+			}
+		}
+	})
+	return t
 }
 
 type spellListProvider struct {
@@ -381,6 +394,11 @@ func NewTableDockable(filePath string, provider tbl.TableProvider) *TableDockabl
 
 	d.applyScale()
 	return d
+}
+
+// DockableKind implements widget.DockableKind
+func (d *TableDockable) DockableKind() string {
+	return widget.ListDockableKind
 }
 
 func (d *TableDockable) installPerformHandlers(id int, can func() bool, do func()) {

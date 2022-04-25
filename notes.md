@@ -5,10 +5,12 @@
 - Something is off about numeric field entry: when trying to insert a negative sign, it sometimes is ignored
 - Printing support in unison
 - Drag & drop support in the unison Table object
-- Carefully comb over the interface and identify areas where things aren't working well on Windows and Linux, since I spend nearly all of my development time on macOS and may have not noticed deficiencies there
+- Carefully comb over the interface and identify areas where things aren't working well on Windows and Linux, since I
+  spend nearly all of my development time on macOS and may have not noticed deficiencies there
 
 #### GCS-specific work that needs to be done
 
+- Wildcard skill difficulties are being calculated incorrectly
 - Detail editors
   - Advantages
   - Advantage Modifiers
@@ -75,6 +77,8 @@
   - Help
     - Check for GCS updates...
 - Printing support for sheets (requires support in unison first)
-- Make final decision on whether tables that have no content in the sheet should be hidden (complicates updates and makes it harder for users to discover they exist)
-  - I'm currently thinking of just having a preference for making empty lists vanish when printing. That way they are discoverable in the UI, but don't clutter up the printed sheet if you don't want them to.
+- Make final decision on whether tables that have no content in the sheet should be hidden (complicates updates and
+  makes it harder for users to discover they exist)
+  - I'm currently thinking of just having a preference for making empty lists vanish when printing. That way they are
+    discoverable in the UI, but don't clutter up the printed sheet if you don't want them to.
 - Fix jumping of sheet when clicking on a row in a table that is only partially shown

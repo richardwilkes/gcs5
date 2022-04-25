@@ -83,7 +83,7 @@ func NewOtherEquipmentPageList(provider gurps.ListProvider) *PageList {
 }
 
 // NewSkillsPageList creates the skills page list.
-func NewSkillsPageList(provider gurps.ListProvider) *PageList {
+func NewSkillsPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
 	p := newPageList(tbl.NewSkillsProvider(provider, true))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
@@ -91,6 +91,15 @@ func NewSkillsPageList(provider gurps.ListProvider) *PageList {
 	p.installDecrementSkillHandler()
 	p.installIncrementTechLevelHandler()
 	p.installDecrementTechLevelHandler()
+	p.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
+		for _, row := range p.table.SelectedRows(false) {
+			if node, ok := row.(*tbl.Node); ok {
+				if skill, ok2 := node.Data().(*gurps.Skill); ok2 {
+					editors.EditSkill(owner, skill)
+				}
+			}
+		}
+	})
 	return p
 }
 

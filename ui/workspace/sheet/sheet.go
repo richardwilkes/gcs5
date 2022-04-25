@@ -51,6 +51,7 @@ var (
 	_ unison.UndoManagerProvider   = &Sheet{}
 	_ widget.ModifiableRoot        = &Sheet{}
 	_ widget.Rebuildable           = &Sheet{}
+	_ widget.DockableKind          = &Sheet{}
 )
 
 // Sheet holds the view for a GURPS character sheet.
@@ -167,6 +168,11 @@ func NewSheet(filePath string, entity *gurps.Entity) unison.Dockable {
 
 	s.applyScale()
 	return s
+}
+
+// DockableKind implements widget.DockableKind
+func (s *Sheet) DockableKind() string {
+	return widget.SheetDockableKind
 }
 
 // Entity returns the entity this is displaying information for.
@@ -400,7 +406,7 @@ func (s *Sheet) createLists() {
 				s.Lists[advantagesListIndex] = NewAdvantagesPageList(s, s.entity)
 				rowPanel.AddChild(s.Lists[advantagesListIndex])
 			case gurps.BlockLayoutSkillsKey:
-				s.Lists[skillsListIndex] = NewSkillsPageList(s.entity)
+				s.Lists[skillsListIndex] = NewSkillsPageList(s, s.entity)
 				rowPanel.AddChild(s.Lists[skillsListIndex])
 			case gurps.BlockLayoutSpellsKey:
 				s.Lists[spellsListIndex] = NewSpellsPageList(s.entity)
@@ -452,11 +458,15 @@ func (s *Sheet) MarkForRebuild(full bool) {
 			if doFull {
 				selMap := make([]map[uuid.UUID]bool, listCount)
 				for i, one := range s.Lists {
-					selMap[i] = one.RecordSelection()
+					if one != nil {
+						selMap[i] = one.RecordSelection()
+					}
 				}
 				defer func() {
 					for i, one := range s.Lists {
-						one.ApplySelection(selMap[i])
+						if one != nil {
+							one.ApplySelection(selMap[i])
+						}
 					}
 				}()
 				s.createLists()
