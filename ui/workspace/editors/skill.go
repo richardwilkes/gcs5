@@ -12,8 +12,11 @@
 package editors
 
 import (
+	"strings"
+
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -71,7 +74,41 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 		wrapper.AddChild(widget.NewFieldTrailingLabel(i18n.Text("times the current encumbrance level")))
 
 		if dockableKind == widget.SheetDockableKind || dockableKind == widget.TemplateDockableKind {
-			addLabelAndNumericField(content, i18n.Text("Points"), "", &e.editorData.Points, 0, fxp.MaxBasePoints)
+			pointsLabel := i18n.Text("Points")
+			wrapper = addFlowWrapper(content, pointsLabel, 3)
+			addNumericField(wrapper, pointsLabel, "", &e.editorData.Points, 0, fxp.MaxBasePoints)
+			wrapper.AddChild(widget.NewFieldInteriorLeadingLabel(i18n.Text("Level")))
+			levelField := widget.NewNonEditableField(func(field *widget.NonEditableField) {
+				points := gurps.AdjustedPointsForNonContainerSkillOrTechnique(e.target.Entity, e.editorData.Points,
+					e.editorData.Name, e.editorData.Specialization, e.editorData.Tags)
+				var level skill.Level
+				if e.target.Type == gid.Skill {
+					level = gurps.CalculateSkillLevel(e.target.Entity, e.editorData.Name, e.editorData.Specialization,
+						e.editorData.Tags, e.editorData.DefaultedFrom, e.editorData.Difficulty, points,
+						e.editorData.EncumbrancePenaltyMultiplier)
+				} else {
+					level = gurps.CalculateTechniqueLevel(e.target.Entity, e.editorData.Name,
+						e.editorData.Specialization, e.editorData.Tags, e.editorData.TechniqueDefault,
+						e.editorData.Difficulty.Difficulty, points, true, e.editorData.TechniqueLimitModifier)
+				}
+				lvl := level.Level.Trunc()
+				if lvl <= 0 {
+					field.Text = "-"
+				} else {
+					rsl := level.RelativeLevel
+					if strings.HasPrefix(e.target.Type, gid.Technique) {
+						rsl += e.editorData.TechniqueDefault.Modifier
+					}
+					field.Text = lvl.String() + "/" + gurps.FormatRelativeSkill(e.target.Entity, e.target.Type,
+						e.editorData.Difficulty, rsl)
+				}
+				field.MarkForLayoutAndRedraw()
+			})
+			insets := levelField.Border().Insets()
+			levelField.SetLayoutData(&unison.FlexLayoutData{
+				MinSize: unison.NewSize(levelField.Font.SimpleWidth((-fxp.MaxBasePoints*2).String())+insets.Left+insets.Right, 0),
+			})
+			wrapper.AddChild(levelField)
 		}
 	}
 	addPageRefLabelAndField(content, &e.editorData.PageRef)

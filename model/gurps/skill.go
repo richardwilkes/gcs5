@@ -195,20 +195,28 @@ func (s *Skill) CellData(column int, data *node.CellData) {
 	case SkillRelativeLevelColumn:
 		if !s.Container() {
 			data.Type = node.Text
-			rsl := s.AdjustedRelativeLevel()
-			if rsl == f64d4.Min {
-				data.Primary = "-"
-			} else {
-				data.Primary = ResolveAttributeName(s.Entity, s.Difficulty.Attribute)
-				if rsl != 0 {
-					data.Primary += rsl.StringWithSign()
-				}
-			}
+			data.Primary = FormatRelativeSkill(s.Entity, s.Type, s.Difficulty, s.AdjustedRelativeLevel())
 		}
 	case SkillPointsColumn:
 		data.Type = node.Text
 		data.Primary = s.AdjustedPoints().String()
 		data.Alignment = unison.EndAlignment
+	}
+}
+
+// FormatRelativeSkill formats the relative skill for display.
+func FormatRelativeSkill(entity *Entity, typ string, difficulty AttributeDifficulty, rsl f64d4.Int) string {
+	switch {
+	case rsl == f64d4.Min:
+		return "-"
+	case strings.HasPrefix(typ, gid.Skill):
+		s := ResolveAttributeName(entity, difficulty.Attribute)
+		if rsl != 0 {
+			s += rsl.StringWithSign()
+		}
+		return s
+	default:
+		return rsl.StringWithSign()
 	}
 }
 
@@ -247,7 +255,7 @@ func (s *Skill) DefaultSkill() *Skill {
 	if s.Entity == nil {
 		return nil
 	}
-	if s.Type == gid.Technique {
+	if strings.HasPrefix(s.Type, gid.Technique) {
 		return s.Entity.BaseSkill(s.TechniqueDefault, true)
 	}
 	return s.Entity.BaseSkill(s.DefaultedFrom, true)
@@ -260,7 +268,7 @@ func (s *Skill) Notes() string {
 
 // ModifierNotes returns the notes due to modifiers.
 func (s *Skill) ModifierNotes() string {
-	if s.Type == gid.Technique {
+	if strings.HasPrefix(s.Type, gid.Technique) {
 		return i18n.Text("Default: ") + s.TechniqueDefault.FullName(s.Entity) + s.TechniqueDefault.ModifierAsString()
 	}
 	if s.Difficulty.Difficulty != skill.Wildcard {
@@ -347,7 +355,7 @@ func (s *Skill) RelativeLevel() string {
 	switch {
 	case rsl == f64d4.Min:
 		return "-"
-	case s.Type != gid.Technique:
+	case strings.HasPrefix(s.Type, gid.Skill):
 		return ResolveAttributeName(s.Entity, s.Difficulty.Attribute) + rsl.StringWithSign()
 	default:
 		return rsl.StringWithSign()
@@ -360,7 +368,7 @@ func (s *Skill) AdjustedRelativeLevel() f64d4.Int {
 		return f64d4.Min
 	}
 	if s.Entity != nil && s.LevelData.Level > 0 {
-		if s.Type == gid.Technique {
+		if strings.HasPrefix(s.Type, gid.Technique) {
 			return s.LevelData.RelativeLevel + s.TechniqueDefault.Modifier
 		}
 		return s.LevelData.RelativeLevel
@@ -378,10 +386,14 @@ func (s *Skill) AdjustedPoints() f64d4.Int {
 		}
 		return total
 	}
-	points := s.Points
-	if s.Entity != nil && s.Entity.Type == datafile.PC {
-		points += s.Entity.SkillPointComparedBonusFor(feature.SkillPointsID+"*", s.Name, s.Specialization, s.Tags, nil)
-		points += s.Entity.BonusFor(feature.SkillPointsID+"/"+strings.ToLower(s.Name), nil)
+	return AdjustedPointsForNonContainerSkillOrTechnique(s.Entity, s.Points, s.Name, s.Specialization, s.Tags)
+}
+
+// AdjustedPointsForNonContainerSkillOrTechnique returns the points, adjusted for any bonuses.
+func AdjustedPointsForNonContainerSkillOrTechnique(entity *Entity, points f64d4.Int, name, specialization string, tags []string) f64d4.Int {
+	if entity != nil && entity.Type == datafile.PC {
+		points += entity.SkillPointComparedBonusFor(feature.SkillPointsID+"*", name, specialization, tags, nil)
+		points += entity.BonusFor(feature.SkillPointsID+"/"+strings.ToLower(name), nil)
 		points = points.Max(0)
 	}
 	return points
@@ -459,42 +471,56 @@ func (s *Skill) DecrementSkillLevel() {
 }
 
 func (s *Skill) calculateLevel() skill.Level {
+	points := s.AdjustedPoints()
+	if strings.HasPrefix(s.Type, gid.Skill) {
+		return CalculateSkillLevel(s.Entity, s.Name, s.Specialization, s.Tags, s.DefaultedFrom, s.Difficulty, points,
+			s.EncumbrancePenaltyMultiplier)
+	}
+	if s.TechniqueDefault == nil {
+		fmt.Println("uh-oh")
+	}
+	return CalculateTechniqueLevel(s.Entity, s.Name, s.Specialization, s.Tags, s.TechniqueDefault,
+		s.Difficulty.Difficulty, points, true, s.TechniqueLimitModifier)
+}
+
+// CalculateSkillLevel returns the calculated level for a skill.
+func CalculateSkillLevel(entity *Entity, name, specialization string, tags []string, def *SkillDefault, difficulty AttributeDifficulty, points, encumbrancePenaltyMultiplier f64d4.Int) skill.Level {
 	var tooltip xio.ByteBuffer
-	pts := s.Points
-	relativeLevel := s.Difficulty.Difficulty.BaseRelativeLevel()
-	level := s.Entity.ResolveAttributeCurrent(s.Difficulty.Attribute)
+	relativeLevel := difficulty.Difficulty.BaseRelativeLevel()
+	level := entity.ResolveAttributeCurrent(difficulty.Attribute)
 	if level != f64d4.Min {
-		if s.Difficulty.Difficulty == skill.Wildcard {
-			pts = pts.Div(fxp.Three).Trunc()
-		} else if s.DefaultedFrom != nil && s.DefaultedFrom.Points > 0 {
-			pts += s.DefaultedFrom.Points
+		if difficulty.Difficulty == skill.Wildcard {
+			points = points.Div(fxp.Three)
+		} else if def != nil && def.Points > 0 {
+			points += def.Points
 		}
+		points = points.Trunc()
 		switch {
-		case pts == f64d4.One:
+		case points == f64d4.One:
 			// relativeLevel is preset to this point value
-		case pts > f64d4.One && pts < fxp.Four:
+		case points > f64d4.One && points < fxp.Four:
 			relativeLevel += f64d4.One
-		case pts >= fxp.Four:
-			relativeLevel += f64d4.One + pts.Div(fxp.Four).Trunc()
-		case s.Difficulty.Difficulty != skill.Wildcard && s.DefaultedFrom != nil && s.DefaultedFrom.Points < 0:
-			relativeLevel = s.DefaultedFrom.AdjLevel - level
+		case points >= fxp.Four:
+			relativeLevel += f64d4.One + points.Div(fxp.Four).Trunc()
+		case difficulty.Difficulty != skill.Wildcard && def != nil && def.Points < 0:
+			relativeLevel = def.AdjLevel - level
 		default:
 			level = f64d4.Min
 			relativeLevel = 0
 		}
 		if level != f64d4.Min {
 			level += relativeLevel
-			if s.Difficulty.Difficulty != skill.Wildcard && s.DefaultedFrom != nil && level < s.DefaultedFrom.AdjLevel {
-				level = s.DefaultedFrom.AdjLevel
+			if difficulty.Difficulty != skill.Wildcard && def != nil && level < def.AdjLevel {
+				level = def.AdjLevel
 			}
-			if s.Entity != nil {
-				bonus := s.Entity.SkillComparedBonusFor(feature.SkillNameID+"*", s.Name, s.Specialization, s.Tags, &tooltip)
+			if entity != nil {
+				bonus := entity.SkillComparedBonusFor(feature.SkillNameID+"*", name, specialization, tags, &tooltip)
 				level += bonus
 				relativeLevel += bonus
-				bonus = s.Entity.BonusFor(feature.SkillNameID+"/"+strings.ToLower(s.Name), &tooltip)
+				bonus = entity.BonusFor(feature.SkillNameID+"/"+strings.ToLower(name), &tooltip)
 				level += bonus
 				relativeLevel += bonus
-				bonus = s.Entity.EncumbranceLevel(true).Penalty().Mul(s.EncumbrancePenaltyMultiplier)
+				bonus = entity.EncumbranceLevel(true).Penalty().Mul(encumbrancePenaltyMultiplier)
 				level += bonus
 				if bonus != 0 {
 					fmt.Fprintf(&tooltip, i18n.Text("\nEncumbrance [%s]"), bonus.StringWithSign())
@@ -555,17 +581,15 @@ func CalculateTechniqueLevel(entity *Entity, name, specialization string, tags [
 // UpdateLevel updates the level of the skill, returning true if it has changed.
 func (s *Skill) UpdateLevel() bool {
 	saved := s.LevelData
-	if s.Type == gid.Skill {
-		s.DefaultedFrom = s.bestDefaultWithPoints(nil)
-		s.LevelData = s.calculateLevel()
-	} else {
-		s.DefaultedFrom = nil
-		s.LevelData = CalculateTechniqueLevel(s.Entity, s.Name, s.Specialization, s.Tags, s.TechniqueDefault, s.Difficulty.Difficulty, s.AdjustedPoints(), true, s.TechniqueLimitModifier)
-	}
+	s.DefaultedFrom = s.bestDefaultWithPoints(nil)
+	s.LevelData = s.calculateLevel()
 	return saved != s.LevelData
 }
 
 func (s *Skill) bestDefaultWithPoints(excluded *SkillDefault) *SkillDefault {
+	if strings.HasPrefix(s.Type, gid.Technique) {
+		return nil
+	}
 	best := s.bestDefault(excluded)
 	if best != nil {
 		baseLine := (s.Entity.ResolveAttributeCurrent(s.Difficulty.Attribute) + s.Difficulty.Difficulty.BaseRelativeLevel()).Trunc()
@@ -598,7 +622,7 @@ func (s *Skill) bestDefault(excluded *SkillDefault) *SkillDefault {
 		if def.Equivalent(excluded) || s.inDefaultChain(def, make(map[*Skill]bool)) {
 			continue
 		}
-		level := def.SkillLevel(s.Entity, true, excludes, s.Type != gid.Technique)
+		level := def.SkillLevel(s.Entity, true, excludes, strings.HasPrefix(s.Type, gid.Skill))
 		if def.SkillBased() {
 			if other := s.Entity.BestSkillNamed(def.Name, def.Specialization, true, excludes); other != nil {
 				level -= s.Entity.SkillComparedBonusFor(feature.SkillNameID+"*", def.Name, def.Specialization, s.Tags, nil)
@@ -636,11 +660,11 @@ func (s *Skill) inDefaultChain(def *SkillDefault, lookedAt map[*Skill]bool) bool
 
 // TechniqueSatisfied returns true if the Technique is satisfied.
 func (s *Skill) TechniqueSatisfied(tooltip *xio.ByteBuffer, prefix string) bool {
-	if s.Type != gid.Technique || !s.TechniqueDefault.SkillBased() {
+	if strings.HasPrefix(s.Type, gid.Skill) || !s.TechniqueDefault.SkillBased() {
 		return true
 	}
 	sk := s.Entity.BestSkillNamed(s.TechniqueDefault.Name, s.TechniqueDefault.Specialization, false, nil)
-	satisfied := sk != nil && (sk.Type == gid.Technique || sk.Points > 0)
+	satisfied := sk != nil && (strings.HasPrefix(sk.Type, gid.Technique) || sk.Points > 0)
 	if !satisfied && tooltip != nil {
 		tooltip.WriteString(prefix)
 		if sk == nil {
