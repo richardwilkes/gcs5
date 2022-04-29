@@ -11,6 +11,11 @@
 
 package gurps
 
+import (
+	"github.com/richardwilkes/gcs/model/gurps/gid"
+	"github.com/richardwilkes/toolbox/i18n"
+)
+
 // AttributeChoice holds a single attribute choice.
 type AttributeChoice struct {
 	Key   string
@@ -18,15 +23,38 @@ type AttributeChoice struct {
 }
 
 // AttributeChoices collects the available choices for attributes for the given entity, or nil.
-func AttributeChoices(entity *Entity) []*AttributeChoice {
+func AttributeChoices(entity *Entity, includeSkills bool) []*AttributeChoice {
 	list := AttributeDefsFor(entity).List()
-	choices := make([]*AttributeChoice, len(list)+1)
-	choices[0] = &AttributeChoice{
+	extra := 1
+	if includeSkills {
+		extra += 3
+	}
+	choices := make([]*AttributeChoice, len(list)+extra)
+	i := 0
+	choices[i] = &AttributeChoice{
 		Key:   "10",
 		Title: "10",
 	}
-	for i, def := range list {
-		choices[i+1] = &AttributeChoice{
+	i++
+	if includeSkills {
+		choices[i] = &AttributeChoice{
+			Key:   gid.Skill,
+			Title: i18n.Text("Skill"),
+		}
+		i++
+		choices[i] = &AttributeChoice{
+			Key:   gid.Parry,
+			Title: i18n.Text("Parry"),
+		}
+		i++
+		choices[i] = &AttributeChoice{
+			Key:   gid.Block,
+			Title: i18n.Text("Block"),
+		}
+		i++
+	}
+	for j, def := range list {
+		choices[j+i] = &AttributeChoice{
 			Key:   def.DefID,
 			Title: def.Name,
 		}

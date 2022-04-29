@@ -13,6 +13,7 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
@@ -73,6 +74,10 @@ func (d *SkillEditData) copyFrom(other *SkillEditData) {
 	if other.TechniqueDefault != nil {
 		def := *other.TechniqueDefault
 		d.TechniqueDefault = &def
+		if !skill.DefaultTypeIsSkillBased(other.TechniqueDefault.DefaultType) {
+			d.TechniqueDefault.Name = ""
+			d.TechniqueDefault.Specialization = ""
+		}
 	}
 	if other.TechniqueLimitModifier != nil {
 		mod := *other.TechniqueLimitModifier

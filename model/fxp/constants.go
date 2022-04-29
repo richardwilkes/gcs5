@@ -42,6 +42,7 @@ var (
 	Fifty         = f64d4.FromInt(50)
 	Seventy       = f64d4.FromInt(70)
 	Eighty        = f64d4.FromInt(80)
+	NinetyNine    = f64d4.FromInt(99)
 	Hundred       = f64d4.FromInt(100)
 	Thousand      = f64d4.FromInt(1000)
 	MaxBasePoints = f64d4.FromInt(999999)

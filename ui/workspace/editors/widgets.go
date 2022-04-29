@@ -179,7 +179,7 @@ func addLabelAndNumericField(parent *unison.Panel, labelText, tooltip string, fi
 	return field
 }
 
-func addNumericField(parent *unison.Panel, labelText, tooltip string, fieldData *f64d4.Int, min, max f64d4.Int) {
+func addNumericField(parent *unison.Panel, labelText, tooltip string, fieldData *f64d4.Int, min, max f64d4.Int) *widget.NumericField {
 	field := widget.NewNumericField(labelText, func() f64d4.Int { return *fieldData },
 		func(value f64d4.Int) {
 			*fieldData = value
@@ -189,6 +189,7 @@ func addNumericField(parent *unison.Panel, labelText, tooltip string, fieldData 
 		field.Tooltip = unison.NewTooltipWithText(tooltip)
 	}
 	parent.AddChild(field)
+	return field
 }
 
 func addCheckBox(parent *unison.Panel, labelText string, fieldData *bool) {

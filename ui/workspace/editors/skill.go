@@ -20,6 +20,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -34,7 +35,8 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 		dockableKind = one.DockableKind()
 	}
 	addNameLabelAndField(content, &e.editorData.Name)
-	if !e.target.Container() {
+	isTechnique := strings.HasPrefix(e.target.Type, gid.Technique)
+	if !e.target.Container() && !isTechnique {
 		addSpecializationLabelAndField(content, &e.editorData.Specialization)
 		addTechLevelRequired(content, &e.editorData.TechLevel, dockableKind == widget.SheetDockableKind)
 	}
@@ -42,40 +44,129 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 	addVTTNotesLabelAndField(content, &e.editorData.VTTNotes)
 	addTagsLabelAndField(content, &e.editorData.Tags)
 	if !e.target.Container() {
-		wrapper := addFlowWrapper(content, i18n.Text("Difficulty"), 3)
-		choices := gurps.AttributeChoices(e.target.Entity)
+		difficultyLabel := i18n.Text("Difficulty")
+		choices := gurps.AttributeChoices(e.target.Entity, isTechnique)
 		current := -1
-		for i, one := range choices {
-			if one.Key == e.editorData.Difficulty.Attribute {
-				current = i
-				break
-			}
-		}
-		if current == -1 {
-			current = len(choices)
-			choices = append(choices, &gurps.AttributeChoice{
-				Key:   e.editorData.Difficulty.Attribute,
-				Title: e.editorData.Difficulty.Attribute,
+		if isTechnique {
+			wrapper := addFlowWrapper(content, i18n.Text("Defaults To"), 4)
+			wrapper.SetLayoutData(&unison.FlexLayoutData{
+				HAlign: unison.FillAlignment,
+				HGrab:  true,
 			})
-		}
-		attrChoice := choices[current]
-		attrChoicePopup := addPopup(wrapper, choices, &attrChoice)
-		attrChoicePopup.SelectionCallback = func(_ int, item *gurps.AttributeChoice) {
-			e.editorData.Difficulty.Attribute = item.Key
-			widget.MarkModified(content)
-		}
+			for i, one := range choices {
+				if one.Key == e.editorData.TechniqueDefault.DefaultType {
+					current = i
+					break
+				}
+			}
+			if current == -1 {
+				current = len(choices)
+				choices = append(choices, &gurps.AttributeChoice{
+					Key:   e.editorData.TechniqueDefault.DefaultType,
+					Title: e.editorData.TechniqueDefault.DefaultType,
+				})
+			}
+			attrChoice := choices[current]
+			attrChoicePopup := addPopup(wrapper, choices, &attrChoice)
+			skillDefNameField := addStringField(wrapper, i18n.Text("Technique Default Skill Name"),
+				i18n.Text("Skill Name"), &e.editorData.TechniqueDefault.Name)
+			skillDefNameField.Watermark = i18n.Text("Skill")
+			skillDefNameField.SetLayoutData(&unison.FlexLayoutData{
+				HAlign: unison.FillAlignment,
+				HGrab:  true,
+			})
+			skillDefSpecialtyField := addStringField(wrapper, i18n.Text("Technique Default Skill Specialization"),
+				i18n.Text("Skill Specialization"), &e.editorData.TechniqueDefault.Specialization)
+			skillDefSpecialtyField.Watermark = i18n.Text("Specialization")
+			skillDefSpecialtyField.SetLayoutData(&unison.FlexLayoutData{
+				HAlign: unison.FillAlignment,
+				HGrab:  true,
+			})
+			lastWasSkillBased := skill.DefaultTypeIsSkillBased(e.editorData.TechniqueDefault.DefaultType)
+			if !lastWasSkillBased {
+				skillDefNameField.RemoveFromParent()
+				skillDefSpecialtyField.RemoveFromParent()
+			}
+			addNumericField(wrapper, i18n.Text("Technique Default Adjustment"), i18n.Text("Default Adjustment"),
+				&e.editorData.TechniqueDefault.Modifier, -fxp.NinetyNine, fxp.NinetyNine)
+			attrChoicePopup.SelectionCallback = func(_ int, item *gurps.AttributeChoice) {
+				e.editorData.TechniqueDefault.DefaultType = item.Key
+				if skillBased := skill.DefaultTypeIsSkillBased(e.editorData.TechniqueDefault.DefaultType); skillBased != lastWasSkillBased {
+					lastWasSkillBased = skillBased
+					if skillBased {
+						wrapper.AddChildAtIndex(skillDefNameField, len(wrapper.Children())-1)
+						wrapper.AddChildAtIndex(skillDefSpecialtyField, len(wrapper.Children())-1)
+					} else {
+						skillDefNameField.RemoveFromParent()
+						skillDefSpecialtyField.RemoveFromParent()
+					}
+				}
+				widget.MarkModified(content)
+			}
+			wrapper2 := addFlowWrapper(content, "", 2)
+			limitField := widget.NewNumericField(i18n.Text("Limit"), func() f64d4.Int {
+				if e.editorData.TechniqueLimitModifier != nil {
+					return *e.editorData.TechniqueLimitModifier
+				}
+				return 0
+			}, func(value f64d4.Int) {
+				if e.editorData.TechniqueLimitModifier != nil {
+					*e.editorData.TechniqueLimitModifier = value
+				}
+				widget.MarkModified(wrapper2)
+			}, -fxp.NinetyNine, fxp.NinetyNine, false)
+			wrapper2.AddChild(widget.NewCheckBox(i18n.Text("Cannot exceed default skill level by more than"),
+				e.editorData.TechniqueLimitModifier != nil, func(b bool) {
+					if b {
+						if e.editorData.TechniqueLimitModifier == nil {
+							var limit f64d4.Int
+							e.editorData.TechniqueLimitModifier = &limit
+						}
+						enableAndUnblankField(limitField)
+					} else {
+						e.editorData.TechniqueLimitModifier = nil
+						disableAndBlankField(limitField)
+					}
+					widget.MarkModified(wrapper2)
+				}))
+			if e.editorData.TechniqueLimitModifier == nil {
+				disableAndBlankField(limitField)
+			}
+			wrapper2.AddChild(limitField)
+			addLabelAndPopup(content, difficultyLabel, "", skill.AllTechniqueDifficulty, &e.editorData.Difficulty.Difficulty)
+		} else {
+			wrapper := addFlowWrapper(content, difficultyLabel, 3)
+			for i, one := range choices {
+				if one.Key == e.editorData.Difficulty.Attribute {
+					current = i
+					break
+				}
+			}
+			if current == -1 {
+				current = len(choices)
+				choices = append(choices, &gurps.AttributeChoice{
+					Key:   e.editorData.Difficulty.Attribute,
+					Title: e.editorData.Difficulty.Attribute,
+				})
+			}
+			attrChoice := choices[current]
+			attrChoicePopup := addPopup(wrapper, choices, &attrChoice)
+			attrChoicePopup.SelectionCallback = func(_ int, item *gurps.AttributeChoice) {
+				e.editorData.Difficulty.Attribute = item.Key
+				widget.MarkModified(content)
+			}
+			wrapper.AddChild(widget.NewFieldTrailingLabel("/"))
+			addPopup(wrapper, skill.AllDifficulty, &e.editorData.Difficulty.Difficulty)
 
-		wrapper.AddChild(widget.NewFieldTrailingLabel("/"))
-		addPopup(wrapper, skill.AllDifficulty, &e.editorData.Difficulty.Difficulty)
-		encLabel := i18n.Text("Encumbrance Penalty")
-
-		wrapper = addFlowWrapper(content, encLabel, 2)
-		addNumericField(wrapper, encLabel, "", &e.editorData.EncumbrancePenaltyMultiplier, 0, fxp.Nine)
-		wrapper.AddChild(widget.NewFieldTrailingLabel(i18n.Text("times the current encumbrance level")))
+			encLabel := i18n.Text("Encumbrance Penalty")
+			wrapper = addFlowWrapper(content, encLabel, 2)
+			addNumericField(wrapper, encLabel, "", &e.editorData.EncumbrancePenaltyMultiplier, 0, fxp.Nine)
+			wrapper.AddChild(widget.NewFieldTrailingLabel(i18n.Text("times the current encumbrance level")))
+		}
 
 		if dockableKind == widget.SheetDockableKind || dockableKind == widget.TemplateDockableKind {
 			pointsLabel := i18n.Text("Points")
-			wrapper = addFlowWrapper(content, pointsLabel, 3)
+			wrapper := addFlowWrapper(content, pointsLabel, 3)
 			addNumericField(wrapper, pointsLabel, "", &e.editorData.Points, 0, fxp.MaxBasePoints)
 			wrapper.AddChild(widget.NewFieldInteriorLeadingLabel(i18n.Text("Level")))
 			levelField := widget.NewNonEditableField(func(field *widget.NonEditableField) {
@@ -96,7 +187,7 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 					field.Text = "-"
 				} else {
 					rsl := level.RelativeLevel
-					if strings.HasPrefix(e.target.Type, gid.Technique) {
+					if isTechnique {
 						rsl += e.editorData.TechniqueDefault.Modifier
 					}
 					field.Text = lvl.String() + "/" + gurps.FormatRelativeSkill(e.target.Entity, e.target.Type,

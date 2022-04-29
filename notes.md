@@ -3,6 +3,8 @@
 #### Unison-specific work that needs to be done
 
 - Something is off about numeric field entry: when trying to insert a negative sign, it sometimes is ignored
+- Selection in a Table can cause the display to jump. It appears to be trying to scroll the whole table into view,
+  rather than just the row clicked on.
 - Printing support in unison
 - Drag & drop support in the unison Table object
 - Carefully comb over the interface and identify areas where things aren't working well on Windows and Linux, since I

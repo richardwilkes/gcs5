@@ -16,6 +16,12 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
+// AllTechniqueDifficulty holds all possible values when used with Techniques.
+var AllTechniqueDifficulty = []Difficulty{
+	Average,
+	Hard,
+}
+
 // BaseRelativeLevel returns the base relative skill level at 0 points.
 func (enum Difficulty) BaseRelativeLevel() f64d4.Int {
 	switch enum {
