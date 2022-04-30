@@ -104,12 +104,21 @@ func NewSkillsPageList(owner widget.Rebuildable, provider gurps.ListProvider) *P
 }
 
 // NewSpellsPageList creates the spells page list.
-func NewSpellsPageList(provider gurps.SpellListProvider) *PageList {
+func NewSpellsPageList(owner widget.Rebuildable, provider gurps.SpellListProvider) *PageList {
 	p := newPageList(tbl.NewSpellsProvider(provider, true))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
 	p.installIncrementSkillHandler()
 	p.installDecrementSkillHandler()
+	p.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
+		for _, row := range p.table.SelectedRows(false) {
+			if node, ok := row.(*tbl.Node); ok {
+				if spell, ok2 := node.Data().(*gurps.Spell); ok2 {
+					editors.EditSpell(owner, spell)
+				}
+			}
+		}
+	})
 	return p
 }
 

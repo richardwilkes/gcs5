@@ -44,15 +44,14 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 	addVTTNotesLabelAndField(content, &e.editorData.VTTNotes)
 	addTagsLabelAndField(content, &e.editorData.Tags)
 	if !e.target.Container() {
-		difficultyLabel := i18n.Text("Difficulty")
-		choices := gurps.AttributeChoices(e.target.Entity, isTechnique)
-		current := -1
 		if isTechnique {
 			wrapper := addFlowWrapper(content, i18n.Text("Defaults To"), 4)
 			wrapper.SetLayoutData(&unison.FlexLayoutData{
 				HAlign: unison.FillAlignment,
 				HGrab:  true,
 			})
+			current := -1
+			choices := gurps.AttributeChoices(e.target.Entity, isTechnique)
 			for i, one := range choices {
 				if one.Key == e.editorData.TechniqueDefault.DefaultType {
 					current = i
@@ -133,33 +132,12 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 				disableAndBlankField(limitField)
 			}
 			wrapper2.AddChild(limitField)
-			addLabelAndPopup(content, difficultyLabel, "", skill.AllTechniqueDifficulty, &e.editorData.Difficulty.Difficulty)
+			addLabelAndPopup(content, i18n.Text("Difficulty"), "", skill.AllTechniqueDifficulty,
+				&e.editorData.Difficulty.Difficulty)
 		} else {
-			wrapper := addFlowWrapper(content, difficultyLabel, 3)
-			for i, one := range choices {
-				if one.Key == e.editorData.Difficulty.Attribute {
-					current = i
-					break
-				}
-			}
-			if current == -1 {
-				current = len(choices)
-				choices = append(choices, &gurps.AttributeChoice{
-					Key:   e.editorData.Difficulty.Attribute,
-					Title: e.editorData.Difficulty.Attribute,
-				})
-			}
-			attrChoice := choices[current]
-			attrChoicePopup := addPopup(wrapper, choices, &attrChoice)
-			attrChoicePopup.SelectionCallback = func(_ int, item *gurps.AttributeChoice) {
-				e.editorData.Difficulty.Attribute = item.Key
-				widget.MarkModified(content)
-			}
-			wrapper.AddChild(widget.NewFieldTrailingLabel("/"))
-			addPopup(wrapper, skill.AllDifficulty, &e.editorData.Difficulty.Difficulty)
-
+			addDifficultyLabelAndFields(content, e.target.Entity, &e.editorData.Difficulty)
 			encLabel := i18n.Text("Encumbrance Penalty")
-			wrapper = addFlowWrapper(content, encLabel, 2)
+			wrapper := addFlowWrapper(content, encLabel, 2)
 			addNumericField(wrapper, encLabel, "", &e.editorData.EncumbrancePenaltyMultiplier, 0, fxp.Nine)
 			wrapper.AddChild(widget.NewFieldTrailingLabel(i18n.Text("times the current encumbrance level")))
 		}
@@ -171,16 +149,16 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 			wrapper.AddChild(widget.NewFieldInteriorLeadingLabel(i18n.Text("Level")))
 			levelField := widget.NewNonEditableField(func(field *widget.NonEditableField) {
 				points := gurps.AdjustedPointsForNonContainerSkillOrTechnique(e.target.Entity, e.editorData.Points,
-					e.editorData.Name, e.editorData.Specialization, e.editorData.Tags)
+					e.editorData.Name, e.editorData.Specialization, e.editorData.Tags, nil)
 				var level skill.Level
-				if e.target.Type == gid.Skill {
-					level = gurps.CalculateSkillLevel(e.target.Entity, e.editorData.Name, e.editorData.Specialization,
-						e.editorData.Tags, e.editorData.DefaultedFrom, e.editorData.Difficulty, points,
-						e.editorData.EncumbrancePenaltyMultiplier)
-				} else {
+				if isTechnique {
 					level = gurps.CalculateTechniqueLevel(e.target.Entity, e.editorData.Name,
 						e.editorData.Specialization, e.editorData.Tags, e.editorData.TechniqueDefault,
 						e.editorData.Difficulty.Difficulty, points, true, e.editorData.TechniqueLimitModifier)
+				} else {
+					level = gurps.CalculateSkillLevel(e.target.Entity, e.editorData.Name, e.editorData.Specialization,
+						e.editorData.Tags, e.editorData.DefaultedFrom, e.editorData.Difficulty, points,
+						e.editorData.EncumbrancePenaltyMultiplier)
 				}
 				lvl := level.Level.Trunc()
 				if lvl <= 0 {

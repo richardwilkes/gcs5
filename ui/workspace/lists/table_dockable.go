@@ -219,7 +219,17 @@ func NewSpellTableDockableFromFile(filePath string) (unison.Dockable, error) {
 
 // NewSpellTableDockable creates a new unison.Dockable for spell list files.
 func NewSpellTableDockable(filePath string, spells []*gurps.Spell) unison.Dockable {
-	return NewTableDockable(filePath, tbl.NewSpellsProvider(&spellListProvider{spells: spells}, false))
+	t := NewTableDockable(filePath, tbl.NewSpellsProvider(&spellListProvider{spells: spells}, false))
+	t.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
+		for _, row := range t.table.SelectedRows(false) {
+			if node, ok := row.(*tbl.Node); ok {
+				if spell, ok2 := node.Data().(*gurps.Spell); ok2 {
+					editors.EditSpell(t, spell)
+				}
+			}
+		}
+	})
+	return t
 }
 
 type noteListProvider struct {

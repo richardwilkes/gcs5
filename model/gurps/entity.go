@@ -586,6 +586,39 @@ func (e *Entity) WeaponComparedDamageBonusesFor(featureID, nameQualifier, specia
 	return bonuses
 }
 
+// SpellBonusesFor returns the total bonuses for a spell.
+func (e *Entity) SpellBonusesFor(featureID, qualifier string, tags []string, tooltip *xio.ByteBuffer) f64d4.Int {
+	level := e.BonusFor(featureID, tooltip)
+	level += e.BonusFor(featureID+"/"+strings.ToLower(qualifier), tooltip)
+	level += e.SpellComparedBonusFor(featureID+"*", qualifier, tags, tooltip)
+	return level
+}
+
+// BestCollegeSpellBonus returns the best college spell bonus for a spell.
+func (e *Entity) BestCollegeSpellBonus(tags, colleges []string, tooltip *xio.ByteBuffer) f64d4.Int {
+	best := f64d4.Min
+	var bestTooltip string
+	for _, college := range colleges {
+		var buffer *xio.ByteBuffer
+		if tooltip != nil {
+			buffer = &xio.ByteBuffer{}
+		}
+		if pts := e.SpellBonusesFor(feature.SpellCollegeID, college, tags, buffer); best < pts {
+			best = pts
+			if buffer != nil {
+				bestTooltip = buffer.String()
+			}
+		}
+	}
+	if tooltip != nil {
+		tooltip.WriteString(bestTooltip)
+	}
+	if best == f64d4.Min {
+		best = 0
+	}
+	return best
+}
+
 // BonusFor returns the total bonus for the given ID.
 func (e *Entity) BonusFor(featureID string, tooltip *xio.ByteBuffer) f64d4.Int {
 	var total f64d4.Int
@@ -636,7 +669,7 @@ func (e *Entity) BestSkillNamed(name, specialization string, requirePoints bool,
 	var best *Skill
 	level := f64d4.Min
 	for _, sk := range e.SkillNamed(name, specialization, requirePoints, excludes) {
-		skillLevel := sk.Level()
+		skillLevel := sk.CalculateLevel().Level
 		if best == nil || level < skillLevel {
 			best = sk
 			level = skillLevel
@@ -658,7 +691,7 @@ func (e *Entity) SkillNamed(name, specialization string, requirePoints bool, exc
 	var list []*Skill
 	TraverseSkills(func(sk *Skill) bool {
 		if !sk.Container() && !excludes[sk.String()] {
-			if !requirePoints || sk.Type == gid.Technique || sk.AdjustedPoints() > 0 {
+			if !requirePoints || sk.Type == gid.Technique || sk.AdjustedPoints(nil) > 0 {
 				if strings.EqualFold(sk.Name, name) {
 					if specialization == "" || strings.EqualFold(sk.Specialization, specialization) {
 						list = append(list, sk)

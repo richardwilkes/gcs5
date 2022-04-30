@@ -21,3 +21,15 @@ type Level struct {
 	RelativeLevel f64d4.Int
 	Tooltip       string
 }
+
+// LevelAsString returns the level as a string.
+func (l Level) LevelAsString(forContainer bool) string {
+	if forContainer {
+		return ""
+	}
+	level := l.Level.Trunc()
+	if level <= 0 {
+		return "-"
+	}
+	return level.String()
+}

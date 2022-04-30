@@ -374,7 +374,7 @@ func (s *Sheet) createLists() {
 				s.Lists[skillsListIndex] = NewSkillsPageList(s, s.entity)
 				rowPanel.AddChild(s.Lists[skillsListIndex])
 			case gurps.BlockLayoutSpellsKey:
-				s.Lists[spellsListIndex] = NewSpellsPageList(s.entity)
+				s.Lists[spellsListIndex] = NewSpellsPageList(s, s.entity)
 				rowPanel.AddChild(s.Lists[spellsListIndex])
 			case gurps.BlockLayoutEquipmentKey:
 				s.Lists[carriedEquipmentListIndex] = NewCarriedEquipmentPageList(s.entity)

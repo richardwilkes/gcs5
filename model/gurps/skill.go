@@ -189,7 +189,11 @@ func (s *Skill) CellData(column int, data *node.CellData) {
 	case SkillLevelColumn:
 		if !s.Container() {
 			data.Type = node.Text
-			data.Primary = s.LevelAsString()
+			level := s.CalculateLevel()
+			data.Primary = level.LevelAsString(s.Container())
+			if level.Tooltip != "" {
+				data.Tooltip = IncludesModifiersFrom + ":" + level.Tooltip
+			}
 			data.Alignment = unison.EndAlignment
 		}
 	case SkillRelativeLevelColumn:
@@ -199,8 +203,12 @@ func (s *Skill) CellData(column int, data *node.CellData) {
 		}
 	case SkillPointsColumn:
 		data.Type = node.Text
-		data.Primary = s.AdjustedPoints().String()
+		var tooltip xio.ByteBuffer
+		data.Primary = s.AdjustedPoints(&tooltip).String()
 		data.Alignment = unison.EndAlignment
+		if tooltip.Len() != 0 {
+			data.Tooltip = IncludesModifiersFrom + ":" + tooltip.String()
+		}
 	}
 }
 
@@ -209,7 +217,7 @@ func FormatRelativeSkill(entity *Entity, typ string, difficulty AttributeDifficu
 	switch {
 	case rsl == f64d4.Min:
 		return "-"
-	case strings.HasPrefix(typ, gid.Skill):
+	case strings.HasPrefix(typ, gid.Skill) || strings.HasPrefix(typ, gid.Spell):
 		s := ResolveAttributeName(entity, difficulty.Attribute)
 		if rsl != 0 {
 			s += rsl.StringWithSign()
@@ -378,42 +386,25 @@ func (s *Skill) AdjustedRelativeLevel() f64d4.Int {
 }
 
 // AdjustedPoints returns the points, adjusted for any bonuses.
-func (s *Skill) AdjustedPoints() f64d4.Int {
+func (s *Skill) AdjustedPoints(tooltip *xio.ByteBuffer) f64d4.Int {
 	if s.Container() {
 		var total f64d4.Int
 		for _, one := range s.Children {
-			total += one.AdjustedPoints()
+			total += one.AdjustedPoints(tooltip)
 		}
 		return total
 	}
-	return AdjustedPointsForNonContainerSkillOrTechnique(s.Entity, s.Points, s.Name, s.Specialization, s.Tags)
+	return AdjustedPointsForNonContainerSkillOrTechnique(s.Entity, s.Points, s.Name, s.Specialization, s.Tags, tooltip)
 }
 
 // AdjustedPointsForNonContainerSkillOrTechnique returns the points, adjusted for any bonuses.
-func AdjustedPointsForNonContainerSkillOrTechnique(entity *Entity, points f64d4.Int, name, specialization string, tags []string) f64d4.Int {
+func AdjustedPointsForNonContainerSkillOrTechnique(entity *Entity, points f64d4.Int, name, specialization string, tags []string, tooltip *xio.ByteBuffer) f64d4.Int {
 	if entity != nil && entity.Type == datafile.PC {
-		points += entity.SkillPointComparedBonusFor(feature.SkillPointsID+"*", name, specialization, tags, nil)
-		points += entity.BonusFor(feature.SkillPointsID+"/"+strings.ToLower(name), nil)
+		points += entity.SkillPointComparedBonusFor(feature.SkillPointsID+"*", name, specialization, tags, tooltip)
+		points += entity.BonusFor(feature.SkillPointsID+"/"+strings.ToLower(name), tooltip)
 		points = points.Max(0)
 	}
 	return points
-}
-
-// LevelAsString returns the level as a string.
-func (s *Skill) LevelAsString() string {
-	if s.Container() {
-		return ""
-	}
-	level := s.Level().Trunc()
-	if level <= 0 {
-		return "-"
-	}
-	return level.String()
-}
-
-// Level returns the computed level.
-func (s *Skill) Level() f64d4.Int {
-	return s.calculateLevel().Level
 }
 
 // IncrementSkillLevel adds enough points to increment the skill level to the next level.
@@ -426,11 +417,11 @@ func (s *Skill) IncrementSkillLevel() {
 		} else {
 			maxPoints += fxp.Four
 		}
-		oldLevel := s.Level()
+		oldLevel := s.CalculateLevel().Level
 		for points := basePoints; points < maxPoints; points += f64d4.One {
 			s.Points = points
 			s.UpdateLevel()
-			if s.Level() > oldLevel {
+			if s.CalculateLevel().Level > oldLevel {
 				break
 			}
 		}
@@ -448,20 +439,20 @@ func (s *Skill) DecrementSkillLevel() {
 			minPoints -= fxp.Four
 		}
 		minPoints = minPoints.Max(0)
-		oldLevel := s.Level()
+		oldLevel := s.CalculateLevel().Level
 		for points := basePoints; points >= minPoints; points -= f64d4.One {
 			s.Points = points
 			s.UpdateLevel()
-			if s.Level() < oldLevel {
+			if s.CalculateLevel().Level < oldLevel {
 				break
 			}
 		}
 		if s.Points > 0 {
-			oldLevel = s.Level()
+			oldLevel = s.CalculateLevel().Level
 			for s.Points > 0 {
 				s.Points -= f64d4.One
 				s.UpdateLevel()
-				if s.Level() != oldLevel {
+				if s.CalculateLevel().Level != oldLevel {
 					s.Points += f64d4.One
 					break
 				}
@@ -470,14 +461,12 @@ func (s *Skill) DecrementSkillLevel() {
 	}
 }
 
-func (s *Skill) calculateLevel() skill.Level {
-	points := s.AdjustedPoints()
+// CalculateLevel returns the computed level without updating it.
+func (s *Skill) CalculateLevel() skill.Level {
+	points := s.AdjustedPoints(nil)
 	if strings.HasPrefix(s.Type, gid.Skill) {
 		return CalculateSkillLevel(s.Entity, s.Name, s.Specialization, s.Tags, s.DefaultedFrom, s.Difficulty, points,
 			s.EncumbrancePenaltyMultiplier)
-	}
-	if s.TechniqueDefault == nil {
-		fmt.Println("uh-oh")
 	}
 	return CalculateTechniqueLevel(s.Entity, s.Name, s.Specialization, s.Tags, s.TechniqueDefault,
 		s.Difficulty.Difficulty, points, true, s.TechniqueLimitModifier)
@@ -543,7 +532,7 @@ func CalculateTechniqueLevel(entity *Entity, name, specialization string, tags [
 	if entity != nil {
 		if def.DefaultType == gid.Skill {
 			if sk := entity.BaseSkill(def, requirePoints); sk != nil {
-				level = sk.Level()
+				level = sk.CalculateLevel().Level
 			}
 		} else {
 			// Take the modifier back out, as we wanted the base, not the final value.
@@ -582,7 +571,7 @@ func CalculateTechniqueLevel(entity *Entity, name, specialization string, tags [
 func (s *Skill) UpdateLevel() bool {
 	saved := s.LevelData
 	s.DefaultedFrom = s.bestDefaultWithPoints(nil)
-	s.LevelData = s.calculateLevel()
+	s.LevelData = s.CalculateLevel()
 	return saved != s.LevelData
 }
 

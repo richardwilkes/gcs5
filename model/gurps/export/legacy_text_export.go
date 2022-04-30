@@ -868,7 +868,7 @@ func (ex *legacyExporter) processSkillsLoop(buffer []byte) {
 					ex.writeEncodedText("ITEM")
 				}
 			case pointsKey:
-				ex.writeEncodedText(s.AdjustedPoints().String())
+				ex.writeEncodedText(s.AdjustedPoints(nil).String())
 			case descriptionKey:
 				ex.writeEncodedText(s.String())
 				ex.writeNote(s.ModifierNotes())
@@ -876,7 +876,7 @@ func (ex *legacyExporter) processSkillsLoop(buffer []byte) {
 			case descriptionPrimaryKey:
 				ex.writeEncodedText(s.String())
 			case "SL":
-				ex.writeEncodedText(s.LevelAsString())
+				ex.writeEncodedText(s.CalculateLevel().LevelAsString(s.Container()))
 			case "RSL":
 				ex.writeEncodedText(s.RelativeLevel())
 			case "DIFFICULTY":
@@ -924,7 +924,7 @@ func (ex *legacyExporter) processSpellsLoop(buffer []byte) {
 					ex.writeEncodedText("ITEM")
 				}
 			case pointsKey:
-				ex.writeEncodedText(s.AdjustedPoints().String())
+				ex.writeEncodedText(s.AdjustedPoints(nil).String())
 			case descriptionKey:
 				ex.writeEncodedText(s.String())
 				ex.writeNote(s.Notes())
@@ -932,7 +932,7 @@ func (ex *legacyExporter) processSpellsLoop(buffer []byte) {
 			case descriptionPrimaryKey:
 				ex.writeEncodedText(s.String())
 			case "SL":
-				ex.writeEncodedText(s.LevelAsString())
+				ex.writeEncodedText(s.CalculateLevel().LevelAsString(s.Container()))
 			case "RSL":
 				ex.writeEncodedText(s.RelativeLevel())
 			case "DIFFICULTY":

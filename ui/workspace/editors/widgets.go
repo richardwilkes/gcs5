@@ -12,7 +12,10 @@
 package editors
 
 import (
+	"fmt"
+
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -99,9 +102,39 @@ func addTechLevelRequired(parent *unison.Panel, fieldData **string, includeField
 	}))
 }
 
+func addDifficultyLabelAndFields(parent *unison.Panel, entity *gurps.Entity, difficulty *gurps.AttributeDifficulty) {
+	wrapper := addFlowWrapper(parent, i18n.Text("Difficulty"), 3)
+	current := -1
+	choices := gurps.AttributeChoices(entity, false)
+	for i, one := range choices {
+		if one.Key == difficulty.Attribute {
+			current = i
+			break
+		}
+	}
+	if current == -1 {
+		current = len(choices)
+		choices = append(choices, &gurps.AttributeChoice{
+			Key:   difficulty.Attribute,
+			Title: difficulty.Attribute,
+		})
+	}
+	attrChoice := choices[current]
+	attrChoicePopup := addPopup(wrapper, choices, &attrChoice)
+	attrChoicePopup.SelectionCallback = func(_ int, item *gurps.AttributeChoice) {
+		difficulty.Attribute = item.Key
+		widget.MarkModified(parent)
+	}
+	wrapper.AddChild(widget.NewFieldTrailingLabel("/"))
+	addPopup(wrapper, skill.AllDifficulty, &difficulty.Difficulty)
+}
+
 func addTagsLabelAndField(parent *unison.Panel, fieldData *[]string) {
-	labelText := i18n.Text("Tags")
-	tooltip := i18n.Text("Separate multiple tags with commas")
+	addLabelAndListField(parent, i18n.Text("Tags"), i18n.Text("tags"), fieldData)
+}
+
+func addLabelAndListField(parent *unison.Panel, labelText, pluralForTooltip string, fieldData *[]string) {
+	tooltip := fmt.Sprintf(i18n.Text("Separate multiple %s with commas"), pluralForTooltip)
 	label := widget.NewFieldLeadingLabel(labelText)
 	if tooltip != "" {
 		label.Tooltip = unison.NewTooltipWithText(tooltip)
@@ -159,6 +192,19 @@ func addLabelAndMultiLineStringField(parent *unison.Panel, labelText, tooltip st
 	}
 	field.AutoScroll = false
 	parent.AddChild(field)
+}
+
+func addIntegerField(parent *unison.Panel, labelText, tooltip string, fieldData *int, min, max int) *widget.IntegerField {
+	field := widget.NewIntegerField(labelText, func() int { return *fieldData },
+		func(value int) {
+			*fieldData = value
+			widget.MarkModified(parent)
+		}, min, max, false)
+	if tooltip != "" {
+		field.Tooltip = unison.NewTooltipWithText(tooltip)
+	}
+	parent.AddChild(field)
+	return field
 }
 
 func addLabelAndNumericField(parent *unison.Panel, labelText, tooltip string, fieldData *f64d4.Int, min, max f64d4.Int) *widget.NumericField {

@@ -201,7 +201,7 @@ func (d *Template) createLists() {
 				d.Lists[skillsListIndex] = NewSkillsPageList(d, d.template)
 				rowPanel.AddChild(d.Lists[skillsListIndex])
 			case gurps.BlockLayoutSpellsKey:
-				d.Lists[spellsListIndex] = NewSpellsPageList(d.template)
+				d.Lists[spellsListIndex] = NewSpellsPageList(d, d.template)
 				rowPanel.AddChild(d.Lists[spellsListIndex])
 			case gurps.BlockLayoutEquipmentKey:
 				d.Lists[carriedEquipmentListIndex] = NewCarriedEquipmentPageList(d.template)
