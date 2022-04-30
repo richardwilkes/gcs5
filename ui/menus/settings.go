@@ -57,10 +57,10 @@ var PerSheetSettings = &unison.Action{
 	ID:              constants.PerSheetSettingsItemID,
 	Title:           i18n.Text("Sheet Settings…"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyComma, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: func(_ *unison.Action, _ interface{}) bool { return sheet.ActiveEntity() != nil },
+	EnabledCallback: func(_ *unison.Action, _ interface{}) bool { return sheet.ActiveSheet() != nil },
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		if entity := sheet.ActiveEntity(); entity != nil {
-			uisettings.ShowSheetSettings(entity)
+		if s := sheet.ActiveSheet(); s != nil {
+			uisettings.ShowSheetSettings(s)
 		}
 	},
 }

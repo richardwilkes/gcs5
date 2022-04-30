@@ -26,9 +26,11 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+var _ widget.GroupedCloser = &sheetSettingsDockable{}
+
 type sheetSettingsDockable struct {
 	Dockable
-	entity                             *gurps.Entity
+	owner                              widget.EntityPanel
 	damageProgressionPopup             *unison.PopupMenu[attribute.DamageProgression]
 	showAdvantageModifier              *unison.CheckBox
 	showEquipmentModifier              *unison.CheckBox
@@ -51,19 +53,19 @@ type sheetSettingsDockable struct {
 	blockLayoutField                   *unison.Field
 }
 
-// ShowSheetSettings the Sheet Settings window.
-func ShowSheetSettings(entity *gurps.Entity) {
+// ShowSheetSettings the Sheet Settings window. Pass in nil to edit the defaults or a sheet to edit the sheet's settings
+func ShowSheetSettings(owner widget.EntityPanel) {
 	ws, dc, found := workspace.Activate(func(d unison.Dockable) bool {
-		if s, ok := d.(*sheetSettingsDockable); ok && s.entity == entity {
+		if s, ok := d.(*sheetSettingsDockable); ok && owner == s.owner {
 			return true
 		}
 		return false
 	})
 	if !found && ws != nil {
-		d := &sheetSettingsDockable{entity: entity}
+		d := &sheetSettingsDockable{owner: owner}
 		d.Self = d
-		if entity != nil {
-			d.TabTitle = i18n.Text("Sheet Settings: " + entity.Profile.Name)
+		if owner != nil {
+			d.TabTitle = i18n.Text("Sheet Settings: " + owner.Entity().Profile.Name)
 		} else {
 			d.TabTitle = i18n.Text("Default Sheet Settings")
 		}
@@ -75,13 +77,13 @@ func ShowSheetSettings(entity *gurps.Entity) {
 	}
 }
 
-func (d *sheetSettingsDockable) CloseWithEntity(entity *gurps.Entity) bool {
-	return entity != nil && entity == d.entity
+func (d *sheetSettingsDockable) CloseWithGroup(other unison.Paneler) bool {
+	return d.owner != nil && d.owner == other
 }
 
 func (d *sheetSettingsDockable) settings() *gurps.SheetSettings {
-	if d.entity != nil {
-		return d.entity.SheetSettings
+	if d.owner != nil {
+		return d.owner.Entity().SheetSettings
 	}
 	return settings.Global().Sheet
 }
@@ -326,8 +328,9 @@ func (d *sheetSettingsDockable) createHeader(panel *unison.Panel, title string, 
 }
 
 func (d *sheetSettingsDockable) reset() {
-	if d.entity != nil {
-		d.entity.SheetSettings = settings.Global().Sheet.Clone(d.entity)
+	if d.owner != nil {
+		entity := d.owner.Entity()
+		entity.SheetSettings = settings.Global().Sheet.Clone(entity)
 	} else {
 		settings.Global().Sheet = gurps.FactorySheetSettings()
 	}
@@ -363,9 +366,13 @@ func (d *sheetSettingsDockable) syncSheet(full bool) {
 	for _, wnd := range unison.Windows() {
 		if ws := workspace.FromWindow(wnd); ws != nil {
 			ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
+				var entity *gurps.Entity
+				if d.owner != nil {
+					entity = d.owner.Entity()
+				}
 				for _, one := range dc.Dockables() {
 					if s, ok := one.(gurps.SheetSettingsResponder); ok {
-						s.SheetSettingsUpdated(d.entity, full)
+						s.SheetSettingsUpdated(entity, full)
 					}
 				}
 				return false
@@ -379,9 +386,10 @@ func (d *sheetSettingsDockable) load(fileSystem fs.FS, filePath string) error {
 	if err != nil {
 		return err
 	}
-	if d.entity != nil {
-		d.entity.SheetSettings = s
-		s.SetOwningEntity(d.entity)
+	if d.owner != nil {
+		entity := d.owner.Entity()
+		entity.SheetSettings = s
+		s.SetOwningEntity(entity)
 	} else {
 		settings.Global().Sheet = s
 	}
@@ -390,8 +398,8 @@ func (d *sheetSettingsDockable) load(fileSystem fs.FS, filePath string) error {
 }
 
 func (d *sheetSettingsDockable) save(filePath string) error {
-	if d.entity != nil {
-		return d.entity.SheetSettings.Save(filePath)
+	if d.owner != nil {
+		return d.owner.Entity().SheetSettings.Save(filePath)
 	}
 	return settings.Global().Sheet.Save(filePath)
 }

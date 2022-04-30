@@ -99,10 +99,11 @@ func (d *Dockable) MayAttemptClose() bool {
 }
 
 // AttemptClose implements unison.TabCloser
-func (d *Dockable) AttemptClose() {
+func (d *Dockable) AttemptClose() bool {
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.Close(d)
 	}
+	return true
 }
 
 func (d *Dockable) createToolbar(addToStartToolbar, addToEndToolbar func(*unison.Panel)) *unison.Panel {

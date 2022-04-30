@@ -82,14 +82,14 @@ type Sheet struct {
 	full               bool
 }
 
-// ActiveEntity returns the currently active entity.
-func ActiveEntity() *gurps.Entity {
+// ActiveSheet returns the currently active sheet.
+func ActiveSheet() *Sheet {
 	d := workspace.ActiveDockable()
 	if d == nil {
 		return nil
 	}
 	if s, ok := d.(*Sheet); ok {
-		return s.Entity()
+		return s
 	}
 	return nil
 }
@@ -140,7 +140,7 @@ func NewSheet(filePath string, entity *gurps.Entity) unison.Dockable {
 
 	sheetSettingsButton := unison.NewSVGButton(res.SettingsSVG)
 	sheetSettingsButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Sheet Settings"))
-	sheetSettingsButton.ClickCallback = func() { wsettings.ShowSheetSettings(s.entity) }
+	sheetSettingsButton.ClickCallback = func() { wsettings.ShowSheetSettings(s) }
 
 	s.scaleField = widget.NewPercentageField(func() int { return s.scale }, func(v int) {
 		s.scale = v
@@ -222,49 +222,14 @@ func (s *Sheet) Modified() bool {
 	return s.crc != s.entity.CRC64()
 }
 
-type closeWithEntity interface {
-	unison.TabCloser
-	CloseWithEntity(entity *gurps.Entity) bool
-}
-
 // MayAttemptClose implements unison.TabCloser
 func (s *Sheet) MayAttemptClose() bool {
-	allow := true
-	for _, wnd := range unison.Windows() {
-		if ws := workspace.FromWindow(wnd); ws != nil {
-			ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
-				for _, d := range dc.Dockables() {
-					if fe, ok := d.(closeWithEntity); ok && fe.CloseWithEntity(s.entity) {
-						if !fe.MayAttemptClose() {
-							allow = false
-							return true
-						}
-					}
-				}
-				return false
-			})
-		}
-	}
-	return allow
+	return workspace.MayAttemptCloseOfDockable(s)
 }
 
 // AttemptClose implements unison.TabCloser
-func (s *Sheet) AttemptClose() {
-	for _, wnd := range unison.Windows() {
-		if ws := workspace.FromWindow(wnd); ws != nil {
-			ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
-				for _, d := range dc.Dockables() {
-					if fe, ok := d.(closeWithEntity); ok && fe.CloseWithEntity(s.entity) {
-						fe.AttemptClose()
-					}
-				}
-				return false
-			})
-		}
-	}
-	if dc := unison.DockContainerFor(s); dc != nil {
-		dc.Close(s)
-	}
+func (s *Sheet) AttemptClose() bool {
+	return workspace.AttemptCloseOfDockable(s)
 }
 
 func (s *Sheet) createTopBlock() *Page {

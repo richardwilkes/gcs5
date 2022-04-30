@@ -32,6 +32,7 @@ var (
 	_ unison.TabCloser           = &editor[*gurps.Note, *gurps.NoteEditData]{}
 	_ widget.ModifiableRoot      = &editor[*gurps.Note, *gurps.NoteEditData]{}
 	_ unison.UndoManagerProvider = &editor[*gurps.Note, *gurps.NoteEditData]{}
+	_ widget.GroupedCloser       = &editor[*gurps.Note, *gurps.NoteEditData]{}
 )
 
 type editor[N node.Node, D node.EditorData[N]] struct {
@@ -166,20 +167,28 @@ func (e *editor[N, D]) MarkModified() {
 	}
 }
 
+func (e *editor[N, D]) CloseWithGroup(other unison.Paneler) bool {
+	return e.owner != nil && e.owner == other
+}
+
 func (e *editor[N, D]) MayAttemptClose() bool {
 	return true
 }
 
-func (e *editor[N, D]) AttemptClose() {
+func (e *editor[N, D]) AttemptClose() bool {
 	if e.promptForSave && !reflect.DeepEqual(e.beforeData, e.editorData) {
-		msg := fmt.Sprintf(i18n.Text("Save changes made to\n%s?"), e.Title())
-		if unison.QuestionDialog(msg, "") == unison.ModalResponseOK {
+		switch unison.YesNoCancelDialog(fmt.Sprintf(i18n.Text("Save changes made to\n%s?"), e.Title()), "") {
+		case unison.ModalResponseDiscard:
+		case unison.ModalResponseOK:
 			e.apply()
+		case unison.ModalResponseCancel:
+			return false
 		}
 	}
 	if dc := unison.DockContainerFor(e); dc != nil {
 		dc.Close(e)
 	}
+	return true
 }
 
 func (e *editor[N, D]) UndoManager() *unison.UndoManager {

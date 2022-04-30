@@ -174,14 +174,12 @@ func (d *Template) MarkModified() {
 
 // MayAttemptClose implements unison.TabCloser
 func (d *Template) MayAttemptClose() bool {
-	return true
+	return workspace.MayAttemptCloseOfDockable(d)
 }
 
 // AttemptClose implements unison.TabCloser
-func (d *Template) AttemptClose() {
-	if dc := unison.DockContainerFor(d); dc != nil {
-		dc.Close(d)
-	}
+func (d *Template) AttemptClose() bool {
+	return workspace.AttemptCloseOfDockable(d)
 }
 
 func (d *Template) createContent() unison.Paneler {

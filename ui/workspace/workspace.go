@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/richardwilkes/gcs/model/settings"
+	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -197,4 +198,57 @@ func DockContainerHoldsExtension(dc *unison.DockContainer, ext ...string) bool {
 		}
 	}
 	return false
+}
+
+// MayAttemptCloseOfDockable returns true if the given Dockable and any grouped Dockables associated with it may be
+// closed.
+func MayAttemptCloseOfDockable(d unison.Dockable) bool {
+	allow := true
+	for _, wnd := range unison.Windows() {
+		if ws := FromWindow(wnd); ws != nil {
+			ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
+				for _, other := range dc.Dockables() {
+					if fe, ok := other.(widget.GroupedCloser); ok && fe.CloseWithGroup(d) {
+						if !fe.MayAttemptClose() {
+							allow = false
+							return true
+						}
+					}
+				}
+				return false
+			})
+		}
+	}
+	return allow
+}
+
+// AttemptCloseOfDockable attempts to close the given Dockable and any grouped Dockables associated with it.
+func AttemptCloseOfDockable(d unison.Dockable) bool {
+	allow := true
+	for _, wnd := range unison.Windows() {
+		if ws := FromWindow(wnd); ws != nil {
+			ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
+				for _, other := range dc.Dockables() {
+					if fe, ok := other.(widget.GroupedCloser); ok && fe.CloseWithGroup(d) {
+						if !fe.MayAttemptClose() {
+							allow = false
+							return true
+						}
+						if !fe.AttemptClose() {
+							allow = false
+							return true
+						}
+					}
+				}
+				return false
+			})
+		}
+	}
+	if !allow {
+		return false
+	}
+	if dc := unison.DockContainerFor(d); dc != nil {
+		dc.Close(d)
+	}
+	return true
 }

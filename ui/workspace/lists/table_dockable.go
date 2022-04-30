@@ -24,6 +24,7 @@ import (
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/gcs/ui/workspace/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -447,14 +448,12 @@ func (d *TableDockable) Modified() bool {
 
 // MayAttemptClose implements unison.TabCloser
 func (d *TableDockable) MayAttemptClose() bool {
-	return true
+	return workspace.MayAttemptCloseOfDockable(d)
 }
 
 // AttemptClose implements unison.TabCloser
-func (d *TableDockable) AttemptClose() {
-	if dc := unison.DockContainerFor(d); dc != nil {
-		dc.Close(d)
-	}
+func (d *TableDockable) AttemptClose() bool {
+	return workspace.AttemptCloseOfDockable(d)
 }
 
 func (d *TableDockable) toggleLock() {

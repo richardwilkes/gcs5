@@ -538,8 +538,9 @@ func (d *PDFDockable) MayAttemptClose() bool {
 }
 
 // AttemptClose implements unison.TabCloser
-func (d *PDFDockable) AttemptClose() {
+func (d *PDFDockable) AttemptClose() bool {
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.Close(d)
 	}
+	return true
 }
