@@ -115,7 +115,17 @@ func NewAdvantageModifierTableDockableFromFile(filePath string) (unison.Dockable
 
 // NewAdvantageModifierTableDockable creates a new unison.Dockable for advantage modifier list files.
 func NewAdvantageModifierTableDockable(filePath string, modifiers []*gurps.AdvantageModifier) unison.Dockable {
-	return NewTableDockable(filePath, tbl.NewAdvantageModifiersProvider(&advantageModifierListProvider{modifiers: modifiers}))
+	t := NewTableDockable(filePath, tbl.NewAdvantageModifiersProvider(&advantageModifierListProvider{modifiers: modifiers}))
+	t.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
+		for _, row := range t.table.SelectedRows(false) {
+			if node, ok := row.(*tbl.Node); ok {
+				if modifier, ok2 := node.Data().(*gurps.AdvantageModifier); ok2 {
+					editors.EditAdvantageModifier(t, modifier)
+				}
+			}
+		}
+	})
+	return t
 }
 
 type equipmentListProvider struct {
