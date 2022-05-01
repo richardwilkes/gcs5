@@ -23,6 +23,7 @@ import (
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"golang.org/x/exp/slices"
@@ -224,24 +225,27 @@ func (a *AdvantageModifier) CostDescription() string {
 	if a.Container() {
 		return ""
 	}
-	var buffer strings.Builder
-	if a.CostType == advantage.Multiplier {
-		buffer.WriteByte('x')
-		buffer.WriteString(a.Cost.String())
-	} else {
-		if a.Cost >= 0 {
-			buffer.WriteByte('+')
+	var base string
+	switch a.CostType {
+	case advantage.Percentage:
+		if a.HasLevels() {
+			base = a.Cost.Mul(a.Levels).StringWithSign()
+		} else {
+			base = a.Cost.StringWithSign()
 		}
-		buffer.WriteString(a.Cost.String())
-		if a.CostType == advantage.Percentage {
-			buffer.WriteByte('%')
-		}
-		if desc := a.Affects.AltString(); desc != "" {
-			buffer.WriteByte(' ')
-			buffer.WriteString(desc)
-		}
+		base += advantage.Percentage.String()
+	case advantage.Points:
+		base = a.Cost.StringWithSign()
+	case advantage.Multiplier:
+		return a.CostType.String() + a.Cost.String()
+	default:
+		jot.Errorf("unhandled cost type: %d", a.CostType)
+		base = a.Cost.StringWithSign() + advantage.Percentage.String()
 	}
-	return buffer.String()
+	if desc := a.Affects.AltString(); desc != "" {
+		base += " " + desc
+	}
+	return base
 }
 
 // FillWithNameableKeys adds any nameable keys found in this AdvantageModifier to the provided map.
