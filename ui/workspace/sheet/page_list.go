@@ -58,7 +58,7 @@ func NewAdvantagesPageList(owner widget.Rebuildable, provider gurps.ListProvider
 }
 
 // NewCarriedEquipmentPageList creates the carried equipment page list.
-func NewCarriedEquipmentPageList(provider gurps.ListProvider) *PageList {
+func NewCarriedEquipmentPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
 	p := newPageList(tbl.NewEquipmentProvider(provider, true, true))
 	p.installToggleStateHandler()
 	p.installIncrementHandler()
@@ -67,11 +67,20 @@ func NewCarriedEquipmentPageList(provider gurps.ListProvider) *PageList {
 	p.installDecrementUsesHandler()
 	p.installIncrementTechLevelHandler()
 	p.installDecrementTechLevelHandler()
+	p.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
+		for _, row := range p.table.SelectedRows(false) {
+			if node, ok := row.(*tbl.Node); ok {
+				if one, ok2 := node.Data().(*gurps.Equipment); ok2 {
+					editors.EditEquipment(owner, one, true)
+				}
+			}
+		}
+	})
 	return p
 }
 
 // NewOtherEquipmentPageList creates the other equipment page list.
-func NewOtherEquipmentPageList(provider gurps.ListProvider) *PageList {
+func NewOtherEquipmentPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
 	p := newPageList(tbl.NewEquipmentProvider(provider, true, false))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
@@ -79,6 +88,15 @@ func NewOtherEquipmentPageList(provider gurps.ListProvider) *PageList {
 	p.installDecrementUsesHandler()
 	p.installIncrementTechLevelHandler()
 	p.installDecrementTechLevelHandler()
+	p.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
+		for _, row := range p.table.SelectedRows(false) {
+			if node, ok := row.(*tbl.Node); ok {
+				if one, ok2 := node.Data().(*gurps.Equipment); ok2 {
+					editors.EditEquipment(owner, one, false)
+				}
+			}
+		}
+	})
 	return p
 }
 

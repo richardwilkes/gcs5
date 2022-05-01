@@ -54,8 +54,9 @@ const (
 	EquipmentReferenceColumn
 )
 
-// TechLevelInfo holds the general TL age list
-var TechLevelInfo = i18n.Text(`TL0: Stone Age (Prehistory)
+var (
+	// TechLevelInfo holds the general TL age list
+	TechLevelInfo = i18n.Text(`TL0: Stone Age (Prehistory)
 TL1: Bronze Age (3500 B.C.+)
 TL2: Iron Age (1200 B.C.+)
 TL3: Medieval (600 A.D.+)
@@ -68,6 +69,14 @@ TL9: Microtech Age (2025+?)
 TL10: Robotic Age (2070+?)
 TL11: Age of Exotic Matter
 TL12: Anything Goes`)
+
+	// LegalityClassInfo holds the LC list
+	LegalityClassInfo = i18n.Text(`LC0: Banned
+LC1: Military
+LC2: Restricted
+LC3: Licensed
+LC4: Open`)
+)
 
 const (
 	equipmentListTypeKey = "equipment_list"
@@ -357,17 +366,25 @@ func (e *Equipment) AdjustedWeight(forSkills bool, defUnits measure.WeightUnits)
 
 // ExtendedWeight returns the extended weight.
 func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits) measure.Weight {
-	if e.Quantity <= 0 {
+	return ExtendedWeightAdjustedForModifiers(defUnits, e.Quantity, e.Weight, e.Modifiers, e.Features, e.Children, forSkills, e.WeightIgnoredForSkills)
+}
+
+// ExtendedWeightAdjustedForModifiers calculates the extended weight.
+func ExtendedWeightAdjustedForModifiers(defUnits measure.WeightUnits, qty f64d4.Int, baseWeight measure.Weight, modifiers []*EquipmentModifier, features feature.Features, children []*Equipment, forSkills, weightIgnoredForSkills bool) measure.Weight {
+	if qty <= 0 {
 		return 0
 	}
-	base := f64d4.Int(e.AdjustedWeight(forSkills, defUnits)).Mul(e.Quantity)
-	if e.Container() {
+	var base f64d4.Int
+	if !forSkills || !weightIgnoredForSkills {
+		base = f64d4.Int(WeightAdjustedForModifiers(baseWeight, modifiers, defUnits)).Mul(qty)
+	}
+	if len(children) != 0 {
 		var contained f64d4.Int
-		for _, one := range e.Children {
+		for _, one := range children {
 			contained += f64d4.Int(one.ExtendedWeight(forSkills, defUnits))
 		}
 		var percentage, reduction f64d4.Int
-		for _, one := range e.Features {
+		for _, one := range features {
 			if cwr, ok := one.(*feature.ContainedWeightReduction); ok {
 				if cwr.IsPercentageReduction() {
 					percentage += cwr.PercentageReduction()
@@ -376,9 +393,9 @@ func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits)
 				}
 			}
 		}
-		for _, one := range e.Modifiers {
+		for _, one := range modifiers {
 			if !one.Disabled {
-				for _, f := range e.Features {
+				for _, f := range one.Features {
 					if cwr, ok := f.(*feature.ContainedWeightReduction); ok {
 						if cwr.IsPercentageReduction() {
 							percentage += cwr.PercentageReduction()

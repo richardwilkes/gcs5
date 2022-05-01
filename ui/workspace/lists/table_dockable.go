@@ -152,7 +152,17 @@ func NewEquipmentTableDockableFromFile(filePath string) (unison.Dockable, error)
 
 // NewEquipmentTableDockable creates a new unison.Dockable for equipment list files.
 func NewEquipmentTableDockable(filePath string, equipment []*gurps.Equipment) unison.Dockable {
-	return NewTableDockable(filePath, tbl.NewEquipmentProvider(&equipmentListProvider{other: equipment}, false, false))
+	t := NewTableDockable(filePath, tbl.NewEquipmentProvider(&equipmentListProvider{other: equipment}, false, false))
+	t.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
+		for _, row := range t.table.SelectedRows(false) {
+			if node, ok := row.(*tbl.Node); ok {
+				if one, ok2 := node.Data().(*gurps.Equipment); ok2 {
+					editors.EditEquipment(t, one, false)
+				}
+			}
+		}
+	})
+	return t
 }
 
 type equipmentModifierListProvider struct {

@@ -15,6 +15,7 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/tbl"
@@ -238,6 +239,19 @@ func addNumericField(parent *unison.Panel, labelText, tooltip string, fieldData 
 	return field
 }
 
+func addWeightField(parent *unison.Panel, labelText, tooltip string, entity *gurps.Entity, fieldData *measure.Weight) *widget.WeightField {
+	field := widget.NewWeightField(labelText, entity, func() measure.Weight { return *fieldData },
+		func(value measure.Weight) {
+			*fieldData = value
+			widget.MarkModified(parent)
+		}, 0, measure.Weight(f64d4.Max))
+	if tooltip != "" {
+		field.Tooltip = unison.NewTooltipWithText(tooltip)
+	}
+	parent.AddChild(field)
+	return field
+}
+
 func addCheckBox(parent *unison.Panel, labelText string, fieldData *bool) {
 	parent.AddChild(widget.NewCheckBox(labelText, *fieldData, func(b bool) {
 		*fieldData = b
@@ -288,17 +302,25 @@ func addPopup[T comparable](parent *unison.Panel, choices []T, fieldData *T) *un
 	return popup
 }
 
-func disableAndBlankField(field *widget.NumericField) {
-	field.SetEnabled(false)
-	field.DrawOverCallback = func(gc *unison.Canvas, rect unison.Rect) {
-		rect = field.ContentRect(false)
-		gc.DrawRect(rect, field.BackgroundInk.Paint(gc, rect, unison.Fill))
+func disableAndBlankField(field unison.Paneler) {
+	panel := field.AsPanel()
+	panel.SetEnabled(false)
+	panel.DrawOverCallback = func(gc *unison.Canvas, rect unison.Rect) {
+		rect = panel.ContentRect(false)
+		var ink unison.Ink
+		if f, ok := panel.Self.(*unison.Field); ok {
+			ink = f.BackgroundInk
+		} else {
+			ink = unison.DefaultFieldTheme.BackgroundInk
+		}
+		gc.DrawRect(rect, ink.Paint(gc, rect, unison.Fill))
 	}
 }
 
-func enableAndUnblankField(field *widget.NumericField) {
-	field.SetEnabled(true)
-	field.DrawOverCallback = nil
+func enableAndUnblankField(field unison.Paneler) {
+	panel := field.AsPanel()
+	panel.SetEnabled(true)
+	panel.DrawOverCallback = nil
 }
 
 func disableAndBlankPopup[T comparable](popup *unison.PopupMenu[T]) {
