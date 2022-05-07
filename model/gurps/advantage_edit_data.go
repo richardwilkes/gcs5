@@ -12,11 +12,11 @@
 package gurps
 
 import (
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var _ node.EditorData[*Advantage] = &AdvantageEditData{}
@@ -31,9 +31,9 @@ type AdvantageEditData struct {
 	UserDesc       string                    `json:"userdesc,omitempty"`
 	Tags           []string                  `json:"tags,omitempty"`
 	Modifiers      []*AdvantageModifier      `json:"modifiers,omitempty"`
-	BasePoints     f64d4.Int                 `json:"base_points,omitempty"`      // Non-container only
-	Levels         f64d4.Int                 `json:"levels,omitempty"`           // Non-container only
-	PointsPerLevel f64d4.Int                 `json:"points_per_level,omitempty"` // Non-container only
+	BasePoints     fxp.Int                   `json:"base_points,omitempty"`      // Non-container only
+	Levels         fxp.Int                   `json:"levels,omitempty"`           // Non-container only
+	PointsPerLevel fxp.Int                   `json:"points_per_level,omitempty"` // Non-container only
 	Prereq         *PrereqList               `json:"prereqs,omitempty"`          // Non-container only
 	Weapons        []*Weapon                 `json:"weapons,omitempty"`          // Non-container only
 	Features       feature.Features          `json:"features,omitempty"`         // Non-container only

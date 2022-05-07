@@ -14,9 +14,9 @@ package feature
 import (
 	"fmt"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var _ Bonus = &AttributeBonus{}
@@ -36,7 +36,7 @@ func NewAttributeBonus(attrID string) *AttributeBonus {
 		Type:          AttributeBonusType,
 		Attribute:     attrID,
 		Limitation:    attribute.None,
-		LeveledAmount: LeveledAmount{Amount: f64d4.One},
+		LeveledAmount: LeveledAmount{Amount: fxp.One},
 	}
 }
 
@@ -69,7 +69,7 @@ func (a *AttributeBonus) SetParent(parent fmt.Stringer) {
 }
 
 // SetLevel implements Bonus.
-func (a *AttributeBonus) SetLevel(level f64d4.Int) {
+func (a *AttributeBonus) SetLevel(level fxp.Int) {
 	a.Level = level
 }
 

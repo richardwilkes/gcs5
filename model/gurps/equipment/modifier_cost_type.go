@@ -14,7 +14,7 @@ package equipment
 import (
 	"fmt"
 
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+	"github.com/richardwilkes/gcs/model/fxp"
 )
 
 // StringWithExample returns an example along with the normal String() content.
@@ -44,7 +44,7 @@ func (enum ModifierCostType) DetermineModifierCostValueTypeFromString(s string) 
 }
 
 // ExtractValue from the string.
-func (enum ModifierCostType) ExtractValue(s string) f64d4.Int {
+func (enum ModifierCostType) ExtractValue(s string) fxp.Int {
 	return enum.DetermineModifierCostValueTypeFromString(s).ExtractValue(s)
 }
 

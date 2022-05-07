@@ -15,11 +15,11 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/gcs/model/criteria"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 const (
@@ -60,7 +60,7 @@ func NewSkillBonus() *SkillBonus {
 				Compare: criteria.Any,
 			},
 		},
-		LeveledAmount: LeveledAmount{Amount: f64d4.One},
+		LeveledAmount: LeveledAmount{Amount: fxp.One},
 	}
 }
 
@@ -117,7 +117,7 @@ func (s *SkillBonus) SetParent(parent fmt.Stringer) {
 }
 
 // SetLevel implements Bonus.
-func (s *SkillBonus) SetLevel(level f64d4.Int) {
+func (s *SkillBonus) SetLevel(level fxp.Int) {
 	s.Level = level
 }
 

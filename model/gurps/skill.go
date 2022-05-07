@@ -28,7 +28,6 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 	"golang.org/x/exp/slices"
 )
@@ -117,7 +116,7 @@ func newSkill(entity *Entity, parent *Skill, typeKey string, container bool) *Sk
 	if !container {
 		s.Difficulty.Attribute = AttributeIDFor(entity, gid.Dexterity)
 		s.Difficulty.Difficulty = skill.Average
-		s.Points = f64d4.One
+		s.Points = fxp.One
 	}
 	s.Name = s.Kind()
 	return &s
@@ -130,8 +129,8 @@ func (s *Skill) MarshalJSON() ([]byte, error) {
 		return json.Marshal(&s.SkillData)
 	}
 	type calc struct {
-		Level              f64d4.Int `json:"level"`
-		RelativeSkillLevel string    `json:"rsl"`
+		Level              fxp.Int `json:"level"`
+		RelativeSkillLevel string  `json:"rsl"`
 	}
 	return json.Marshal(&struct {
 		SkillData
@@ -213,9 +212,9 @@ func (s *Skill) CellData(column int, data *node.CellData) {
 }
 
 // FormatRelativeSkill formats the relative skill for display.
-func FormatRelativeSkill(entity *Entity, typ string, difficulty AttributeDifficulty, rsl f64d4.Int) string {
+func FormatRelativeSkill(entity *Entity, typ string, difficulty AttributeDifficulty, rsl fxp.Int) string {
 	switch {
-	case rsl == f64d4.Min:
+	case rsl == fxp.Min:
 		return "-"
 	case strings.HasPrefix(typ, gid.Skill) || strings.HasPrefix(typ, gid.Spell):
 		s := ResolveAttributeName(entity, difficulty.Attribute)
@@ -361,7 +360,7 @@ func (s *Skill) RelativeLevel() string {
 	}
 	rsl := s.AdjustedRelativeLevel()
 	switch {
-	case rsl == f64d4.Min:
+	case rsl == fxp.Min:
 		return "-"
 	case strings.HasPrefix(s.Type, gid.Skill):
 		return ResolveAttributeName(s.Entity, s.Difficulty.Attribute) + rsl.StringWithSign()
@@ -371,9 +370,9 @@ func (s *Skill) RelativeLevel() string {
 }
 
 // AdjustedRelativeLevel returns the relative skill level.
-func (s *Skill) AdjustedRelativeLevel() f64d4.Int {
+func (s *Skill) AdjustedRelativeLevel() fxp.Int {
 	if s.Container() {
-		return f64d4.Min
+		return fxp.Min
 	}
 	if s.Entity != nil && s.LevelData.Level > 0 {
 		if strings.HasPrefix(s.Type, gid.Technique) {
@@ -382,13 +381,13 @@ func (s *Skill) AdjustedRelativeLevel() f64d4.Int {
 		return s.LevelData.RelativeLevel
 	}
 	// TODO: Old code had a case for templates... but can't see that being exercised in the actual display anywhere
-	return f64d4.Min
+	return fxp.Min
 }
 
 // AdjustedPoints returns the points, adjusted for any bonuses.
-func (s *Skill) AdjustedPoints(tooltip *xio.ByteBuffer) f64d4.Int {
+func (s *Skill) AdjustedPoints(tooltip *xio.ByteBuffer) fxp.Int {
 	if s.Container() {
-		var total f64d4.Int
+		var total fxp.Int
 		for _, one := range s.Children {
 			total += one.AdjustedPoints(tooltip)
 		}
@@ -398,7 +397,7 @@ func (s *Skill) AdjustedPoints(tooltip *xio.ByteBuffer) f64d4.Int {
 }
 
 // AdjustedPointsForNonContainerSkillOrTechnique returns the points, adjusted for any bonuses.
-func AdjustedPointsForNonContainerSkillOrTechnique(entity *Entity, points f64d4.Int, name, specialization string, tags []string, tooltip *xio.ByteBuffer) f64d4.Int {
+func AdjustedPointsForNonContainerSkillOrTechnique(entity *Entity, points fxp.Int, name, specialization string, tags []string, tooltip *xio.ByteBuffer) fxp.Int {
 	if entity != nil && entity.Type == datafile.PC {
 		points += entity.SkillPointComparedBonusFor(feature.SkillPointsID+"*", name, specialization, tags, tooltip)
 		points += entity.BonusFor(feature.SkillPointsID+"/"+strings.ToLower(name), tooltip)
@@ -410,7 +409,7 @@ func AdjustedPointsForNonContainerSkillOrTechnique(entity *Entity, points f64d4.
 // IncrementSkillLevel adds enough points to increment the skill level to the next level.
 func (s *Skill) IncrementSkillLevel() {
 	if !s.Container() {
-		basePoints := s.Points.Trunc() + f64d4.One
+		basePoints := s.Points.Trunc() + fxp.One
 		maxPoints := basePoints
 		if s.Difficulty.Difficulty == skill.Wildcard {
 			maxPoints += fxp.Twelve
@@ -418,7 +417,7 @@ func (s *Skill) IncrementSkillLevel() {
 			maxPoints += fxp.Four
 		}
 		oldLevel := s.CalculateLevel().Level
-		for points := basePoints; points < maxPoints; points += f64d4.One {
+		for points := basePoints; points < maxPoints; points += fxp.One {
 			s.Points = points
 			s.UpdateLevel()
 			if s.CalculateLevel().Level > oldLevel {
@@ -440,7 +439,7 @@ func (s *Skill) DecrementSkillLevel() {
 		}
 		minPoints = minPoints.Max(0)
 		oldLevel := s.CalculateLevel().Level
-		for points := basePoints; points >= minPoints; points -= f64d4.One {
+		for points := basePoints; points >= minPoints; points -= fxp.One {
 			s.Points = points
 			s.UpdateLevel()
 			if s.CalculateLevel().Level < oldLevel {
@@ -450,10 +449,10 @@ func (s *Skill) DecrementSkillLevel() {
 		if s.Points > 0 {
 			oldLevel = s.CalculateLevel().Level
 			for s.Points > 0 {
-				s.Points -= f64d4.One
+				s.Points -= fxp.One
 				s.UpdateLevel()
 				if s.CalculateLevel().Level != oldLevel {
-					s.Points += f64d4.One
+					s.Points += fxp.One
 					break
 				}
 			}
@@ -473,11 +472,11 @@ func (s *Skill) CalculateLevel() skill.Level {
 }
 
 // CalculateSkillLevel returns the calculated level for a skill.
-func CalculateSkillLevel(entity *Entity, name, specialization string, tags []string, def *SkillDefault, difficulty AttributeDifficulty, points, encumbrancePenaltyMultiplier f64d4.Int) skill.Level {
+func CalculateSkillLevel(entity *Entity, name, specialization string, tags []string, def *SkillDefault, difficulty AttributeDifficulty, points, encumbrancePenaltyMultiplier fxp.Int) skill.Level {
 	var tooltip xio.ByteBuffer
 	relativeLevel := difficulty.Difficulty.BaseRelativeLevel()
 	level := entity.ResolveAttributeCurrent(difficulty.Attribute)
-	if level != f64d4.Min {
+	if level != fxp.Min {
 		if difficulty.Difficulty == skill.Wildcard {
 			points = points.Div(fxp.Three)
 		} else if def != nil && def.Points > 0 {
@@ -485,19 +484,19 @@ func CalculateSkillLevel(entity *Entity, name, specialization string, tags []str
 		}
 		points = points.Trunc()
 		switch {
-		case points == f64d4.One:
+		case points == fxp.One:
 			// relativeLevel is preset to this point value
-		case points > f64d4.One && points < fxp.Four:
-			relativeLevel += f64d4.One
+		case points > fxp.One && points < fxp.Four:
+			relativeLevel += fxp.One
 		case points >= fxp.Four:
-			relativeLevel += f64d4.One + points.Div(fxp.Four).Trunc()
+			relativeLevel += fxp.One + points.Div(fxp.Four).Trunc()
 		case difficulty.Difficulty != skill.Wildcard && def != nil && def.Points < 0:
 			relativeLevel = def.AdjLevel - level
 		default:
-			level = f64d4.Min
+			level = fxp.Min
 			relativeLevel = 0
 		}
-		if level != f64d4.Min {
+		if level != fxp.Min {
 			level += relativeLevel
 			if difficulty.Difficulty != skill.Wildcard && def != nil && level < def.AdjLevel {
 				level = def.AdjLevel
@@ -525,10 +524,10 @@ func CalculateSkillLevel(entity *Entity, name, specialization string, tags []str
 }
 
 // CalculateTechniqueLevel returns the calculated level for a technique.
-func CalculateTechniqueLevel(entity *Entity, name, specialization string, tags []string, def *SkillDefault, difficulty skill.Difficulty, points f64d4.Int, requirePoints bool, limitModifier *f64d4.Int) skill.Level {
+func CalculateTechniqueLevel(entity *Entity, name, specialization string, tags []string, def *SkillDefault, difficulty skill.Difficulty, points fxp.Int, requirePoints bool, limitModifier *fxp.Int) skill.Level {
 	var tooltip xio.ByteBuffer
-	var relativeLevel f64d4.Int
-	level := f64d4.Min
+	var relativeLevel fxp.Int
+	level := fxp.Min
 	if entity != nil {
 		if def.DefaultType == gid.Skill {
 			if sk := entity.BaseSkill(def, requirePoints); sk != nil {
@@ -538,16 +537,16 @@ func CalculateTechniqueLevel(entity *Entity, name, specialization string, tags [
 			// Take the modifier back out, as we wanted the base, not the final value.
 			level = def.SkillLevelFast(entity, true, nil, false) - def.Modifier
 		}
-		if level != f64d4.Min {
+		if level != fxp.Min {
 			baseLevel := level
 			level += def.Modifier
 			if difficulty == skill.Hard {
-				points -= f64d4.One
+				points -= fxp.One
 			}
 			if points > 0 {
 				relativeLevel = points
 			}
-			if level != f64d4.Min {
+			if level != fxp.Min {
 				relativeLevel += entity.BonusFor(feature.SkillNameID+"/"+strings.ToLower(name), &tooltip)
 				relativeLevel += entity.SkillComparedBonusFor(feature.SkillNameID+"*", name, specialization, tags, &tooltip)
 				level += relativeLevel
@@ -586,11 +585,11 @@ func (s *Skill) bestDefaultWithPoints(excluded *SkillDefault) *SkillDefault {
 		best.AdjLevel = level
 		switch {
 		case level == baseLine:
-			best.Points = f64d4.One
-		case level == baseLine+f64d4.One:
+			best.Points = fxp.One
+		case level == baseLine+fxp.One:
 			best.Points = fxp.Two
-		case level > baseLine+f64d4.One:
-			best.Points = fxp.Four.Mul(level - (baseLine + f64d4.One))
+		case level > baseLine+fxp.One:
+			best.Points = fxp.Four.Mul(level - (baseLine + fxp.One))
 		default:
 			best.Points = -level.Max(0)
 		}
@@ -605,7 +604,7 @@ func (s *Skill) bestDefault(excluded *SkillDefault) *SkillDefault {
 	excludes := make(map[string]bool)
 	excludes[s.String()] = true
 	var bestDef *SkillDefault
-	best := f64d4.Min
+	best := fxp.Min
 	for _, def := range s.Defaults {
 		// For skill-based defaults, prune out any that already use a default that we are involved with
 		if def.Equivalent(excluded) || s.inDefaultChain(def, make(map[*Skill]bool)) {

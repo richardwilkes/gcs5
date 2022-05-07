@@ -27,7 +27,6 @@ import (
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 	"golang.org/x/exp/slices"
 )
@@ -129,7 +128,7 @@ func NewEquipment(entity *Entity, parent *Equipment, container bool) *Equipment 
 			ContainerBase: newContainerBase[*Equipment](equipmentTypeKey, container),
 			EquipmentEditData: EquipmentEditData{
 				LegalityClass: "4",
-				Quantity:      f64d4.One,
+				Quantity:      fxp.One,
 				Equipped:      true,
 			},
 		},
@@ -143,7 +142,7 @@ func NewEquipment(entity *Entity, parent *Equipment, container bool) *Equipment 
 // MarshalJSON implements json.Marshaler.
 func (e *Equipment) MarshalJSON() ([]byte, error) {
 	type calc struct {
-		ExtendedValue           f64d4.Int       `json:"extended_value"`
+		ExtendedValue           fxp.Int         `json:"extended_value"`
 		ExtendedWeight          measure.Weight  `json:"extended_weight"`
 		ExtendedWeightForSkills *measure.Weight `json:"extended_weight_for_skills,omitempty"`
 	}
@@ -188,7 +187,7 @@ func (e *Equipment) UnmarshalJSON(data []byte) error {
 			m := make(map[string]interface{})
 			if err := json.Unmarshal(data, &m); err == nil {
 				if _, exists := m["quantity"]; !exists {
-					e.Quantity = f64d4.One
+					e.Quantity = fxp.One
 				}
 			}
 		}
@@ -338,12 +337,12 @@ func (e *Equipment) TagList() []string {
 }
 
 // AdjustedValue returns the value after adjustments for any modifiers. Does not include the value of children.
-func (e *Equipment) AdjustedValue() f64d4.Int {
+func (e *Equipment) AdjustedValue() fxp.Int {
 	return ValueAdjustedForModifiers(e.Value, e.Modifiers)
 }
 
 // ExtendedValue returns the extended value.
-func (e *Equipment) ExtendedValue() f64d4.Int {
+func (e *Equipment) ExtendedValue() fxp.Int {
 	if e.Quantity <= 0 {
 		return 0
 	}
@@ -370,26 +369,26 @@ func (e *Equipment) ExtendedWeight(forSkills bool, defUnits measure.WeightUnits)
 }
 
 // ExtendedWeightAdjustedForModifiers calculates the extended weight.
-func ExtendedWeightAdjustedForModifiers(defUnits measure.WeightUnits, qty f64d4.Int, baseWeight measure.Weight, modifiers []*EquipmentModifier, features feature.Features, children []*Equipment, forSkills, weightIgnoredForSkills bool) measure.Weight {
+func ExtendedWeightAdjustedForModifiers(defUnits measure.WeightUnits, qty fxp.Int, baseWeight measure.Weight, modifiers []*EquipmentModifier, features feature.Features, children []*Equipment, forSkills, weightIgnoredForSkills bool) measure.Weight {
 	if qty <= 0 {
 		return 0
 	}
-	var base f64d4.Int
+	var base fxp.Int
 	if !forSkills || !weightIgnoredForSkills {
-		base = f64d4.Int(WeightAdjustedForModifiers(baseWeight, modifiers, defUnits)).Mul(qty)
+		base = fxp.Int(WeightAdjustedForModifiers(baseWeight, modifiers, defUnits)).Mul(qty)
 	}
 	if len(children) != 0 {
-		var contained f64d4.Int
+		var contained fxp.Int
 		for _, one := range children {
-			contained += f64d4.Int(one.ExtendedWeight(forSkills, defUnits))
+			contained += fxp.Int(one.ExtendedWeight(forSkills, defUnits))
 		}
-		var percentage, reduction f64d4.Int
+		var percentage, reduction fxp.Int
 		for _, one := range features {
 			if cwr, ok := one.(*feature.ContainedWeightReduction); ok {
 				if cwr.IsPercentageReduction() {
 					percentage += cwr.PercentageReduction()
 				} else {
-					reduction += f64d4.Int(cwr.FixedReduction(defUnits))
+					reduction += fxp.Int(cwr.FixedReduction(defUnits))
 				}
 			}
 		}
@@ -400,7 +399,7 @@ func ExtendedWeightAdjustedForModifiers(defUnits measure.WeightUnits, qty f64d4.
 						if cwr.IsPercentageReduction() {
 							percentage += cwr.PercentageReduction()
 						} else {
-							reduction += f64d4.Int(cwr.FixedReduction(defUnits))
+							reduction += fxp.Int(cwr.FixedReduction(defUnits))
 						}
 					}
 				}

@@ -14,13 +14,13 @@ package sheet
 import (
 	"fmt"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -71,8 +71,8 @@ func (p *PrimaryAttrPanel) rebuild(attrs *gurps.AttributeDefs) {
 		}
 		p.AddChild(p.createPointsField(attr))
 		p.AddChild(widget.NewNumericPageField(i18n.Text("Primary Attribute"),
-			func() f64d4.Int { return attr.Maximum() },
-			func(v f64d4.Int) { attr.SetMaximum(v) }, f64d4.Min, f64d4.Max, true))
+			func() fxp.Int { return attr.Maximum() },
+			func(v fxp.Int) { attr.SetMaximum(v) }, fxp.Min, fxp.Max, true))
 		p.AddChild(widget.NewPageLabel(def.CombinedName()))
 	}
 }

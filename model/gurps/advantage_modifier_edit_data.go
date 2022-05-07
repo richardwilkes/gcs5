@@ -12,11 +12,11 @@
 package gurps
 
 import (
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var _ node.EditorData[*AdvantageModifier] = &AdvantageModifierEditData{}
@@ -28,8 +28,8 @@ type AdvantageModifierEditData struct {
 	LocalNotes string                     `json:"notes,omitempty"`
 	VTTNotes   string                     `json:"vtt_notes,omitempty"`
 	Tags       []string                   `json:"tags,omitempty"`
-	Cost       f64d4.Int                  `json:"cost,omitempty"`      // Non-container only
-	Levels     f64d4.Int                  `json:"levels,omitempty"`    // Non-container only
+	Cost       fxp.Int                    `json:"cost,omitempty"`      // Non-container only
+	Levels     fxp.Int                    `json:"levels,omitempty"`    // Non-container only
 	Affects    advantage.Affects          `json:"affects,omitempty"`   // Non-container only
 	CostType   advantage.ModifierCostType `json:"cost_type,omitempty"` // Non-container only
 	Disabled   bool                       `json:"disabled,omitempty"`  // Non-container only

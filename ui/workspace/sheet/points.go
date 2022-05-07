@@ -14,10 +14,10 @@ package sheet
 import (
 	"fmt"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -52,8 +52,8 @@ func NewPointsPanel(entity *gurps.Entity) *PointsPanel {
 	p.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) { drawBandedBackground(p, gc, rect, 0, 2) }
 
 	p.unspent = widget.NewNumericPageField(i18n.Text("Unspent Points"),
-		func() f64d4.Int { return p.entity.UnspentPoints() },
-		func(v f64d4.Int) { p.entity.SetUnspentPoints(v) }, f64d4.Min, f64d4.Max, true)
+		func() fxp.Int { return p.entity.UnspentPoints() },
+		func(v fxp.Int) { p.entity.SetUnspentPoints(v) }, fxp.Min, fxp.Max, true)
 	p.unspent.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,

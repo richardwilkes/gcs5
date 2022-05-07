@@ -11,14 +11,12 @@
 
 package skill
 
-import (
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
-)
+import "github.com/richardwilkes/gcs/model/fxp"
 
 // Level provides a level & relative level pair, plus a tooltip.
 type Level struct {
-	Level         f64d4.Int
-	RelativeLevel f64d4.Int
+	Level         fxp.Int
+	RelativeLevel fxp.Int
 	Tooltip       string
 }
 

@@ -14,10 +14,10 @@ package feature
 import (
 	"fmt"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // Feature holds data that affects another object.
@@ -34,9 +34,9 @@ type Bonus interface {
 	// SetParent sets the parent to use.
 	SetParent(parent fmt.Stringer)
 	// SetLevel sets the level.
-	SetLevel(level f64d4.Int)
+	SetLevel(level fxp.Int)
 	// AdjustedAmount returns the amount, adjusted for level, if requested.
-	AdjustedAmount() f64d4.Int
+	AdjustedAmount() fxp.Int
 	// AddToTooltip adds this Bonus's details to the tooltip. 'buffer' may be nil.
 	AddToTooltip(buffer *xio.ByteBuffer)
 }

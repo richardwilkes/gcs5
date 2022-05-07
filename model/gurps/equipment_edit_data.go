@@ -12,11 +12,11 @@
 package gurps
 
 import (
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var _ node.EditorData[*Equipment] = &EquipmentEditData{}
@@ -31,8 +31,8 @@ type EquipmentEditData struct {
 	LegalityClass          string               `json:"legality_class,omitempty"`
 	Tags                   []string             `json:"tags,omitempty"`
 	Modifiers              []*EquipmentModifier `json:"modifiers,omitempty"`
-	Quantity               f64d4.Int            `json:"quantity,omitempty"`
-	Value                  f64d4.Int            `json:"value,omitempty"`
+	Quantity               fxp.Int              `json:"quantity,omitempty"`
+	Value                  fxp.Int              `json:"value,omitempty"`
 	Weight                 measure.Weight       `json:"weight,omitempty"`
 	MaxUses                int                  `json:"max_uses,omitempty"`
 	Uses                   int                  `json:"uses,omitempty"`

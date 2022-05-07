@@ -13,7 +13,6 @@ package feature
 
 import (
 	"github.com/richardwilkes/gcs/model/fxp"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // AttributeIDPrefix is the prefix all references to attribute IDs should use.
@@ -23,9 +22,9 @@ var _ Feature = &CostReduction{}
 
 // CostReduction holds the data for a cost reduction.
 type CostReduction struct {
-	Type       Type      `json:"type"`
-	Attribute  string    `json:"attribute,omitempty"`
-	Percentage f64d4.Int `json:"percentage,omitempty"`
+	Type       Type    `json:"type"`
+	Attribute  string  `json:"attribute,omitempty"`
+	Percentage fxp.Int `json:"percentage,omitempty"`
 }
 
 // NewCostReduction creates a new CostReduction.

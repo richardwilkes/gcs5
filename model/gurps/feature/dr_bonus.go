@@ -15,11 +15,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // HitLocationPrefix is the prefix used on all hit locations for DR bonuses.
@@ -48,7 +48,7 @@ func NewDRBonus() *DRBonus {
 			Type:           DRBonusType,
 			Location:       "torso",
 			Specialization: gid.All,
-			LeveledAmount:  LeveledAmount{Amount: f64d4.One},
+			LeveledAmount:  LeveledAmount{Amount: fxp.One},
 		},
 	}
 }
@@ -87,7 +87,7 @@ func (d *DRBonus) SetParent(parent fmt.Stringer) {
 }
 
 // SetLevel implements Bonus.
-func (d *DRBonus) SetLevel(level f64d4.Int) {
+func (d *DRBonus) SetLevel(level fxp.Int) {
 	d.Level = level
 }
 

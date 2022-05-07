@@ -26,7 +26,6 @@ import (
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 	"golang.org/x/exp/slices"
 )
@@ -104,7 +103,7 @@ func NewAdvantage(entity *Entity, parent *Advantage, container bool) *Advantage 
 // MarshalJSON implements json.Marshaler.
 func (a *Advantage) MarshalJSON() ([]byte, error) {
 	type calc struct {
-		Points f64d4.Int `json:"points"`
+		Points fxp.Int `json:"points"`
 	}
 	a.ClearUnusedFieldsForType()
 	data := struct {
@@ -223,16 +222,16 @@ func (a *Advantage) IsLeveled() bool {
 }
 
 // AdjustedPoints returns the total points, taking levels and modifiers into account.
-func (a *Advantage) AdjustedPoints() f64d4.Int {
+func (a *Advantage) AdjustedPoints() fxp.Int {
 	if a.Disabled {
 		return 0
 	}
 	if !a.Container() {
 		return AdjustedPoints(a.Entity, a.BasePoints, a.Levels, a.PointsPerLevel, a.CR, a.AllModifiers(), a.RoundCostDown)
 	}
-	var points f64d4.Int
+	var points fxp.Int
 	if a.ContainerType == advantage.AlternativeAbilities {
-		values := make([]f64d4.Int, len(a.Children))
+		values := make([]fxp.Int, len(a.Children))
 		for i, one := range a.Children {
 			values[i] = one.AdjustedPoints()
 			if values[i] > points {
@@ -433,8 +432,8 @@ func ExtractTags(tags string) []string {
 }
 
 // AdjustedPoints returns the total points, taking levels and modifiers into account. 'entity' may be nil.
-func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel f64d4.Int, cr advantage.SelfControlRoll, modifiers []*AdvantageModifier, roundCostDown bool) f64d4.Int {
-	var baseEnh, levelEnh, baseLim, levelLim f64d4.Int
+func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fxp.Int, cr advantage.SelfControlRoll, modifiers []*AdvantageModifier, roundCostDown bool) fxp.Int {
+	var baseEnh, levelEnh, baseLim, levelLim fxp.Int
 	multiplier := cr.Multiplier()
 	for _, one := range modifiers {
 		if !one.Container() && !one.Disabled {
@@ -499,10 +498,10 @@ func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel f64d4.Int
 	return fxp.ApplyRounding(modifiedBasePoints.Mul(multiplier), roundCostDown)
 }
 
-func modifyPoints(points, modifier f64d4.Int) f64d4.Int {
+func modifyPoints(points, modifier fxp.Int) fxp.Int {
 	return points + calculateModifierPoints(points, modifier)
 }
 
-func calculateModifierPoints(points, modifier f64d4.Int) f64d4.Int {
+func calculateModifierPoints(points, modifier fxp.Int) fxp.Int {
 	return points.Mul(modifier).Div(fxp.Hundred)
 }

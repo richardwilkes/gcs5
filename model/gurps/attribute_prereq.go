@@ -13,11 +13,12 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/criteria"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 var _ Prereq = &AttributePrereq{}
@@ -39,7 +40,7 @@ func NewAttributePrereq(entity *Entity) *AttributePrereq {
 		QualifierCriteria: criteria.Numeric{
 			NumericData: criteria.NumericData{
 				Compare:   criteria.AtLeast,
-				Qualifier: f64d4.FromInt(10),
+				Qualifier: f64.From[fxp.DP](10),
 			},
 		},
 		Which: AttributeIDFor(entity, gid.Strength),

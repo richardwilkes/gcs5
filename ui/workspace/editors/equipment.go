@@ -14,11 +14,11 @@ package editors
 import (
 	"strconv"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -32,20 +32,20 @@ func EditEquipment(owner widget.Rebuildable, equipment *gurps.Equipment, carried
 			qtyLabel := i18n.Text("Quantity")
 			if carried {
 				wrapper := addFlowWrapper(content, qtyLabel, 2)
-				addNumericField(wrapper, qtyLabel, "", &e.editorData.Quantity, 0, f64d4.Max-1)
+				addNumericField(wrapper, qtyLabel, "", &e.editorData.Quantity, 0, fxp.Max-1)
 				addCheckBox(wrapper, i18n.Text("Equipped"), &e.editorData.Equipped)
 			} else {
-				addLabelAndNumericField(content, qtyLabel, "", &e.editorData.Quantity, 0, f64d4.Max-1)
+				addLabelAndNumericField(content, qtyLabel, "", &e.editorData.Quantity, 0, fxp.Max-1)
 			}
 		}
 		addLabelAndStringField(content, i18n.Text("Tech Level"), gurps.TechLevelInfo, &e.editorData.TechLevel)
 		addLabelAndStringField(content, i18n.Text("Legality Class"), gurps.LegalityClassInfo, &e.editorData.LegalityClass)
 		valueLabel := i18n.Text("Value")
 		wrapper := addFlowWrapper(content, valueLabel, 3)
-		addNumericField(wrapper, valueLabel, "", &e.editorData.Value, 0, f64d4.Max-1)
+		addNumericField(wrapper, valueLabel, "", &e.editorData.Value, 0, fxp.Max-1)
 		wrapper.AddChild(widget.NewFieldInteriorLeadingLabel(i18n.Text("Extended")))
 		wrapper.AddChild(widget.NewNonEditableField(func(field *widget.NonEditableField) {
-			var value f64d4.Int
+			var value fxp.Int
 			if e.editorData.Quantity > 0 {
 				value = gurps.ValueAdjustedForModifiers(e.editorData.Value, e.editorData.Modifiers).Mul(e.editorData.Quantity)
 				if e.target.Container() {

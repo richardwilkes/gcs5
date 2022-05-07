@@ -26,7 +26,6 @@ import (
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"golang.org/x/exp/slices"
 )
 
@@ -265,24 +264,24 @@ func (e *EquipmentModifier) ApplyNameableKeys(m map[string]string) {
 }
 
 // ValueAdjustedForModifiers returns the value after adjusting it for a set of modifiers.
-func ValueAdjustedForModifiers(value f64d4.Int, modifiers []*EquipmentModifier) f64d4.Int {
+func ValueAdjustedForModifiers(value fxp.Int, modifiers []*EquipmentModifier) fxp.Int {
 	// Apply all equipment.OriginalCost
 	cost := processNonCFStep(equipment.OriginalCost, value, modifiers)
 
 	// Apply all equipment.BaseCost
-	var cf f64d4.Int
+	var cf fxp.Int
 	for _, one := range modifiers {
 		if !one.Disabled && one.CostType == equipment.BaseCost {
 			t := equipment.BaseCost.DetermineModifierCostValueTypeFromString(one.CostAmount)
 			cf += t.ExtractValue(one.CostAmount)
 			if t == equipment.Multiplier {
-				cf -= f64d4.One
+				cf -= fxp.One
 			}
 		}
 	}
 	if cf != 0 {
 		cf = cf.Max(fxp.NegPointEight)
-		cost = cost.Mul(cf.Max(fxp.NegPointEight) + f64d4.One)
+		cost = cost.Mul(cf.Max(fxp.NegPointEight) + fxp.One)
 	}
 
 	// Apply all equipment.FinalBaseCost
@@ -294,8 +293,8 @@ func ValueAdjustedForModifiers(value f64d4.Int, modifiers []*EquipmentModifier) 
 	return cost.Max(0)
 }
 
-func processNonCFStep(costType equipment.ModifierCostType, value f64d4.Int, modifiers []*EquipmentModifier) f64d4.Int {
-	var percentages, additions f64d4.Int
+func processNonCFStep(costType equipment.ModifierCostType, value fxp.Int, modifiers []*EquipmentModifier) fxp.Int {
+	var percentages, additions fxp.Int
 	cost := value
 	for _, one := range modifiers {
 		if !one.Disabled && one.CostType == costType {
@@ -320,8 +319,8 @@ func processNonCFStep(costType equipment.ModifierCostType, value f64d4.Int, modi
 
 // WeightAdjustedForModifiers returns the weight after adjusting it for a set of modifiers.
 func WeightAdjustedForModifiers(weight measure.Weight, modifiers []*EquipmentModifier, defUnits measure.WeightUnits) measure.Weight {
-	var percentages f64d4.Int
-	w := f64d4.Int(weight)
+	var percentages fxp.Int
+	w := fxp.Int(weight)
 
 	// Apply all equipment.OriginalWeight
 	for _, one := range modifiers {
@@ -336,7 +335,7 @@ func WeightAdjustedForModifiers(weight measure.Weight, modifiers []*EquipmentMod
 		}
 	}
 	if percentages != 0 {
-		w += f64d4.Int(weight).Mul(percentages.Div(fxp.Hundred))
+		w += fxp.Int(weight).Mul(percentages.Div(fxp.Hundred))
 	}
 
 	// Apply all equipment.BaseWeight
@@ -351,8 +350,8 @@ func WeightAdjustedForModifiers(weight measure.Weight, modifiers []*EquipmentMod
 	return measure.Weight(w.Max(0))
 }
 
-func processMultiplyAddWeightStep(weightType equipment.ModifierWeightType, weight f64d4.Int, defUnits measure.WeightUnits, modifiers []*EquipmentModifier) f64d4.Int {
-	var sum f64d4.Int
+func processMultiplyAddWeightStep(weightType equipment.ModifierWeightType, weight fxp.Int, defUnits measure.WeightUnits, modifiers []*EquipmentModifier) fxp.Int {
+	var sum fxp.Int
 	for _, one := range modifiers {
 		if !one.Disabled && one.WeightType == weightType {
 			t := weightType.DetermineModifierWeightValueTypeFromString(one.WeightAmount)

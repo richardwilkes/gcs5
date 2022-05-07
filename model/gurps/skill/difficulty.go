@@ -13,7 +13,6 @@ package skill
 
 import (
 	"github.com/richardwilkes/gcs/model/fxp"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // AllTechniqueDifficulty holds all possible values when used with Techniques.
@@ -23,7 +22,7 @@ var AllTechniqueDifficulty = []Difficulty{
 }
 
 // BaseRelativeLevel returns the base relative skill level at 0 points.
-func (enum Difficulty) BaseRelativeLevel() f64d4.Int {
+func (enum Difficulty) BaseRelativeLevel() fxp.Int {
 	switch enum {
 	case Easy:
 		return 0

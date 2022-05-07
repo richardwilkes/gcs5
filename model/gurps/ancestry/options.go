@@ -18,6 +18,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/eval"
 	"github.com/richardwilkes/toolbox/log/jot"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 const (
@@ -77,7 +78,7 @@ func (o *Options) RandomWeight(resolver eval.VariableResolver, not measure.Weigh
 // RandomAge returns a randomized age.
 func (o *Options) RandomAge(resolver eval.VariableResolver, not int) int {
 	for i := 0; i < maximumTries; i++ {
-		age := fxp.EvaluateToNumber(o.AgeFormula, resolver).AsInt()
+		age := f64.As[fxp.DP, int](fxp.EvaluateToNumber(o.AgeFormula, resolver))
 		if age <= 0 {
 			age = defaultAge
 		}

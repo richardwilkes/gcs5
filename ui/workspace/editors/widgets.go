@@ -14,13 +14,13 @@ package editors
 import (
 	"fmt"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -208,14 +208,14 @@ func addIntegerField(parent *unison.Panel, labelText, tooltip string, fieldData 
 	return field
 }
 
-func addLabelAndNumericField(parent *unison.Panel, labelText, tooltip string, fieldData *f64d4.Int, min, max f64d4.Int) *widget.NumericField {
+func addLabelAndNumericField(parent *unison.Panel, labelText, tooltip string, fieldData *fxp.Int, min, max fxp.Int) *widget.NumericField {
 	label := widget.NewFieldLeadingLabel(labelText)
 	if tooltip != "" {
 		label.Tooltip = unison.NewTooltipWithText(tooltip)
 	}
 	parent.AddChild(label)
-	field := widget.NewNumericField(labelText, func() f64d4.Int { return *fieldData },
-		func(value f64d4.Int) {
+	field := widget.NewNumericField(labelText, func() fxp.Int { return *fieldData },
+		func(value fxp.Int) {
 			*fieldData = value
 			widget.MarkModified(parent)
 		}, min, max, false)
@@ -226,9 +226,9 @@ func addLabelAndNumericField(parent *unison.Panel, labelText, tooltip string, fi
 	return field
 }
 
-func addNumericField(parent *unison.Panel, labelText, tooltip string, fieldData *f64d4.Int, min, max f64d4.Int) *widget.NumericField {
-	field := widget.NewNumericField(labelText, func() f64d4.Int { return *fieldData },
-		func(value f64d4.Int) {
+func addNumericField(parent *unison.Panel, labelText, tooltip string, fieldData *fxp.Int, min, max fxp.Int) *widget.NumericField {
+	field := widget.NewNumericField(labelText, func() fxp.Int { return *fieldData },
+		func(value fxp.Int) {
 			*fieldData = value
 			widget.MarkModified(parent)
 		}, min, max, false)
@@ -244,7 +244,7 @@ func addWeightField(parent *unison.Panel, labelText, tooltip string, entity *gur
 		func(value measure.Weight) {
 			*fieldData = value
 			widget.MarkModified(parent)
-		}, 0, measure.Weight(f64d4.Max))
+		}, 0, measure.Weight(fxp.Max))
 	if tooltip != "" {
 		field.Tooltip = unison.NewTooltipWithText(tooltip)
 	}

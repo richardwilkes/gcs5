@@ -14,10 +14,10 @@ package feature
 import (
 	"fmt"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var _ Bonus = &ReactionBonus{}
@@ -35,7 +35,7 @@ func NewReactionBonus() *ReactionBonus {
 	return &ReactionBonus{
 		Type:          ReactionBonusType,
 		Situation:     i18n.Text("from others"),
-		LeveledAmount: LeveledAmount{Amount: f64d4.One},
+		LeveledAmount: LeveledAmount{Amount: fxp.One},
 	}
 }
 
@@ -66,7 +66,7 @@ func (r *ReactionBonus) SetParent(parent fmt.Stringer) {
 }
 
 // SetLevel implements Bonus.
-func (r *ReactionBonus) SetLevel(level f64d4.Int) {
+func (r *ReactionBonus) SetLevel(level fxp.Int) {
 	r.Level = level
 }
 

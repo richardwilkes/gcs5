@@ -15,12 +15,12 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/gcs/model/criteria"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 const (
@@ -70,7 +70,7 @@ func NewWeaponDamageBonus() *WeaponDamageBonus {
 				Compare: criteria.Any,
 			},
 		},
-		LeveledAmount: LeveledAmount{Amount: f64d4.One},
+		LeveledAmount: LeveledAmount{Amount: fxp.One},
 	}
 }
 
@@ -129,7 +129,7 @@ func (w *WeaponDamageBonus) SetParent(parent fmt.Stringer) {
 }
 
 // SetLevel implements Bonus.
-func (w *WeaponDamageBonus) SetLevel(level f64d4.Int) {
+func (w *WeaponDamageBonus) SetLevel(level fxp.Int) {
 	w.Level = level
 }
 

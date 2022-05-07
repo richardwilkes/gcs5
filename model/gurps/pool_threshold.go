@@ -13,17 +13,17 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/crc"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // PoolThreshold holds a point within an attribute pool where changes in state occur.
 type PoolThreshold struct {
 	State       string                  `json:"state"`
 	Explanation string                  `json:"explanation,omitempty"`
-	Multiplier  f64d4.Int               `json:"multiplier"`
-	Divisor     f64d4.Int               `json:"divisor"`
-	Addition    f64d4.Int               `json:"addition,omitempty"`
+	Multiplier  fxp.Int                 `json:"multiplier"`
+	Divisor     fxp.Int                 `json:"divisor"`
+	Addition    fxp.Int                 `json:"addition,omitempty"`
 	Ops         []attribute.ThresholdOp `json:"ops,omitempty"`
 	// TODO: Turn the Multiplier, Divisor & Addition fields into an expression widget instead
 }
@@ -39,10 +39,10 @@ func (p *PoolThreshold) Clone() *PoolThreshold {
 }
 
 // Threshold returns the threshold value for the given maximum.
-func (p *PoolThreshold) Threshold(max f64d4.Int) f64d4.Int {
+func (p *PoolThreshold) Threshold(max fxp.Int) fxp.Int {
 	divisor := p.Divisor //nolint:ifshort // bad recommendation
 	if divisor == 0 {
-		divisor = f64d4.One
+		divisor = fxp.One
 	}
 	// TODO: Check that rounding here is correct for our purposes
 	return (max.Mul(p.Multiplier).Div(divisor) + p.Addition).Round()

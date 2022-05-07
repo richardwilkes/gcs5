@@ -12,9 +12,9 @@
 package gurps
 
 import (
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var _ node.EditorData[*Spell] = &SpellEditData{}
@@ -38,7 +38,7 @@ type SpellEditData struct {
 	Duration          string              `json:"duration,omitempty"`         // Non-container only
 	RitualSkillName   string              `json:"base_skill,omitempty"`       // Non-container only
 	RitualPrereqCount int                 `json:"prereq_count,omitempty"`     // Non-container only
-	Points            f64d4.Int           `json:"points,omitempty"`           // Non-container only
+	Points            fxp.Int             `json:"points,omitempty"`           // Non-container only
 	Prereq            *PrereqList         `json:"prereqs,omitempty"`          // Non-container only
 	Weapons           []*Weapon           `json:"weapons,omitempty"`          // Non-container only
 }

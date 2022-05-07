@@ -18,7 +18,6 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -41,7 +40,7 @@ func initAdvantageModifierEditor(e *editor[*gurps.AdvantageModifier, *gurps.Adva
 		addNumericField(wrapper, costLabel, "", &e.editorData.Cost, -fxp.MaxBasePoints, fxp.MaxBasePoints)
 		costTypePopup := addCostTypePopup(wrapper, e)
 		affectsPopup := addPopup(wrapper, advantage.AllAffects, &e.editorData.Affects)
-		levels := addLabelAndNumericField(content, i18n.Text("Level"), "", &e.editorData.Levels, f64d4.One, fxp.Thousand)
+		levels := addLabelAndNumericField(content, i18n.Text("Level"), "", &e.editorData.Levels, fxp.One, fxp.Thousand)
 		if !e.target.HasLevels() {
 			disableAndBlankField(levels)
 		}
@@ -75,7 +74,7 @@ func initAdvantageModifierEditor(e *editor[*gurps.AdvantageModifier, *gurps.Adva
 			if index == 0 {
 				e.editorData.CostType = advantage.Percentage
 				enableAndUnblankField(levels)
-				if e.editorData.Levels < f64d4.One {
+				if e.editorData.Levels < fxp.One {
 					levels.SetText("1")
 				}
 			} else {

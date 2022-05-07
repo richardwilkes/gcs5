@@ -16,6 +16,7 @@ import (
 	"io/fs"
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
@@ -25,7 +26,6 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"golang.org/x/exp/slices"
 )
 
@@ -168,7 +168,7 @@ func (a *AdvantageModifier) SetOwningEntity(entity *Entity) {
 }
 
 // CostModifier returns the total cost modifier.
-func (a *AdvantageModifier) CostModifier() f64d4.Int {
+func (a *AdvantageModifier) CostModifier() fxp.Int {
 	if a.Levels > 0 {
 		return a.Cost.Mul(a.Levels)
 	}

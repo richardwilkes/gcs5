@@ -13,11 +13,12 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/criteria"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/gcs/model/gurps/spell"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 var _ Prereq = &SpellPrereq{}
@@ -45,7 +46,7 @@ func NewSpellPrereq() *SpellPrereq {
 		QuantityCriteria: criteria.Numeric{
 			NumericData: criteria.NumericData{
 				Compare:   criteria.AtLeast,
-				Qualifier: f64d4.One,
+				Qualifier: fxp.One,
 			},
 		},
 		Has: true,
@@ -119,7 +120,7 @@ func (s *SpellPrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xi
 	if s.SubType == spell.CollegeCount {
 		count = len(colleges)
 	}
-	satisfied := s.QuantityCriteria.Matches(f64d4.FromInt(count))
+	satisfied := s.QuantityCriteria.Matches(f64.From[fxp.DP](count))
 	if !s.Has {
 		satisfied = !satisfied
 	}
@@ -133,7 +134,7 @@ func (s *SpellPrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xi
 		} else {
 			tooltip.WriteByte(' ')
 			tooltip.WriteString(s.QuantityCriteria.String())
-			if s.QuantityCriteria.Qualifier == f64d4.One {
+			if s.QuantityCriteria.Qualifier == fxp.One {
 				tooltip.WriteString(" spell ")
 			} else {
 				tooltip.WriteString(" spells ")

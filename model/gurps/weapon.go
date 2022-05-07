@@ -32,7 +32,7 @@ import (
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 var _ node.Node = &Weapon{}
@@ -154,11 +154,11 @@ func (w *Weapon) HashCode() uint32 {
 // MarshalJSON implements json.Marshaler.
 func (w *Weapon) MarshalJSON() ([]byte, error) {
 	type calc struct {
-		Level  f64d4.Int `json:"level,omitempty"`
-		Parry  string    `json:"parry,omitempty"`
-		Block  string    `json:"block,omitempty"`
-		Range  string    `json:"range,omitempty"`
-		Damage string    `json:"damage,omitempty"`
+		Level  fxp.Int `json:"level,omitempty"`
+		Parry  string  `json:"parry,omitempty"`
+		Block  string  `json:"block,omitempty"`
+		Range  string  `json:"range,omitempty"`
+		Damage string  `json:"damage,omitempty"`
 	}
 	data := struct {
 		WeaponData
@@ -238,7 +238,7 @@ func (w *Weapon) PC() *Entity {
 }
 
 // SkillLevel returns the resolved skill level.
-func (w *Weapon) SkillLevel(tooltip *xio.ByteBuffer) f64d4.Int {
+func (w *Weapon) SkillLevel(tooltip *xio.ByteBuffer) fxp.Int {
 	pc := w.PC()
 	if pc == nil {
 		return 0
@@ -248,16 +248,16 @@ func (w *Weapon) SkillLevel(tooltip *xio.ByteBuffer) f64d4.Int {
 		primaryTooltip = &xio.ByteBuffer{}
 	}
 	adj := w.skillLevelBaseAdjustment(pc, primaryTooltip) + w.skillLevelPostAdjustment(pc, primaryTooltip)
-	best := f64d4.Min
+	best := fxp.Min
 	for _, def := range w.Defaults {
-		if level := def.SkillLevelFast(pc, false, nil, true); level != f64d4.Min {
+		if level := def.SkillLevelFast(pc, false, nil, true); level != fxp.Min {
 			level += adj
 			if best < level {
 				best = level
 			}
 		}
 	}
-	if best == f64d4.Min {
+	if best == fxp.Min {
 		return 0
 	}
 	if tooltip != nil && primaryTooltip.Len() != 0 {
@@ -272,8 +272,8 @@ func (w *Weapon) SkillLevel(tooltip *xio.ByteBuffer) f64d4.Int {
 	return best
 }
 
-func (w *Weapon) skillLevelBaseAdjustment(entity *Entity, tooltip *xio.ByteBuffer) f64d4.Int {
-	var adj f64d4.Int
+func (w *Weapon) skillLevelBaseAdjustment(entity *Entity, tooltip *xio.ByteBuffer) fxp.Int {
+	var adj fxp.Int
 	if minST := w.ResolvedMinimumStrength() - (entity.StrengthOrZero() + entity.StrikingStrengthBonus); minST > 0 {
 		adj -= minST
 	}
@@ -310,7 +310,7 @@ func (w *Weapon) skillLevelBaseAdjustment(entity *Entity, tooltip *xio.ByteBuffe
 	return adj
 }
 
-func (w *Weapon) skillLevelPostAdjustment(entity *Entity, tooltip *xio.ByteBuffer) f64d4.Int {
+func (w *Weapon) skillLevelPostAdjustment(entity *Entity, tooltip *xio.ByteBuffer) fxp.Int {
 	if w.Type.EnsureValid() == weapon.Melee && strings.Contains(w.Parry, "F") {
 		return w.EncumbrancePenalty(entity, tooltip)
 	}
@@ -318,7 +318,7 @@ func (w *Weapon) skillLevelPostAdjustment(entity *Entity, tooltip *xio.ByteBuffe
 }
 
 // EncumbrancePenalty returns the current encumbrance penalty.
-func (w *Weapon) EncumbrancePenalty(entity *Entity, tooltip *xio.ByteBuffer) f64d4.Int {
+func (w *Weapon) EncumbrancePenalty(entity *Entity, tooltip *xio.ByteBuffer) fxp.Int {
 	if entity == nil {
 		return 0
 	}
@@ -333,7 +333,7 @@ func (w *Weapon) EncumbrancePenalty(entity *Entity, tooltip *xio.ByteBuffer) f64
 	return penalty
 }
 
-func (w *Weapon) extractSkillBonus(f feature.Feature, tooltip *xio.ByteBuffer) f64d4.Int {
+func (w *Weapon) extractSkillBonus(f feature.Feature, tooltip *xio.ByteBuffer) fxp.Int {
 	if sb, ok := f.(*feature.SkillBonus); ok {
 		switch sb.SelectionType.EnsureValid() {
 		case skill.SkillsWithName:
@@ -388,7 +388,7 @@ func (w *Weapon) resolvedValue(input, baseDefaultType string, tooltip *xio.ByteB
 		return input
 	}
 	var buffer strings.Builder
-	skillLevel := f64d4.Max
+	skillLevel := fxp.Max
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -423,7 +423,7 @@ func (w *Weapon) resolvedValue(input, baseDefaultType string, tooltip *xio.ByteB
 					}
 				}
 				if found {
-					if skillLevel == f64d4.Max {
+					if skillLevel == fxp.Max {
 						var primaryTooltip, secondaryTooltip *xio.ByteBuffer
 						if tooltip != nil {
 							primaryTooltip = &xio.ByteBuffer{}
@@ -436,10 +436,10 @@ func (w *Weapon) resolvedValue(input, baseDefaultType string, tooltip *xio.ByteB
 						} else {
 							adj += pc.BlockBonus
 						}
-						best := f64d4.Min
+						best := fxp.Min
 						for _, def := range w.Defaults {
 							level := def.SkillLevelFast(pc, false, nil, true)
-							if level == f64d4.Min {
+							if level == fxp.Min {
 								continue
 							}
 							level += preAdj
@@ -459,7 +459,7 @@ func (w *Weapon) resolvedValue(input, baseDefaultType string, tooltip *xio.ByteB
 								secondaryTooltip = possibleTooltip
 							}
 						}
-						if best != f64d4.Min && tooltip != nil {
+						if best != fxp.Min && tooltip != nil {
 							if primaryTooltip.Len() != 0 {
 								if tooltip.Len() != 0 {
 									tooltip.WriteByte('\n')
@@ -478,7 +478,7 @@ func (w *Weapon) resolvedValue(input, baseDefaultType string, tooltip *xio.ByteB
 					if neg {
 						modifier = -modifier
 					}
-					num := (skillLevel + f64d4.FromInt(modifier)).Trunc().String()
+					num := (skillLevel + f64.From[fxp.DP](modifier)).Trunc().String()
 					if i < max {
 						buffer.WriteString(num)
 						line = line[i:]
@@ -493,7 +493,7 @@ func (w *Weapon) resolvedValue(input, baseDefaultType string, tooltip *xio.ByteB
 	return buffer.String()
 }
 
-func (w *Weapon) resolveRange(inRange string, st f64d4.Int) string {
+func (w *Weapon) resolveRange(inRange string, st fxp.Int) string {
 	where := strings.IndexByte(inRange, 'x')
 	if where == -1 {
 		return inRange
@@ -524,7 +524,7 @@ func (w *Weapon) resolveRange(inRange string, st f64d4.Int) string {
 	if !found {
 		return inRange
 	}
-	value, err := f64d4.FromString(inRange[started:last])
+	value, err := f64.FromString[fxp.DP](inRange[started:last])
 	if err != nil {
 		return inRange
 	}
@@ -540,7 +540,7 @@ func (w *Weapon) resolveRange(inRange string, st f64d4.Int) string {
 }
 
 // ResolvedMinimumStrength returns the resolved minimum strength required to use this weapon, or 0 if there is none.
-func (w *Weapon) ResolvedMinimumStrength() f64d4.Int {
+func (w *Weapon) ResolvedMinimumStrength() fxp.Int {
 	started := false
 	value := 0
 	for _, ch := range w.MinimumStrength {
@@ -552,7 +552,7 @@ func (w *Weapon) ResolvedMinimumStrength() f64d4.Int {
 			break
 		}
 	}
-	return f64d4.FromInt(value)
+	return f64.From[fxp.DP](value)
 }
 
 // FillWithNameableKeys adds any nameable keys found in this Weapon to the provided map.

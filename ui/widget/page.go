@@ -12,12 +12,12 @@
 package widget
 
 import (
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -195,14 +195,14 @@ func NewIntegerPageField(undoTitle string, get func() int, set func(int), min, m
 }
 
 // NewNumericPageField creates a new numeric text entry field for a sheet page.
-func NewNumericPageField(undoTitle string, get func() f64d4.Int, set func(f64d4.Int), min, max f64d4.Int, noMinWidth bool) *NumericField {
+func NewNumericPageField(undoTitle string, get func() fxp.Int, set func(fxp.Int), min, max fxp.Int, noMinWidth bool) *NumericField {
 	field := NewNumericField(undoTitle, get, set, min, max, noMinWidth)
 	field.HAlign = unison.EndAlignment
 	field.Font = theme.PageFieldPrimaryFont
 	field.FocusedBorder = unison.NewLineBorder(theme.AccentColor, 0, unison.Insets{Bottom: 1}, false)
 	field.UnfocusedBorder = unison.NewLineBorder(unison.ControlEdgeColor, 0, unison.Insets{Bottom: 1}, false)
 	field.SetBorder(field.UnfocusedBorder)
-	if !noMinWidth && min != f64d4.Min && max != f64d4.Max {
+	if !noMinWidth && min != fxp.Min && max != fxp.Max {
 		// Override to ignore fractional values
 		field.MinimumTextWidth = xmath.Max(field.Font.SimpleWidth(min.Trunc().String()),
 			field.Font.SimpleWidth(max.Trunc().String()))

@@ -14,13 +14,14 @@ package gurps
 import (
 	"strconv"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/ancestry"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 	"github.com/richardwilkes/unison"
 )
 
@@ -49,7 +50,7 @@ type Profile struct {
 	Height            measure.Length `json:"height,omitempty"`
 	Weight            measure.Weight `json:"weight,omitempty"`
 	SizeModifier      int            `json:"SM,omitempty"`
-	SizeModifierBonus f64d4.Int      `json:"-"`
+	SizeModifierBonus fxp.Int        `json:"-"`
 	portrait          *unison.Image
 }
 
@@ -74,14 +75,14 @@ func (p *Profile) Portrait() *unison.Image {
 
 // AdjustedSizeModifier returns the adjusted size modifier.
 func (p *Profile) AdjustedSizeModifier() int {
-	return p.SizeModifier + p.SizeModifierBonus.AsInt()
+	return p.SizeModifier + f64.As[fxp.DP, int](p.SizeModifierBonus)
 }
 
 // SetAdjustedSizeModifier sets the adjusted size modifier.
 func (p *Profile) SetAdjustedSizeModifier(value int) {
 	if value != p.AdjustedSizeModifier() {
 		// TODO: Need undo logic
-		p.SizeModifier = value - p.SizeModifierBonus.AsInt()
+		p.SizeModifier = value - f64.As[fxp.DP, int](p.SizeModifierBonus)
 	}
 }
 

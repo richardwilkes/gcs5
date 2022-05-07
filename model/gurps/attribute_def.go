@@ -21,7 +21,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/eval"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 // ReservedIDs holds a list of IDs that are reserved for internal use.
@@ -34,8 +34,8 @@ type AttributeDef struct {
 	Name                string           `json:"name"`
 	FullName            string           `json:"full_name,omitempty"`
 	AttributeBase       string           `json:"attribute_base"`
-	CostPerPoint        f64d4.Int        `json:"cost_per_point"`
-	CostAdjPercentPerSM f64d4.Int        `json:"cost_adj_percent_per_sm,omitempty"`
+	CostPerPoint        fxp.Int          `json:"cost_per_point"`
+	CostAdjPercentPerSM fxp.Int          `json:"cost_adj_percent_per_sm,omitempty"`
 	Thresholds          []*PoolThreshold `json:"thresholds,omitempty"`
 	Order               int              `json:"-"`
 }
@@ -89,15 +89,15 @@ func (a *AttributeDef) Primary() bool {
 }
 
 // BaseValue returns the resolved base value.
-func (a *AttributeDef) BaseValue(resolver eval.VariableResolver) f64d4.Int {
+func (a *AttributeDef) BaseValue(resolver eval.VariableResolver) fxp.Int {
 	return fxp.EvaluateToNumber(a.AttributeBase, resolver)
 }
 
 // ComputeCost returns the value adjusted for a cost reduction.
-func (a *AttributeDef) ComputeCost(entity *Entity, value, costReduction f64d4.Int, sizeModifier int) f64d4.Int {
+func (a *AttributeDef) ComputeCost(entity *Entity, value, costReduction fxp.Int, sizeModifier int) fxp.Int {
 	cost := value.Mul(a.CostPerPoint)
 	if sizeModifier > 0 && a.CostAdjPercentPerSM > 0 && !(a.DefID == "hp" && entity.SheetSettings.DamageProgression == attribute.KnowingYourOwnStrength) {
-		costReduction += f64d4.FromInt(sizeModifier).Mul(a.CostAdjPercentPerSM)
+		costReduction += f64.From[fxp.DP](sizeModifier).Mul(a.CostAdjPercentPerSM)
 	}
 	if costReduction > 0 {
 		if costReduction > fxp.Eighty {

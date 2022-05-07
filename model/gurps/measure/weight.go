@@ -14,21 +14,22 @@ package measure
 import (
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/json"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 // Weight contains a fixed-point value in pounds.
-type Weight f64d4.Int
+type Weight fxp.Int
 
 // WeightFromInt64 creates a new Weight.
 func WeightFromInt64(value int64, unit WeightUnits) Weight {
-	return Weight(unit.ToPounds(f64d4.FromInt64(value)))
+	return Weight(unit.ToPounds(f64.From[fxp.DP](value)))
 }
 
 // WeightFromInt creates a new Weight.
 func WeightFromInt(value int, unit WeightUnits) Weight {
-	return Weight(unit.ToPounds(f64d4.FromInt(value)))
+	return Weight(unit.ToPounds(f64.From[fxp.DP](value)))
 }
 
 // WeightFromStringForced creates a new Weight. May have any of the known Weight suffixes or no notation at all, in which
@@ -47,7 +48,7 @@ func WeightFromString(text string, defaultUnits WeightUnits) (Weight, error) {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
 	for _, unit := range AllWeightUnits {
 		if strings.HasSuffix(text, unit.Key()) {
-			value, err := f64d4.FromString(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())))
+			value, err := f64.FromString[fxp.DP](strings.TrimSpace(strings.TrimSuffix(text, unit.Key())))
 			if err != nil {
 				return 0, err
 			}
@@ -55,7 +56,7 @@ func WeightFromString(text string, defaultUnits WeightUnits) (Weight, error) {
 		}
 	}
 	// No matches, so let's use our passed-in default units
-	value, err := f64d4.FromString(strings.TrimSpace(text))
+	value, err := f64.FromString[fxp.DP](strings.TrimSpace(text))
 	if err != nil {
 		return 0, err
 	}

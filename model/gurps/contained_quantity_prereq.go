@@ -13,10 +13,10 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/criteria"
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var _ Prereq = &ContainedQuantityPrereq{}
@@ -36,7 +36,7 @@ func NewContainedQuantityPrereq() *ContainedQuantityPrereq {
 		QualifierCriteria: criteria.Numeric{
 			NumericData: criteria.NumericData{
 				Compare:   criteria.AtMost,
-				Qualifier: f64d4.One,
+				Qualifier: fxp.One,
 			},
 		},
 		Has: true,
@@ -63,7 +63,7 @@ func (c *ContainedQuantityPrereq) Satisfied(_ *Entity, exclude interface{}, tool
 	satisfied := false
 	if eqp, ok := exclude.(*Equipment); ok {
 		if satisfied = !eqp.Container(); !satisfied {
-			var qty f64d4.Int
+			var qty fxp.Int
 			for _, child := range eqp.Children {
 				qty += child.Quantity
 			}

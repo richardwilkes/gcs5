@@ -11,21 +11,17 @@
 
 package fxp
 
-import (
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
-)
-
 // ApplyRounding rounds in the positive direction of roundDown is false, or in the negative direction if roundDown is
 // true.
-func ApplyRounding(value f64d4.Int, roundDown bool) f64d4.Int {
+func ApplyRounding(value Int, roundDown bool) Int {
 	if truncated := value.Trunc(); value != truncated {
 		if roundDown {
 			if value < 0 {
-				return truncated - f64d4.One
+				return truncated - One
 			}
 		} else {
 			if value > 0 {
-				return truncated + f64d4.One
+				return truncated + One
 			}
 		}
 		return truncated
@@ -35,7 +31,7 @@ func ApplyRounding(value f64d4.Int, roundDown bool) f64d4.Int {
 
 // ResetIfOutOfRange checks the value and if it is lower than min or greater than max, returns def, otherwise returns
 // value.
-func ResetIfOutOfRange(value, min, max, def f64d4.Int) f64d4.Int {
+func ResetIfOutOfRange(value, min, max, def Int) Int {
 	if value < min || value > max {
 		return def
 	}

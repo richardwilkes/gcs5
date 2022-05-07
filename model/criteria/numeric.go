@@ -12,8 +12,8 @@
 package criteria
 
 import (
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/json"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // Numeric holds the criteria for matching a number.
@@ -24,7 +24,7 @@ type Numeric struct {
 // NumericData holds the criteria for matching a number that should be written to disk.
 type NumericData struct {
 	Compare   NumericCompareType `json:"compare,omitempty"`
-	Qualifier f64d4.Int          `json:"qualifier,omitempty"`
+	Qualifier fxp.Int            `json:"qualifier,omitempty"`
 }
 
 // ShouldOmit implements json.Omitter.
@@ -40,7 +40,7 @@ func (n *Numeric) UnmarshalJSON(data []byte) error {
 }
 
 // Matches performs a comparison and returns true if the data matches.
-func (n Numeric) Matches(value f64d4.Int) bool {
+func (n Numeric) Matches(value fxp.Int) bool {
 	return n.Compare.Matches(n.Qualifier, value)
 }
 

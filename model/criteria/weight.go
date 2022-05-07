@@ -12,9 +12,9 @@
 package criteria
 
 import (
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/json"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // Weight holds the criteria for matching a number.
@@ -42,9 +42,9 @@ func (w *Weight) UnmarshalJSON(data []byte) error {
 
 // Matches performs a comparison and returns true if the data matches.
 func (w Weight) Matches(value measure.Weight) bool {
-	return w.Compare.Matches(f64d4.Int(w.Qualifier), f64d4.Int(value))
+	return w.Compare.Matches(fxp.Int(w.Qualifier), fxp.Int(value))
 }
 
 func (w Weight) String() string {
-	return w.Compare.Describe(f64d4.Int(w.Qualifier))
+	return w.Compare.Describe(fxp.Int(w.Qualifier))
 }

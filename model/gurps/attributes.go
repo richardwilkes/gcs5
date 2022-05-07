@@ -16,8 +16,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/json"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 // Attributes holds a set of Attribute objects.
@@ -81,37 +82,37 @@ func (a *Attributes) List() []*Attribute {
 }
 
 // Cost returns the points spent for the specified Attribute.
-func (a *Attributes) Cost(attrID string) f64d4.Int {
+func (a *Attributes) Cost(attrID string) fxp.Int {
 	if attr, ok := a.Set[attrID]; ok {
 		return attr.PointCost()
 	}
 	return 0
 }
 
-// Current resolves the given attribute ID to its current value, or f64d4.Min.
-func (a *Attributes) Current(attrID string) f64d4.Int {
+// Current resolves the given attribute ID to its current value, or fxp.Min.
+func (a *Attributes) Current(attrID string) fxp.Int {
 	if attr, ok := a.Set[attrID]; ok {
 		return attr.Current()
 	}
-	if v, err := f64d4.FromString(attrID); err == nil {
+	if v, err := f64.FromString[fxp.DP](attrID); err == nil {
 		return v
 	}
-	return f64d4.Min
+	return fxp.Min
 }
 
-// Maximum resolves the given attribute ID to its maximum value, or f64d4.Min.
-func (a *Attributes) Maximum(attrID string) f64d4.Int {
+// Maximum resolves the given attribute ID to its maximum value, or fxp.Min.
+func (a *Attributes) Maximum(attrID string) fxp.Int {
 	if attr, ok := a.Set[attrID]; ok {
 		return attr.Maximum()
 	}
-	if v, err := f64d4.FromString(attrID); err == nil {
+	if v, err := f64.FromString[fxp.DP](attrID); err == nil {
 		return v
 	}
-	return f64d4.Min
+	return fxp.Min
 }
 
-// PoolThreshold resolves the given attribute ID and state to the value for its pool threshold, or f64d4.Min.
-func (a *Attributes) PoolThreshold(attrID, state string) f64d4.Int {
+// PoolThreshold resolves the given attribute ID and state to the value for its pool threshold, or fxp.Min.
+func (a *Attributes) PoolThreshold(attrID, state string) fxp.Int {
 	if attr, ok := a.Set[attrID]; ok {
 		if def := attr.AttributeDef(); def != nil {
 			for _, one := range def.Thresholds {
@@ -121,5 +122,5 @@ func (a *Attributes) PoolThreshold(attrID, state string) f64d4.Int {
 			}
 		}
 	}
-	return f64d4.Min
+	return fxp.Min
 }

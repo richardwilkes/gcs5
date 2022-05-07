@@ -12,11 +12,11 @@
 package gurps
 
 import (
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 var _ node.EditorData[*Skill] = &SkillEditData{}
@@ -31,12 +31,12 @@ type SkillEditData struct {
 	Specialization               string              `json:"specialization,omitempty"`                 // Non-container only
 	TechLevel                    *string             `json:"tech_level,omitempty"`                     // Non-container only
 	Difficulty                   AttributeDifficulty `json:"difficulty"`                               // Non-container only
-	Points                       f64d4.Int           `json:"points,omitempty"`                         // Non-container only
-	EncumbrancePenaltyMultiplier f64d4.Int           `json:"encumbrance_penalty_multiplier,omitempty"` // Non-container only
+	Points                       fxp.Int             `json:"points,omitempty"`                         // Non-container only
+	EncumbrancePenaltyMultiplier fxp.Int             `json:"encumbrance_penalty_multiplier,omitempty"` // Non-container only
 	DefaultedFrom                *SkillDefault       `json:"defaulted_from,omitempty"`                 // Non-container only
 	Defaults                     []*SkillDefault     `json:"defaults,omitempty"`                       // Non-container only
 	TechniqueDefault             *SkillDefault       `json:"default,omitempty"`                        // Non-container only
-	TechniqueLimitModifier       *f64d4.Int          `json:"limit,omitempty"`                          // Non-container only
+	TechniqueLimitModifier       *fxp.Int            `json:"limit,omitempty"`                          // Non-container only
 	Prereq                       *PrereqList         `json:"prereqs,omitempty"`                        // Non-container only
 	Weapons                      []*Weapon           `json:"weapons,omitempty"`                        // Non-container only
 	Features                     feature.Features    `json:"features,omitempty"`                       // Non-container only

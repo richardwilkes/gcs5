@@ -12,12 +12,12 @@
 package fxp
 
 import (
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 // Extract a leading value from a string. If a value is found, it is returned along with the portion of the string that
 // was unused. If a value is not found, then 0 is returned along with the original string.
-func Extract(in string) (value f64d4.Int, remainder string) {
+func Extract(in string) (value Int, remainder string) {
 	last := 0
 	max := len(in)
 	if last < max && in[last] == ' ' {
@@ -46,7 +46,7 @@ func Extract(in string) (value f64d4.Int, remainder string) {
 	if !found {
 		return 0, in
 	}
-	value, err := f64d4.FromString(in[start:last])
+	value, err := f64.FromString[DP](in[start:last])
 	if err != nil {
 		return 0, in
 	}

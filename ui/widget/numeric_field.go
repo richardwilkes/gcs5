@@ -16,9 +16,10 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 	"github.com/richardwilkes/unison"
 )
 
@@ -27,16 +28,16 @@ type NumericField struct {
 	*unison.Field
 	undoID     int64
 	undoTitle  string
-	get        func() f64d4.Int
-	set        func(f64d4.Int)
-	minimum    f64d4.Int
-	maximum    f64d4.Int
+	get        func() fxp.Int
+	set        func(fxp.Int)
+	minimum    fxp.Int
+	maximum    fxp.Int
 	noMinWidth bool
 	inUndo     bool
 }
 
 // NewNumericField creates a new field that holds a fixed-point number.
-func NewNumericField(undoTitle string, get func() f64d4.Int, set func(f64d4.Int), min, max f64d4.Int, noMinWidth bool) *NumericField {
+func NewNumericField(undoTitle string, get func() fxp.Int, set func(fxp.Int), min, max fxp.Int, noMinWidth bool) *NumericField {
 	f := &NumericField{
 		Field:      unison.NewField(),
 		undoID:     unison.NextUndoID(),
@@ -56,11 +57,11 @@ func NewNumericField(undoTitle string, get func() f64d4.Int, set func(f64d4.Int)
 }
 
 // SetMaximum sets the maximum value allowed.
-func (f *NumericField) SetMaximum(maximum f64d4.Int) {
+func (f *NumericField) SetMaximum(maximum fxp.Int) {
 	f.maximum = maximum
-	if !f.noMinWidth && f.minimum != f64d4.Min && f.maximum != f64d4.Max {
-		f.MinimumTextWidth = xmath.Max(f.Font.SimpleWidth((f.minimum.Trunc() + f64d4.One - 1).String()),
-			f.Font.SimpleWidth((f.maximum.Trunc() + f64d4.One - 1).String()))
+	if !f.noMinWidth && f.minimum != fxp.Min && f.maximum != fxp.Max {
+		f.MinimumTextWidth = xmath.Max(f.Font.SimpleWidth((f.minimum.Trunc() + fxp.One - 1).String()),
+			f.Font.SimpleWidth((f.maximum.Trunc() + fxp.One - 1).String()))
 	}
 }
 
@@ -69,16 +70,16 @@ func (f *NumericField) trimmed(text string) string {
 }
 
 func (f *NumericField) validate() bool {
-	v, err := f64d4.FromString(f.trimmed(f.Text()))
+	v, err := f64.FromString[fxp.DP](f.trimmed(f.Text()))
 	if err != nil {
 		f.Tooltip = unison.NewTooltipWithText(i18n.Text("Invalid number"))
 		return false
 	}
-	if f.minimum != f64d4.Min && v < f.minimum {
+	if f.minimum != fxp.Min && v < f.minimum {
 		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Number must be at least %s"), f.minimum.String()))
 		return false
 	}
-	if f.maximum != f64d4.Max && v > f.maximum {
+	if f.maximum != fxp.Max && v > f.maximum {
 		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Number must be no more than %s"), f.maximum.String()))
 		return false
 	}
@@ -108,9 +109,9 @@ func (f *NumericField) modified() {
 			})
 		}
 	}
-	if v, err := f64d4.FromString(f.trimmed(text)); err == nil &&
-		(f.minimum == f64d4.Min || v >= f.minimum) &&
-		(f.maximum == f64d4.Max || v <= f.maximum) && f.get() != v {
+	if v, err := f64.FromString[fxp.DP](f.trimmed(text)); err == nil &&
+		(f.minimum == fxp.Min || v >= f.minimum) &&
+		(f.maximum == fxp.Max || v <= f.maximum) && f.get() != v {
 		f.set(v)
 		MarkForLayoutWithinDockable(f)
 		MarkModified(f)
@@ -130,9 +131,9 @@ func (f *NumericField) setWithoutUndo(text string, focus bool) {
 // Sync the field to the current value.
 func (f *NumericField) Sync() {
 	value := f.get()
-	if f.minimum != f64d4.Min && value < f.minimum {
+	if f.minimum != fxp.Min && value < f.minimum {
 		value = f.minimum
-	} else if f.maximum != f64d4.Max && value > f.maximum {
+	} else if f.maximum != fxp.Max && value > f.maximum {
 		value = f.maximum
 	}
 	f.setWithoutUndo(value.String(), false)
@@ -145,7 +146,7 @@ func (f *NumericField) runeTyped(ch rune) bool {
 			return false
 		}
 		if text := f.trimmed(string(f.RunesIfPasted([]rune{ch}))); text != "-" {
-			if _, err := f64d4.FromString(text); err != nil {
+			if _, err := f64.FromString[fxp.DP](text); err != nil {
 				unison.Beep()
 				return false
 			}

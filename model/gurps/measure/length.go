@@ -15,24 +15,25 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 // Length contains a fixed-point value in inches. Conversions to/from metric are done using the simplified Length metric
 // conversion of 1 yd = 1 meter. For consistency, all metric lengths are converted to meters, then to yards, rather than
 // the variations at different lengths that the Length rules suggest.
-type Length f64d4.Int
+type Length fxp.Int
 
 // LengthFromInt64 creates a new Length.
 func LengthFromInt64(value int64, unit LengthUnits) Length {
-	return Length(unit.ToInches(f64d4.FromInt64(value)))
+	return Length(unit.ToInches(f64.From[fxp.DP](value)))
 }
 
 // LengthFromInt creates a new Length.
 func LengthFromInt(value int, unit LengthUnits) Length {
-	return Length(unit.ToInches(f64d4.FromInt(value)))
+	return Length(unit.ToInches(f64.From[fxp.DP](value)))
 }
 
 // LengthFromStringForced creates a new Length. May have any of the known Units suffixes, a feet and inches format (e.g.
@@ -51,7 +52,7 @@ func LengthFromString(text string, defaultUnits LengthUnits) (Length, error) {
 	text = strings.TrimLeft(strings.TrimSpace(text), "+")
 	for _, unit := range AllLengthUnits[1:] {
 		if strings.HasSuffix(text, unit.Key()) {
-			value, err := f64d4.FromString(strings.TrimSpace(strings.TrimSuffix(text, unit.Key())))
+			value, err := f64.FromString[fxp.DP](strings.TrimSpace(strings.TrimSuffix(text, unit.Key())))
 			if err != nil {
 				return 0, err
 			}
@@ -63,17 +64,17 @@ func LengthFromString(text string, defaultUnits LengthUnits) (Length, error) {
 	inchIndex := strings.Index(text, `"`)
 	if feetIndex == -1 && inchIndex == -1 {
 		// Nope, so let's use our passed-in default units
-		value, err := f64d4.FromString(strings.TrimSpace(text))
+		value, err := f64.FromString[fxp.DP](strings.TrimSpace(text))
 		if err != nil {
 			return 0, err
 		}
 		return Length(defaultUnits.ToInches(value)), nil
 	}
-	var feet, inches f64d4.Int
+	var feet, inches fxp.Int
 	var err error
 	if feetIndex != -1 {
 		s := strings.TrimSpace(text[:feetIndex])
-		feet, err = f64d4.FromString(s)
+		feet, err = f64.FromString[fxp.DP](s)
 		if err != nil {
 			return 0, err
 		}
@@ -83,12 +84,12 @@ func LengthFromString(text string, defaultUnits LengthUnits) (Length, error) {
 			return 0, errs.New(fmt.Sprintf("invalid format: %s", text))
 		}
 		s := strings.TrimSpace(text[feetIndex+1 : inchIndex])
-		inches, err = f64d4.FromString(s)
+		inches, err = f64.FromString[fxp.DP](s)
 		if err != nil {
 			return 0, err
 		}
 	}
-	return Length(feet.Mul(f64d4.FromInt(12)) + inches), nil
+	return Length(feet.Mul(f64.From[fxp.DP](12)) + inches), nil
 }
 
 func (l Length) String() string {

@@ -43,7 +43,7 @@ import (
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 var (
@@ -56,7 +56,7 @@ type EntityData struct {
 	Type             datafile.Type          `json:"type"`
 	Version          int                    `json:"version"`
 	ID               uuid.UUID              `json:"id"`
-	TotalPoints      f64d4.Int              `json:"total_points"`
+	TotalPoints      fxp.Int                `json:"total_points"`
 	Profile          *Profile               `json:"profile,omitempty"`
 	SheetSettings    *SheetSettings         `json:"settings,omitempty"`
 	Attributes       *Attributes            `json:"attributes,omitempty"`
@@ -74,12 +74,12 @@ type EntityData struct {
 // Entity holds the base information for various types of entities: PC, NPC, Creature, etc.
 type Entity struct {
 	EntityData
-	LiftingStrengthBonus       f64d4.Int
-	StrikingStrengthBonus      f64d4.Int
-	ThrowingStrengthBonus      f64d4.Int
-	DodgeBonus                 f64d4.Int
-	ParryBonus                 f64d4.Int
-	BlockBonus                 f64d4.Int
+	LiftingStrengthBonus       fxp.Int
+	StrikingStrengthBonus      fxp.Int
+	ThrowingStrengthBonus      fxp.Int
+	DodgeBonus                 fxp.Int
+	ParryBonus                 fxp.Int
+	BlockBonus                 fxp.Int
 	featureMap                 map[string][]feature.Feature
 	variableResolverExclusions map[string]bool
 }
@@ -129,12 +129,12 @@ func (e *Entity) MarshalJSON() ([]byte, error) {
 		Swing                 *dice.Dice     `json:"swing"`
 		Thrust                *dice.Dice     `json:"thrust"`
 		BasicLift             measure.Weight `json:"basic_lift"`
-		LiftingStrengthBonus  f64d4.Int      `json:"lifting_st_bonus,omitempty"`
-		StrikingStrengthBonus f64d4.Int      `json:"striking_st_bonus,omitempty"`
-		ThrowingStrengthBonus f64d4.Int      `json:"throwing_st_bonus,omitempty"`
-		DodgeBonus            f64d4.Int      `json:"dodge_bonus,omitempty"`
-		ParryBonus            f64d4.Int      `json:"parry_bonus,omitempty"`
-		BlockBonus            f64d4.Int      `json:"block_bonus,omitempty"`
+		LiftingStrengthBonus  fxp.Int        `json:"lifting_st_bonus,omitempty"`
+		StrikingStrengthBonus fxp.Int        `json:"striking_st_bonus,omitempty"`
+		ThrowingStrengthBonus fxp.Int        `json:"throwing_st_bonus,omitempty"`
+		DodgeBonus            fxp.Int        `json:"dodge_bonus,omitempty"`
+		ParryBonus            fxp.Int        `json:"parry_bonus,omitempty"`
+		BlockBonus            fxp.Int        `json:"block_bonus,omitempty"`
 		Move                  []int          `json:"move"`
 		Dodge                 []int          `json:"dodge"`
 	}
@@ -292,7 +292,7 @@ func (e *Entity) processFeatures() {
 	e.BlockBonus = e.BonusFor(feature.AttributeIDPrefix+gid.Block, nil).Trunc()
 }
 
-func processFeature(parent fmt.Stringer, m map[string][]feature.Feature, f feature.Feature, levels f64d4.Int) {
+func processFeature(parent fmt.Stringer, m map[string][]feature.Feature, f feature.Feature, levels fxp.Int) {
 	key := strings.ToLower(f.FeatureMapKey())
 	list := m[key]
 	if bonus, ok := f.(feature.Bonus); ok {
@@ -407,7 +407,7 @@ func (e *Entity) UpdateSpells() bool {
 }
 
 // SpentPoints returns the number of spent points.
-func (e *Entity) SpentPoints() f64d4.Int {
+func (e *Entity) SpentPoints() fxp.Int {
 	total := e.AttributePoints()
 	ad, disad, race, quirk := e.AdvantagePoints()
 	total += ad + disad + race + quirk
@@ -417,12 +417,12 @@ func (e *Entity) SpentPoints() f64d4.Int {
 }
 
 // UnspentPoints returns the number of unspent points.
-func (e *Entity) UnspentPoints() f64d4.Int {
+func (e *Entity) UnspentPoints() fxp.Int {
 	return e.TotalPoints - e.SpentPoints()
 }
 
 // SetUnspentPoints sets the number of unspent points.
-func (e *Entity) SetUnspentPoints(unspent f64d4.Int) {
+func (e *Entity) SetUnspentPoints(unspent fxp.Int) {
 	if unspent != e.UnspentPoints() {
 		// TODO: Need undo logic
 		e.TotalPoints = unspent + e.SpentPoints()
@@ -430,8 +430,8 @@ func (e *Entity) SetUnspentPoints(unspent f64d4.Int) {
 }
 
 // AttributePoints returns the number of points spent on attributes.
-func (e *Entity) AttributePoints() f64d4.Int {
-	var total f64d4.Int
+func (e *Entity) AttributePoints() fxp.Int {
+	var total fxp.Int
 	for _, attr := range e.Attributes.Set {
 		total += attr.PointCost()
 	}
@@ -439,7 +439,7 @@ func (e *Entity) AttributePoints() f64d4.Int {
 }
 
 // AdvantagePoints returns the number of points spent on advantages.
-func (e *Entity) AdvantagePoints() (ad, disad, race, quirk f64d4.Int) {
+func (e *Entity) AdvantagePoints() (ad, disad, race, quirk fxp.Int) {
 	for _, one := range e.Advantages {
 		a, d, r, q := calculateSingleAdvantagePoints(one)
 		ad += a
@@ -450,7 +450,7 @@ func (e *Entity) AdvantagePoints() (ad, disad, race, quirk f64d4.Int) {
 	return
 }
 
-func calculateSingleAdvantagePoints(adq *Advantage) (ad, disad, race, quirk f64d4.Int) {
+func calculateSingleAdvantagePoints(adq *Advantage) (ad, disad, race, quirk fxp.Int) {
 	if adq.Container() {
 		switch adq.ContainerType {
 		case advantage.Group:
@@ -479,8 +479,8 @@ func calculateSingleAdvantagePoints(adq *Advantage) (ad, disad, race, quirk f64d
 }
 
 // SkillPoints returns the number of points spent on skills.
-func (e *Entity) SkillPoints() f64d4.Int {
-	var total f64d4.Int
+func (e *Entity) SkillPoints() fxp.Int {
+	var total fxp.Int
 	TraverseSkills(func(s *Skill) bool {
 		if !s.Container() {
 			total += s.Points
@@ -491,8 +491,8 @@ func (e *Entity) SkillPoints() f64d4.Int {
 }
 
 // SpellPoints returns the number of points spent on spells.
-func (e *Entity) SpellPoints() f64d4.Int {
-	var total f64d4.Int
+func (e *Entity) SpellPoints() fxp.Int {
+	var total fxp.Int
 	TraverseSpells(func(s *Spell) bool {
 		if !s.Container() {
 			total += s.Points
@@ -503,8 +503,8 @@ func (e *Entity) SpellPoints() f64d4.Int {
 }
 
 // WealthCarried returns the current wealth being carried.
-func (e *Entity) WealthCarried() f64d4.Int {
-	var value f64d4.Int
+func (e *Entity) WealthCarried() fxp.Int {
+	var value fxp.Int
 	for _, one := range e.CarriedEquipment {
 		value += one.ExtendedValue()
 	}
@@ -512,8 +512,8 @@ func (e *Entity) WealthCarried() f64d4.Int {
 }
 
 // WealthNotCarried returns the current wealth not being carried.
-func (e *Entity) WealthNotCarried() f64d4.Int {
-	var value f64d4.Int
+func (e *Entity) WealthNotCarried() fxp.Int {
+	var value fxp.Int
 	for _, one := range e.OtherEquipment {
 		value += one.ExtendedValue()
 	}
@@ -521,13 +521,13 @@ func (e *Entity) WealthNotCarried() f64d4.Int {
 }
 
 // StrengthOrZero returns the current ST value, or zero if no such attribute exists.
-func (e *Entity) StrengthOrZero() f64d4.Int {
+func (e *Entity) StrengthOrZero() fxp.Int {
 	return e.ResolveAttributeCurrent(gid.Strength).Max(0)
 }
 
 // Thrust returns the thrust value for the current strength.
 func (e *Entity) Thrust() *dice.Dice {
-	return e.ThrustFor((e.StrengthOrZero() + e.StrikingStrengthBonus).AsInt())
+	return e.ThrustFor(f64.As[fxp.DP, int](e.StrengthOrZero() + e.StrikingStrengthBonus))
 }
 
 // ThrustFor returns the thrust value for the provided strength.
@@ -537,7 +537,7 @@ func (e *Entity) ThrustFor(st int) *dice.Dice {
 
 // Swing returns the swing value for the current strength.
 func (e *Entity) Swing() *dice.Dice {
-	return e.SwingFor((e.StrengthOrZero() + e.StrikingStrengthBonus).AsInt())
+	return e.SwingFor(f64.As[fxp.DP, int](e.StrengthOrZero() + e.StrikingStrengthBonus))
 }
 
 // SwingFor returns the swing value for the provided strength.
@@ -559,13 +559,13 @@ func (e *Entity) AddWeaponComparedDamageBonusesFor(featureID, nameQualifier, spe
 
 // WeaponComparedDamageBonusesFor returns the bonuses for matching weapons that match.
 func (e *Entity) WeaponComparedDamageBonusesFor(featureID, nameQualifier, specializationQualifier string, tagsQualifier []string, dieCount int, tooltip *xio.ByteBuffer) []*feature.WeaponDamageBonus {
-	rsl := f64d4.Min
+	rsl := fxp.Min
 	for _, sk := range e.SkillNamed(nameQualifier, specializationQualifier, true, nil) {
 		if rsl < sk.LevelData.RelativeLevel {
 			rsl = sk.LevelData.RelativeLevel
 		}
 	}
-	if rsl == f64d4.Min {
+	if rsl == fxp.Min {
 		return nil
 	}
 	var bonuses []*feature.WeaponDamageBonus
@@ -578,7 +578,7 @@ func (e *Entity) WeaponComparedDamageBonusesFor(featureID, nameQualifier, specia
 			bonus.TagsCriteria.Matches(tagsQualifier...) {
 			bonuses = append(bonuses, bonus)
 			level := bonus.LeveledAmount.Level
-			bonus.LeveledAmount.Level = f64d4.FromInt(dieCount)
+			bonus.LeveledAmount.Level = f64.From[fxp.DP](dieCount)
 			bonus.AddToTooltip(tooltip)
 			bonus.LeveledAmount.Level = level
 		}
@@ -587,7 +587,7 @@ func (e *Entity) WeaponComparedDamageBonusesFor(featureID, nameQualifier, specia
 }
 
 // SpellBonusesFor returns the total bonuses for a spell.
-func (e *Entity) SpellBonusesFor(featureID, qualifier string, tags []string, tooltip *xio.ByteBuffer) f64d4.Int {
+func (e *Entity) SpellBonusesFor(featureID, qualifier string, tags []string, tooltip *xio.ByteBuffer) fxp.Int {
 	level := e.BonusFor(featureID, tooltip)
 	level += e.BonusFor(featureID+"/"+strings.ToLower(qualifier), tooltip)
 	level += e.SpellComparedBonusFor(featureID+"*", qualifier, tags, tooltip)
@@ -595,8 +595,8 @@ func (e *Entity) SpellBonusesFor(featureID, qualifier string, tags []string, too
 }
 
 // BestCollegeSpellBonus returns the best college spell bonus for a spell.
-func (e *Entity) BestCollegeSpellBonus(tags, colleges []string, tooltip *xio.ByteBuffer) f64d4.Int {
-	best := f64d4.Min
+func (e *Entity) BestCollegeSpellBonus(tags, colleges []string, tooltip *xio.ByteBuffer) fxp.Int {
+	best := fxp.Min
 	var bestTooltip string
 	for _, college := range colleges {
 		var buffer *xio.ByteBuffer
@@ -613,15 +613,15 @@ func (e *Entity) BestCollegeSpellBonus(tags, colleges []string, tooltip *xio.Byt
 	if tooltip != nil {
 		tooltip.WriteString(bestTooltip)
 	}
-	if best == f64d4.Min {
+	if best == fxp.Min {
 		best = 0
 	}
 	return best
 }
 
 // BonusFor returns the total bonus for the given ID.
-func (e *Entity) BonusFor(featureID string, tooltip *xio.ByteBuffer) f64d4.Int {
-	var total f64d4.Int
+func (e *Entity) BonusFor(featureID string, tooltip *xio.ByteBuffer) fxp.Int {
+	var total fxp.Int
 	for _, f := range e.featureMap[strings.ToLower(featureID)] {
 		if bonus, ok := f.(feature.Bonus); ok {
 			if _, ok = bonus.(*feature.WeaponDamageBonus); !ok {
@@ -634,8 +634,8 @@ func (e *Entity) BonusFor(featureID string, tooltip *xio.ByteBuffer) f64d4.Int {
 }
 
 // CostReductionFor returns the total cost reduction for the given ID.
-func (e *Entity) CostReductionFor(featureID string) f64d4.Int {
-	var total f64d4.Int
+func (e *Entity) CostReductionFor(featureID string) fxp.Int {
+	var total fxp.Int
 	for _, f := range e.featureMap[strings.ToLower(featureID)] {
 		if reduction, ok := f.(*feature.CostReduction); ok {
 			total += reduction.Percentage
@@ -656,7 +656,7 @@ func (e *Entity) AddDRBonusesFor(featureID string, tooltip *xio.ByteBuffer, drMa
 	if list, exists := e.featureMap[strings.ToLower(featureID)]; exists {
 		for _, one := range list {
 			if drBonus, ok := one.(*feature.DRBonus); ok {
-				drMap[strings.ToLower(drBonus.Specialization)] += drBonus.AdjustedAmount().AsInt()
+				drMap[strings.ToLower(drBonus.Specialization)] += f64.As[fxp.DP, int](drBonus.AdjustedAmount())
 				drBonus.AddToTooltip(tooltip)
 			}
 		}
@@ -667,7 +667,7 @@ func (e *Entity) AddDRBonusesFor(featureID string, tooltip *xio.ByteBuffer, drMa
 // BestSkillNamed returns the best skill that matches.
 func (e *Entity) BestSkillNamed(name, specialization string, requirePoints bool, excludes map[string]bool) *Skill {
 	var best *Skill
-	level := f64d4.Min
+	level := fxp.Min
 	for _, sk := range e.SkillNamed(name, specialization, requirePoints, excludes) {
 		skillLevel := sk.CalculateLevel().Level
 		if best == nil || level < skillLevel {
@@ -705,8 +705,8 @@ func (e *Entity) SkillNamed(name, specialization string, requirePoints bool, exc
 }
 
 // SkillComparedBonusFor returns the total bonus for the matching skill bonuses.
-func (e *Entity) SkillComparedBonusFor(featureID, name, specialization string, tags []string, tooltip *xio.ByteBuffer) f64d4.Int {
-	var total f64d4.Int
+func (e *Entity) SkillComparedBonusFor(featureID, name, specialization string, tags []string, tooltip *xio.ByteBuffer) fxp.Int {
+	var total fxp.Int
 	for _, f := range e.featureMap[strings.ToLower(featureID)] {
 		if bonus, ok := f.(*feature.SkillBonus); ok &&
 			bonus.NameCriteria.Matches(name) &&
@@ -720,8 +720,8 @@ func (e *Entity) SkillComparedBonusFor(featureID, name, specialization string, t
 }
 
 // SkillPointComparedBonusFor returns the total bonus for the matching skill point bonuses.
-func (e *Entity) SkillPointComparedBonusFor(featureID, name, specialization string, tags []string, tooltip *xio.ByteBuffer) f64d4.Int {
-	var total f64d4.Int
+func (e *Entity) SkillPointComparedBonusFor(featureID, name, specialization string, tags []string, tooltip *xio.ByteBuffer) fxp.Int {
+	var total fxp.Int
 	for _, f := range e.featureMap[strings.ToLower(featureID)] {
 		if bonus, ok := f.(*feature.SkillPointBonus); ok &&
 			bonus.NameCriteria.Matches(name) &&
@@ -735,7 +735,7 @@ func (e *Entity) SkillPointComparedBonusFor(featureID, name, specialization stri
 }
 
 // SpellPointBonusesFor returns the total point bonus for the matching spell.
-func (e *Entity) SpellPointBonusesFor(featureID, qualifier string, tags []string, tooltip *xio.ByteBuffer) f64d4.Int {
+func (e *Entity) SpellPointBonusesFor(featureID, qualifier string, tags []string, tooltip *xio.ByteBuffer) fxp.Int {
 	level := e.BonusFor(featureID, tooltip)
 	level += e.BonusFor(featureID+"/"+strings.ToLower(qualifier), tooltip)
 	level += e.SpellPointComparedBonusFor(featureID+"*", qualifier, tags, tooltip)
@@ -743,8 +743,8 @@ func (e *Entity) SpellPointBonusesFor(featureID, qualifier string, tags []string
 }
 
 // SpellComparedBonusFor returns the total bonus for the matching spell bonuses.
-func (e *Entity) SpellComparedBonusFor(featureID, name string, tags []string, tooltip *xio.ByteBuffer) f64d4.Int {
-	var total f64d4.Int
+func (e *Entity) SpellComparedBonusFor(featureID, name string, tags []string, tooltip *xio.ByteBuffer) fxp.Int {
+	var total fxp.Int
 	for _, f := range e.featureMap[strings.ToLower(featureID)] {
 		if bonus, ok := f.(*feature.SpellBonus); ok &&
 			bonus.NameCriteria.Matches(name) &&
@@ -757,8 +757,8 @@ func (e *Entity) SpellComparedBonusFor(featureID, name string, tags []string, to
 }
 
 // SpellPointComparedBonusFor returns the total bonus for the matching spell point bonuses.
-func (e *Entity) SpellPointComparedBonusFor(featureID, qualifier string, tags []string, tooltip *xio.ByteBuffer) f64d4.Int {
-	var total f64d4.Int
+func (e *Entity) SpellPointComparedBonusFor(featureID, qualifier string, tags []string, tooltip *xio.ByteBuffer) fxp.Int {
+	var total fxp.Int
 	for _, f := range e.featureMap[strings.ToLower(featureID)] {
 		if bonus, ok := f.(*feature.SpellPointBonus); ok &&
 			bonus.NameCriteria.Matches(qualifier) &&
@@ -798,7 +798,7 @@ func (e *Entity) NamedWeaponDamageBonusesFor(featureID, nameQualifier, usageQual
 			bonus.TagsCriteria.Matches(tagsQualifier...) {
 			bonuses = append(bonuses, bonus)
 			level := bonus.LeveledAmount.Level
-			bonus.LeveledAmount.Level = f64d4.FromInt(dieCount)
+			bonus.LeveledAmount.Level = f64.From[fxp.DP](dieCount)
 			bonus.AddToTooltip(tooltip)
 			bonus.LeveledAmount.Level = level
 		}
@@ -831,16 +831,16 @@ func (e *Entity) Move(enc datafile.Encumbrance) int {
 	initialMove := e.ResolveAttributeCurrent(gid.BasicMove).Max(0)
 	divisor := 2 * xmath.Min(CountThresholdOpMet(attribute.HalveMove, e.Attributes), 2)
 	if divisor > 0 {
-		initialMove = initialMove.Div(f64d4.FromInt(divisor)).Ceil()
+		initialMove = initialMove.Div(f64.From[fxp.DP](divisor)).Ceil()
 	}
 	move := initialMove.Mul(fxp.Ten + fxp.Two.Mul(enc.Penalty())).Div(fxp.Ten).Trunc()
-	if move < f64d4.One {
+	if move < fxp.One {
 		if initialMove > 0 {
 			return 1
 		}
 		return 0
 	}
-	return move.AsInt()
+	return f64.As[fxp.DP, int](move)
 }
 
 // Dodge returns the current Dodge value for the given Encumbrance.
@@ -848,9 +848,9 @@ func (e *Entity) Dodge(enc datafile.Encumbrance) int {
 	dodge := fxp.Three + e.DodgeBonus + e.ResolveAttributeCurrent(gid.BasicSpeed).Max(0)
 	divisor := 2 * xmath.Min(CountThresholdOpMet(attribute.HalveDodge, e.Attributes), 2)
 	if divisor > 0 {
-		dodge = dodge.Div(f64d4.FromInt(divisor)).Ceil()
+		dodge = dodge.Div(f64.From[fxp.DP](divisor)).Ceil()
 	}
-	return (dodge + enc.Penalty()).Max(f64d4.One).AsInt()
+	return f64.As[fxp.DP, int]((dodge + enc.Penalty()).Max(fxp.One))
 }
 
 // EncumbranceLevel returns the current Encumbrance level.
@@ -875,37 +875,37 @@ func (e *Entity) WeightCarried(forSkills bool) measure.Weight {
 
 // MaximumCarry returns the maximum amount the Entity can carry for the specified encumbrance level.
 func (e *Entity) MaximumCarry(encumbrance datafile.Encumbrance) measure.Weight {
-	return measure.Weight(f64d4.Int(e.BasicLift()).Mul(encumbrance.WeightMultiplier()))
+	return measure.Weight(fxp.Int(e.BasicLift()).Mul(encumbrance.WeightMultiplier()))
 }
 
 // OneHandedLift returns the one-handed lift value.
 func (e *Entity) OneHandedLift() measure.Weight {
-	return measure.Weight(f64d4.Int(e.BasicLift()).Mul(fxp.Two))
+	return measure.Weight(fxp.Int(e.BasicLift()).Mul(fxp.Two))
 }
 
 // TwoHandedLift returns the two-handed lift value.
 func (e *Entity) TwoHandedLift() measure.Weight {
-	return measure.Weight(f64d4.Int(e.BasicLift()).Mul(fxp.Eight))
+	return measure.Weight(fxp.Int(e.BasicLift()).Mul(fxp.Eight))
 }
 
 // ShoveAndKnockOver returns the shove & knock over value.
 func (e *Entity) ShoveAndKnockOver() measure.Weight {
-	return measure.Weight(f64d4.Int(e.BasicLift()).Mul(fxp.Twelve))
+	return measure.Weight(fxp.Int(e.BasicLift()).Mul(fxp.Twelve))
 }
 
 // RunningShoveAndKnockOver returns the running shove & knock over value.
 func (e *Entity) RunningShoveAndKnockOver() measure.Weight {
-	return measure.Weight(f64d4.Int(e.BasicLift()).Mul(fxp.TwentyFour))
+	return measure.Weight(fxp.Int(e.BasicLift()).Mul(fxp.TwentyFour))
 }
 
 // CarryOnBack returns the carry on back value.
 func (e *Entity) CarryOnBack() measure.Weight {
-	return measure.Weight(f64d4.Int(e.BasicLift()).Mul(fxp.Fifteen))
+	return measure.Weight(fxp.Int(e.BasicLift()).Mul(fxp.Fifteen))
 }
 
 // ShiftSlightly returns the shift slightly value.
 func (e *Entity) ShiftSlightly() measure.Weight {
-	return measure.Weight(f64d4.Int(e.BasicLift()).Mul(fxp.Fifty))
+	return measure.Weight(fxp.Int(e.BasicLift()).Mul(fxp.Fifty))
 }
 
 // BasicLift returns the entity's Basic Lift.
@@ -914,26 +914,26 @@ func (e *Entity) BasicLift() measure.Weight {
 	if IsThresholdOpMet(attribute.HalveST, e.Attributes) {
 		st = st.Div(fxp.Two)
 		if st != st.Trunc() {
-			st = st.Trunc() + f64d4.One
+			st = st.Trunc() + fxp.One
 		}
 	}
-	if st < f64d4.One {
+	if st < fxp.One {
 		return 0
 	}
-	var v f64d4.Int
+	var v fxp.Int
 	if e.SheetSettings.DamageProgression == attribute.KnowingYourOwnStrength {
-		var diff f64d4.Int
+		var diff fxp.Int
 		if st > fxp.Nineteen {
-			diff = st.Div(fxp.Ten).Trunc() - f64d4.One
+			diff = st.Div(fxp.Ten).Trunc() - fxp.One
 			st -= diff.Mul(fxp.Ten)
 		}
-		v = f64d4.FromFloat64(math.Pow(10, st.AsFloat64()/10)).Mul(fxp.Two)
+		v = f64.From[fxp.DP](math.Pow(10, f64.As[fxp.DP, float64](st)/10)).Mul(fxp.Two)
 		if st <= fxp.Six {
 			v = v.Mul(fxp.Ten).Round().Div(fxp.Ten)
 		} else {
 			v = v.Round()
 		}
-		v = v.Mul(f64d4.FromFloat64(math.Pow(10, diff.AsFloat64())))
+		v = v.Mul(f64.From[fxp.DP](math.Pow(10, f64.As[fxp.DP, float64](diff))))
 	} else {
 		v = st.Mul(st).Div(fxp.Five)
 	}
@@ -1010,12 +1010,12 @@ func (e *Entity) ResolveAttribute(attrID string) *Attribute {
 	return nil
 }
 
-// ResolveAttributeCurrent resolves the given attribute ID to its current value, or f64d4.Min.
-func (e *Entity) ResolveAttributeCurrent(attrID string) f64d4.Int {
+// ResolveAttributeCurrent resolves the given attribute ID to its current value, or fxp.Min.
+func (e *Entity) ResolveAttributeCurrent(attrID string) fxp.Int {
 	if e != nil && e.Type == datafile.PC {
 		return e.Attributes.Current(attrID)
 	}
-	return f64d4.Min
+	return fxp.Min
 }
 
 // PreservesUserDesc returns true if the user description widget should be preserved when written to disk. Normally, only
@@ -1108,7 +1108,7 @@ func (e *Entity) Reactions() []*ConditionalModifier {
 			}
 		}
 		if a.CR != advantage.None && a.CRAdj == ReactionPenalty {
-			amt := f64d4.FromInt(ReactionPenalty.Adjustment(a.CR))
+			amt := f64.From[fxp.DP](ReactionPenalty.Adjustment(a.CR))
 			situation := fmt.Sprintf(i18n.Text("from others when %s is triggered"), a.String())
 			if r, exists := m[situation]; exists {
 				r.Add(source, amt)

@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/fxp"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 // Format returns a formatted version of the value.
@@ -28,13 +27,13 @@ func (enum ModifierWeightValueType) Format(fraction fxp.Fraction) string {
 	case WeightPercentageMultiplier:
 		if fraction.Numerator <= 0 {
 			fraction.Numerator = fxp.Hundred
-			fraction.Denominator = f64d4.One
+			fraction.Denominator = fxp.One
 		}
 		return "x" + fraction.String() + "%"
 	case WeightMultiplier:
 		if fraction.Numerator <= 0 {
-			fraction.Numerator = f64d4.One
-			fraction.Denominator = f64d4.One
+			fraction.Numerator = fxp.One
+			fraction.Denominator = fxp.One
 		}
 		return enum.String() + fraction.String()
 	default:
@@ -50,12 +49,12 @@ func (enum ModifierWeightValueType) ExtractFraction(s string) fxp.Fraction {
 	case WeightPercentageMultiplier:
 		if fraction.Numerator <= 0 {
 			fraction.Numerator = fxp.Hundred
-			fraction.Denominator = f64d4.One
+			fraction.Denominator = fxp.One
 		}
 	case WeightMultiplier:
 		if fraction.Numerator <= 0 {
-			fraction.Numerator = f64d4.One
-			fraction.Denominator = f64d4.One
+			fraction.Numerator = fxp.One
+			fraction.Denominator = fxp.One
 		}
 	default:
 	}

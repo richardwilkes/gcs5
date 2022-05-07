@@ -14,13 +14,13 @@ package sheet
 import (
 	"fmt"
 
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -74,23 +74,23 @@ func (p *PointPoolsPanel) rebuild(attrs *gurps.AttributeDefs) {
 
 		var currentField *widget.NumericField
 		currentField = widget.NewNumericPageField(i18n.Text("Point Pool Current"),
-			func() f64d4.Int {
+			func() fxp.Int {
 				if currentField != nil {
 					currentField.SetMaximum(attr.Maximum())
 				}
 				return attr.Current()
-			}, func(v f64d4.Int) { attr.Damage = (attr.Maximum() - v).Max(0) }, f64d4.Min, attr.Maximum(), true)
+			}, func(v fxp.Int) { attr.Damage = (attr.Maximum() - v).Max(0) }, fxp.Min, attr.Maximum(), true)
 		p.AddChild(currentField)
 
 		p.AddChild(widget.NewPageLabel(i18n.Text("of")))
 
 		maximumField := widget.NewNumericPageField(i18n.Text("Point Pool Maximum"),
-			func() f64d4.Int { return attr.Maximum() },
-			func(v f64d4.Int) {
+			func() fxp.Int { return attr.Maximum() },
+			func(v fxp.Int) {
 				attr.SetMaximum(v)
 				currentField.SetMaximum(v)
 				currentField.Sync()
-			}, f64d4.Min, f64d4.Max, true)
+			}, fxp.Min, fxp.Max, true)
 		p.AddChild(maximumField)
 
 		name := widget.NewPageLabel(def.Name)

@@ -20,7 +20,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/richardwilkes/unison"
 )
 
@@ -103,12 +102,12 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 				widget.MarkModified(content)
 			}
 			wrapper2 := addFlowWrapper(content, "", 2)
-			limitField := widget.NewNumericField(i18n.Text("Limit"), func() f64d4.Int {
+			limitField := widget.NewNumericField(i18n.Text("Limit"), func() fxp.Int {
 				if e.editorData.TechniqueLimitModifier != nil {
 					return *e.editorData.TechniqueLimitModifier
 				}
 				return 0
-			}, func(value f64d4.Int) {
+			}, func(value fxp.Int) {
 				if e.editorData.TechniqueLimitModifier != nil {
 					*e.editorData.TechniqueLimitModifier = value
 				}
@@ -118,7 +117,7 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 				e.editorData.TechniqueLimitModifier != nil, func(b bool) {
 					if b {
 						if e.editorData.TechniqueLimitModifier == nil {
-							var limit f64d4.Int
+							var limit fxp.Int
 							e.editorData.TechniqueLimitModifier = &limit
 						}
 						enableAndUnblankField(limitField)
