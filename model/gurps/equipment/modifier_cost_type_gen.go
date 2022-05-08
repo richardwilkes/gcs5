@@ -43,22 +43,22 @@ var (
 	}{
 		{
 			key:    "to_original_cost",
-			string: i18n.Text("To Original Cost"),
+			string: i18n.Text("to original cost"),
 			alt:    i18n.Text("\"+5\", \"-5\", \"+10%\", \"-10%\", \"x3.2\""),
 		},
 		{
 			key:    "to_base_cost",
-			string: i18n.Text("To Base Cost"),
+			string: i18n.Text("to base cost"),
 			alt:    i18n.Text("\"x2\", \"+2 CF\", \"-0.2 CF\""),
 		},
 		{
 			key:    "to_final_base_cost",
-			string: i18n.Text("To Final Base Cost"),
+			string: i18n.Text("to final base cost"),
 			alt:    i18n.Text("\"+5\", \"-5\", \"+10%\", \"-10%\", \"x3.2\""),
 		},
 		{
 			key:    "to_final_cost",
-			string: i18n.Text("To Final Cost"),
+			string: i18n.Text("to final cost"),
 			alt:    i18n.Text("\"+5\", \"-5\", \"+10%\", \"-10%\", \"x3.2\""),
 		},
 	}

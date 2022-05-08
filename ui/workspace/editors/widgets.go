@@ -69,6 +69,7 @@ func addTechLevelRequired(parent *unison.Panel, fieldData **string, includeField
 			**fieldData = value
 			widget.MarkModified(parent)
 		})
+		field.Tooltip = unison.NewTooltipWithText(gurps.TechLevelInfo)
 		if *fieldData == nil {
 			field.SetEnabled(false)
 		}

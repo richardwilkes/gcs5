@@ -38,7 +38,7 @@ func (enum ModifierCostValueType) Format(value fxp.Int) string {
 
 // ExtractValue from the string.
 func (enum ModifierCostValueType) ExtractValue(s string) fxp.Int {
-	v := fxp.FromStringForced(s)
+	v, _ := fxp.Extract(strings.TrimLeft(strings.TrimSpace(s), Multiplier.Key()))
 	if enum.EnsureValid() == Multiplier && v <= 0 {
 		v = fxp.One
 	}

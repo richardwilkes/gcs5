@@ -29,7 +29,7 @@ func (enum ModifierWeightValueType) Format(fraction fxp.Fraction) string {
 			fraction.Numerator = fxp.Hundred
 			fraction.Denominator = fxp.One
 		}
-		return "x" + fraction.String() + "%"
+		return WeightMultiplier.String() + fraction.String() + WeightPercentageAdder.String()
 	case WeightMultiplier:
 		if fraction.Numerator <= 0 {
 			fraction.Numerator = fxp.One
@@ -43,6 +43,10 @@ func (enum ModifierWeightValueType) Format(fraction fxp.Fraction) string {
 
 // ExtractFraction from the string.
 func (enum ModifierWeightValueType) ExtractFraction(s string) fxp.Fraction {
+	s = strings.TrimLeft(strings.TrimSpace(s), WeightMultiplier.Key())
+	for len(s) > 0 && (s[len(s)-1] < '0' || s[len(s)-1] > '9') {
+		s = s[:len(s)-1]
+	}
 	fraction := fxp.NewFraction(s)
 	revised := enum.EnsureValid()
 	switch revised {
