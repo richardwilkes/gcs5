@@ -39,13 +39,13 @@ func (enum Encumbrance) Penalty() fxp.Int {
 	case None:
 		return 0
 	case Light:
-		return fxp.NegOne
+		return -fxp.One
 	case Medium:
-		return fxp.NegTwo
+		return -fxp.Two
 	case Heavy:
-		return fxp.NegThree
+		return -fxp.Three
 	case ExtraHeavy:
-		return fxp.NegFour
+		return -fxp.Four
 	default:
 		return None.Penalty()
 	}

@@ -15,7 +15,6 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/eval"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 // The evaluator operators and functions that will be used when calling NewEvaluator().
@@ -24,7 +23,7 @@ var (
 	EvalFuncs     = eval.FixedFunctions[DP]()
 )
 
-// NewEvaluator creates a new evaluator whose number type is F64.
+// NewEvaluator creates a new evaluator whose number type is an Int.
 func NewEvaluator(resolver eval.VariableResolver) *eval.Evaluator {
 	return &eval.Evaluator{
 		Resolver:  resolver,
@@ -45,7 +44,7 @@ func EvaluateToNumber(expression string, resolver eval.VariableResolver) Int {
 	}
 	if str, ok := result.(string); ok {
 		var value Int
-		if value, err = f64.FromString[DP](str); err == nil {
+		if value, err = FromString(str); err == nil {
 			return value
 		}
 	}

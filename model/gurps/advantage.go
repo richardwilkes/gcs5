@@ -478,14 +478,14 @@ func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fxp.Int, 
 	if baseEnh != 0 || baseLim != 0 || levelEnh != 0 || levelLim != 0 {
 		if SheetSettingsFor(entity).UseMultiplicativeModifiers {
 			if baseEnh == levelEnh && baseLim == levelLim {
-				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints+leveledPoints, baseEnh), fxp.NegEighty.Max(baseLim))
+				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints+leveledPoints, baseEnh), (-fxp.Eighty).Max(baseLim))
 			} else {
-				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints, baseEnh), fxp.NegEighty.Max(baseLim)) +
-					modifyPoints(modifyPoints(leveledPoints, levelEnh), fxp.NegEighty.Max(levelLim))
+				modifiedBasePoints = modifyPoints(modifyPoints(modifiedBasePoints, baseEnh), (-fxp.Eighty).Max(baseLim)) +
+					modifyPoints(modifyPoints(leveledPoints, levelEnh), (-fxp.Eighty).Max(levelLim))
 			}
 		} else {
-			baseMod := fxp.NegEighty.Max(baseEnh + baseLim)
-			levelMod := fxp.NegEighty.Max(levelEnh + levelLim)
+			baseMod := (-fxp.Eighty).Max(baseEnh + baseLim)
+			levelMod := (-fxp.Eighty).Max(levelEnh + levelLim)
 			if baseMod == levelMod {
 				modifiedBasePoints = modifyPoints(modifiedBasePoints+leveledPoints, baseMod)
 			} else {

@@ -31,7 +31,6 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio/fs"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 	"github.com/richardwilkes/unison"
 )
 
@@ -330,9 +329,9 @@ func NewTableDockable(filePath string, provider tbl.TableProvider) *TableDockabl
 
 	d.tableHeader = unison.NewTableHeader(d.table, headers...)
 	d.tableHeader.Less = func(s1, s2 string) bool {
-		if n1, err := f64.FromString[fxp.DP](s1); err == nil {
+		if n1, err := fxp.FromString(s1); err == nil {
 			var n2 fxp.Int
-			if n2, err = f64.FromString[fxp.DP](s2); err == nil {
+			if n2, err = fxp.FromString(s2); err == nil {
 				return n1 < n2
 			}
 		}

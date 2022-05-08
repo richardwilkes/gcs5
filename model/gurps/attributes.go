@@ -18,7 +18,6 @@ import (
 
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/json"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 // Attributes holds a set of Attribute objects.
@@ -94,7 +93,7 @@ func (a *Attributes) Current(attrID string) fxp.Int {
 	if attr, ok := a.Set[attrID]; ok {
 		return attr.Current()
 	}
-	if v, err := f64.FromString[fxp.DP](attrID); err == nil {
+	if v, err := fxp.FromString(attrID); err == nil {
 		return v
 	}
 	return fxp.Min
@@ -105,7 +104,7 @@ func (a *Attributes) Maximum(attrID string) fxp.Int {
 	if attr, ok := a.Set[attrID]; ok {
 		return attr.Maximum()
 	}
-	if v, err := f64.FromString[fxp.DP](attrID); err == nil {
+	if v, err := fxp.FromString(attrID); err == nil {
 		return v
 	}
 	return fxp.Min

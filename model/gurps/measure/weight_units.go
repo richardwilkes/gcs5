@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/fxp"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 // TrailingWeightUnitsFromString extracts a trailing WeightUnits from a string.
@@ -35,13 +34,13 @@ func (enum WeightUnits) Format(weight Weight) string {
 	case Pound, PoundAlt:
 		return fxp.Int(weight).String() + " " + enum.Key()
 	case Ounce:
-		return fxp.Int(weight).Mul(f64.From[fxp.DP](16)).String() + " " + enum.Key()
+		return fxp.Int(weight).Mul(fxp.From(16)).String() + " " + enum.Key()
 	case Ton, TonAlt:
-		return fxp.Int(weight).Div(f64.From[fxp.DP](2000)).String() + " " + enum.Key()
+		return fxp.Int(weight).Div(fxp.From(2000)).String() + " " + enum.Key()
 	case Kilogram:
-		return fxp.Int(weight).Div(f64.From[fxp.DP](2)).String() + " " + enum.Key()
+		return fxp.Int(weight).Div(fxp.From(2)).String() + " " + enum.Key()
 	case Gram:
-		return fxp.Int(weight).Mul(f64.From[fxp.DP](500)).String() + " " + enum.Key()
+		return fxp.Int(weight).Mul(fxp.From(500)).String() + " " + enum.Key()
 	default:
 		return Pound.Format(weight)
 	}
@@ -53,13 +52,13 @@ func (enum WeightUnits) ToPounds(weight fxp.Int) fxp.Int {
 	case Pound, PoundAlt:
 		return weight
 	case Ounce:
-		return weight.Div(f64.From[fxp.DP](16))
+		return weight.Div(fxp.From(16))
 	case Ton, TonAlt:
-		return weight.Mul(f64.From[fxp.DP](2000))
+		return weight.Mul(fxp.From(2000))
 	case Kilogram:
-		return weight.Mul(f64.From[fxp.DP](2))
+		return weight.Mul(fxp.From(2))
 	case Gram:
-		return weight.Div(f64.From[fxp.DP](500))
+		return weight.Div(fxp.From(500))
 	default:
 		return Pound.ToPounds(weight)
 	}

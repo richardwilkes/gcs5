@@ -43,7 +43,6 @@ import (
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 var (
@@ -468,7 +467,7 @@ func calculateSingleAdvantagePoints(adq *Advantage) (ad, disad, race, quirk fxp.
 	}
 	pts := adq.AdjustedPoints()
 	switch {
-	case pts == fxp.NegOne:
+	case pts == -fxp.One:
 		quirk += pts
 	case pts > 0:
 		ad += pts
@@ -527,7 +526,7 @@ func (e *Entity) StrengthOrZero() fxp.Int {
 
 // Thrust returns the thrust value for the current strength.
 func (e *Entity) Thrust() *dice.Dice {
-	return e.ThrustFor(f64.As[fxp.DP, int](e.StrengthOrZero() + e.StrikingStrengthBonus))
+	return e.ThrustFor(fxp.As[int](e.StrengthOrZero() + e.StrikingStrengthBonus))
 }
 
 // ThrustFor returns the thrust value for the provided strength.
@@ -537,7 +536,7 @@ func (e *Entity) ThrustFor(st int) *dice.Dice {
 
 // Swing returns the swing value for the current strength.
 func (e *Entity) Swing() *dice.Dice {
-	return e.SwingFor(f64.As[fxp.DP, int](e.StrengthOrZero() + e.StrikingStrengthBonus))
+	return e.SwingFor(fxp.As[int](e.StrengthOrZero() + e.StrikingStrengthBonus))
 }
 
 // SwingFor returns the swing value for the provided strength.
@@ -578,7 +577,7 @@ func (e *Entity) WeaponComparedDamageBonusesFor(featureID, nameQualifier, specia
 			bonus.TagsCriteria.Matches(tagsQualifier...) {
 			bonuses = append(bonuses, bonus)
 			level := bonus.LeveledAmount.Level
-			bonus.LeveledAmount.Level = f64.From[fxp.DP](dieCount)
+			bonus.LeveledAmount.Level = fxp.From(dieCount)
 			bonus.AddToTooltip(tooltip)
 			bonus.LeveledAmount.Level = level
 		}
@@ -656,7 +655,7 @@ func (e *Entity) AddDRBonusesFor(featureID string, tooltip *xio.ByteBuffer, drMa
 	if list, exists := e.featureMap[strings.ToLower(featureID)]; exists {
 		for _, one := range list {
 			if drBonus, ok := one.(*feature.DRBonus); ok {
-				drMap[strings.ToLower(drBonus.Specialization)] += f64.As[fxp.DP, int](drBonus.AdjustedAmount())
+				drMap[strings.ToLower(drBonus.Specialization)] += fxp.As[int](drBonus.AdjustedAmount())
 				drBonus.AddToTooltip(tooltip)
 			}
 		}
@@ -798,7 +797,7 @@ func (e *Entity) NamedWeaponDamageBonusesFor(featureID, nameQualifier, usageQual
 			bonus.TagsCriteria.Matches(tagsQualifier...) {
 			bonuses = append(bonuses, bonus)
 			level := bonus.LeveledAmount.Level
-			bonus.LeveledAmount.Level = f64.From[fxp.DP](dieCount)
+			bonus.LeveledAmount.Level = fxp.From(dieCount)
 			bonus.AddToTooltip(tooltip)
 			bonus.LeveledAmount.Level = level
 		}
@@ -831,7 +830,7 @@ func (e *Entity) Move(enc datafile.Encumbrance) int {
 	initialMove := e.ResolveAttributeCurrent(gid.BasicMove).Max(0)
 	divisor := 2 * xmath.Min(CountThresholdOpMet(attribute.HalveMove, e.Attributes), 2)
 	if divisor > 0 {
-		initialMove = initialMove.Div(f64.From[fxp.DP](divisor)).Ceil()
+		initialMove = initialMove.Div(fxp.From(divisor)).Ceil()
 	}
 	move := initialMove.Mul(fxp.Ten + fxp.Two.Mul(enc.Penalty())).Div(fxp.Ten).Trunc()
 	if move < fxp.One {
@@ -840,7 +839,7 @@ func (e *Entity) Move(enc datafile.Encumbrance) int {
 		}
 		return 0
 	}
-	return f64.As[fxp.DP, int](move)
+	return fxp.As[int](move)
 }
 
 // Dodge returns the current Dodge value for the given Encumbrance.
@@ -848,9 +847,9 @@ func (e *Entity) Dodge(enc datafile.Encumbrance) int {
 	dodge := fxp.Three + e.DodgeBonus + e.ResolveAttributeCurrent(gid.BasicSpeed).Max(0)
 	divisor := 2 * xmath.Min(CountThresholdOpMet(attribute.HalveDodge, e.Attributes), 2)
 	if divisor > 0 {
-		dodge = dodge.Div(f64.From[fxp.DP](divisor)).Ceil()
+		dodge = dodge.Div(fxp.From(divisor)).Ceil()
 	}
-	return f64.As[fxp.DP, int]((dodge + enc.Penalty()).Max(fxp.One))
+	return fxp.As[int]((dodge + enc.Penalty()).Max(fxp.One))
 }
 
 // EncumbranceLevel returns the current Encumbrance level.
@@ -927,13 +926,13 @@ func (e *Entity) BasicLift() measure.Weight {
 			diff = st.Div(fxp.Ten).Trunc() - fxp.One
 			st -= diff.Mul(fxp.Ten)
 		}
-		v = f64.From[fxp.DP](math.Pow(10, f64.As[fxp.DP, float64](st)/10)).Mul(fxp.Two)
+		v = fxp.From(math.Pow(10, fxp.As[float64](st)/10)).Mul(fxp.Two)
 		if st <= fxp.Six {
 			v = v.Mul(fxp.Ten).Round().Div(fxp.Ten)
 		} else {
 			v = v.Round()
 		}
-		v = v.Mul(f64.From[fxp.DP](math.Pow(10, f64.As[fxp.DP, float64](diff))))
+		v = v.Mul(fxp.From(math.Pow(10, fxp.As[float64](diff))))
 	} else {
 		v = st.Mul(st).Div(fxp.Five)
 	}
@@ -1108,7 +1107,7 @@ func (e *Entity) Reactions() []*ConditionalModifier {
 			}
 		}
 		if a.CR != advantage.None && a.CRAdj == ReactionPenalty {
-			amt := f64.From[fxp.DP](ReactionPenalty.Adjustment(a.CR))
+			amt := fxp.From(ReactionPenalty.Adjustment(a.CR))
 			situation := fmt.Sprintf(i18n.Text("from others when %s is triggered"), a.String())
 			if r, exists := m[situation]; exists {
 				r.Add(source, amt)

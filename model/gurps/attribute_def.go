@@ -21,7 +21,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/eval"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 // ReservedIDs holds a list of IDs that are reserved for internal use.
@@ -97,7 +96,7 @@ func (a *AttributeDef) BaseValue(resolver eval.VariableResolver) fxp.Int {
 func (a *AttributeDef) ComputeCost(entity *Entity, value, costReduction fxp.Int, sizeModifier int) fxp.Int {
 	cost := value.Mul(a.CostPerPoint)
 	if sizeModifier > 0 && a.CostAdjPercentPerSM > 0 && !(a.DefID == "hp" && entity.SheetSettings.DamageProgression == attribute.KnowingYourOwnStrength) {
-		costReduction += f64.From[fxp.DP](sizeModifier).Mul(a.CostAdjPercentPerSM)
+		costReduction += fxp.From(sizeModifier).Mul(a.CostAdjPercentPerSM)
 	}
 	if costReduction > 0 {
 		if costReduction > fxp.Eighty {

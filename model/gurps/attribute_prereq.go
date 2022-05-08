@@ -18,7 +18,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 var _ Prereq = &AttributePrereq{}
@@ -40,7 +39,7 @@ func NewAttributePrereq(entity *Entity) *AttributePrereq {
 		QualifierCriteria: criteria.Numeric{
 			NumericData: criteria.NumericData{
 				Compare:   criteria.AtLeast,
-				Qualifier: f64.From[fxp.DP](10),
+				Qualifier: fxp.From(10),
 			},
 		},
 		Which: AttributeIDFor(entity, gid.Strength),

@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/fxp"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 // Format the length for this LengthUnits.
@@ -23,7 +22,7 @@ func (enum LengthUnits) Format(length Length) string {
 	inches := fxp.Int(length)
 	switch enum {
 	case FeetAndInches:
-		oneFoot := f64.From[fxp.DP](12)
+		oneFoot := fxp.From(12)
 		feet := inches.Div(oneFoot).Trunc()
 		inches -= feet.Mul(oneFoot)
 		if feet == 0 && inches == 0 {
@@ -42,15 +41,15 @@ func (enum LengthUnits) Format(length Length) string {
 	case Inch:
 		return inches.String() + " " + enum.Key()
 	case Feet:
-		return inches.Div(f64.From[fxp.DP](12)).String() + " " + enum.Key()
+		return inches.Div(fxp.From(12)).String() + " " + enum.Key()
 	case Yard, Meter:
-		return inches.Div(f64.From[fxp.DP](36)).String() + " " + enum.Key()
+		return inches.Div(fxp.From(36)).String() + " " + enum.Key()
 	case Mile:
-		return inches.Div(f64.From[fxp.DP](63360)).String() + " " + enum.Key()
+		return inches.Div(fxp.From(63360)).String() + " " + enum.Key()
 	case Centimeter:
-		return inches.Div(f64.From[fxp.DP](36)).Mul(f64.From[fxp.DP](100)).String() + " " + enum.Key()
+		return inches.Div(fxp.From(36)).Mul(fxp.From(100)).String() + " " + enum.Key()
 	case Kilometer:
-		return inches.Div(f64.From[fxp.DP](36000)).String() + " " + enum.Key()
+		return inches.Div(fxp.From(36000)).String() + " " + enum.Key()
 	default:
 		return FeetAndInches.Format(length)
 	}
@@ -62,17 +61,17 @@ func (enum LengthUnits) ToInches(length fxp.Int) fxp.Int {
 	case FeetAndInches, Inch:
 		return length
 	case Feet:
-		return length.Mul(f64.From[fxp.DP](12))
+		return length.Mul(fxp.From(12))
 	case Yard:
-		return length.Mul(f64.From[fxp.DP](36))
+		return length.Mul(fxp.From(36))
 	case Mile:
-		return length.Mul(f64.From[fxp.DP](63360))
+		return length.Mul(fxp.From(63360))
 	case Centimeter:
-		return length.Mul(f64.From[fxp.DP](36)).Div(f64.From[fxp.DP](100))
+		return length.Mul(fxp.From(36)).Div(fxp.From(100))
 	case Kilometer:
-		return length.Mul(f64.From[fxp.DP](36000))
+		return length.Mul(fxp.From(36000))
 	case Meter:
-		return length.Mul(f64.From[fxp.DP](36))
+		return length.Mul(fxp.From(36))
 	default:
 		return FeetAndInches.ToInches(length)
 	}

@@ -22,7 +22,6 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/eval"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 // InstallEvaluatorFunctions installs additional functions for the evaluator.
@@ -71,10 +70,10 @@ func evalToString(e *eval.Evaluator, arguments string) (string, error) {
 func evalAdvantageLevel(e *eval.Evaluator, arguments string) (interface{}, error) {
 	entity, ok := e.Resolver.(*Entity)
 	if !ok || entity.Type != datafile.PC {
-		return fxp.NegOne, nil
+		return -fxp.One, nil
 	}
 	arguments = strings.Trim(arguments, `"`)
-	levels := fxp.NegOne
+	levels := -fxp.One
 	TraverseAdvantages(func(adq *Advantage) bool {
 		if strings.EqualFold(adq.Name, arguments) {
 			if adq.IsLeveled() {
@@ -96,7 +95,7 @@ func evalDice(e *eval.Evaluator, arguments string) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		argList = append(argList, f64.As[fxp.DP, int](n))
+		argList = append(argList, fxp.As[int](n))
 	}
 	var d *dice.Dice
 	switch len(argList) {
@@ -139,7 +138,7 @@ func evalRoll(e *eval.Evaluator, arguments string) (interface{}, error) {
 			return nil, err
 		}
 	}
-	return f64.From[fxp.DP](dice.New(arguments).Roll(false)), nil
+	return fxp.From(dice.New(arguments).Roll(false)), nil
 }
 
 func evalSigned(e *eval.Evaluator, arguments string) (interface{}, error) {
@@ -176,7 +175,7 @@ func evalSSRT(e *eval.Evaluator, arguments string) (interface{}, error) {
 	if !wantSize {
 		result = -result
 	}
-	return f64.From[fxp.DP](result), nil
+	return fxp.From(result), nil
 }
 
 func evalSSRTYards(e *eval.Evaluator, arguments string) (interface{}, error) {
@@ -184,7 +183,7 @@ func evalSSRTYards(e *eval.Evaluator, arguments string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return valueToYards(f64.As[fxp.DP, int](v)), nil
+	return valueToYards(fxp.As[int](v)), nil
 }
 
 func yardsToValue(length measure.Length, allowNegative bool) int {

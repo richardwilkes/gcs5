@@ -22,21 +22,20 @@ import (
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 	"github.com/richardwilkes/unison"
 )
 
 // Default, min & max values for the general numeric settings
 var (
-	InitialPointsDef       = f64.From[fxp.DP](150)
+	InitialPointsDef       = fxp.From(150)
 	InitialPointsMin       fxp.Int
-	InitialPointsMax       = f64.From[fxp.DP](9999999)
-	TooltipDelayDef        = f64.FromStringForced[fxp.DP]("0.75")
+	InitialPointsMax       = fxp.From(9999999)
+	TooltipDelayDef        = fxp.FromStringForced("0.75")
 	TooltipDelayMin        fxp.Int
 	TooltipDelayMax        = fxp.Thirty
-	TooltipDismissalDef    = f64.From[fxp.DP](60)
+	TooltipDismissalDef    = fxp.From(60)
 	TooltipDismissalMin    = fxp.One
-	TooltipDismissalMax    = f64.From[fxp.DP](3600)
+	TooltipDismissalMax    = fxp.From(3600)
 	ImageResolutionDef     = 200
 	ImageResolutionMin     = 50
 	ImageResolutionMax     = 400
@@ -111,8 +110,8 @@ func (s *General) Save(filePath string) error {
 
 // UpdateToolTipTiming updates the default tooltip theme to use the timing values from this object.
 func (s *General) UpdateToolTipTiming() {
-	unison.DefaultTooltipTheme.Delay = time.Duration(f64.As[fxp.DP, int64](s.TooltipDelay.Mul(fxp.Thousand))) * time.Millisecond
-	unison.DefaultTooltipTheme.Dismissal = time.Duration(f64.As[fxp.DP, int64](s.TooltipDismissal.Mul(fxp.Thousand))) * time.Millisecond
+	unison.DefaultTooltipTheme.Delay = time.Duration(fxp.As[int64](s.TooltipDelay.Mul(fxp.Thousand))) * time.Millisecond
+	unison.DefaultTooltipTheme.Dismissal = time.Duration(fxp.As[int64](s.TooltipDismissal.Mul(fxp.Thousand))) * time.Millisecond
 }
 
 // CalendarRef returns the CalendarRef these settings refer to.

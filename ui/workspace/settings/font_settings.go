@@ -22,7 +22,6 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 	"github.com/richardwilkes/unison"
 )
 
@@ -119,14 +118,14 @@ func (d *fontSettingsDockable) createFamilyField(index int) {
 
 func (d *fontSettingsDockable) createSizeField(index int) {
 	field := widget.NewNumericField(i18n.Text("Font Size"), func() fxp.Int {
-		return f64.From[fxp.DP](theme.CurrentFonts[index].Font.Size())
+		return fxp.From(theme.CurrentFonts[index].Font.Size())
 	}, func(v fxp.Int) {
 		if !d.noUpdate {
 			fd := theme.CurrentFonts[index].Font.Descriptor()
-			fd.Size = f64.As[fxp.DP, float32](v)
+			fd.Size = fxp.As[float32](v)
 			d.applyFont(index, fd)
 		}
-	}, fxp.One, f64.From[fxp.DP](999), false)
+	}, fxp.One, fxp.From(999), false)
 	field.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,
@@ -217,7 +216,7 @@ func (d *fontSettingsDockable) applyFont(index int, fd unison.FontDescriptor) {
 		p.Select(fd.Family)
 	}
 	if nf, ok := children[i+2].Self.(*widget.NumericField); ok {
-		nf.SetText(f64.From[fxp.DP](fd.Size).String())
+		nf.SetText(fxp.From(fd.Size).String())
 	}
 	if p, ok := children[i+3].Self.(*unison.PopupMenu[unison.FontWeight]); ok {
 		p.Select(fd.Weight)

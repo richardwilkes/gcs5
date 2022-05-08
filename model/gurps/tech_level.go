@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/fxp"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 // ExtractTechLevel extracts the first number it finds in the string and returns that as the tech level. The start and
@@ -51,7 +50,7 @@ outer:
 		return 0, -1, -1
 	}
 	var err error
-	if techLevel, err = f64.FromString[fxp.DP](buffer.String()); err == nil {
+	if techLevel, err = fxp.FromString(buffer.String()); err == nil {
 		return techLevel.Max(0).Min(fxp.Twelve), start, end
 	}
 	return 0, -1, -1

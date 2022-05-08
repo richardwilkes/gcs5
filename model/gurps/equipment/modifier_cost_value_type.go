@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/fxp"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 // Format returns a formatted version of the value.
@@ -39,7 +38,7 @@ func (enum ModifierCostValueType) Format(value fxp.Int) string {
 
 // ExtractValue from the string.
 func (enum ModifierCostValueType) ExtractValue(s string) fxp.Int {
-	v := f64.FromStringForced[fxp.DP](s)
+	v := fxp.FromStringForced(s)
 	if enum.EnsureValid() == Multiplier && v <= 0 {
 		v = fxp.One
 	}

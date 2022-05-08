@@ -32,7 +32,6 @@ import (
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 var _ node.Node = &Weapon{}
@@ -478,7 +477,7 @@ func (w *Weapon) resolvedValue(input, baseDefaultType string, tooltip *xio.ByteB
 					if neg {
 						modifier = -modifier
 					}
-					num := (skillLevel + f64.From[fxp.DP](modifier)).Trunc().String()
+					num := (skillLevel + fxp.From(modifier)).Trunc().String()
 					if i < max {
 						buffer.WriteString(num)
 						line = line[i:]
@@ -524,7 +523,7 @@ func (w *Weapon) resolveRange(inRange string, st fxp.Int) string {
 	if !found {
 		return inRange
 	}
-	value, err := f64.FromString[fxp.DP](inRange[started:last])
+	value, err := fxp.FromString(inRange[started:last])
 	if err != nil {
 		return inRange
 	}
@@ -552,7 +551,7 @@ func (w *Weapon) ResolvedMinimumStrength() fxp.Int {
 			break
 		}
 	}
-	return f64.From[fxp.DP](value)
+	return fxp.From(value)
 }
 
 // FillWithNameableKeys adds any nameable keys found in this Weapon to the provided map.

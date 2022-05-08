@@ -27,11 +27,11 @@ func (enum Difficulty) BaseRelativeLevel() fxp.Int {
 	case Easy:
 		return 0
 	case Average:
-		return fxp.NegOne
+		return -fxp.One
 	case Hard:
-		return fxp.NegTwo
+		return -fxp.Two
 	case VeryHard, Wildcard:
-		return fxp.NegThree
+		return -fxp.Three
 	default:
 		return Easy.BaseRelativeLevel()
 	}

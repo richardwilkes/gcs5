@@ -43,7 +43,7 @@ func (enum ModifierWeightValueType) Format(fraction fxp.Fraction) string {
 
 // ExtractFraction from the string.
 func (enum ModifierWeightValueType) ExtractFraction(s string) fxp.Fraction {
-	fraction := fxp.NewFractionFromString(s)
+	fraction := fxp.NewFraction(s)
 	revised := enum.EnsureValid()
 	switch revised {
 	case WeightPercentageMultiplier:

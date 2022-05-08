@@ -11,76 +11,12 @@
 
 package fxp
 
-import (
-	"strings"
+import "github.com/richardwilkes/toolbox/xmath/fixed/f64"
 
-	"github.com/richardwilkes/json"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
-)
+// Fraction is an alias for the fixed-point fractional type we are using.
+type Fraction = f64.Fraction[DP]
 
-// Fraction holds a fraction value.
-type Fraction struct {
-	Numerator   Int
-	Denominator Int
-}
-
-// NewFractionFromString creates a new fractional value from a string.
-func NewFractionFromString(s string) Fraction {
-	parts := strings.SplitN(s, "/", 2)
-	f := Fraction{
-		Numerator:   f64.FromStringForced[DP](strings.TrimSpace(parts[0])),
-		Denominator: One,
-	}
-	if len(parts) > 1 {
-		f.Denominator = f64.FromStringForced[DP](strings.TrimSpace(parts[1]))
-	}
-	return f
-}
-
-// Normalize the fraction, eliminating any division by zero.
-func (f *Fraction) Normalize() {
-	if f.Denominator == 0 {
-		f.Numerator = 0
-		f.Denominator = One
-	} else if f.Denominator < 0 {
-		f.Numerator = f.Numerator.Mul(NegOne)
-		f.Denominator = f.Denominator.Mul(NegOne)
-	}
-}
-
-// Value returns the computed value.
-func (f Fraction) Value() Int {
-	return f.Numerator.Div(f.Denominator)
-}
-
-// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive
-func (f Fraction) StringWithSign() string {
-	s := f.Numerator.StringWithSign()
-	if f.Denominator == One {
-		return s
-	}
-	return s + "/" + f.Denominator.String()
-}
-
-func (f Fraction) String() string {
-	s := f.Numerator.String()
-	if f.Denominator == One {
-		return s
-	}
-	return s + "/" + f.Denominator.String()
-}
-
-// MarshalJSON implements json.Marshaler.
-func (f Fraction) MarshalJSON() ([]byte, error) {
-	return json.Marshal(f.String())
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (f *Fraction) UnmarshalJSON(in []byte) error {
-	var s string
-	if err := json.Unmarshal(in, &s); err != nil {
-		return err
-	}
-	*f = NewFractionFromString(s)
-	return nil
+// NewFraction creates a new fractional value from a string.
+func NewFraction(str string) Fraction {
+	return f64.NewFraction[DP](str)
 }

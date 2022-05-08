@@ -19,7 +19,6 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 	"github.com/richardwilkes/unison"
 )
 
@@ -70,7 +69,7 @@ func (f *NumericField) trimmed(text string) string {
 }
 
 func (f *NumericField) validate() bool {
-	v, err := f64.FromString[fxp.DP](f.trimmed(f.Text()))
+	v, err := fxp.FromString(f.trimmed(f.Text()))
 	if err != nil {
 		f.Tooltip = unison.NewTooltipWithText(i18n.Text("Invalid number"))
 		return false
@@ -109,7 +108,7 @@ func (f *NumericField) modified() {
 			})
 		}
 	}
-	if v, err := f64.FromString[fxp.DP](f.trimmed(text)); err == nil &&
+	if v, err := fxp.FromString(f.trimmed(text)); err == nil &&
 		(f.minimum == fxp.Min || v >= f.minimum) &&
 		(f.maximum == fxp.Max || v <= f.maximum) && f.get() != v {
 		f.set(v)
@@ -146,7 +145,7 @@ func (f *NumericField) runeTyped(ch rune) bool {
 			return false
 		}
 		if text := f.trimmed(string(f.RunesIfPasted([]rune{ch}))); text != "-" {
-			if _, err := f64.FromString[fxp.DP](text); err != nil {
+			if _, err := fxp.FromString(text); err != nil {
 				unison.Beep()
 				return false
 			}

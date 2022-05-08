@@ -17,7 +17,6 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 // Adjustment returns the adjustment amount.
@@ -64,6 +63,6 @@ func (enum SelfControlRollAdj) Features(cr advantage.SelfControlRoll) feature.Fe
 	}
 	f := feature.NewSkillBonus()
 	f.NameCriteria.Qualifier = "Merchant"
-	f.Amount = f64.From[fxp.DP](cr.Index() - len(advantage.AllSelfControlRolls))
+	f.Amount = fxp.From(cr.Index() - len(advantage.AllSelfControlRolls))
 	return feature.Features{f}
 }

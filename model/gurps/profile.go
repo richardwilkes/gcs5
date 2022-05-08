@@ -21,7 +21,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 	"github.com/richardwilkes/unison"
 )
 
@@ -75,14 +74,14 @@ func (p *Profile) Portrait() *unison.Image {
 
 // AdjustedSizeModifier returns the adjusted size modifier.
 func (p *Profile) AdjustedSizeModifier() int {
-	return p.SizeModifier + f64.As[fxp.DP, int](p.SizeModifierBonus)
+	return p.SizeModifier + fxp.As[int](p.SizeModifierBonus)
 }
 
 // SetAdjustedSizeModifier sets the adjusted size modifier.
 func (p *Profile) SetAdjustedSizeModifier(value int) {
 	if value != p.AdjustedSizeModifier() {
 		// TODO: Need undo logic
-		p.SizeModifier = value - f64.As[fxp.DP, int](p.SizeModifierBonus)
+		p.SizeModifier = value - fxp.As[int](p.SizeModifierBonus)
 	}
 }
 

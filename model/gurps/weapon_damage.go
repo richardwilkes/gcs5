@@ -25,7 +25,6 @@ import (
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 // WeaponDamageData holds the WeaponDamage data that is written to disk.
@@ -181,16 +180,16 @@ func (w *WeaponDamage) ResolvedDamage(tooltip *xio.ByteBuffer) string {
 	}
 	adq, adqOK := w.Owner.Owner.(*Advantage)
 	if adqOK && adq.IsLeveled() {
-		multiplyDice(f64.As[fxp.DP, int](adq.Levels), base)
+		multiplyDice(fxp.As[int](adq.Levels), base)
 	}
-	intST := f64.As[fxp.DP, int](st)
+	intST := fxp.As[int](st)
 	switch w.StrengthType {
 	case weapon.Thrust:
 		base = addDice(base, pc.ThrustFor(intST))
 	case weapon.LeveledThrust:
 		thrust := pc.ThrustFor(intST)
 		if adqOK && adq.IsLeveled() {
-			multiplyDice(f64.As[fxp.DP, int](adq.Levels), thrust)
+			multiplyDice(fxp.As[int](adq.Levels), thrust)
 		}
 		base = addDice(base, thrust)
 	case weapon.Swing:
@@ -198,7 +197,7 @@ func (w *WeaponDamage) ResolvedDamage(tooltip *xio.ByteBuffer) string {
 	case weapon.LeveledSwing:
 		thrust := pc.SwingFor(intST)
 		if adqOK && adq.IsLeveled() {
-			multiplyDice(f64.As[fxp.DP, int](adq.Levels), thrust)
+			multiplyDice(fxp.As[int](adq.Levels), thrust)
 		}
 		base = addDice(base, thrust)
 	}
@@ -254,20 +253,20 @@ func (w *WeaponDamage) ResolvedDamage(tooltip *xio.ByteBuffer) string {
 		} else {
 			amt := bonus.Amount
 			if bonus.PerLevel {
-				amt = amt.Mul(f64.From[fxp.DP](base.Count))
+				amt = amt.Mul(fxp.From(base.Count))
 				if adjustForPhoenixFlame {
 					amt = amt.Div(fxp.Two)
 				}
 			}
-			base.Modifier += f64.As[fxp.DP, int](amt)
+			base.Modifier += fxp.As[int](amt)
 		}
 	}
 	if w.ModifierPerDie != 0 {
-		amt := w.ModifierPerDie.Mul(f64.From[fxp.DP](base.Count))
+		amt := w.ModifierPerDie.Mul(fxp.From(base.Count))
 		if adjustForPhoenixFlame {
 			amt = amt.Div(fxp.Two)
 		}
-		base.Modifier += f64.As[fxp.DP, int](amt)
+		base.Modifier += fxp.As[int](amt)
 	}
 	if percent != 0 {
 		base = adjustDiceForPercentBonus(base, percent)
@@ -310,7 +309,7 @@ func (w *WeaponDamage) ResolvedDamage(tooltip *xio.ByteBuffer) string {
 func (w *WeaponDamage) extractWeaponDamageBonus(f feature.Feature, set map[*feature.WeaponDamageBonus]bool, dieCount int, tooltip *xio.ByteBuffer) {
 	if bonus, ok := f.(*feature.WeaponDamageBonus); ok {
 		level := bonus.LeveledAmount.Level
-		bonus.LeveledAmount.Level = f64.From[fxp.DP](dieCount)
+		bonus.LeveledAmount.Level = fxp.From(dieCount)
 		switch bonus.SelectionType {
 		case weapon.WithRequiredSkill:
 		case weapon.ThisWeapon:
@@ -346,14 +345,14 @@ func multiplyDice(multiplier int, d *dice.Dice) {
 func addDice(left, right *dice.Dice) *dice.Dice {
 	if left.Sides > 1 && right.Sides > 1 && left.Sides != right.Sides {
 		sides := xmath.Min(left.Sides, right.Sides)
-		average := f64.From[fxp.DP](sides + 1).Div(fxp.Two)
-		averageLeft := f64.From[fxp.DP](left.Count * (left.Sides + 1)).Div(fxp.Two).Mul(f64.From[fxp.DP](left.Multiplier))
-		averageRight := f64.From[fxp.DP](right.Count * (right.Sides + 1)).Div(fxp.Two).Mul(f64.From[fxp.DP](right.Multiplier))
+		average := fxp.From(sides + 1).Div(fxp.Two)
+		averageLeft := fxp.From(left.Count * (left.Sides + 1)).Div(fxp.Two).Mul(fxp.From(left.Multiplier))
+		averageRight := fxp.From(right.Count * (right.Sides + 1)).Div(fxp.Two).Mul(fxp.From(right.Multiplier))
 		averageBoth := averageLeft + averageRight
 		return &dice.Dice{
-			Count:      f64.As[fxp.DP, int](averageBoth.Div(average)),
+			Count:      fxp.As[int](averageBoth.Div(average)),
 			Sides:      sides,
-			Modifier:   f64.As[fxp.DP, int](averageBoth.Mod(average).Round()) + left.Modifier + right.Modifier,
+			Modifier:   fxp.As[int](averageBoth.Mod(average).Round()) + left.Modifier + right.Modifier,
 			Multiplier: 1,
 		}
 	}
@@ -366,9 +365,9 @@ func addDice(left, right *dice.Dice) *dice.Dice {
 }
 
 func adjustDiceForPercentBonus(d *dice.Dice, percent fxp.Int) *dice.Dice {
-	count := f64.From[fxp.DP](d.Count)
-	modifier := f64.From[fxp.DP](d.Modifier)
-	averagePerDie := f64.From[fxp.DP](d.Sides + 1).Div(fxp.Two)
+	count := fxp.From(d.Count)
+	modifier := fxp.From(d.Modifier)
+	averagePerDie := fxp.From(d.Sides + 1).Div(fxp.Two)
 	average := averagePerDie.Mul(count) + modifier
 	modifier = modifier.Mul(fxp.Hundred + percent).Div(fxp.Hundred)
 	if average < 0 {
@@ -379,9 +378,9 @@ func adjustDiceForPercentBonus(d *dice.Dice, percent fxp.Int) *dice.Dice {
 		modifier += (average - count.Mul(averagePerDie)).Round()
 	}
 	return &dice.Dice{
-		Count:      f64.As[fxp.DP, int](count),
+		Count:      fxp.As[int](count),
 		Sides:      d.Sides,
-		Modifier:   f64.As[fxp.DP, int](modifier),
+		Modifier:   fxp.As[int](modifier),
 		Multiplier: d.Multiplier,
 	}
 }

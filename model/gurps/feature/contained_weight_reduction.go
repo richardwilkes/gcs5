@@ -16,7 +16,6 @@ import (
 
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 var _ Feature = &ContainedWeightReduction{}
@@ -65,7 +64,7 @@ func (c *ContainedWeightReduction) PercentageReduction() fxp.Int {
 	if !c.IsPercentageReduction() {
 		return 0
 	}
-	return f64.FromStringForced[fxp.DP](c.Reduction[:len(c.Reduction)-1])
+	return fxp.FromStringForced(c.Reduction[:len(c.Reduction)-1])
 }
 
 // FixedReduction returns the fixed amount the weight should be reduced by. Will return 0 if this is a percentage.

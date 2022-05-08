@@ -19,7 +19,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 var skillBasedDefaultTypes = map[string]bool{
@@ -156,7 +155,7 @@ func (s *SkillDefault) SkillLevelFast(entity *Entity, requirePoints bool, exclud
 		if ruleOf20 && level > 20 {
 			level = 20
 		}
-		return s.finalLevel(f64.From[fxp.DP](level))
+		return s.finalLevel(fxp.From(level))
 	case gid.Parry:
 		best := s.bestFast(entity, requirePoints, excludes)
 		if best != fxp.Min {

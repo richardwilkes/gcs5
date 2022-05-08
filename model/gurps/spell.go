@@ -28,7 +28,6 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 	"github.com/richardwilkes/unison"
 	"golang.org/x/exp/slices"
 )
@@ -484,7 +483,7 @@ func determineRitualMagicSkillLevelForCollege(entity *Entity, name, college, rit
 		DefaultType:    gid.Skill,
 		Name:           ritualSkillName,
 		Specialization: college,
-		Modifier:       f64.From[fxp.DP](-ritualPrereqCount),
+		Modifier:       fxp.From(-ritualPrereqCount),
 	}
 	if college == "" {
 		def.Name = ""
@@ -583,7 +582,7 @@ func (s *Spell) Rituals() string {
 		}
 		return ritual + i18n.Text("; Cost: -1")
 	default:
-		adj := f64.As[fxp.DP, int]((level - fxp.Fifteen).Div(fxp.Five))
+		adj := fxp.As[int]((level - fxp.Fifteen).Div(fxp.Five))
 		class := strings.ToLower(s.Class)
 		time := ""
 		if !strings.Contains(class, "missile") {

@@ -18,7 +18,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
 	"github.com/richardwilkes/gcs/model/gurps/spell"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 )
 
 var _ Prereq = &SpellPrereq{}
@@ -120,7 +119,7 @@ func (s *SpellPrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xi
 	if s.SubType == spell.CollegeCount {
 		count = len(colleges)
 	}
-	satisfied := s.QuantityCriteria.Matches(f64.From[fxp.DP](count))
+	satisfied := s.QuantityCriteria.Matches(fxp.From(count))
 	if !s.Has {
 		satisfied = !satisfied
 	}
