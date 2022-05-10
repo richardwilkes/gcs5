@@ -12,6 +12,8 @@
 package criteria
 
 import (
+	"strings"
+
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/toolbox/i18n"
 )
@@ -90,4 +92,23 @@ func (n NumericCompareType) Matches(qualifier, data fxp.Int) bool {
 	default:
 		return AnyNumber.Matches(qualifier, data)
 	}
+}
+
+// ExtractNumericCompareTypeIndex extracts the index from a string.
+func ExtractNumericCompareTypeIndex(str string) int {
+	for i, one := range AllNumericCompareTypes {
+		if strings.EqualFold(string(one), str) {
+			return i
+		}
+	}
+	return 0
+}
+
+// PrefixedNumericCompareTypeChoices returns the set of NumericCompareType choices as strings with a prefix.
+func PrefixedNumericCompareTypeChoices(prefix string) []string {
+	choices := make([]string, len(AllNumericCompareTypes))
+	for i, choice := range AllNumericCompareTypes {
+		choices[i] = prefix + " " + choice.String()
+	}
+	return choices
 }

@@ -24,30 +24,29 @@ var _ Prereq = &PrereqList{}
 
 // PrereqList holds a prereq that contains a list of prerequisites.
 type PrereqList struct {
-	Parent         *PrereqList      `json:"-"`
-	Type           prereq.Type      `json:"type"`
-	All            bool             `json:"all"`
-	WhenEnabled    bool             `json:"-"`
-	WhenTLCriteria criteria.Numeric `json:"when_tl,omitempty"`
-	Prereqs        Prereqs          `json:"prereqs,omitempty"`
+	Parent  *PrereqList      `json:"-"`
+	Type    prereq.Type      `json:"type"`
+	All     bool             `json:"all"`
+	WhenTL  criteria.Numeric `json:"when_tl,omitempty"`
+	Prereqs Prereqs          `json:"prereqs,omitempty"`
 }
 
 // NewPrereqList creates a new PrereqList.
 func NewPrereqList() *PrereqList {
 	return &PrereqList{
 		Type: prereq.List,
-		WhenTLCriteria: criteria.Numeric{
-			NumericData: criteria.NumericData{
-				Compare: criteria.AtLeast,
-			},
-		},
-		All: true,
+		All:  true,
 	}
 }
 
 // ShouldOmit implements json.Omitter.
 func (p *PrereqList) ShouldOmit() bool {
-	return p == nil || (p.All && p.WhenTLCriteria.Compare == criteria.AtLeast && p.WhenTLCriteria.Qualifier == 0 && len(p.Prereqs) == 0)
+	return p == nil || (p.All && p.WhenTL.Compare == criteria.AtLeast && p.WhenTL.Qualifier == 0 && len(p.Prereqs) == 0)
+}
+
+// ParentList implements Prereq.
+func (p *PrereqList) ParentList() *PrereqList {
+	return p.Parent
 }
 
 // Clone implements Prereq.
@@ -66,6 +65,22 @@ func (p *PrereqList) CloneAsPrereqList(parent *PrereqList) *PrereqList {
 	return &clone
 }
 
+// CloneResolvingEmpty clones this prereq list. If the result would be nil and it isn't a container, a new, empty, list
+// is created. If the result would not be nil but pruneIfEmpty is true and calling ShouldOmit() on it would return true,
+// then nil is returned.
+func (p *PrereqList) CloneResolvingEmpty(isContainer, pruneIfEmpty bool) *PrereqList {
+	if p != nil {
+		if pruneIfEmpty && p.ShouldOmit() {
+			return nil
+		}
+		return p.CloneAsPrereqList(nil)
+	}
+	if isContainer {
+		return nil
+	}
+	return NewPrereqList()
+}
+
 // FillWithNameableKeys implements Prereq.
 func (p *PrereqList) FillWithNameableKeys(m map[string]string) {
 	for _, one := range p.Prereqs {
@@ -82,12 +97,12 @@ func (p *PrereqList) ApplyNameableKeys(m map[string]string) {
 
 // Satisfied implements Prereq.
 func (p *PrereqList) Satisfied(entity *Entity, exclude interface{}, buffer *xio.ByteBuffer, prefix string) bool {
-	if p.WhenEnabled {
+	if p.WhenTL.Compare != criteria.AnyNumber {
 		tl, _, _ := ExtractTechLevel(entity.Profile.TechLevel)
 		if tl < 0 {
 			tl = 0
 		}
-		if !p.WhenTLCriteria.Compare.Matches(p.WhenTLCriteria.Qualifier, tl) {
+		if !p.WhenTL.Compare.Matches(p.WhenTL.Qualifier, tl) {
 			return true
 		}
 	}

@@ -46,15 +46,15 @@ type AdvantageEditData struct {
 
 // CopyFrom implements node.EditorData.
 func (d *AdvantageEditData) CopyFrom(adv *Advantage) {
-	d.copyFrom(&adv.AdvantageEditData)
+	d.copyFrom(&adv.AdvantageEditData, adv.Container(), false)
 }
 
 // ApplyTo implements node.EditorData.
 func (d *AdvantageEditData) ApplyTo(adv *Advantage) {
-	adv.AdvantageEditData.copyFrom(d)
+	adv.AdvantageEditData.copyFrom(d, adv.Container(), true)
 }
 
-func (d *AdvantageEditData) copyFrom(other *AdvantageEditData) {
+func (d *AdvantageEditData) copyFrom(other *AdvantageEditData, isContainer, isApply bool) {
 	*d = *other
 	d.Tags = txt.CloneStringSlice(d.Tags)
 	d.Modifiers = nil
@@ -64,9 +64,7 @@ func (d *AdvantageEditData) copyFrom(other *AdvantageEditData) {
 			d.Modifiers = append(d.Modifiers, one.Clone())
 		}
 	}
-	if d.Prereq != nil {
-		d.Prereq = d.Prereq.CloneAsPrereqList(nil)
-	}
+	d.Prereq = d.Prereq.CloneResolvingEmpty(isContainer, isApply)
 	d.Weapons = nil
 	if len(other.Weapons) != 0 {
 		d.Weapons = make([]*Weapon, 0, len(other.Weapons))

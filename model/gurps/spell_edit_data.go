@@ -45,15 +45,15 @@ type SpellEditData struct {
 
 // CopyFrom implements node.EditorData.
 func (d *SpellEditData) CopyFrom(s *Spell) {
-	d.copyFrom(&s.SpellEditData)
+	d.copyFrom(&s.SpellEditData, s.Container(), false)
 }
 
 // ApplyTo implements node.EditorData.
 func (d *SpellEditData) ApplyTo(s *Spell) {
-	s.SpellEditData.copyFrom(d)
+	s.SpellEditData.copyFrom(d, s.Container(), true)
 }
 
-func (d *SpellEditData) copyFrom(other *SpellEditData) {
+func (d *SpellEditData) copyFrom(other *SpellEditData, isContainer, isApply bool) {
 	*d = *other
 	d.Tags = txt.CloneStringSlice(d.Tags)
 	if other.TechLevel != nil {
@@ -61,9 +61,7 @@ func (d *SpellEditData) copyFrom(other *SpellEditData) {
 		d.TechLevel = &tl
 	}
 	d.College = txt.CloneStringSlice(d.College)
-	if d.Prereq != nil {
-		d.Prereq = d.Prereq.CloneAsPrereqList(nil)
-	}
+	d.Prereq = d.Prereq.CloneResolvingEmpty(isContainer, isApply)
 	d.Weapons = nil
 	if len(other.Weapons) != 0 {
 		d.Weapons = make([]*Weapon, 0, len(other.Weapons))

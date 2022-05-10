@@ -47,7 +47,7 @@ func NewBodyPanel(entity *gurps.Entity) *BodyPanel {
 	})
 	locations := gurps.SheetSettingsFor(entity).HitLocations
 	p.crc = locations.CRC64()
-	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: locations.Name}, unison.NewEmptyBorder(unison.Insets{
+	p.SetBorder(unison.NewCompoundBorder(&widget.TitledBorder{Title: locations.Name}, unison.NewEmptyBorder(unison.Insets{
 		Left:   2,
 		Bottom: 1,
 		Right:  2,

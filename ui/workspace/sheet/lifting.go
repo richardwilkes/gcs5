@@ -38,7 +38,7 @@ func NewLiftingPanel(entity *gurps.Entity) *LiftingPanel {
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
-	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Lifting & Moving Things")}, unison.NewEmptyBorder(unison.Insets{
+	p.SetBorder(unison.NewCompoundBorder(&widget.TitledBorder{Title: i18n.Text("Lifting & Moving Things")}, unison.NewEmptyBorder(unison.Insets{
 		Top:    1,
 		Left:   2,
 		Bottom: 1,

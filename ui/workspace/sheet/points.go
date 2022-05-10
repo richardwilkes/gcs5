@@ -25,7 +25,7 @@ import (
 type PointsPanel struct {
 	unison.Panel
 	entity       *gurps.Entity
-	pointsBorder *TitledBorder
+	pointsBorder *widget.TitledBorder
 	unspent      *widget.NumericField
 }
 
@@ -42,7 +42,7 @@ func NewPointsPanel(entity *gurps.Entity) *PointsPanel {
 		VAlign: unison.FillAlignment,
 		VSpan:  2,
 	})
-	p.pointsBorder = &TitledBorder{Title: fmt.Sprintf(i18n.Text("%s Points"), p.entity.TotalPoints.String())}
+	p.pointsBorder = &widget.TitledBorder{Title: fmt.Sprintf(i18n.Text("%s Points"), p.entity.TotalPoints.String())}
 	p.SetBorder(unison.NewCompoundBorder(p.pointsBorder, unison.NewEmptyBorder(unison.Insets{
 		Top:    1,
 		Left:   2,

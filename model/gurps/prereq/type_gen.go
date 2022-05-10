@@ -48,31 +48,31 @@ var (
 	}{
 		{
 			key:    "prereq_list",
-			string: i18n.Text("Prerequisite List"),
+			string: i18n.Text("a list"),
 		},
 		{
 			key:    "advantage_prereq",
-			string: i18n.Text("Advantage Prerequisite"),
+			string: i18n.Text("an advantage"),
 		},
 		{
 			key:    "attribute_prereq",
-			string: i18n.Text("Attribute Prerequisite"),
+			string: i18n.Text("the attribute"),
 		},
 		{
 			key:    "contained_quantity_prereq",
-			string: i18n.Text("Contained Quantity Prerequisite"),
+			string: i18n.Text("a contained quantity of"),
 		},
 		{
 			key:    "contained_weight_prereq",
-			string: i18n.Text("Contained Weight Prerequisite"),
+			string: i18n.Text("a contained weight"),
 		},
 		{
 			key:    "skill_prereq",
-			string: i18n.Text("Skill Prerequisite"),
+			string: i18n.Text("a skill"),
 		},
 		{
 			key:    "spell_prereq",
-			string: i18n.Text("Spell Prerequisite"),
+			string: i18n.Text("spell(s)"),
 		},
 	}
 )

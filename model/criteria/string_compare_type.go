@@ -116,3 +116,22 @@ func (s StringCompareType) Matches(qualifier, data string) bool {
 		return Any.Matches(qualifier, data)
 	}
 }
+
+// ExtractStringCompareTypeIndex extracts the index from a string.
+func ExtractStringCompareTypeIndex(str string) int {
+	for i, one := range AllStringCompareTypes {
+		if strings.EqualFold(string(one), str) {
+			return i
+		}
+	}
+	return 0
+}
+
+// PrefixedStringCompareTypeChoices returns the set of StringCompareType choices as strings with a prefix.
+func PrefixedStringCompareTypeChoices(prefix string) []string {
+	choices := make([]string, len(AllStringCompareTypes))
+	for i, choice := range AllStringCompareTypes {
+		choices[i] = prefix + " " + choice.String()
+	}
+	return choices
+}

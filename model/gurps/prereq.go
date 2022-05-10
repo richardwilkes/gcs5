@@ -20,6 +20,8 @@ import (
 // Prereq holds data necessary to track a prerequisite.
 type Prereq interface {
 	nameables.Nameables
+	// ParentList returns the owning parent list, if any.
+	ParentList() *PrereqList
 	// Clone creates a new copy of this Prereq.
 	Clone(parent *PrereqList) Prereq
 	// Satisfied returns true if this Prereq is satisfied by the specified Entity. 'buffer' will be used, if not nil, to

@@ -59,18 +59,18 @@ linters-settings:
 linters:
   disable-all: true
   enable:
+    # Re-enable the commented-out ones once they work correctly with Go 1.18+
     - deadcode
     - depguard
     - errcheck
     - errorlint
     - exportloopref
     - goconst
-# Re-enable once golangci-lint works correctly with Go 1.18+
 #    - gocritic
     - gofumpt
     - goimports
     - gosec
-    - gosimple
+#    - gosimple
     - govet
     - ifshort
     - ineffassign
@@ -79,10 +79,10 @@ linters:
     - prealloc
     - predeclared
     - revive
-    - staticcheck
+#    - staticcheck
     - structcheck
     - unconvert
-    - unused
+#    - unused
     - varcheck
     - wastedassign
 issues:

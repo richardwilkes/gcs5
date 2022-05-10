@@ -516,37 +516,37 @@ func main() {
 			{
 				Name:   "List",
 				Key:    "prereq_list",
-				String: "Prerequisite List",
+				String: "a list",
 			},
 			{
 				Name:   "Advantage",
 				Key:    "advantage_prereq",
-				String: "Advantage Prerequisite",
+				String: "an advantage",
 			},
 			{
 				Name:   "Attribute",
 				Key:    "attribute_prereq",
-				String: "Attribute Prerequisite",
+				String: "the attribute",
 			},
 			{
 				Name:   "ContainedQuantity",
 				Key:    "contained_quantity_prereq",
-				String: "Contained Quantity Prerequisite",
+				String: "a contained quantity of",
 			},
 			{
 				Name:   "ContainedWeight",
 				Key:    "contained_weight_prereq",
-				String: "Contained Weight Prerequisite",
+				String: "a contained weight",
 			},
 			{
 				Name:   "Skill",
 				Key:    "skill_prereq",
-				String: "Skill Prerequisite",
+				String: "a skill",
 			},
 			{
 				Name:   "Spell",
 				Key:    "spell_prereq",
-				String: "Spell Prerequisite",
+				String: "spell(s)",
 			},
 		},
 	})

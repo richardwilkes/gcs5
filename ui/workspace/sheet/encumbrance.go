@@ -44,7 +44,7 @@ func NewEncumbrancePanel(entity *gurps.Entity) *EncumbrancePanel {
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
-	p.SetBorder(&TitledBorder{Title: i18n.Text("Encumbrance, Move & Dodge")})
+	p.SetBorder(&widget.TitledBorder{Title: i18n.Text("Encumbrance, Move & Dodge")})
 	p.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) {
 		r := p.Children()[0].FrameRect()
 		r.X = rect.X

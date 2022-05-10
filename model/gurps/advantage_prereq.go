@@ -54,6 +54,11 @@ func NewAdvantagePrereq() *AdvantagePrereq {
 	}
 }
 
+// ParentList implements Prereq.
+func (a *AdvantagePrereq) ParentList() *PrereqList {
+	return a.Parent
+}
+
 // Clone implements Prereq.
 func (a *AdvantagePrereq) Clone(parent *PrereqList) Prereq {
 	clone := *a

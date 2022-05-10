@@ -37,7 +37,7 @@ func NewMiscPanel(entity *gurps.Entity) *MiscPanel {
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
 	})
-	m.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Miscellaneous")}, unison.NewEmptyBorder(unison.Insets{
+	m.SetBorder(unison.NewCompoundBorder(&widget.TitledBorder{Title: i18n.Text("Miscellaneous")}, unison.NewEmptyBorder(unison.Insets{
 		Top:    1,
 		Left:   2,
 		Bottom: 1,

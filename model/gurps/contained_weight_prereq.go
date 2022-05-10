@@ -43,6 +43,11 @@ func NewContainedWeightPrereq(entity *Entity) *ContainedWeightPrereq {
 	}
 }
 
+// ParentList implements Prereq.
+func (c *ContainedWeightPrereq) ParentList() *PrereqList {
+	return c.Parent
+}
+
 // Clone implements Prereq.
 func (c *ContainedWeightPrereq) Clone(parent *PrereqList) Prereq {
 	clone := *c

@@ -37,7 +37,7 @@ func NewDamagePanel(entity *gurps.Entity) *DamagePanel {
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
 	})
-	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Basic Damage")}, unison.NewEmptyBorder(unison.Insets{
+	p.SetBorder(unison.NewCompoundBorder(&widget.TitledBorder{Title: i18n.Text("Basic Damage")}, unison.NewEmptyBorder(unison.Insets{
 		Top:    1,
 		Left:   2,
 		Bottom: 1,

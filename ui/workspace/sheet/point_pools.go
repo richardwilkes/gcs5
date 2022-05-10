@@ -44,7 +44,7 @@ func NewPointPoolsPanel(entity *gurps.Entity) *PointPoolsPanel {
 		VAlign: unison.FillAlignment,
 		HSpan:  2,
 	})
-	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Point Pools")}, unison.NewEmptyBorder(unison.Insets{
+	p.SetBorder(unison.NewCompoundBorder(&widget.TitledBorder{Title: i18n.Text("Point Pools")}, unison.NewEmptyBorder(unison.Insets{
 		Top:    1,
 		Left:   2,
 		Bottom: 1,

@@ -44,7 +44,7 @@ func NewSecondaryAttrPanel(entity *gurps.Entity) *SecondaryAttrPanel {
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
 	})
-	p.SetBorder(unison.NewCompoundBorder(&TitledBorder{Title: i18n.Text("Secondary Attributes")},
+	p.SetBorder(unison.NewCompoundBorder(&widget.TitledBorder{Title: i18n.Text("Secondary Attributes")},
 		unison.NewEmptyBorder(unison.Insets{
 			Top:    1,
 			Left:   2,

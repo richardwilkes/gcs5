@@ -47,6 +47,11 @@ func NewAttributePrereq(entity *Entity) *AttributePrereq {
 	}
 }
 
+// ParentList implements Prereq.
+func (a *AttributePrereq) ParentList() *PrereqList {
+	return a.Parent
+}
+
 // Clone implements Prereq.
 func (a *AttributePrereq) Clone(parent *PrereqList) Prereq {
 	clone := *a

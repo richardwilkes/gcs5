@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package sheet
+package widget
 
 import (
 	"github.com/richardwilkes/gcs/model/theme"
@@ -21,12 +21,20 @@ var _ unison.Border = &TitledBorder{}
 // TitledBorder provides a titled line border.
 type TitledBorder struct {
 	Title string
+	Font  unison.Font
+}
+
+func (t *TitledBorder) font() unison.Font {
+	if t.Font == nil {
+		return theme.PageLabelPrimaryFont
+	}
+	return t.Font
 }
 
 // Insets implements unison.Border
 func (t *TitledBorder) Insets() unison.Insets {
 	return unison.Insets{
-		Top:    theme.PageLabelPrimaryFont.LineHeight() + 2,
+		Top:    t.font().LineHeight() + 2,
 		Left:   1,
 		Bottom: 1,
 		Right:  1,
@@ -43,7 +51,7 @@ func (t *TitledBorder) Draw(gc *unison.Canvas, rect unison.Rect) {
 	path.Rect(clip)
 	gc.DrawPath(path, theme.HeaderColor.Paint(gc, rect, unison.Fill))
 	text := unison.NewText(t.Title, &unison.TextDecoration{
-		Font:  theme.PageLabelPrimaryFont,
+		Font:  t.font(),
 		Paint: theme.OnHeaderColor.Paint(gc, rect, unison.Fill),
 	})
 	text.Draw(gc, rect.X+(rect.Width-text.Width())/2, rect.Y+1+text.Baseline())

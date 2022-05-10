@@ -91,5 +91,8 @@ func initSpellEditor(e *editor[*gurps.Spell, *gurps.SpellEditData], content *uni
 	addVTTNotesLabelAndField(content, &e.editorData.VTTNotes)
 	addTagsLabelAndField(content, &e.editorData.Tags)
 	addPageRefLabelAndField(content, &e.editorData.PageRef)
+	if !e.target.Container() {
+		content.AddChild(newPrereqPanel(&e.editorData.Prereq))
+	}
 	return nil
 }

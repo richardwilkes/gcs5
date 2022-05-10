@@ -15,6 +15,7 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -34,7 +35,7 @@ func NewPortraitPanel(entity *gurps.Entity) *PortraitPanel {
 		VAlign: unison.StartAlignment,
 		VSpan:  2,
 	})
-	p.SetBorder(&TitledBorder{Title: i18n.Text("Portrait")})
+	p.SetBorder(&widget.TitledBorder{Title: i18n.Text("Portrait")})
 	p.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text(`Double-click to set a character portrait, or drag an image onto this block.
 
 The dimensions of the chosen picture should be in a ratio of 3 pixels wide

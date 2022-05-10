@@ -52,6 +52,11 @@ func NewSpellPrereq() *SpellPrereq {
 	}
 }
 
+// ParentList implements Prereq.
+func (s *SpellPrereq) ParentList() *PrereqList {
+	return s.Parent
+}
+
 // Clone implements Prereq.
 func (s *SpellPrereq) Clone(parent *PrereqList) Prereq {
 	clone := *s
