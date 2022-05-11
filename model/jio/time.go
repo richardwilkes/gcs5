@@ -26,6 +26,11 @@ func Now() Time {
 	return Time(time.Now())
 }
 
+// After reports whether this time is after the other time.
+func (e Time) After(other Time) bool {
+	return time.Time(e).After(time.Time(other))
+}
+
 func (e Time) String() string {
 	return time.Time(e).In(time.Local).Format("Jan _2, 2006, 3:04 PM")
 }

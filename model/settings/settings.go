@@ -17,7 +17,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
@@ -40,7 +39,7 @@ var global *Settings
 // WindowPosition holds a window's last known frame and when the frame's size or position was last altered.
 type WindowPosition struct {
 	Frame       unison.Rect `json:"frame"`
-	LastUpdated time.Time   `json:"last_updated"`
+	LastUpdated jio.Time    `json:"last_updated"`
 }
 
 // NavigatorSettings holds settings for the navigator view.

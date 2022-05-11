@@ -13,17 +13,17 @@ package gurps
 
 import (
 	"sort"
-	"time"
 
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/json"
 )
 
 // ExportInfo holds information about a recent export so that it can be redone quickly.
 type ExportInfo struct {
-	FilePath     string    `json:"filePath"`
-	TemplatePath string    `json:"templatePath"`
-	ExportPath   string    `json:"exportPath"`
-	LastUsed     time.Time `json:"lastUsed"`
+	FilePath     string   `json:"file_path"`
+	TemplatePath string   `json:"template_path"`
+	ExportPath   string   `json:"export_path"`
+	LastUsed     jio.Time `json:"last_used"`
 }
 
 // QuickExportsData holds the QuickExports data that is written to disk.
