@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/google/uuid v1.3.0
 	github.com/richardwilkes/json v0.0.0-20220202023945-ac9125b86187
-	github.com/richardwilkes/pdf v0.0.0-20220414031719-fa3d49a402b1
+	github.com/richardwilkes/pdf v0.0.0-20220514034211-8275a65f51fc
 	github.com/richardwilkes/rpgtools v1.4.1
 	github.com/richardwilkes/toolbox v1.71.0
 	github.com/richardwilkes/unison v0.16.0
@@ -24,6 +24,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/yookoala/realpath v1.0.0 // indirect
 	golang.org/x/image v0.0.0-20220413100746-70e8d0d3baa9 // indirect
-	golang.org/x/sys v0.0.0-20220503163025-988cb79eb6c6 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	golang.org/x/sys v0.0.0-20220513210249-45d2b4557a2a // indirect
+	gopkg.in/yaml.v3 v3.0.0-20220512140231-539c8e751b99 // indirect
 )
