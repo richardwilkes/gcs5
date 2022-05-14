@@ -11,6 +11,9 @@ for arg in "$@"; do
     TEST=1
     RACE=-race
     ;;
+  --dist|-d)
+    EXTRA_BUILD_FLAGS="-a"
+    ;;
   --lint | -l) LINT=1 ;;
   --race | -r)
     TEST=1
@@ -20,6 +23,7 @@ for arg in "$@"; do
   --help | -h)
     echo "$0 [options]"
     echo "  -a, --all  Equivalent to --lint --race"
+    echo "  -d, --dist Build for distribution"
     echo "  -l, --lint Run the linters"
     echo "  -r, --race Run the tests with race-checking enabled"
     echo "  -t, --test Run the tests"
@@ -35,39 +39,37 @@ done
 
 echo -e "\033[33mBuilding...\033[0m"
 
+case $(uname -s) in
+Darwin*)
+  if [ $(uname -p) == "arm" ]; then
+    export MACOSX_DEPLOYMENT_TARGET=11
+  else
+    export MACOSX_DEPLOYMENT_TARGET=10.14
+  fi
+esac
+
 # Generate the source
 go generate ./gen/enumgen.go
 
 # Build our code
-EXE="$(go env GOPATH)/bin/gcs"
 case $(uname -s) in
 Darwin*)
-  if [ $(uname -p) == "arm" ]; then
-    DEPLOYMENT_TARGET=11
-  else
-    DEPLOYMENT_TARGET=10.14
-  fi
-  MACOSX_DEPLOYMENT_TARGET=$DEPLOYMENT_TARGET go install -v .
   /bin/rm -rf GCS.app
   CONTENTS="GCS.app/Contents"
   mkdir -p "$CONTENTS/MacOS"
   mkdir -p "$CONTENTS/Resources"
   cp bundle/*.icns "$CONTENTS/Resources/"
-  sed -e "s/SHORT_APP_VERSION/$($EXE -v | tr -d "\n")/" \
-    -e "s/LONG_APP_VERSION/$($EXE -V |tr -d "\n")/" \
-    -e "s/COPYRIGHT_YEARS/$($EXE --copyright-date | tr -d "\n")/" \
+  go build $EXTRA_BUILD_FLAGS -o "$CONTENTS/MacOS/" -v .
+  sed -e "s/SHORT_APP_VERSION/$($CONTENTS/MacOS/gcs -v | tr -d "\n")/" \
+    -e "s/LONG_APP_VERSION/$($CONTENTS/MacOS/gcs -V | tr -d "\n")/" \
+    -e "s/COPYRIGHT_YEARS/$($CONTENTS/MacOS/gcs --copyright-date | tr -d "\n")/" \
     bundle/Info.plist >"$CONTENTS/Info.plist"
-  mv "$EXE" "$CONTENTS/MacOS/"
   ;;
 Linux*)
-  go install -v .
-  /bin/rm -f gcs
-  mv "$EXE" ./gcs
+  go build $EXTRA_BUILD_FLAGS -v .
   ;;
 MINGW*)
-  go install -v -ldflags all="-H windowsgui" .
-  /bin/rm -f gcs.exe
-  mv "$EXE.exe" ./gcs.exe
+  go build $EXTRA_BUILD_FLAGS -v -ldflags all="-H windowsgui" .
   ;;
 *)
   echo "Unsupported OS"
