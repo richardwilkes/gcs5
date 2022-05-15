@@ -59,9 +59,9 @@ func (n NumericCompareType) String() string {
 	case NotEquals:
 		return i18n.Text("is not")
 	case AtLeast:
-		return i18n.Text("at least")
+		return i18n.Text("is at least")
 	case AtMost:
-		return i18n.Text("at most")
+		return i18n.Text("is at most")
 	default:
 		return AnyNumber.String()
 	}

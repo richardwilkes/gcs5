@@ -50,7 +50,7 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 				HGrab:  true,
 			})
 			current := -1
-			choices := gurps.AttributeChoices(e.target.Entity, isTechnique)
+			choices := gurps.AttributeChoices(e.target.Entity, "", isTechnique)
 			for i, one := range choices {
 				if one.Key == e.editorData.TechniqueDefault.DefaultType {
 					current = i
@@ -181,7 +181,7 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 	}
 	addPageRefLabelAndField(content, &e.editorData.PageRef)
 	if !e.target.Container() {
-		content.AddChild(newPrereqPanel(&e.editorData.Prereq))
+		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
 	}
 	return nil
 }

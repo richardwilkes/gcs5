@@ -108,7 +108,7 @@ func addTechLevelRequired(parent *unison.Panel, fieldData **string, includeField
 func addDifficultyLabelAndFields(parent *unison.Panel, entity *gurps.Entity, difficulty *gurps.AttributeDifficulty) {
 	wrapper := addFlowWrapper(parent, i18n.Text("Difficulty"), 3)
 	current := -1
-	choices := gurps.AttributeChoices(entity, false)
+	choices := gurps.AttributeChoices(entity, "", false)
 	for i, one := range choices {
 		if one.Key == difficulty.Attribute {
 			current = i
