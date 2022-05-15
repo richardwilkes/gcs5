@@ -611,20 +611,25 @@ func main() {
 		StandAlone: true,
 		Values: []enumValue{
 			{
-				Key: "name",
+				Key:    "name",
+				String: "whose name",
 			},
 			{
 				Key:     "tag",
 				OldKeys: []string{"category"},
+				String:  "with a tag which",
 			},
 			{
-				Key: "college",
+				Key:    "college",
+				String: "whose college name",
 			},
 			{
-				Key: "college_count",
+				Key:    "college_count",
+				String: "from different colleges",
 			},
 			{
-				Key: "any",
+				Key:    "any",
+				String: "of any kind",
 			},
 		},
 	})

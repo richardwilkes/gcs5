@@ -14,7 +14,6 @@ package editors
 import (
 	"reflect"
 
-	"github.com/richardwilkes/gcs/model/criteria"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
@@ -60,7 +59,7 @@ func (p *prereqPanel) createPrereqListPanel(depth int, list *gurps.PrereqList) *
 	panel := unison.NewPanel()
 	p.createButtonsPanel(panel, depth, list)
 	addNumericCriteriaPanel(panel, i18n.Text("When the Tech Level"), i18n.Text("When Tech Level"), &list.WhenTL, 0,
-		fxp.Twelve, true, 1)
+		fxp.Twelve, true, true, 1)
 	addBoolPopup(panel, i18n.Text("requires all of:"), i18n.Text("requires at least one of:"), &list.All)
 	columns := len(panel.Children())
 	panel.SetLayout(&unison.FlexLayout{
@@ -147,7 +146,7 @@ func (p *prereqPanel) createAdvantagePrereqPanel(depth int, pr *gurps.AdvantageP
 	})
 	addNameCriteriaPanel(panel, &pr.NameCriteria, columns-1)
 	addNotesCriteriaPanel(panel, &pr.NotesCriteria, columns-1)
-	addLevelCriteriaPanel(panel, &pr.LevelCriteria, columns-1)
+	addLevelCriteriaPanel(panel, &pr.LevelCriteria, columns-1, true)
 	return panel
 }
 
@@ -164,48 +163,10 @@ func (p *prereqPanel) createAttributePrereqPanel(depth int, pr *gurps.AttributeP
 	})
 	second := unison.NewPanel()
 	second.SetLayoutData(&unison.FlexLayoutData{HSpan: columns - 1})
-	choices := gurps.AttributeChoices(p.entity, "", true)
-	var current *gurps.AttributeChoice
-	for _, choice := range choices {
-		if choice.Key == pr.Which {
-			current = choice
-		}
-	}
-	popup := addPopup[*gurps.AttributeChoice](second, choices, &current)
-	popup.SelectionCallback = func(index int, _ *gurps.AttributeChoice) {
-		pr.Which = choices[index].Key
-		widget.MarkModified(second)
-	}
-	combinedWithChoices := append([]*gurps.AttributeChoice{{}},
-		gurps.AttributeChoices(p.entity, i18n.Text("combined with"), true)...)
-	var currentCombinedWith *gurps.AttributeChoice
-	for _, choice := range choices {
-		if choice.Key == pr.CombinedWith {
-			currentCombinedWith = choice
-		}
-	}
-	popup = addPopup[*gurps.AttributeChoice](second, combinedWithChoices, &currentCombinedWith)
-	popup.SelectionCallback = func(index int, _ *gurps.AttributeChoice) {
-		pr.CombinedWith = combinedWithChoices[index].Key
-		widget.MarkModified(second)
-	}
-	var field unison.Paneler
-	popupCriteria := unison.NewPopupMenu[string]()
-	for _, one := range criteria.PrefixedNumericCompareTypeChoices(i18n.Text("which")) {
-		popupCriteria.AddItem(one)
-	}
-	popupCriteria.SelectIndex(criteria.ExtractNumericCompareTypeIndex(string(pr.QualifierCriteria.Compare)))
-	popupCriteria.SelectionCallback = func(index int, _ string) {
-		pr.QualifierCriteria.Compare = criteria.AllNumericCompareTypes[index]
-		if pr.QualifierCriteria.Compare == criteria.AnyNumber {
-			disableAndBlankField(field)
-		} else {
-			enableAndUnblankField(field)
-		}
-		widget.MarkModified(second)
-	}
-	second.AddChild(popupCriteria)
-	field = addNumericField(second, i18n.Text("Attribute Criteria"), "", &pr.QualifierCriteria.Qualifier, fxp.Min, fxp.Max)
+	addAttributeChoicePopup(second, p.entity, "", &pr.Which, false)
+	addAttributeChoicePopup(second, p.entity, i18n.Text("combined with"), &pr.CombinedWith, true)
+	addNumericCriteriaPanel(second, i18n.Text("which"), i18n.Text("Attribute Qualifier"), &pr.QualifierCriteria,
+		fxp.Min, fxp.Max, false, false, 1)
 	second.SetLayout(&unison.FlexLayout{
 		Columns:  len(second.Children()),
 		HSpacing: unison.StdHSpacing,
@@ -244,23 +205,7 @@ func (p *prereqPanel) createContainedWeightPrereqPanel(depth int, pr *gurps.Cont
 	})
 	second := unison.NewPanel()
 	second.SetLayoutData(&unison.FlexLayoutData{HSpan: columns - 1})
-	var field unison.Paneler
-	popup := unison.NewPopupMenu[string]()
-	for _, one := range criteria.PrefixedNumericCompareTypeChoices(i18n.Text("which")) {
-		popup.AddItem(one)
-	}
-	popup.SelectIndex(criteria.ExtractNumericCompareTypeIndex(string(pr.WeightCriteria.Compare)))
-	popup.SelectionCallback = func(index int, _ string) {
-		pr.WeightCriteria.Compare = criteria.AllNumericCompareTypes[index]
-		if pr.WeightCriteria.Compare == criteria.AnyNumber {
-			disableAndBlankField(field)
-		} else {
-			enableAndUnblankField(field)
-		}
-		widget.MarkModified(second)
-	}
-	second.AddChild(popup)
-	field = addWeightField(second, i18n.Text("Weight Criteria"), "", p.entity, &pr.WeightCriteria.Qualifier)
+	addWeightCriteriaPanel(second, p.entity, &pr.WeightCriteria)
 	second.SetLayout(&unison.FlexLayout{
 		Columns:  len(second.Children()),
 		HSpacing: unison.StdHSpacing,
@@ -284,7 +229,7 @@ func (p *prereqPanel) createSkillPrereqPanel(depth int, pr *gurps.SkillPrereq) *
 	})
 	addNameCriteriaPanel(panel, &pr.NameCriteria, columns-1)
 	addSpecializationCriteriaPanel(panel, &pr.SpecializationCriteria, columns-1)
-	addLevelCriteriaPanel(panel, &pr.LevelCriteria, columns-1)
+	addLevelCriteriaPanel(panel, &pr.LevelCriteria, columns-1, true)
 	return panel
 }
 

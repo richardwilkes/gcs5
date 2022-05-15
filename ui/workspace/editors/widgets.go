@@ -359,6 +359,24 @@ func enableAndUnblankPopup[T comparable](popup *unison.PopupMenu[T]) {
 	popup.DrawOverCallback = nil
 }
 
+func addAttributeChoicePopup(parent *unison.Panel, entity *gurps.Entity, prefix string, fieldData *string, addBlank bool) {
+	choices := gurps.AttributeChoices(entity, prefix, true)
+	if addBlank {
+		choices = append([]*gurps.AttributeChoice{{}}, choices...)
+	}
+	var current *gurps.AttributeChoice
+	for _, choice := range choices {
+		if choice.Key == *fieldData {
+			current = choice
+		}
+	}
+	popup := addPopup[*gurps.AttributeChoice](parent, choices, &current)
+	popup.SelectionCallback = func(index int, _ *gurps.AttributeChoice) {
+		*fieldData = choices[index].Key
+		widget.MarkModified(parent)
+	}
+}
+
 func addNameCriteriaPanel(parent *unison.Panel, strCriteria *criteria.String, hSpan int) {
 	addStringCriteriaPanel(parent, i18n.Text("whose name"), i18n.Text("Name Qualifier"), strCriteria, hSpan)
 }
@@ -408,12 +426,15 @@ func addStringCriteriaPanel(parent *unison.Panel, prefix, undoTitle string, strC
 	parent.AddChild(panel)
 }
 
-func addLevelCriteriaPanel(parent *unison.Panel, numCriteria *criteria.Numeric, hSpan int) {
-	addNumericCriteriaPanel(parent, i18n.Text("and whose level"), i18n.Text("Level Qualifier"), numCriteria, 0, fxp.Thousand, false, hSpan)
+func addLevelCriteriaPanel(parent *unison.Panel, numCriteria *criteria.Numeric, hSpan int, includeEmptyFiller bool) {
+	addNumericCriteriaPanel(parent, i18n.Text("and whose level"), i18n.Text("Level Qualifier"), numCriteria, 0,
+		fxp.Thousand, false, includeEmptyFiller, hSpan)
 }
 
-func addNumericCriteriaPanel(parent *unison.Panel, prefix, undoTitle string, numCriteria *criteria.Numeric, min, max fxp.Int, integerOnly bool, hSpan int) {
-	parent.AddChild(unison.NewPanel())
+func addNumericCriteriaPanel(parent *unison.Panel, prefix, undoTitle string, numCriteria *criteria.Numeric, min, max fxp.Int, integerOnly, includeEmptyFiller bool, hSpan int) {
+	if includeEmptyFiller {
+		parent.AddChild(unison.NewPanel())
+	}
 	panel := unison.NewPanel()
 	panel.SetLayout(&unison.FlexLayout{
 		Columns:  2,
@@ -459,11 +480,35 @@ func addNumericCriteriaPanel(parent *unison.Panel, prefix, undoTitle string, num
 	parent.AddChild(panel)
 }
 
+func addWeightCriteriaPanel(parent *unison.Panel, entity *gurps.Entity, weightCriteria *criteria.Weight) {
+	popup := unison.NewPopupMenu[string]()
+	for _, one := range criteria.PrefixedNumericCompareTypeChoices(i18n.Text("which")) {
+		popup.AddItem(one)
+	}
+	popup.SelectIndex(criteria.ExtractNumericCompareTypeIndex(string(weightCriteria.Compare)))
+	field := addWeightField(parent, i18n.Text("Weight Qualifier"), "", entity, &weightCriteria.Qualifier)
+	popup.SelectionCallback = func(index int, _ string) {
+		weightCriteria.Compare = criteria.AllNumericCompareTypes[index]
+		if weightCriteria.Compare == criteria.AnyNumber {
+			disableAndBlankField(field)
+		} else {
+			enableAndUnblankField(field)
+		}
+		widget.MarkModified(parent)
+	}
+	parent.AddChild(popup)
+	parent.SetLayout(&unison.FlexLayout{
+		Columns:  len(parent.Children()),
+		HSpacing: unison.StdHSpacing,
+		VSpacing: unison.StdVSpacing,
+	})
+}
+
 func addQuantityCriteriaPanel(parent *unison.Panel, numCriteria *criteria.Numeric) {
 	choices := []string{
 		i18n.Text("exactly"),
-		criteria.AtLeast.String(),
-		criteria.AtMost.String(),
+		i18n.Text("at least"),
+		i18n.Text("at most"),
 	}
 	var numType string
 	switch numCriteria.Compare {

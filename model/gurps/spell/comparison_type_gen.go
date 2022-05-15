@@ -46,24 +46,24 @@ var (
 	}{
 		{
 			key:    "name",
-			string: i18n.Text("Name"),
+			string: i18n.Text("whose name"),
 		},
 		{
 			key:     "tag",
 			oldKeys: []string{"category"},
-			string:  i18n.Text("Tag"),
+			string:  i18n.Text("with a tag which"),
 		},
 		{
 			key:    "college",
-			string: i18n.Text("College"),
+			string: i18n.Text("whose college name"),
 		},
 		{
 			key:    "college_count",
-			string: i18n.Text("College Count"),
+			string: i18n.Text("from different colleges"),
 		},
 		{
 			key:    "any",
-			string: i18n.Text("Any"),
+			string: i18n.Text("of any kind"),
 		},
 	}
 )
