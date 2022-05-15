@@ -17,6 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/prereq"
+	"github.com/richardwilkes/gcs/model/gurps/spell"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/errs"
@@ -245,6 +246,31 @@ func (p *prereqPanel) createSpellPrereqPanel(depth int, pr *gurps.SpellPrereq) *
 		HSpacing: unison.StdHSpacing,
 		VSpacing: unison.StdVSpacing,
 	})
-	// TODO: Add other bits here
+	second := unison.NewPanel()
+	second.SetLayoutData(&unison.FlexLayoutData{HSpan: columns - 1})
+	subTypePopup := addPopup[spell.ComparisonType](second, spell.AllComparisonType, &pr.SubType)
+	popup, field := addStringCriteriaPanel(second, "", i18n.Text("Spell Qualifier"), &pr.QualifierCriteria, 1)
+	savedCallback := subTypePopup.SelectionCallback
+	subTypePopup.SelectionCallback = func(index int, item spell.ComparisonType) {
+		savedCallback(index, item)
+		if pr.SubType == spell.Any || pr.SubType == spell.CollegeCount {
+			disableAndBlankPopup(popup)
+			disableAndBlankField(field)
+		} else {
+			enableAndUnblankPopup(popup)
+			enableAndUnblankField(field)
+		}
+	}
+	if pr.SubType == spell.Any || pr.SubType == spell.CollegeCount {
+		disableAndBlankPopup(popup)
+		disableAndBlankField(field)
+	}
+	second.SetLayout(&unison.FlexLayout{
+		Columns:  len(second.Children()),
+		HSpacing: unison.StdHSpacing,
+		VSpacing: unison.StdVSpacing,
+	})
+	panel.AddChild(unison.NewPanel())
+	panel.AddChild(second)
 	return panel
 }

@@ -389,7 +389,7 @@ func addNotesCriteriaPanel(parent *unison.Panel, strCriteria *criteria.String, h
 	addStringCriteriaPanel(parent, i18n.Text("and whose notes"), i18n.Text("Notes Qualifier"), strCriteria, hSpan)
 }
 
-func addStringCriteriaPanel(parent *unison.Panel, prefix, undoTitle string, strCriteria *criteria.String, hSpan int) {
+func addStringCriteriaPanel(parent *unison.Panel, prefix, undoTitle string, strCriteria *criteria.String, hSpan int) (*unison.PopupMenu[string], *widget.StringField) {
 	parent.AddChild(unison.NewPanel())
 	panel := unison.NewPanel()
 	panel.SetLayout(&unison.FlexLayout{
@@ -424,6 +424,7 @@ func addStringCriteriaPanel(parent *unison.Panel, prefix, undoTitle string, strC
 		disableAndBlankField(criteriaField)
 	}
 	parent.AddChild(panel)
+	return popup, criteriaField
 }
 
 func addLevelCriteriaPanel(parent *unison.Panel, numCriteria *criteria.Numeric, hSpan int, includeEmptyFiller bool) {
