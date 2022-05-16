@@ -54,6 +54,11 @@ func NewSkillPrereq() *SkillPrereq {
 	}
 }
 
+// PrereqType implements Prereq.
+func (s *SkillPrereq) PrereqType() prereq.Type {
+	return s.Type
+}
+
 // ParentList implements Prereq.
 func (s *SkillPrereq) ParentList() *PrereqList {
 	return s.Parent

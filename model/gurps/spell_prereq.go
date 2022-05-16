@@ -52,6 +52,11 @@ func NewSpellPrereq() *SpellPrereq {
 	}
 }
 
+// PrereqType implements Prereq.
+func (s *SpellPrereq) PrereqType() prereq.Type {
+	return s.Type
+}
+
 // ParentList implements Prereq.
 func (s *SpellPrereq) ParentList() *PrereqList {
 	return s.Parent

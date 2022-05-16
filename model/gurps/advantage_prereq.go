@@ -54,6 +54,11 @@ func NewAdvantagePrereq() *AdvantagePrereq {
 	}
 }
 
+// PrereqType implements Prereq.
+func (a *AdvantagePrereq) PrereqType() prereq.Type {
+	return a.Type
+}
+
 // ParentList implements Prereq.
 func (a *AdvantagePrereq) ParentList() *PrereqList {
 	return a.Parent

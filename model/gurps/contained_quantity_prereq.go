@@ -43,6 +43,11 @@ func NewContainedQuantityPrereq() *ContainedQuantityPrereq {
 	}
 }
 
+// PrereqType implements Prereq.
+func (c *ContainedQuantityPrereq) PrereqType() prereq.Type {
+	return c.Type
+}
+
 // ParentList implements Prereq.
 func (c *ContainedQuantityPrereq) ParentList() *PrereqList {
 	return c.Parent

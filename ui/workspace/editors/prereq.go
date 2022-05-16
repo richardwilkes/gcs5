@@ -89,12 +89,12 @@ func (p *prereqPanel) createPrereqListPanel(depth int, list *gurps.PrereqList) *
 		VSpacing: unison.StdVSpacing,
 	})
 	for _, child := range list.Prereqs {
-		p.addToList(panel, depth+1, child, false)
+		p.addToList(panel, depth+1, -1, child)
 	}
 	return panel
 }
 
-func (p *prereqPanel) addToList(parent *unison.Panel, depth int, child gurps.Prereq, first bool) {
+func (p *prereqPanel) addToList(parent *unison.Panel, depth, index int, child gurps.Prereq) {
 	var panel *unison.Panel
 	switch one := child.(type) {
 	case *gurps.PrereqList:
@@ -121,10 +121,10 @@ func (p *prereqPanel) addToList(parent *unison.Panel, depth int, child gurps.Pre
 			HAlign: unison.FillAlignment,
 			HGrab:  true,
 		})
-		if first {
-			parent.AddChildAtIndex(panel, columns)
-		} else {
+		if index < 0 {
 			parent.AddChild(panel)
+		} else {
+			parent.AddChildAtIndex(panel, columns+index)
 		}
 	}
 }
@@ -138,6 +138,10 @@ func (p *prereqPanel) createButtonsPanel(parent *unison.Panel, depth int, data g
 		addPrereqButton.ClickCallback = func() {
 			var created gurps.Prereq
 			switch lastPrereqTypeUsed {
+			case prereq.Advantage:
+				one := gurps.NewAdvantagePrereq()
+				one.Parent = prereqList
+				created = one
 			case prereq.Attribute:
 				one := gurps.NewAttributePrereq(p.entity)
 				one.Parent = prereqList
@@ -158,13 +162,12 @@ func (p *prereqPanel) createButtonsPanel(parent *unison.Panel, depth int, data g
 				one := gurps.NewSpellPrereq()
 				one.Parent = prereqList
 				created = one
-			default: // prereq.Advantage
-				one := gurps.NewAdvantagePrereq()
-				one.Parent = prereqList
-				created = one
+			default:
+				jot.Warn(errs.Newf("unknown prerequisite type: %s", lastPrereqTypeUsed.String()))
+				return
 			}
 			prereqList.Prereqs = slices.Insert(prereqList.Prereqs, 0, created)
-			p.addToList(parent, depth+1, created, true)
+			p.addToList(parent, depth+1, 0, created)
 			p.adjustAndOrForList(prereqList)
 			unison.DockContainerFor(p).MarkForLayoutRecursively()
 			widget.MarkModified(p)
@@ -176,7 +179,7 @@ func (p *prereqPanel) createButtonsPanel(parent *unison.Panel, depth int, data g
 			newList := gurps.NewPrereqList()
 			newList.Parent = prereqList
 			prereqList.Prereqs = slices.Insert(prereqList.Prereqs, 0, gurps.Prereq(newList))
-			p.addToList(parent, depth+1, newList, true)
+			p.addToList(parent, depth+1, 0, newList)
 			p.adjustAndOrForList(prereqList)
 			unison.DockContainerFor(p).MarkForLayoutRecursively()
 			widget.MarkModified(p)
@@ -242,6 +245,57 @@ func andOrText(pr gurps.Prereq) string {
 	return i18n.Text("or")
 }
 
+func (p *prereqPanel) addPrereqTypeSwitcher(parent *unison.Panel, depth int, pr gurps.Prereq) {
+	prereqType := pr.PrereqType()
+	popup := addPopup[prereq.Type](parent, prereq.AllType[1:], &prereqType)
+	popup.SelectionCallback = func(_ int, item prereq.Type) {
+		var newPrereq gurps.Prereq
+		parentList := pr.ParentList()
+		switch item {
+		case prereq.List:
+			one := gurps.NewPrereqList()
+			one.Parent = parentList
+			newPrereq = one
+		case prereq.Advantage:
+			one := gurps.NewAdvantagePrereq()
+			one.Parent = parentList
+			newPrereq = one
+		case prereq.Attribute:
+			one := gurps.NewAttributePrereq(p.entity)
+			one.Parent = parentList
+			newPrereq = one
+		case prereq.ContainedQuantity:
+			one := gurps.NewContainedQuantityPrereq()
+			one.Parent = parentList
+			newPrereq = one
+		case prereq.ContainedWeight:
+			one := gurps.NewContainedWeightPrereq(p.entity)
+			one.Parent = parentList
+			newPrereq = one
+		case prereq.Skill:
+			one := gurps.NewSkillPrereq()
+			one.Parent = parentList
+			newPrereq = one
+		case prereq.Spell:
+			one := gurps.NewSpellPrereq()
+			one.Parent = parentList
+			newPrereq = one
+		default:
+			jot.Warn(errs.Newf("unknown prerequisite type: %s", item.String()))
+			return
+		}
+		lastPrereqTypeUsed = item
+		parentOfParent := parent.Parent()
+		parent.RemoveFromParent()
+		list := parentList.Prereqs
+		i := slices.IndexFunc(list, func(one gurps.Prereq) bool { return one == pr })
+		list[i] = newPrereq
+		p.addToList(parentOfParent, depth, i, newPrereq)
+		unison.DockContainerFor(p).MarkForLayoutRecursively()
+		widget.MarkModified(p)
+	}
+}
+
 func (p *prereqPanel) createAdvantagePrereqPanel(depth int, pr *gurps.AdvantagePrereq) *unison.Panel {
 	panel := unison.NewPanel()
 	p.createButtonsPanel(panel, depth, pr)
@@ -250,7 +304,7 @@ func (p *prereqPanel) createAdvantagePrereqPanel(depth int, pr *gurps.AdvantageP
 		p.addAndOr(panel, pr)
 	}
 	addHasPopup(panel, &pr.Has)
-	addPopup[prereq.Type](panel, prereq.AllType[1:], &pr.Type)
+	p.addPrereqTypeSwitcher(panel, depth, pr)
 	if !inFront {
 		p.addAndOr(panel, pr)
 	}
@@ -274,7 +328,7 @@ func (p *prereqPanel) createAttributePrereqPanel(depth int, pr *gurps.AttributeP
 		p.addAndOr(panel, pr)
 	}
 	addHasPopup(panel, &pr.Has)
-	addPopup[prereq.Type](panel, prereq.AllType[1:], &pr.Type)
+	p.addPrereqTypeSwitcher(panel, depth, pr)
 	if !inFront {
 		p.addAndOr(panel, pr)
 	}
@@ -308,7 +362,7 @@ func (p *prereqPanel) createContainedQuantityPrereqPanel(depth int, pr *gurps.Co
 		p.addAndOr(panel, pr)
 	}
 	addHasPopup(panel, &pr.Has)
-	addPopup[prereq.Type](panel, prereq.AllType[1:], &pr.Type)
+	p.addPrereqTypeSwitcher(panel, depth, pr)
 	addQuantityCriteriaPanel(panel, &pr.QualifierCriteria)
 	if !inFront {
 		p.addAndOr(panel, pr)
@@ -330,7 +384,7 @@ func (p *prereqPanel) createContainedWeightPrereqPanel(depth int, pr *gurps.Cont
 		p.addAndOr(panel, pr)
 	}
 	addHasPopup(panel, &pr.Has)
-	addPopup[prereq.Type](panel, prereq.AllType[1:], &pr.Type)
+	p.addPrereqTypeSwitcher(panel, depth, pr)
 	if !inFront {
 		p.addAndOr(panel, pr)
 	}
@@ -361,7 +415,7 @@ func (p *prereqPanel) createSkillPrereqPanel(depth int, pr *gurps.SkillPrereq) *
 		p.addAndOr(panel, pr)
 	}
 	addHasPopup(panel, &pr.Has)
-	addPopup[prereq.Type](panel, prereq.AllType[1:], &pr.Type)
+	p.addPrereqTypeSwitcher(panel, depth, pr)
 	if !inFront {
 		p.addAndOr(panel, pr)
 	}
@@ -386,7 +440,7 @@ func (p *prereqPanel) createSpellPrereqPanel(depth int, pr *gurps.SpellPrereq) *
 	}
 	addHasPopup(panel, &pr.Has)
 	addQuantityCriteriaPanel(panel, &pr.QuantityCriteria)
-	addPopup[prereq.Type](panel, prereq.AllType[1:], &pr.Type)
+	p.addPrereqTypeSwitcher(panel, depth, pr)
 	if !inFront {
 		p.addAndOr(panel, pr)
 	}

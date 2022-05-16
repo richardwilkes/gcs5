@@ -44,6 +44,11 @@ func (p *PrereqList) ShouldOmit() bool {
 	return p == nil || (p.All && p.WhenTL.Compare == criteria.AtLeast && p.WhenTL.Qualifier == 0 && len(p.Prereqs) == 0)
 }
 
+// PrereqType implements Prereq.
+func (p *PrereqList) PrereqType() prereq.Type {
+	return p.Type
+}
+
 // ParentList implements Prereq.
 func (p *PrereqList) ParentList() *PrereqList {
 	return p.Parent

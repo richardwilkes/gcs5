@@ -47,6 +47,11 @@ func NewAttributePrereq(entity *Entity) *AttributePrereq {
 	}
 }
 
+// PrereqType implements Prereq.
+func (a *AttributePrereq) PrereqType() prereq.Type {
+	return a.Type
+}
+
 // ParentList implements Prereq.
 func (a *AttributePrereq) ParentList() *PrereqList {
 	return a.Parent
