@@ -85,6 +85,7 @@ func EditEquipment(owner widget.Rebuildable, equipment *gurps.Equipment, carried
 			disableAndBlankField(usesField)
 		}
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
+		content.AddChild(newFeaturesPanel(e.target, &e.editorData.Features))
 		return func() {
 			if e.editorData.Uses > e.editorData.MaxUses {
 				usesField.SetText(strconv.Itoa(e.editorData.MaxUses))

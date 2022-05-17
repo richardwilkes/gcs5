@@ -87,6 +87,9 @@ func initAdvantageModifierEditor(e *editor[*gurps.AdvantageModifier, *gurps.Adva
 	}
 	addTagsLabelAndField(content, &e.editorData.Tags)
 	addPageRefLabelAndField(content, &e.editorData.PageRef)
+	if !e.target.Container() {
+		content.AddChild(newFeaturesPanel(e.target, &e.editorData.Features))
+	}
 	return nil
 }
 

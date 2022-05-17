@@ -85,6 +85,7 @@ func initAdvantageEditor(e *editor[*gurps.Advantage, *gurps.AdvantageEditData], 
 	addPageRefLabelAndField(content, &e.editorData.PageRef)
 	if !e.target.Container() {
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
+		content.AddChild(newFeaturesPanel(e.target, &e.editorData.Features))
 	}
 	return func() {
 		if levelField != nil {

@@ -182,6 +182,7 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 	addPageRefLabelAndField(content, &e.editorData.PageRef)
 	if !e.target.Container() {
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
+		content.AddChild(newFeaturesPanel(e.target, &e.editorData.Features))
 	}
 	return nil
 }
