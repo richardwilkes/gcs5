@@ -32,7 +32,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/model/theme"
-	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xio/fs"
@@ -137,22 +136,18 @@ func (ex *legacyExporter) emitKey(key string) error {
 	case "ENHANCED_KEY_PARSING":
 		ex.enhancedKeyParsing = true
 	case "PORTRAIT":
-		portraitData := ex.entity.Profile.PortraitData
-		if len(portraitData) == 0 {
-			portraitData = res.DefaultPortraitData
+		if len(ex.entity.Profile.PortraitData) != 0 {
+			filePath := filepath.Join(filepath.Dir(ex.exportPath), fs.TrimExtension(filepath.Base(ex.exportPath))+".png")
+			if err := os.WriteFile(filePath, ex.entity.Profile.PortraitData, 0o640); err != nil {
+				return errs.Wrap(err)
+			}
+			ex.out.WriteString(url.PathEscape(filePath))
 		}
-		filePath := filepath.Join(filepath.Dir(ex.exportPath), fs.TrimExtension(filepath.Base(ex.exportPath))+".png")
-		if err := os.WriteFile(filePath, portraitData, 0o640); err != nil {
-			return errs.Wrap(err)
-		}
-		ex.out.WriteString(url.PathEscape(filePath))
 	case "PORTRAIT_EMBEDDED":
-		portraitData := ex.entity.Profile.PortraitData
-		if len(portraitData) == 0 {
-			portraitData = res.DefaultPortraitData
+		if len(ex.entity.Profile.PortraitData) != 0 {
+			ex.out.WriteString("data:image/png;base64,")
+			ex.out.WriteString(base64.URLEncoding.EncodeToString(ex.entity.Profile.PortraitData))
 		}
-		ex.out.WriteString("data:image/png;base64,")
-		ex.out.WriteString(base64.URLEncoding.EncodeToString(portraitData))
 	case nameKey:
 		ex.writeEncodedText(ex.entity.Profile.Name)
 	case "TITLE":
