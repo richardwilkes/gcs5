@@ -25,12 +25,13 @@ const (
 )
 
 type enumValue struct {
-	Name       string
-	Key        string
-	OldKeys    []string
-	String     string
-	Alt        string
-	NoLocalize bool
+	Name          string
+	Key           string
+	OldKeys       []string
+	String        string
+	Alt           string
+	NoLocalize    bool
+	EmptyStringOK bool
 }
 
 type enumInfo struct {
@@ -215,7 +216,9 @@ func main() {
 		StandAlone: true,
 		Values: []enumValue{
 			{
-				Key: "none",
+				Key:           "none",
+				EmptyStringOK: true,
+				NoLocalize:    true,
 			},
 			{
 				Key:    "striking_only",
@@ -471,39 +474,49 @@ func main() {
 		StandAlone: false,
 		Values: []enumValue{
 			{
-				Key: "attribute_bonus",
+				Key:    "attribute_bonus",
+				String: "Gives an attribute modifier of",
 			},
 			{
-				Key: "conditional_modifier",
-			},
-			{
-				Key: "contained_weight_reduction",
-			},
-			{
-				Key: "cost_reduction",
+				Key:    "conditional_modifier",
+				String: "Gives a conditional modifier of",
 			},
 			{
 				Name:   "DRBonus",
 				Key:    "dr_bonus",
-				String: "DR Bonus",
+				String: "Gives a DR bonus of",
 			},
 			{
-				Key: "reaction_bonus",
+				Key:    "reaction_bonus",
+				String: "Gives a reaction modifier of",
 			},
 			{
-				Key: "skill_bonus",
+				Key:    "skill_bonus",
+				String: "Gives a skill level modifier of",
 			},
 			{
-				Key: "skill_point_bonus",
+				Key:    "skill_point_bonus",
+				String: "Gives a skill point modifier of",
 			},
 			{
-				Key: "spell_bonus",
+				Key:    "spell_bonus",
+				String: "Gives a spell level modifier of",
 			},
 			{
-				Key: "spell_point_bonus",
+				Key:    "spell_point_bonus",
+				String: "Gives a spell point modifier of",
 			},
 			{
-				Key: "weapon_bonus",
+				Key:    "weapon_bonus",
+				String: "Gives a weapon damage modifier of",
+			},
+			{
+				Key:    "cost_reduction",
+				String: "Reduces the attribute cost of",
+			},
+			{
+				Key:    "contained_weight_reduction",
+				String: "Reduces the contained weight by",
 			},
 		},
 	})
@@ -1001,7 +1014,7 @@ func (e *enumInfo) NeedI18N() bool {
 }
 
 func (e *enumValue) StringValue() string {
-	if e.String == "" {
+	if e.String == "" && !e.EmptyStringOK {
 		return cases.Title(language.AmericanEnglish).String(strings.ReplaceAll(e.Key, "_", " "))
 	}
 	return e.String

@@ -17,6 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/model/criteria"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/ui/widget"
@@ -105,29 +106,29 @@ func addTechLevelRequired(parent *unison.Panel, fieldData **string, includeField
 	}))
 }
 
-func addDifficultyLabelAndFields(parent *unison.Panel, entity *gurps.Entity, difficulty *gurps.AttributeDifficulty) {
-	wrapper := addFlowWrapper(parent, i18n.Text("Difficulty"), 3)
-	current := -1
-	choices := gurps.AttributeChoices(entity, "", false)
-	for i, one := range choices {
-		if one.Key == difficulty.Attribute {
-			current = i
-			break
-		}
-	}
-	if current == -1 {
-		current = len(choices)
-		choices = append(choices, &gurps.AttributeChoice{
-			Key:   difficulty.Attribute,
-			Title: difficulty.Attribute,
-		})
-	}
-	attrChoice := choices[current]
-	attrChoicePopup := addPopup(wrapper, choices, &attrChoice)
-	attrChoicePopup.SelectionCallback = func(_ int, item *gurps.AttributeChoice) {
-		difficulty.Attribute = item.Key
+func addHitLocationChoicePopup(parent *unison.Panel, entity *gurps.Entity, prefix string, fieldData *string) *unison.PopupMenu[*gurps.HitLocationChoice] {
+	choices, current := gurps.HitLocationChoices(entity, prefix, *fieldData)
+	popup := addPopup(parent, choices, &current)
+	popup.SelectionCallback = func(index int, _ *gurps.HitLocationChoice) {
+		*fieldData = choices[index].Key
 		widget.MarkModified(parent)
 	}
+	return popup
+}
+
+func addAttributeChoicePopup(parent *unison.Panel, entity *gurps.Entity, prefix string, fieldData *string, flags gurps.AttributeFlags) *unison.PopupMenu[*gurps.AttributeChoice] {
+	choices, current := gurps.AttributeChoices(entity, prefix, flags, *fieldData)
+	popup := addPopup(parent, choices, &current)
+	popup.SelectionCallback = func(index int, _ *gurps.AttributeChoice) {
+		*fieldData = choices[index].Key
+		widget.MarkModified(parent)
+	}
+	return popup
+}
+
+func addDifficultyLabelAndFields(parent *unison.Panel, entity *gurps.Entity, difficulty *gurps.AttributeDifficulty) {
+	wrapper := addFlowWrapper(parent, i18n.Text("Difficulty"), 3)
+	addAttributeChoicePopup(wrapper, entity, "", &difficulty.Attribute, gurps.TenFlag)
 	wrapper.AddChild(widget.NewFieldTrailingLabel("/"))
 	addPopup(wrapper, skill.AllDifficulty, &difficulty.Difficulty)
 }
@@ -202,7 +203,7 @@ func addIntegerField(parent *unison.Panel, labelText, tooltip string, fieldData 
 		func(value int) {
 			*fieldData = value
 			widget.MarkModified(parent)
-		}, min, max, false)
+		}, min, max, false, false)
 	if tooltip != "" {
 		field.Tooltip = unison.NewTooltipWithText(tooltip)
 	}
@@ -210,17 +211,17 @@ func addIntegerField(parent *unison.Panel, labelText, tooltip string, fieldData 
 	return field
 }
 
-func addLabelAndNumericField(parent *unison.Panel, labelText, tooltip string, fieldData *fxp.Int, min, max fxp.Int) *widget.NumericField {
+func addLabelAndDecimalField(parent *unison.Panel, labelText, tooltip string, fieldData *fxp.Int, min, max fxp.Int) *widget.DecimalField {
 	label := widget.NewFieldLeadingLabel(labelText)
 	if tooltip != "" {
 		label.Tooltip = unison.NewTooltipWithText(tooltip)
 	}
 	parent.AddChild(label)
-	field := widget.NewNumericField(labelText, func() fxp.Int { return *fieldData },
+	field := widget.NewDecimalField(labelText, func() fxp.Int { return *fieldData },
 		func(value fxp.Int) {
 			*fieldData = value
 			widget.MarkModified(parent)
-		}, min, max, false)
+		}, min, max, false, false)
 	if tooltip != "" {
 		field.Tooltip = unison.NewTooltipWithText(tooltip)
 	}
@@ -228,12 +229,12 @@ func addLabelAndNumericField(parent *unison.Panel, labelText, tooltip string, fi
 	return field
 }
 
-func addNumericField(parent *unison.Panel, labelText, tooltip string, fieldData *fxp.Int, min, max fxp.Int) *widget.NumericField {
-	field := widget.NewNumericField(labelText, func() fxp.Int { return *fieldData },
+func addDecimalField(parent *unison.Panel, labelText, tooltip string, fieldData *fxp.Int, min, max fxp.Int) *widget.DecimalField {
+	field := widget.NewDecimalField(labelText, func() fxp.Int { return *fieldData },
 		func(value fxp.Int) {
 			*fieldData = value
 			widget.MarkModified(parent)
-		}, min, max, false)
+		}, min, max, false, false)
 	if tooltip != "" {
 		field.Tooltip = unison.NewTooltipWithText(tooltip)
 	}
@@ -241,12 +242,12 @@ func addNumericField(parent *unison.Panel, labelText, tooltip string, fieldData 
 	return field
 }
 
-func addWeightField(parent *unison.Panel, labelText, tooltip string, entity *gurps.Entity, fieldData *measure.Weight) *widget.WeightField {
+func addWeightField(parent *unison.Panel, labelText, tooltip string, entity *gurps.Entity, fieldData *measure.Weight, noMinWidth bool) *widget.WeightField {
 	field := widget.NewWeightField(labelText, entity, func() measure.Weight { return *fieldData },
 		func(value measure.Weight) {
 			*fieldData = value
 			widget.MarkModified(parent)
-		}, 0, measure.Weight(fxp.Max))
+		}, 0, measure.Weight(fxp.Max), noMinWidth)
 	if tooltip != "" {
 		field.Tooltip = unison.NewTooltipWithText(tooltip)
 	}
@@ -325,55 +326,34 @@ func addHasPopup(parent *unison.Panel, has *bool) {
 	addBoolPopup(parent, i18n.Text("has"), i18n.Text("doesn't have"), has)
 }
 
-func disableAndBlankField(field unison.Paneler) {
+func adjustFieldBlank(field unison.Paneler, blank bool) {
 	panel := field.AsPanel()
-	panel.SetEnabled(false)
-	panel.DrawOverCallback = func(gc *unison.Canvas, rect unison.Rect) {
-		rect = panel.ContentRect(false)
-		var ink unison.Ink
-		if f, ok := panel.Self.(*unison.Field); ok {
-			ink = f.BackgroundInk
-		} else {
-			ink = unison.DefaultFieldTheme.BackgroundInk
+	panel.SetEnabled(!blank)
+	if blank {
+		panel.DrawOverCallback = func(gc *unison.Canvas, rect unison.Rect) {
+			rect = panel.ContentRect(false)
+			var ink unison.Ink
+			if f, ok := panel.Self.(*unison.Field); ok {
+				ink = f.BackgroundInk
+			} else {
+				ink = unison.DefaultFieldTheme.BackgroundInk
+			}
+			gc.DrawRect(rect, ink.Paint(gc, rect, unison.Fill))
 		}
-		gc.DrawRect(rect, ink.Paint(gc, rect, unison.Fill))
+	} else {
+		panel.DrawOverCallback = nil
 	}
 }
 
-func enableAndUnblankField(field unison.Paneler) {
-	panel := field.AsPanel()
-	panel.SetEnabled(true)
-	panel.DrawOverCallback = nil
-}
-
-func disableAndBlankPopup[T comparable](popup *unison.PopupMenu[T]) {
-	popup.SetEnabled(false)
-	popup.DrawOverCallback = func(gc *unison.Canvas, rect unison.Rect) {
-		rect = popup.ContentRect(false)
-		unison.DrawRoundedRectBase(gc, rect, popup.CornerRadius, 1, popup.BackgroundInk, popup.EdgeInk)
-	}
-}
-
-func enableAndUnblankPopup[T comparable](popup *unison.PopupMenu[T]) {
-	popup.SetEnabled(true)
-	popup.DrawOverCallback = nil
-}
-
-func addAttributeChoicePopup(parent *unison.Panel, entity *gurps.Entity, prefix string, fieldData *string, addBlank bool) {
-	choices := gurps.AttributeChoices(entity, prefix, true)
-	if addBlank {
-		choices = append([]*gurps.AttributeChoice{{}}, choices...)
-	}
-	var current *gurps.AttributeChoice
-	for _, choice := range choices {
-		if choice.Key == *fieldData {
-			current = choice
+func adjustPopupBlank[T comparable](popup *unison.PopupMenu[T], blank bool) {
+	popup.SetEnabled(!blank)
+	if blank {
+		popup.DrawOverCallback = func(gc *unison.Canvas, rect unison.Rect) {
+			rect = popup.ContentRect(false)
+			unison.DrawRoundedRectBase(gc, rect, popup.CornerRadius, 1, popup.BackgroundInk, popup.EdgeInk)
 		}
-	}
-	popup := addPopup[*gurps.AttributeChoice](parent, choices, &current)
-	popup.SelectionCallback = func(index int, _ *gurps.AttributeChoice) {
-		*fieldData = choices[index].Key
-		widget.MarkModified(parent)
+	} else {
+		popup.DrawOverCallback = nil
 	}
 }
 
@@ -411,18 +391,12 @@ func addStringCriteriaPanel(parent *unison.Panel, prefix, undoTitle string, strC
 	popup.SelectIndex(criteria.ExtractStringCompareTypeIndex(string(strCriteria.Compare)))
 	popup.SelectionCallback = func(index int, _ string) {
 		strCriteria.Compare = criteria.AllStringCompareTypes[index]
-		if strCriteria.Compare == criteria.Any {
-			disableAndBlankField(criteriaField)
-		} else {
-			enableAndUnblankField(criteriaField)
-		}
+		adjustFieldBlank(criteriaField, strCriteria.Compare == criteria.Any)
 		widget.MarkModified(panel)
 	}
 	panel.AddChild(popup)
 	criteriaField = addStringField(panel, undoTitle, "", &strCriteria.Qualifier)
-	if strCriteria.Compare == criteria.Any {
-		disableAndBlankField(criteriaField)
-	}
+	adjustFieldBlank(criteriaField, strCriteria.Compare == criteria.Any)
 	parent.AddChild(panel)
 	return popup, criteriaField
 }
@@ -456,11 +430,7 @@ func addNumericCriteriaPanel(parent *unison.Panel, prefix, undoTitle string, num
 	popup.SelectIndex(criteria.ExtractNumericCompareTypeIndex(string(numCriteria.Compare)))
 	popup.SelectionCallback = func(index int, _ string) {
 		numCriteria.Compare = criteria.AllNumericCompareTypes[index]
-		if numCriteria.Compare == criteria.AnyNumber {
-			disableAndBlankField(field)
-		} else {
-			enableAndUnblankField(field)
-		}
+		adjustFieldBlank(field, numCriteria.Compare == criteria.AnyNumber)
 		widget.MarkModified(panel)
 	}
 	panel.AddChild(popup)
@@ -470,14 +440,12 @@ func addNumericCriteriaPanel(parent *unison.Panel, prefix, undoTitle string, num
 			func(value int) {
 				numCriteria.Qualifier = fxp.From(value)
 				widget.MarkModified(panel)
-			}, fxp.As[int](min), fxp.As[int](max), false)
+			}, fxp.As[int](min), fxp.As[int](max), false, false)
 		panel.AddChild(field)
 	} else {
-		field = addNumericField(panel, undoTitle, "", &numCriteria.Qualifier, min, max)
+		field = addDecimalField(panel, undoTitle, "", &numCriteria.Qualifier, min, max)
 	}
-	if numCriteria.Compare == criteria.AnyNumber {
-		disableAndBlankField(field)
-	}
+	adjustFieldBlank(field, numCriteria.Compare == criteria.AnyNumber)
 	parent.AddChild(panel)
 }
 
@@ -487,17 +455,14 @@ func addWeightCriteriaPanel(parent *unison.Panel, entity *gurps.Entity, weightCr
 		popup.AddItem(one)
 	}
 	popup.SelectIndex(criteria.ExtractNumericCompareTypeIndex(string(weightCriteria.Compare)))
-	field := addWeightField(parent, i18n.Text("Weight Qualifier"), "", entity, &weightCriteria.Qualifier)
+	parent.AddChild(popup)
+	field := addWeightField(parent, i18n.Text("Weight Qualifier"), "", entity, &weightCriteria.Qualifier, false)
 	popup.SelectionCallback = func(index int, _ string) {
 		weightCriteria.Compare = criteria.AllNumericCompareTypes[index]
-		if weightCriteria.Compare == criteria.AnyNumber {
-			disableAndBlankField(field)
-		} else {
-			enableAndUnblankField(field)
-		}
+		adjustFieldBlank(field, weightCriteria.Compare == criteria.AnyNumber)
 		widget.MarkModified(parent)
 	}
-	parent.AddChild(popup)
+	adjustFieldBlank(field, weightCriteria.Compare == criteria.AnyNumber)
 	parent.SetLayout(&unison.FlexLayout{
 		Columns:  len(parent.Children()),
 		HSpacing: unison.StdHSpacing,
@@ -542,5 +507,15 @@ func addQuantityCriteriaPanel(parent *unison.Panel, numCriteria *criteria.Numeri
 		func(value int) {
 			numCriteria.Qualifier = fxp.From(value)
 			widget.MarkModified(parent)
-		}, 0, 9999, false))
+		}, 0, 9999, false, false))
+}
+
+func addLeveledAmountPanel(parent *unison.Panel, amount *feature.LeveledAmount) {
+	parent.AddChild(widget.NewDecimalField(i18n.Text("Amount"),
+		func() fxp.Int { return amount.Amount },
+		func(value fxp.Int) {
+			amount.Amount = value
+			widget.MarkModified(parent)
+		}, fxp.Min, fxp.Max, true, false))
+	addCheckBox(parent, i18n.Text("per level"), &amount.PerLevel)
 }

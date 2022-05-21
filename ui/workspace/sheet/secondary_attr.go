@@ -72,7 +72,7 @@ func (p *SecondaryAttrPanel) rebuild(attrs *gurps.AttributeDefs) {
 			continue
 		}
 		p.AddChild(p.createPointsField(attr))
-		p.AddChild(widget.NewNumericPageField(i18n.Text("Secondary Attribute"),
+		p.AddChild(widget.NewDecimalPageField(i18n.Text("Secondary Attribute"),
 			func() fxp.Int { return attr.Maximum() },
 			func(v fxp.Int) { attr.SetMaximum(v) }, fxp.Min, fxp.Max, true))
 		p.AddChild(widget.NewPageLabel(def.CombinedName()))

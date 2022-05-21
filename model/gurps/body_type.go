@@ -48,6 +48,11 @@ type bodyTypeListData struct {
 	*BodyType
 }
 
+// BodyTypeFor returns the BodyType for the given Entity, or the global settings if the Entity is nil.
+func BodyTypeFor(entity *Entity) *BodyType {
+	return SheetSettingsFor(entity).HitLocations
+}
+
 // FactoryBodyType returns a new copy of the default factory BodyType.
 func FactoryBodyType() *BodyType {
 	bodyType, err := NewBodyTypeFromFile(embeddedFS, "data/body_types/Humanoid.body")

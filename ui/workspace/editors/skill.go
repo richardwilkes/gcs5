@@ -49,22 +49,11 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 				HAlign: unison.FillAlignment,
 				HGrab:  true,
 			})
-			current := -1
-			choices := gurps.AttributeChoices(e.target.Entity, "", isTechnique)
-			for i, one := range choices {
-				if one.Key == e.editorData.TechniqueDefault.DefaultType {
-					current = i
-					break
-				}
+			flags := gurps.TenFlag
+			if isTechnique {
+				flags |= gurps.SkillFlag + gurps.ParryFlag + gurps.BlockFlag
 			}
-			if current == -1 {
-				current = len(choices)
-				choices = append(choices, &gurps.AttributeChoice{
-					Key:   e.editorData.TechniqueDefault.DefaultType,
-					Title: e.editorData.TechniqueDefault.DefaultType,
-				})
-			}
-			attrChoice := choices[current]
+			choices, attrChoice := gurps.AttributeChoices(e.target.Entity, "", flags, e.editorData.TechniqueDefault.DefaultType)
 			attrChoicePopup := addPopup(wrapper, choices, &attrChoice)
 			skillDefNameField := addStringField(wrapper, i18n.Text("Technique Default Skill Name"),
 				i18n.Text("Skill Name"), &e.editorData.TechniqueDefault.Name)
@@ -85,7 +74,7 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 				skillDefNameField.RemoveFromParent()
 				skillDefSpecialtyField.RemoveFromParent()
 			}
-			addNumericField(wrapper, i18n.Text("Technique Default Adjustment"), i18n.Text("Default Adjustment"),
+			addDecimalField(wrapper, i18n.Text("Technique Default Adjustment"), i18n.Text("Default Adjustment"),
 				&e.editorData.TechniqueDefault.Modifier, -fxp.NinetyNine, fxp.NinetyNine)
 			attrChoicePopup.SelectionCallback = func(_ int, item *gurps.AttributeChoice) {
 				e.editorData.TechniqueDefault.DefaultType = item.Key
@@ -102,7 +91,7 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 				widget.MarkModified(content)
 			}
 			wrapper2 := addFlowWrapper(content, "", 2)
-			limitField := widget.NewNumericField(i18n.Text("Limit"), func() fxp.Int {
+			limitField := widget.NewDecimalField(i18n.Text("Limit"), func() fxp.Int {
 				if e.editorData.TechniqueLimitModifier != nil {
 					return *e.editorData.TechniqueLimitModifier
 				}
@@ -112,7 +101,7 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 					*e.editorData.TechniqueLimitModifier = value
 				}
 				widget.MarkModified(wrapper2)
-			}, -fxp.NinetyNine, fxp.NinetyNine, false)
+			}, -fxp.NinetyNine, fxp.NinetyNine, false, false)
 			wrapper2.AddChild(widget.NewCheckBox(i18n.Text("Cannot exceed default skill level by more than"),
 				e.editorData.TechniqueLimitModifier != nil, func(b bool) {
 					if b {
@@ -120,16 +109,13 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 							var limit fxp.Int
 							e.editorData.TechniqueLimitModifier = &limit
 						}
-						enableAndUnblankField(limitField)
 					} else {
 						e.editorData.TechniqueLimitModifier = nil
-						disableAndBlankField(limitField)
 					}
+					adjustFieldBlank(limitField, b)
 					widget.MarkModified(wrapper2)
 				}))
-			if e.editorData.TechniqueLimitModifier == nil {
-				disableAndBlankField(limitField)
-			}
+			adjustFieldBlank(limitField, e.editorData.TechniqueLimitModifier == nil)
 			wrapper2.AddChild(limitField)
 			addLabelAndPopup(content, i18n.Text("Difficulty"), "", skill.AllTechniqueDifficulty,
 				&e.editorData.Difficulty.Difficulty)
@@ -137,14 +123,14 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 			addDifficultyLabelAndFields(content, e.target.Entity, &e.editorData.Difficulty)
 			encLabel := i18n.Text("Encumbrance Penalty")
 			wrapper := addFlowWrapper(content, encLabel, 2)
-			addNumericField(wrapper, encLabel, "", &e.editorData.EncumbrancePenaltyMultiplier, 0, fxp.Nine)
+			addDecimalField(wrapper, encLabel, "", &e.editorData.EncumbrancePenaltyMultiplier, 0, fxp.Nine)
 			wrapper.AddChild(widget.NewFieldTrailingLabel(i18n.Text("times the current encumbrance level")))
 		}
 
 		if dockableKind == widget.SheetDockableKind || dockableKind == widget.TemplateDockableKind {
 			pointsLabel := i18n.Text("Points")
 			wrapper := addFlowWrapper(content, pointsLabel, 3)
-			addNumericField(wrapper, pointsLabel, "", &e.editorData.Points, 0, fxp.MaxBasePoints)
+			addDecimalField(wrapper, pointsLabel, "", &e.editorData.Points, 0, fxp.MaxBasePoints)
 			wrapper.AddChild(widget.NewFieldInteriorLeadingLabel(i18n.Text("Level")))
 			levelField := widget.NewNonEditableField(func(field *widget.NonEditableField) {
 				points := gurps.AdjustedPointsForNonContainerSkillOrTechnique(e.target.Entity, e.editorData.Points,
@@ -182,7 +168,7 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 	addPageRefLabelAndField(content, &e.editorData.PageRef)
 	if !e.target.Container() {
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
-		content.AddChild(newFeaturesPanel(e.target, &e.editorData.Features))
+		content.AddChild(newFeaturesPanel(e.target.Entity, e.target, &e.editorData.Features))
 	}
 	return nil
 }

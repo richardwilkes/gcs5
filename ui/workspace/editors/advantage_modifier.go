@@ -37,13 +37,11 @@ func initAdvantageModifierEditor(e *editor[*gurps.AdvantageModifier, *gurps.Adva
 	if !e.target.Container() {
 		costLabel := i18n.Text("Cost")
 		wrapper := addFlowWrapper(content, costLabel, 3)
-		addNumericField(wrapper, costLabel, "", &e.editorData.Cost, -fxp.MaxBasePoints, fxp.MaxBasePoints)
+		addDecimalField(wrapper, costLabel, "", &e.editorData.Cost, -fxp.MaxBasePoints, fxp.MaxBasePoints)
 		costTypePopup := addCostTypePopup(wrapper, e)
 		affectsPopup := addPopup(wrapper, advantage.AllAffects, &e.editorData.Affects)
-		levels := addLabelAndNumericField(content, i18n.Text("Level"), "", &e.editorData.Levels, fxp.One, fxp.Thousand)
-		if !e.target.HasLevels() {
-			disableAndBlankField(levels)
-		}
+		levels := addLabelAndDecimalField(content, i18n.Text("Level"), "", &e.editorData.Levels, fxp.One, fxp.Thousand)
+		adjustFieldBlank(levels, !e.target.HasLevels())
 		total := widget.NewNonEditableField(func(field *widget.NonEditableField) {
 			enabled := true
 			switch costTypePopup.SelectedIndex() - 1 {
@@ -73,22 +71,21 @@ func initAdvantageModifierEditor(e *editor[*gurps.AdvantageModifier, *gurps.Adva
 		costTypePopup.SelectionCallback = func(index int, _ string) {
 			if index == 0 {
 				e.editorData.CostType = advantage.Percentage
-				enableAndUnblankField(levels)
 				if e.editorData.Levels < fxp.One {
 					levels.SetText("1")
 				}
 			} else {
 				e.editorData.CostType = advantage.AllModifierCostType[index-1]
-				disableAndBlankField(levels)
 				e.editorData.Levels = 0
 			}
+			adjustFieldBlank(levels, index != 0)
 			widget.MarkModified(wrapper)
 		}
 	}
 	addTagsLabelAndField(content, &e.editorData.Tags)
 	addPageRefLabelAndField(content, &e.editorData.PageRef)
 	if !e.target.Container() {
-		content.AddChild(newFeaturesPanel(e.target, &e.editorData.Features))
+		content.AddChild(newFeaturesPanel(e.target.Entity, e.target, &e.editorData.Features))
 	}
 	return nil
 }

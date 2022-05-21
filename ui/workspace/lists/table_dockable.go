@@ -368,11 +368,12 @@ func NewTableDockable(filePath string, provider tbl.TableProvider) *TableDockabl
 	d.sizeToFitButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Sets the width of each column to fit its contents"))
 	d.sizeToFitButton.ClickCallback = d.sizeToFit
 
-	d.scaleField = widget.NewPercentageField(func() int { return d.scale }, func(v int) {
+	scaleTitle := i18n.Text("Scale")
+	d.scaleField = widget.NewPercentageField(scaleTitle, func() int { return d.scale }, func(v int) {
 		d.scale = v
 		d.applyScale()
-	}, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax)
-	d.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
+	}, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, false, false)
+	d.scaleField.Tooltip = unison.NewTooltipWithText(scaleTitle)
 
 	d.backButton = unison.NewSVGButton(res.BackSVG)
 	d.backButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Previous Match"))

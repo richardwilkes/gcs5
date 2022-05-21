@@ -117,7 +117,7 @@ func (d *fontSettingsDockable) createFamilyField(index int) {
 }
 
 func (d *fontSettingsDockable) createSizeField(index int) {
-	field := widget.NewNumericField(i18n.Text("Font Size"), func() fxp.Int {
+	field := widget.NewDecimalField(i18n.Text("Font Size"), func() fxp.Int {
 		return fxp.From(theme.CurrentFonts[index].Font.Size())
 	}, func(v fxp.Int) {
 		if !d.noUpdate {
@@ -125,7 +125,7 @@ func (d *fontSettingsDockable) createSizeField(index int) {
 			fd.Size = fxp.As[float32](v)
 			d.applyFont(index, fd)
 		}
-	}, fxp.One, fxp.From(999), false)
+	}, fxp.One, fxp.From(999), false, false)
 	field.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.MiddleAlignment,
@@ -215,7 +215,7 @@ func (d *fontSettingsDockable) applyFont(index int, fd unison.FontDescriptor) {
 	if p, ok := children[i+1].Self.(*unison.PopupMenu[string]); ok {
 		p.Select(fd.Family)
 	}
-	if nf, ok := children[i+2].Self.(*widget.NumericField); ok {
+	if nf, ok := children[i+2].Self.(*widget.DecimalField); ok {
 		nf.SetText(fxp.From(fd.Size).String())
 	}
 	if p, ok := children[i+3].Self.(*unison.PopupMenu[unison.FontWeight]); ok {

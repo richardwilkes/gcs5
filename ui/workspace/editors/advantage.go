@@ -34,7 +34,7 @@ func initAdvantageEditor(e *editor[*gurps.Advantage, *gurps.AdvantageEditData], 
 	addVTTNotesLabelAndField(content, &e.editorData.VTTNotes)
 	addUserDescLabelAndField(content, &e.editorData.UserDesc)
 	addTagsLabelAndField(content, &e.editorData.Tags)
-	var levelField *widget.NumericField
+	var levelField *widget.DecimalField
 	if !e.target.Container() {
 		wrapper := addFlowWrapper(content, i18n.Text("Point Cost"), 8)
 		cost := widget.NewNonEditableField(func(field *widget.NonEditableField) {
@@ -51,15 +51,13 @@ func initAdvantageEditor(e *editor[*gurps.Advantage, *gurps.AdvantageEditData], 
 		addCheckBox(wrapper, i18n.Text("Round Down"), &e.editorData.RoundCostDown)
 		baseCost := i18n.Text("Base Cost")
 		wrapper = addFlowWrapper(content, baseCost, 8)
-		addNumericField(wrapper, baseCost, "", &e.editorData.BasePoints, -fxp.MaxBasePoints,
+		addDecimalField(wrapper, baseCost, "", &e.editorData.BasePoints, -fxp.MaxBasePoints,
 			fxp.MaxBasePoints)
-		addLabelAndNumericField(wrapper, i18n.Text("Per Level"), "", &e.editorData.PointsPerLevel, -fxp.MaxBasePoints,
+		addLabelAndDecimalField(wrapper, i18n.Text("Per Level"), "", &e.editorData.PointsPerLevel, -fxp.MaxBasePoints,
 			fxp.MaxBasePoints)
-		levelField = addLabelAndNumericField(wrapper, i18n.Text("Level"), "", &e.editorData.Levels, 0,
+		levelField = addLabelAndDecimalField(wrapper, i18n.Text("Level"), "", &e.editorData.Levels, 0,
 			fxp.MaxBasePoints)
-		if e.editorData.PointsPerLevel == 0 {
-			disableAndBlankField(levelField)
-		}
+		adjustFieldBlank(levelField, e.editorData.PointsPerLevel == 0)
 	}
 	addLabelAndPopup(content, i18n.Text("Self-Control Roll"), "", advantage.AllSelfControlRolls, &e.editorData.CR)
 	crAdjPopup := addLabelAndPopup(content, i18n.Text("CR Adjustment"), i18n.Text("Self-Control Roll Adjustment"),
@@ -78,22 +76,16 @@ func initAdvantageEditor(e *editor[*gurps.Advantage, *gurps.AdvantageEditData], 
 			}
 		}
 		ancestryPopup = addLabelAndPopup(content, i18n.Text("Ancestry"), "", choices, &e.editorData.Ancestry)
-		if e.editorData.ContainerType != advantage.Race {
-			disableAndBlankPopup(ancestryPopup)
-		}
+		adjustPopupBlank(ancestryPopup, e.editorData.ContainerType != advantage.Race)
 	}
 	addPageRefLabelAndField(content, &e.editorData.PageRef)
 	if !e.target.Container() {
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
-		content.AddChild(newFeaturesPanel(e.target, &e.editorData.Features))
+		content.AddChild(newFeaturesPanel(e.target.Entity, e.target, &e.editorData.Features))
 	}
 	return func() {
 		if levelField != nil {
-			if e.editorData.PointsPerLevel == 0 {
-				disableAndBlankField(levelField)
-			} else {
-				enableAndUnblankField(levelField)
-			}
+			adjustFieldBlank(levelField, e.editorData.PointsPerLevel == 0)
 		}
 		if e.editorData.CR == advantage.None {
 			crAdjPopup.SetEnabled(false)
@@ -104,14 +96,14 @@ func initAdvantageEditor(e *editor[*gurps.Advantage, *gurps.AdvantageEditData], 
 		if ancestryPopup != nil {
 			if e.editorData.ContainerType == advantage.Race {
 				if !ancestryPopup.Enabled() {
-					enableAndUnblankPopup(ancestryPopup)
+					adjustPopupBlank(ancestryPopup, false)
 					if ancestryPopup.IndexOfItem(e.editorData.Ancestry) == -1 {
 						e.editorData.Ancestry = ancestry.Default
 					}
 					ancestryPopup.Select(e.editorData.Ancestry)
 				}
 			} else {
-				disableAndBlankPopup(ancestryPopup)
+				adjustPopupBlank(ancestryPopup, true)
 			}
 		}
 	}

@@ -24,7 +24,7 @@ import (
 )
 
 // ReservedIDs holds a list of IDs that are reserved for internal use.
-var ReservedIDs = []string{gid.Skill, gid.Parry, gid.Block, "dodge", "sm"}
+var ReservedIDs = []string{gid.Skill, gid.Parry, gid.Block, gid.Dodge, gid.SizeModifier, gid.Ten}
 
 // AttributeDef holds the definition of an attribute.
 type AttributeDef struct {

@@ -32,17 +32,17 @@ func EditEquipment(owner widget.Rebuildable, equipment *gurps.Equipment, carried
 			qtyLabel := i18n.Text("Quantity")
 			if carried {
 				wrapper := addFlowWrapper(content, qtyLabel, 2)
-				addNumericField(wrapper, qtyLabel, "", &e.editorData.Quantity, 0, fxp.Max-1)
+				addDecimalField(wrapper, qtyLabel, "", &e.editorData.Quantity, 0, fxp.Max-1)
 				addCheckBox(wrapper, i18n.Text("Equipped"), &e.editorData.Equipped)
 			} else {
-				addLabelAndNumericField(content, qtyLabel, "", &e.editorData.Quantity, 0, fxp.Max-1)
+				addLabelAndDecimalField(content, qtyLabel, "", &e.editorData.Quantity, 0, fxp.Max-1)
 			}
 		}
 		addLabelAndStringField(content, i18n.Text("Tech Level"), gurps.TechLevelInfo, &e.editorData.TechLevel)
 		addLabelAndStringField(content, i18n.Text("Legality Class"), gurps.LegalityClassInfo, &e.editorData.LegalityClass)
 		valueLabel := i18n.Text("Value")
 		wrapper := addFlowWrapper(content, valueLabel, 3)
-		addNumericField(wrapper, valueLabel, "", &e.editorData.Value, 0, fxp.Max-1)
+		addDecimalField(wrapper, valueLabel, "", &e.editorData.Value, 0, fxp.Max-1)
 		wrapper.AddChild(widget.NewFieldInteriorLeadingLabel(i18n.Text("Extended")))
 		wrapper.AddChild(widget.NewNonEditableField(func(field *widget.NonEditableField) {
 			var value fxp.Int
@@ -59,7 +59,7 @@ func EditEquipment(owner widget.Rebuildable, equipment *gurps.Equipment, carried
 		}))
 		weightLabel := i18n.Text("Weight")
 		wrapper = addFlowWrapper(content, weightLabel, 3)
-		addWeightField(wrapper, weightLabel, "", e.target.Entity, &e.editorData.Weight)
+		addWeightField(wrapper, weightLabel, "", e.target.Entity, &e.editorData.Weight, false)
 		wrapper.AddChild(widget.NewFieldInteriorLeadingLabel(i18n.Text("Extended")))
 		wrapper.AddChild(widget.NewNonEditableField(func(field *widget.NonEditableField) {
 			var weight measure.Weight
@@ -81,20 +81,14 @@ func EditEquipment(owner widget.Rebuildable, equipment *gurps.Equipment, carried
 		addIntegerField(wrapper, maxUsesLabel, "", &e.editorData.MaxUses, 0, 9999999)
 		addTagsLabelAndField(content, &e.editorData.Tags)
 		addPageRefLabelAndField(content, &e.editorData.PageRef)
-		if e.editorData.MaxUses <= 0 {
-			disableAndBlankField(usesField)
-		}
+		adjustFieldBlank(usesField, e.editorData.MaxUses <= 0)
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
-		content.AddChild(newFeaturesPanel(e.target, &e.editorData.Features))
+		content.AddChild(newFeaturesPanel(e.target.Entity, e.target, &e.editorData.Features))
 		return func() {
 			if e.editorData.Uses > e.editorData.MaxUses {
 				usesField.SetText(strconv.Itoa(e.editorData.MaxUses))
 			}
-			if e.editorData.MaxUses > 0 {
-				enableAndUnblankField(usesField)
-			} else {
-				disableAndBlankField(usesField)
-			}
+			adjustFieldBlank(usesField, e.editorData.MaxUses <= 0)
 		}
 	})
 }

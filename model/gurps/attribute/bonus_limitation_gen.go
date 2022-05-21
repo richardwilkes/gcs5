@@ -42,7 +42,7 @@ var (
 	}{
 		{
 			key:    "none",
-			string: i18n.Text("None"),
+			string: "",
 		},
 		{
 			key:    "striking_only",

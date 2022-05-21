@@ -136,41 +136,13 @@ func (p *prereqPanel) createButtonsPanel(parent *unison.Panel, depth int, data g
 	if prereqList, ok := data.(*gurps.PrereqList); ok {
 		addPrereqButton := unison.NewSVGButton(res.CircledAddSVG)
 		addPrereqButton.ClickCallback = func() {
-			var created gurps.Prereq
-			switch lastPrereqTypeUsed {
-			case prereq.Advantage:
-				one := gurps.NewAdvantagePrereq()
-				one.Parent = prereqList
-				created = one
-			case prereq.Attribute:
-				one := gurps.NewAttributePrereq(p.entity)
-				one.Parent = prereqList
-				created = one
-			case prereq.ContainedQuantity:
-				one := gurps.NewContainedQuantityPrereq()
-				one.Parent = prereqList
-				created = one
-			case prereq.ContainedWeight:
-				one := gurps.NewContainedWeightPrereq(p.entity)
-				one.Parent = prereqList
-				created = one
-			case prereq.Skill:
-				one := gurps.NewSkillPrereq()
-				one.Parent = prereqList
-				created = one
-			case prereq.Spell:
-				one := gurps.NewSpellPrereq()
-				one.Parent = prereqList
-				created = one
-			default:
-				jot.Warn(errs.Newf("unknown prerequisite type: %s", lastPrereqTypeUsed.String()))
-				return
+			if created := p.createPrereqForType(lastPrereqTypeUsed, prereqList); created != nil {
+				prereqList.Prereqs = slices.Insert(prereqList.Prereqs, 0, created)
+				p.addToList(parent, depth+1, 0, created)
+				p.adjustAndOrForList(prereqList)
+				unison.DockContainerFor(p).MarkForLayoutRecursively()
+				widget.MarkModified(p)
 			}
-			prereqList.Prereqs = slices.Insert(prereqList.Prereqs, 0, created)
-			p.addToList(parent, depth+1, 0, created)
-			p.adjustAndOrForList(prereqList)
-			unison.DockContainerFor(p).MarkForLayoutRecursively()
-			widget.MarkModified(p)
 		}
 		buttons.AddChild(addPrereqButton)
 
@@ -247,52 +219,56 @@ func andOrText(pr gurps.Prereq) string {
 
 func (p *prereqPanel) addPrereqTypeSwitcher(parent *unison.Panel, depth int, pr gurps.Prereq) {
 	prereqType := pr.PrereqType()
-	popup := addPopup[prereq.Type](parent, prereq.AllType[1:], &prereqType)
+	popup := addPopup(parent, prereq.AllType[1:], &prereqType)
 	popup.SelectionCallback = func(_ int, item prereq.Type) {
-		var newPrereq gurps.Prereq
 		parentList := pr.ParentList()
-		switch item {
-		case prereq.List:
-			one := gurps.NewPrereqList()
-			one.Parent = parentList
-			newPrereq = one
-		case prereq.Advantage:
-			one := gurps.NewAdvantagePrereq()
-			one.Parent = parentList
-			newPrereq = one
-		case prereq.Attribute:
-			one := gurps.NewAttributePrereq(p.entity)
-			one.Parent = parentList
-			newPrereq = one
-		case prereq.ContainedQuantity:
-			one := gurps.NewContainedQuantityPrereq()
-			one.Parent = parentList
-			newPrereq = one
-		case prereq.ContainedWeight:
-			one := gurps.NewContainedWeightPrereq(p.entity)
-			one.Parent = parentList
-			newPrereq = one
-		case prereq.Skill:
-			one := gurps.NewSkillPrereq()
-			one.Parent = parentList
-			newPrereq = one
-		case prereq.Spell:
-			one := gurps.NewSpellPrereq()
-			one.Parent = parentList
-			newPrereq = one
-		default:
-			jot.Warn(errs.Newf("unknown prerequisite type: %s", item.String()))
-			return
+		if newPrereq := p.createPrereqForType(item, parentList); newPrereq != nil {
+			lastPrereqTypeUsed = item
+			parentOfParent := parent.Parent()
+			parent.RemoveFromParent()
+			list := parentList.Prereqs
+			i := slices.IndexFunc(list, func(one gurps.Prereq) bool { return one == pr })
+			list[i] = newPrereq
+			p.addToList(parentOfParent, depth, i, newPrereq)
+			unison.DockContainerFor(p).MarkForLayoutRecursively()
+			widget.MarkModified(p)
 		}
-		lastPrereqTypeUsed = item
-		parentOfParent := parent.Parent()
-		parent.RemoveFromParent()
-		list := parentList.Prereqs
-		i := slices.IndexFunc(list, func(one gurps.Prereq) bool { return one == pr })
-		list[i] = newPrereq
-		p.addToList(parentOfParent, depth, i, newPrereq)
-		unison.DockContainerFor(p).MarkForLayoutRecursively()
-		widget.MarkModified(p)
+	}
+}
+
+func (p *prereqPanel) createPrereqForType(prereqType prereq.Type, parentList *gurps.PrereqList) gurps.Prereq {
+	switch prereqType {
+	case prereq.List:
+		one := gurps.NewPrereqList()
+		one.Parent = parentList
+		return one
+	case prereq.Advantage:
+		one := gurps.NewAdvantagePrereq()
+		one.Parent = parentList
+		return one
+	case prereq.Attribute:
+		one := gurps.NewAttributePrereq(p.entity)
+		one.Parent = parentList
+		return one
+	case prereq.ContainedQuantity:
+		one := gurps.NewContainedQuantityPrereq()
+		one.Parent = parentList
+		return one
+	case prereq.ContainedWeight:
+		one := gurps.NewContainedWeightPrereq(p.entity)
+		one.Parent = parentList
+		return one
+	case prereq.Skill:
+		one := gurps.NewSkillPrereq()
+		one.Parent = parentList
+		return one
+	case prereq.Spell:
+		one := gurps.NewSpellPrereq()
+		one.Parent = parentList
+		return one
+	default:
+		jot.Warn(errs.Newf("unknown prerequisite type: %s", prereqType.Key()))
+		return nil
 	}
 }
 
@@ -340,8 +316,9 @@ func (p *prereqPanel) createAttributePrereqPanel(depth int, pr *gurps.AttributeP
 	})
 	second := unison.NewPanel()
 	second.SetLayoutData(&unison.FlexLayoutData{HSpan: columns - 1})
-	addAttributeChoicePopup(second, p.entity, noAndOr, &pr.Which, false)
-	addAttributeChoicePopup(second, p.entity, i18n.Text("combined with"), &pr.CombinedWith, true)
+	extra := gurps.SizeFlag | gurps.DodgeFlag | gurps.ParryFlag | gurps.BlockFlag
+	addAttributeChoicePopup(second, p.entity, noAndOr, &pr.Which, extra)
+	addAttributeChoicePopup(second, p.entity, i18n.Text("combined with"), &pr.CombinedWith, extra|gurps.BlankFlag)
 	addNumericCriteriaPanel(second, i18n.Text("which"), i18n.Text("Attribute Qualifier"), &pr.QualifierCriteria,
 		fxp.Min, fxp.Max, false, false, 1)
 	second.SetLayout(&unison.FlexLayout{
@@ -457,18 +434,12 @@ func (p *prereqPanel) createSpellPrereqPanel(depth int, pr *gurps.SpellPrereq) *
 	savedCallback := subTypePopup.SelectionCallback
 	subTypePopup.SelectionCallback = func(index int, item spell.ComparisonType) {
 		savedCallback(index, item)
-		if pr.SubType == spell.Any || pr.SubType == spell.CollegeCount {
-			disableAndBlankPopup(popup)
-			disableAndBlankField(field)
-		} else {
-			enableAndUnblankPopup(popup)
-			enableAndUnblankField(field)
-		}
+		blank := pr.SubType == spell.Any || pr.SubType == spell.CollegeCount
+		adjustPopupBlank(popup, blank)
+		adjustFieldBlank(field, blank)
 	}
-	if pr.SubType == spell.Any || pr.SubType == spell.CollegeCount {
-		disableAndBlankPopup(popup)
-		disableAndBlankField(field)
-	}
+	adjustPopupBlank(popup, pr.SubType == spell.Any || pr.SubType == spell.CollegeCount)
+	adjustFieldBlank(field, pr.SubType == spell.Any || pr.SubType == spell.CollegeCount)
 	second.SetLayout(&unison.FlexLayout{
 		Columns:  len(second.Children()),
 		HSpacing: unison.StdHSpacing,

@@ -40,6 +40,11 @@ func NewAttributeBonus(attrID string) *AttributeBonus {
 	}
 }
 
+// FeatureType implements Feature.
+func (a *AttributeBonus) FeatureType() Type {
+	return a.Type
+}
+
 // Clone implements Feature.
 func (a *AttributeBonus) Clone() Feature {
 	other := *a

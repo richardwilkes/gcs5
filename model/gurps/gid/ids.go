@@ -34,6 +34,7 @@ const (
 	Strength         = "st"
 	TasteSmell       = "taste_smell"
 	Technique        = "technique"
+	Ten              = "10"
 	Torso            = "torso"
 	Touch            = "touch"
 	Vision           = "vision"

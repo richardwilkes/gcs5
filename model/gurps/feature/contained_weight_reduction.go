@@ -34,6 +34,11 @@ func NewContainedWeightReduction() *ContainedWeightReduction {
 	}
 }
 
+// FeatureType implements Feature.
+func (c *ContainedWeightReduction) FeatureType() Type {
+	return c.Type
+}
+
 // Clone implements Feature.
 func (c *ContainedWeightReduction) Clone() Feature {
 	other := *c

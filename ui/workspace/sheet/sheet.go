@@ -142,12 +142,13 @@ func NewSheet(filePath string, entity *gurps.Entity) unison.Dockable {
 	sheetSettingsButton.Tooltip = unison.NewTooltipWithText(i18n.Text("Sheet Settings"))
 	sheetSettingsButton.ClickCallback = func() { wsettings.ShowSheetSettings(s) }
 
-	s.scaleField = widget.NewPercentageField(func() int { return s.scale }, func(v int) {
+	scaleTitle := i18n.Text("Scale")
+	s.scaleField = widget.NewPercentageField(scaleTitle, func() int { return s.scale }, func(v int) {
 		s.scale = v
 		s.applyScale()
-	}, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax)
+	}, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, false, false)
 	s.scaleField.SetMarksModified(false)
-	s.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
+	s.scaleField.Tooltip = unison.NewTooltipWithText(scaleTitle)
 
 	toolbar := unison.NewPanel()
 	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, unison.Insets{Bottom: 1},

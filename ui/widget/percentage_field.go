@@ -16,117 +16,33 @@ import (
 	"math"
 	"strconv"
 	"strings"
-	"unicode"
-
-	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/unison"
 )
 
-// PercentageField holds the value for a percentage field.
-type PercentageField struct {
-	*unison.Field
-	get           func() int
-	set           func(int)
-	minimum       int
-	maximum       int
-	marksModified bool
-}
+// PercentageField is field that holds a percentage.
+type PercentageField = NumericField[int]
 
-// NewPercentageField creates a new field that holds a percentage (where 100 == 100%).
-func NewPercentageField(get func() int, set func(int), min, max int) *PercentageField {
-	f := &PercentageField{
-		Field:         unison.NewField(),
-		get:           get,
-		set:           set,
-		minimum:       min,
-		maximum:       max,
-		marksModified: true,
-	}
-	f.Self = f
-	f.ModifiedCallback = f.modified
-	f.ValidateCallback = f.validate
-	f.RuneTypedCallback = f.runeTyped
-	if min != math.MinInt && max != math.MaxInt {
-		f.MinimumTextWidth = xmath.Max(f.Font.SimpleWidth(f.formatted(min)), f.Font.SimpleWidth(f.formatted(max)))
-	}
-	f.Sync()
-	return f
-}
-
-// SetMarksModified sets whether this field will attempt to mark its ModifiableRoot as modified. Default is true.
-func (f *PercentageField) SetMarksModified(marksModified bool) {
-	f.marksModified = marksModified
-}
-
-// Set the field value.
-func (f *PercentageField) Set(value int) {
-	SetFieldValue(f.Field, f.formatted(value))
-}
-
-func (f *PercentageField) formatted(value int) string {
-	return strconv.Itoa(value) + "%"
-}
-
-func (f *PercentageField) trimmed(text string) string {
-	return strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(text), "%"))
-}
-
-func (f *PercentageField) validate() bool {
-	v, err := strconv.Atoi(f.trimmed(f.Text()))
-	if err != nil {
-		f.Tooltip = unison.NewTooltipWithText(i18n.Text("Invalid percentage"))
-		return false
-	}
-	if v < f.minimum {
-		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Percentage must be at least %s"), f.formatted(f.minimum)))
-		return false
-	}
-	if v > f.maximum {
-		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Percentage must be no more than %s"), f.formatted(f.maximum)))
-		return false
-	}
-	f.Tooltip = nil
-	return true
-}
-
-func (f *PercentageField) modified() {
-	if v, err := strconv.Atoi(f.trimmed(f.Text())); err == nil &&
-		(f.minimum == math.MinInt || v >= f.minimum) &&
-		(f.maximum == math.MaxInt || v <= f.maximum) {
-		if f.get() != v {
-			f.set(v)
-			MarkForLayoutWithinDockable(f)
-			if f.marksModified {
-				MarkModified(f)
+// NewPercentageField creates a new field that holds a percentage.
+func NewPercentageField(undoTitle string, get func() int, set func(int), min, max int, forceSign, noMinWidth bool) *PercentageField {
+	var getPrototype func(min, max int) []int
+	if !noMinWidth {
+		getPrototype = func(min, max int) []int {
+			if min == math.MinInt {
+				min = -100
 			}
-		}
-	}
-}
-
-// Sync the field to the current value.
-func (f *PercentageField) Sync() {
-	value := f.get()
-	if f.minimum != math.MinInt && value < f.minimum {
-		value = f.minimum
-	} else if f.maximum != math.MaxInt && value > f.maximum {
-		value = f.maximum
-	}
-	f.Set(value)
-}
-
-func (f *PercentageField) runeTyped(ch rune) bool {
-	if !unicode.IsControl(ch) {
-		if f.minimum >= 0 && ch == '-' {
-			unison.Beep()
-			return false
-		}
-		if text := f.trimmed(string(f.RunesIfPasted([]rune{ch}))); text != "-" {
-			if _, err := strconv.Atoi(text); err != nil {
-				unison.Beep()
-				return false
+			if max == math.MaxInt {
+				max = 100
 			}
+			return []int{min, 100, max}
 		}
 	}
-	return f.DefaultRuneTyped(ch)
+	format := func(value int) string {
+		if forceSign {
+			return fmt.Sprintf("%+d%%", value)
+		}
+		return strconv.Itoa(value) + "%"
+	}
+	extract := func(s string) (int, error) {
+		return strconv.Atoi(strings.TrimSpace(strings.TrimSuffix(s, "%")))
+	}
+	return NewNumericField[int](undoTitle, getPrototype, get, set, format, extract, min, max)
 }

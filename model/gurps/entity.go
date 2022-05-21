@@ -269,14 +269,14 @@ func (e *Entity) processFeatures() {
 		return false
 	}, e.CarriedEquipment...)
 	e.featureMap = m
-	e.LiftingStrengthBonus = e.BonusFor(gid.Strength+"."+attribute.LiftingOnly.Key(), nil).Trunc()
-	e.StrikingStrengthBonus = e.BonusFor(gid.Strength+"."+attribute.StrikingOnly.Key(), nil).Trunc()
-	e.ThrowingStrengthBonus = e.BonusFor(gid.Strength+"."+attribute.ThrowingOnly.Key(), nil).Trunc()
+	e.LiftingStrengthBonus = e.BonusFor(feature.AttributeIDPrefix+gid.Strength+"."+attribute.LiftingOnly.Key(), nil).Trunc()
+	e.StrikingStrengthBonus = e.BonusFor(feature.AttributeIDPrefix+gid.Strength+"."+attribute.StrikingOnly.Key(), nil).Trunc()
+	e.ThrowingStrengthBonus = e.BonusFor(feature.AttributeIDPrefix+gid.Strength+"."+attribute.ThrowingOnly.Key(), nil).Trunc()
 	for _, attr := range e.Attributes.Set {
 		if def := attr.AttributeDef(); def != nil {
 			attrID := feature.AttributeIDPrefix + attr.AttrID
 			attr.Bonus = e.BonusFor(attrID, nil)
-			if def.Type == attribute.Decimal {
+			if def.Type != attribute.Decimal {
 				attr.Bonus = attr.Bonus.Trunc()
 			}
 			attr.CostReduction = e.CostReductionFor(attrID)
@@ -298,8 +298,7 @@ func processFeature(parent fmt.Stringer, m map[string][]feature.Feature, f featu
 		bonus.SetParent(parent)
 		bonus.SetLevel(levels)
 	}
-	list = append(list, f)
-	m[key] = list
+	m[key] = append(list, f)
 }
 
 func (e *Entity) processPrereqs() {

@@ -26,7 +26,7 @@ type PointsPanel struct {
 	unison.Panel
 	entity       *gurps.Entity
 	pointsBorder *widget.TitledBorder
-	unspent      *widget.NumericField
+	unspent      *widget.DecimalField
 }
 
 // NewPointsPanel creates a new points panel.
@@ -51,7 +51,7 @@ func NewPointsPanel(entity *gurps.Entity) *PointsPanel {
 	})))
 	p.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) { drawBandedBackground(p, gc, rect, 0, 2) }
 
-	p.unspent = widget.NewNumericPageField(i18n.Text("Unspent Points"),
+	p.unspent = widget.NewDecimalPageField(i18n.Text("Unspent Points"),
 		func() fxp.Int { return p.entity.UnspentPoints() },
 		func(v fxp.Int) { p.entity.SetUnspentPoints(v) }, fxp.Min, fxp.Max, true)
 	p.unspent.SetLayoutData(&unison.FlexLayoutData{

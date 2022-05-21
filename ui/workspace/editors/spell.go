@@ -52,7 +52,7 @@ func initSpellEditor(e *editor[*gurps.Spell, *gurps.SpellEditData], content *uni
 		if dockableKind == widget.SheetDockableKind || dockableKind == widget.TemplateDockableKind {
 			pointsLabel := i18n.Text("Points")
 			wrapper := addFlowWrapper(content, pointsLabel, 3)
-			addNumericField(wrapper, pointsLabel, "", &e.editorData.Points, 0, fxp.MaxBasePoints)
+			addDecimalField(wrapper, pointsLabel, "", &e.editorData.Points, 0, fxp.MaxBasePoints)
 			wrapper.AddChild(widget.NewFieldInteriorLeadingLabel(i18n.Text("Level")))
 			levelField := widget.NewNonEditableField(func(field *widget.NonEditableField) {
 				points := gurps.AdjustedPointsForNonContainerSpell(e.target.Entity, e.editorData.Points,

@@ -15,6 +15,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/res"
@@ -33,20 +35,27 @@ var (
 
 type featuresPanel struct {
 	unison.Panel
+	entity        *gurps.Entity
 	featureParent fmt.Stringer
 	features      *feature.Features
 }
 
-func newFeaturesPanel(featureParent fmt.Stringer, features *feature.Features) *featuresPanel {
+func newFeaturesPanel(entity *gurps.Entity, featureParent fmt.Stringer, features *feature.Features) *featuresPanel {
 	p := &featuresPanel{
+		entity:        entity,
 		featureParent: featureParent,
 		features:      features,
 	}
 	p.Self = p
-	p.SetLayout(&unison.FlexLayout{Columns: 1})
+	p.SetLayout(&unison.FlexLayout{
+		Columns:  1,
+		HSpacing: unison.StdHSpacing,
+		VSpacing: unison.StdVSpacing,
+	})
 	p.SetLayoutData(&unison.FlexLayoutData{
 		HSpan:  2,
 		HAlign: unison.FillAlignment,
+		HGrab:  true,
 	})
 	p.SetBorder(unison.NewCompoundBorder(
 		&widget.TitledBorder{
@@ -59,56 +68,12 @@ func newFeaturesPanel(featureParent fmt.Stringer, features *feature.Features) *f
 	}
 	addButton := unison.NewSVGButton(res.CircledAddSVG)
 	addButton.ClickCallback = func() {
-		var created feature.Feature
-		switch lastFeatureTypeUsed {
-		case feature.AttributeBonusType:
-			one := feature.NewAttributeBonus(lastAttributeIDUsed)
-			one.Parent = featureParent
-			created = one
-		case feature.ConditionalModifierType:
-			one := feature.NewConditionalModifierBonus()
-			one.Parent = featureParent
-			created = one
-		case feature.ContainedWeightReductionType:
-			created = feature.NewContainedWeightReduction()
-		case feature.CostReductionType:
-			created = feature.NewCostReduction(lastAttributeIDUsed)
-		case feature.DRBonusType:
-			one := feature.NewDRBonus()
-			one.Parent = featureParent
-			created = one
-		case feature.ReactionBonusType:
-			one := feature.NewReactionBonus()
-			one.Parent = featureParent
-			created = one
-		case feature.SkillBonusType:
-			one := feature.NewSkillBonus()
-			one.Parent = featureParent
-			created = one
-		case feature.SkillPointBonusType:
-			one := feature.NewSkillPointBonus()
-			one.Parent = featureParent
-			created = one
-		case feature.SpellBonusType:
-			one := feature.NewSpellBonus()
-			one.Parent = featureParent
-			created = one
-		case feature.SpellPointBonusType:
-			one := feature.NewSpellPointBonus()
-			one.Parent = featureParent
-			created = one
-		case feature.WeaponBonusType:
-			one := feature.NewWeaponDamageBonus()
-			one.Parent = featureParent
-			created = one
-		default:
-			jot.Warn(errs.Newf("unknown feature type: %s", lastFeatureTypeUsed.String()))
-			return
+		if created := p.createFeatureForType(lastFeatureTypeUsed); created != nil {
+			*features = slices.Insert(*features, 0, created)
+			p.insertFeaturePanel(1, created)
+			unison.DockContainerFor(p).MarkForLayoutRecursively()
+			widget.MarkModified(p)
 		}
-		*features = slices.Insert(*features, 0, created)
-		p.insertFeaturePanel(1, created)
-		unison.DockContainerFor(p).MarkForLayoutRecursively()
-		widget.MarkModified(p)
 	}
 	p.AddChild(addButton)
 	for i, one := range *features {
@@ -178,12 +143,125 @@ func (p *featuresPanel) createBasePanel(f feature.Feature) *unison.Panel {
 
 func (p *featuresPanel) createAttributeBonusPanel(f *feature.AttributeBonus) *unison.Panel {
 	panel := p.createBasePanel(f)
-	// TODO: Implement
+	p.addLeveledModifierLine(panel, f, &f.LeveledAmount)
+	panel.AddChild(unison.NewPanel())
+	wrapper := unison.NewPanel()
+	var popup *unison.PopupMenu[attribute.BonusLimitation]
+	attrChoicePopup := addAttributeChoicePopup(wrapper, p.entity, i18n.Text("to"), &f.Attribute,
+		gurps.SizeFlag|gurps.DodgeFlag|gurps.ParryFlag|gurps.BlockFlag)
+	callback := attrChoicePopup.SelectionCallback
+	attrChoicePopup.SelectionCallback = func(index int, item *gurps.AttributeChoice) {
+		callback(index, item)
+		adjustPopupBlank(popup, f.Attribute != gid.Strength)
+	}
+	popup = addPopup(wrapper, attribute.AllBonusLimitation, &f.Limitation)
+	adjustPopupBlank(popup, f.Attribute != gid.Strength)
+	wrapper.SetLayout(&unison.FlexLayout{
+		Columns:  len(wrapper.Children()),
+		HSpacing: unison.StdHSpacing,
+		VSpacing: unison.StdVSpacing,
+	})
+	wrapper.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		HGrab:  true,
+	})
+	panel.AddChild(wrapper)
 	return panel
 }
 
 func (p *featuresPanel) createConditionalModifierPanel(f *feature.ConditionalModifier) *unison.Panel {
 	panel := p.createBasePanel(f)
+	p.addLeveledModifierLine(panel, f, &f.LeveledAmount)
+	panel.AddChild(unison.NewPanel())
+	watermark := i18n.Text("Triggering Condition")
+	field := widget.NewMultiLineStringField(watermark, func() string { return f.Situation },
+		func(value string) {
+			f.Situation = value
+			panel.MarkForLayoutAndRedraw()
+			widget.MarkModified(panel)
+		})
+	field.Watermark = watermark
+	field.AutoScroll = false
+	field.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		HGrab:  true,
+	})
+	panel.AddChild(field)
+	return panel
+}
+
+func (p *featuresPanel) createDRBonusPanel(f *feature.DRBonus) *unison.Panel {
+	panel := p.createBasePanel(f)
+	p.addLeveledModifierLine(panel, f, &f.LeveledAmount)
+
+	panel.AddChild(unison.NewPanel())
+	addHitLocationChoicePopup(panel, p.entity, i18n.Text("to the"), &f.Location)
+
+	panel.AddChild(unison.NewPanel())
+	wrapper := unison.NewPanel()
+	wrapper.SetLayout(&unison.FlexLayout{
+		Columns:  3,
+		HSpacing: unison.StdHSpacing,
+		VSpacing: unison.StdVSpacing,
+	})
+	wrapper.AddChild(widget.NewFieldLeadingLabel(i18n.Text("against")))
+	field := widget.NewStringField(i18n.Text("Specialization"), func() string { return f.Specialization },
+		func(value string) {
+			f.Specialization = value
+			f.Normalize()
+			widget.MarkModified(wrapper)
+		})
+	field.Watermark = gid.All
+	field.MinimumTextWidth = 100
+	wrapper.AddChild(field)
+	wrapper.AddChild(widget.NewFieldTrailingLabel(i18n.Text("attacks")))
+	panel.AddChild(wrapper)
+	return panel
+}
+
+func (p *featuresPanel) createReactionBonusPanel(f *feature.ReactionBonus) *unison.Panel {
+	panel := p.createBasePanel(f)
+	p.addLeveledModifierLine(panel, f, &f.LeveledAmount)
+	panel.AddChild(unison.NewPanel())
+	// TODO: Implement
+	return panel
+}
+
+func (p *featuresPanel) createSkillBonusPanel(f *feature.SkillBonus) *unison.Panel {
+	panel := p.createBasePanel(f)
+	p.addLeveledModifierLine(panel, f, &f.LeveledAmount)
+	panel.AddChild(unison.NewPanel())
+	// TODO: Implement
+	return panel
+}
+
+func (p *featuresPanel) createSkillPointBonusPanel(f *feature.SkillPointBonus) *unison.Panel {
+	panel := p.createBasePanel(f)
+	p.addLeveledModifierLine(panel, f, &f.LeveledAmount)
+	panel.AddChild(unison.NewPanel())
+	// TODO: Implement
+	return panel
+}
+
+func (p *featuresPanel) createSpellBonusPanel(f *feature.SpellBonus) *unison.Panel {
+	panel := p.createBasePanel(f)
+	p.addLeveledModifierLine(panel, f, &f.LeveledAmount)
+	panel.AddChild(unison.NewPanel())
+	// TODO: Implement
+	return panel
+}
+
+func (p *featuresPanel) createSpellPointBonusPanel(f *feature.SpellPointBonus) *unison.Panel {
+	panel := p.createBasePanel(f)
+	p.addLeveledModifierLine(panel, f, &f.LeveledAmount)
+	// TODO: Implement
+	return panel
+}
+
+func (p *featuresPanel) createWeaponDamageBonusPanel(f *feature.WeaponDamageBonus) *unison.Panel {
+	panel := p.createBasePanel(f)
+	p.addLeveledModifierLine(panel, f, &f.LeveledAmount)
+	panel.AddChild(unison.NewPanel())
 	// TODO: Implement
 	return panel
 }
@@ -200,44 +278,90 @@ func (p *featuresPanel) createCostReductionPanel(f *feature.CostReduction) *unis
 	return panel
 }
 
-func (p *featuresPanel) createDRBonusPanel(f *feature.DRBonus) *unison.Panel {
-	panel := p.createBasePanel(f)
-	// TODO: Implement
-	return panel
+func (p *featuresPanel) addLeveledModifierLine(parent *unison.Panel, f feature.Feature, amount *feature.LeveledAmount) {
+	panel := unison.NewPanel()
+	p.addTypeSwitcher(panel, f)
+	addLeveledAmountPanel(panel, amount)
+	panel.SetLayout(&unison.FlexLayout{
+		Columns:  len(panel.Children()),
+		HSpacing: unison.StdHSpacing,
+		VSpacing: unison.StdVSpacing,
+	})
+	panel.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		HGrab:  true,
+	})
+	parent.AddChild(panel)
 }
 
-func (p *featuresPanel) createReactionBonusPanel(f *feature.ReactionBonus) *unison.Panel {
-	panel := p.createBasePanel(f)
-	// TODO: Implement
-	return panel
+func (p *featuresPanel) featureTypesList() []feature.Type {
+	if e, ok := p.featureParent.(*gurps.Equipment); ok && e.Container() {
+		return feature.AllType
+	}
+	return feature.AllWithoutContainedWeightType
 }
 
-func (p *featuresPanel) createSkillBonusPanel(f *feature.SkillBonus) *unison.Panel {
-	panel := p.createBasePanel(f)
-	// TODO: Implement
-	return panel
+func (p *featuresPanel) addTypeSwitcher(parent *unison.Panel, f feature.Feature) {
+	currentType := f.FeatureType()
+	popup := addPopup(parent, p.featureTypesList(), &currentType)
+	popup.SelectionCallback = func(_ int, item feature.Type) {
+		if newFeature := p.createFeatureForType(item); newFeature != nil {
+			lastFeatureTypeUsed = item
+			parent.Parent().RemoveFromParent()
+			list := *p.features
+			i := slices.IndexFunc(list, func(one feature.Feature) bool { return one == f })
+			list[i] = newFeature
+			p.insertFeaturePanel(i+1, newFeature)
+			unison.DockContainerFor(p).MarkForLayoutRecursively()
+			widget.MarkModified(p)
+		}
+	}
 }
 
-func (p *featuresPanel) createSkillPointBonusPanel(f *feature.SkillPointBonus) *unison.Panel {
-	panel := p.createBasePanel(f)
-	// TODO: Implement
-	return panel
-}
-
-func (p *featuresPanel) createSpellBonusPanel(f *feature.SpellBonus) *unison.Panel {
-	panel := p.createBasePanel(f)
-	// TODO: Implement
-	return panel
-}
-
-func (p *featuresPanel) createSpellPointBonusPanel(f *feature.SpellPointBonus) *unison.Panel {
-	panel := p.createBasePanel(f)
-	// TODO: Implement
-	return panel
-}
-
-func (p *featuresPanel) createWeaponDamageBonusPanel(f *feature.WeaponDamageBonus) *unison.Panel {
-	panel := p.createBasePanel(f)
-	// TODO: Implement
-	return panel
+func (p *featuresPanel) createFeatureForType(featureType feature.Type) feature.Feature {
+	switch featureType {
+	case feature.AttributeBonusType:
+		one := feature.NewAttributeBonus(lastAttributeIDUsed)
+		one.Parent = p.featureParent
+		return one
+	case feature.ConditionalModifierType:
+		one := feature.NewConditionalModifierBonus()
+		one.Parent = p.featureParent
+		return one
+	case feature.ContainedWeightReductionType:
+		return feature.NewContainedWeightReduction()
+	case feature.CostReductionType:
+		return feature.NewCostReduction(lastAttributeIDUsed)
+	case feature.DRBonusType:
+		one := feature.NewDRBonus()
+		one.Parent = p.featureParent
+		return one
+	case feature.ReactionBonusType:
+		one := feature.NewReactionBonus()
+		one.Parent = p.featureParent
+		return one
+	case feature.SkillBonusType:
+		one := feature.NewSkillBonus()
+		one.Parent = p.featureParent
+		return one
+	case feature.SkillPointBonusType:
+		one := feature.NewSkillPointBonus()
+		one.Parent = p.featureParent
+		return one
+	case feature.SpellBonusType:
+		one := feature.NewSpellBonus()
+		one.Parent = p.featureParent
+		return one
+	case feature.SpellPointBonusType:
+		one := feature.NewSpellPointBonus()
+		one.Parent = p.featureParent
+		return one
+	case feature.WeaponBonusType:
+		one := feature.NewWeaponDamageBonus()
+		one.Parent = p.featureParent
+		return one
+	default:
+		jot.Warn(errs.Newf("unknown feature type: %s", featureType.Key()))
+		return nil
+	}
 }

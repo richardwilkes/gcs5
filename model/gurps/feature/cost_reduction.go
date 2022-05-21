@@ -36,6 +36,11 @@ func NewCostReduction(attrID string) *CostReduction {
 	}
 }
 
+// FeatureType implements Feature.
+func (c *CostReduction) FeatureType() Type {
+	return c.Type
+}
+
 // Clone implements Feature.
 func (c *CostReduction) Clone() Feature {
 	other := *c

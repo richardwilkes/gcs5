@@ -31,15 +31,15 @@ type generalSettingsDockable struct {
 	Dockable
 	nameField                           *widget.StringField
 	autoFillProfileCheckbox             *unison.CheckBox
-	pointsField                         *widget.NumericField
+	pointsField                         *widget.DecimalField
 	includeUnspentPointsInTotalCheckbox *unison.CheckBox
 	techLevelField                      *widget.StringField
 	calendarPopup                       *unison.PopupMenu[string]
 	initialListScaleField               *widget.PercentageField
 	initialSheetScaleField              *widget.PercentageField
 	exportResolutionField               *widget.IntegerField
-	tooltipDelayField                   *widget.NumericField
-	tooltipDismissalField               *widget.NumericField
+	tooltipDelayField                   *widget.DecimalField
+	tooltipDismissalField               *widget.DecimalField
 	gCalcKeyField                       *widget.StringField
 }
 
@@ -72,17 +72,19 @@ func (d *generalSettingsDockable) initContent(content *unison.Panel) {
 	d.createInitialPointsFields(content)
 	d.createTechLevelField(content)
 	d.createCalendarPopup(content)
-	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Initial List Scale")))
-	d.initialListScaleField = widget.NewPercentageField(
+	initialListScaleTitle := i18n.Text("Initial List Scale")
+	content.AddChild(widget.NewFieldLeadingLabel(initialListScaleTitle))
+	d.initialListScaleField = widget.NewPercentageField(initialListScaleTitle,
 		func() int { return settings.Global().General.InitialListUIScale },
 		func(v int) { settings.Global().General.InitialListUIScale = v },
-		gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax)
+		gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, false, false)
 	content.AddChild(widget.WrapWithSpan(2, d.initialListScaleField))
-	content.AddChild(widget.NewFieldLeadingLabel(i18n.Text("Initial Sheet Scale")))
-	d.initialSheetScaleField = widget.NewPercentageField(
+	initialSheetScaleTitle := i18n.Text("Initial Sheet Scale")
+	content.AddChild(widget.NewFieldLeadingLabel(initialSheetScaleTitle))
+	d.initialSheetScaleField = widget.NewPercentageField(initialSheetScaleTitle,
 		func() int { return settings.Global().General.InitialSheetUIScale },
 		func(v int) { settings.Global().General.InitialSheetUIScale = v },
-		gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax)
+		gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, false, false)
 	content.AddChild(widget.WrapWithSpan(2, d.initialSheetScaleField))
 	d.createImageResolutionField(content)
 	d.createTooltipDelayField(content)
@@ -106,10 +108,10 @@ func (d *generalSettingsDockable) createPlayerAndDescFields(content *unison.Pane
 func (d *generalSettingsDockable) createInitialPointsFields(content *unison.Panel) {
 	title := i18n.Text("Initial Points")
 	content.AddChild(widget.NewFieldLeadingLabel(title))
-	d.pointsField = widget.NewNumericField(title,
+	d.pointsField = widget.NewDecimalField(title,
 		func() fxp.Int { return settings.Global().General.InitialPoints },
 		func(v fxp.Int) { settings.Global().General.InitialPoints = v }, gsettings.InitialPointsMin,
-		gsettings.InitialPointsMax, false)
+		gsettings.InitialPointsMax, false, false)
 	content.AddChild(d.pointsField)
 	d.includeUnspentPointsInTotalCheckbox = widget.NewCheckBox(i18n.Text("Include unspent points in total"),
 		settings.Global().General.IncludeUnspentPointsInTotal,
@@ -152,32 +154,32 @@ func (d *generalSettingsDockable) createImageResolutionField(content *unison.Pan
 	d.exportResolutionField = widget.NewIntegerField(title,
 		func() int { return settings.Global().General.ImageResolution },
 		func(v int) { settings.Global().General.ImageResolution = v },
-		gsettings.ImageResolutionMin, gsettings.ImageResolutionMax, false)
+		gsettings.ImageResolutionMin, gsettings.ImageResolutionMax, false, false)
 	content.AddChild(widget.WrapWithSpan(2, d.exportResolutionField, widget.NewFieldTrailingLabel(i18n.Text("ppi"))))
 }
 
 func (d *generalSettingsDockable) createTooltipDelayField(content *unison.Panel) {
 	title := i18n.Text("Tooltip Delay")
 	content.AddChild(widget.NewFieldLeadingLabel(title))
-	d.tooltipDelayField = widget.NewNumericField(title, func() fxp.Int { return settings.Global().General.TooltipDelay },
+	d.tooltipDelayField = widget.NewDecimalField(title, func() fxp.Int { return settings.Global().General.TooltipDelay },
 		func(v fxp.Int) {
 			general := settings.Global().General
 			general.TooltipDelay = v
 			general.UpdateToolTipTiming()
-		}, gsettings.TooltipDelayMin, gsettings.TooltipDelayMax, false)
+		}, gsettings.TooltipDelayMin, gsettings.TooltipDelayMax, false, false)
 	content.AddChild(widget.WrapWithSpan(2, d.tooltipDelayField, widget.NewFieldTrailingLabel(i18n.Text("seconds"))))
 }
 
 func (d *generalSettingsDockable) createTooltipDismissalField(content *unison.Panel) {
 	title := i18n.Text("Tooltip Dismissal")
 	content.AddChild(widget.NewFieldLeadingLabel(title))
-	d.tooltipDismissalField = widget.NewNumericField(title, func() fxp.Int {
+	d.tooltipDismissalField = widget.NewDecimalField(title, func() fxp.Int {
 		return settings.Global().General.TooltipDismissal
 	}, func(v fxp.Int) {
 		general := settings.Global().General
 		general.TooltipDismissal = v
 		general.UpdateToolTipTiming()
-	}, gsettings.TooltipDismissalMin, gsettings.TooltipDismissalMax, false)
+	}, gsettings.TooltipDismissalMin, gsettings.TooltipDismissalMax, false, false)
 	content.AddChild(widget.WrapWithSpan(2, d.tooltipDismissalField, widget.NewFieldTrailingLabel(i18n.Text("seconds"))))
 }
 
@@ -217,8 +219,8 @@ func (d *generalSettingsDockable) sync() {
 	widget.SetCheckBoxState(d.includeUnspentPointsInTotalCheckbox, s.IncludeUnspentPointsInTotal)
 	d.techLevelField.SetText(s.DefaultTechLevel)
 	d.calendarPopup.Select(s.CalendarRef(settings.Global().Libraries()).Name)
-	d.initialListScaleField.Set(s.InitialListUIScale)
-	d.initialSheetScaleField.Set(s.InitialSheetUIScale)
+	widget.SetFieldValue(d.initialListScaleField.Field, d.initialListScaleField.Format(s.InitialListUIScale))
+	widget.SetFieldValue(d.initialSheetScaleField.Field, d.initialSheetScaleField.Format(s.InitialSheetUIScale))
 	d.exportResolutionField.SetText(strconv.Itoa(s.ImageResolution))
 	d.tooltipDelayField.SetText(s.TooltipDelay.String())
 	d.tooltipDismissalField.SetText(s.TooltipDismissal.String())

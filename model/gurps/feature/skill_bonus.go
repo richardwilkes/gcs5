@@ -64,6 +64,11 @@ func NewSkillBonus() *SkillBonus {
 	}
 }
 
+// FeatureType implements Feature.
+func (s *SkillBonus) FeatureType() Type {
+	return s.Type
+}
+
 // Clone implements Feature.
 func (s *SkillBonus) Clone() Feature {
 	other := *s

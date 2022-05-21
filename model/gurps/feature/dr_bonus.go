@@ -53,6 +53,11 @@ func NewDRBonus() *DRBonus {
 	}
 }
 
+// FeatureType implements Feature.
+func (d *DRBonus) FeatureType() Type {
+	return d.Type
+}
+
 // Clone implements Feature.
 func (d *DRBonus) Clone() Feature {
 	other := *d

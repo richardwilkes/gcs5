@@ -12,123 +12,37 @@
 package widget
 
 import (
-	"fmt"
-
+	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
-	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/unison"
 )
 
-// WeightField holds the value for a weight field.
-type WeightField struct {
-	*unison.Field
-	undoID    int64
-	undoTitle string
-	entity    *gurps.Entity
-	get       func() measure.Weight
-	set       func(measure.Weight)
-	minimum   measure.Weight
-	maximum   measure.Weight
-	inUndo    bool
-}
+// WeightField is field that holds a weight value.
+type WeightField = NumericField[measure.Weight]
 
-// NewWeightField creates a new field that holds a weight.
-func NewWeightField(undoTitle string, entity *gurps.Entity, get func() measure.Weight, set func(measure.Weight), min, max measure.Weight) *WeightField {
-	f := &WeightField{
-		Field:     unison.NewField(),
-		undoID:    unison.NextUndoID(),
-		undoTitle: undoTitle,
-		entity:    entity,
-		get:       get,
-		set:       set,
-		minimum:   min,
-		maximum:   max,
-	}
-	f.Self = f
-	f.ModifiedCallback = f.modified
-	f.ValidateCallback = f.validate
-	units := gurps.SheetSettingsFor(f.entity).DefaultWeightUnits
-	if min >= 0 && max > 0 {
-		f.MinimumTextWidth = xmath.Max(f.Font.SimpleWidth(units.Format(min)), f.Font.SimpleWidth(units.Format(max)))
-	}
-	f.Sync()
-	return f
-}
-
-func (f *WeightField) validate() bool {
-	units := gurps.SheetSettingsFor(f.entity).DefaultWeightUnits
-	v, err := measure.WeightFromString(f.Text(), units)
-	if err != nil {
-		f.Tooltip = unison.NewTooltipWithText(i18n.Text("Invalid weight"))
-		return false
-	}
-	if v < 0 {
-		f.Tooltip = unison.NewTooltipWithText(i18n.Text("Weight may not be negative"))
-		return false
-	}
-	if f.minimum >= 0 && v < f.minimum {
-		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Weight must be at least %s"), units.Format(f.minimum)))
-		return false
-	}
-	if f.maximum > 0 && v > f.maximum {
-		f.Tooltip = unison.NewTooltipWithText(fmt.Sprintf(i18n.Text("Weight must be no more than %s"), units.Format(f.maximum)))
-		return false
-	}
-	f.Tooltip = nil
-	return true
-}
-
-func (f *WeightField) modified() {
-	text := f.Text()
-	if !f.inUndo && f.undoID != unison.NoUndoID {
-		if mgr := unison.UndoManagerFor(f); mgr != nil {
-			mgr.Add(&unison.UndoEdit[string]{
-				ID:       f.undoID,
-				EditName: f.undoTitle,
-				EditCost: 1,
-				UndoFunc: func(e *unison.UndoEdit[string]) { f.setWithoutUndo(e.BeforeData, true) },
-				RedoFunc: func(e *unison.UndoEdit[string]) { f.setWithoutUndo(e.AfterData, true) },
-				AbsorbFunc: func(e *unison.UndoEdit[string], other unison.Undoable) bool {
-					if e2, ok := other.(*unison.UndoEdit[string]); ok && e2.ID == f.undoID {
-						e.AfterData = e2.AfterData
-						return true
-					}
-					return false
-				},
-				BeforeData: f.get().String(),
-				AfterData:  text,
-			})
+// NewWeightField creates a new field that holds a fixed-point number.
+func NewWeightField(undoTitle string, entity *gurps.Entity, get func() measure.Weight, set func(measure.Weight), min, max measure.Weight, noMinWidth bool) *WeightField {
+	var getPrototypes func(min, max measure.Weight) []measure.Weight
+	if !noMinWidth {
+		getPrototypes = func(min, max measure.Weight) []measure.Weight {
+			if min == measure.Weight(fxp.Min) {
+				min = measure.Weight(-fxp.One)
+			}
+			min = measure.Weight(fxp.Int(min).Trunc() + fxp.One - 1)
+			if max == measure.Weight(fxp.Max) {
+				max = measure.Weight(fxp.One)
+			}
+			max = measure.Weight(fxp.Int(max).Trunc() + fxp.One - 1)
+			return []measure.Weight{min, measure.Weight(fxp.Two - 1), max}
 		}
 	}
-	units := gurps.SheetSettingsFor(f.entity).DefaultWeightUnits
-	if v, err := measure.WeightFromString(text, units); err == nil &&
-		(f.minimum < 0 || v >= f.minimum) &&
-		(f.maximum <= 0 || v <= f.maximum) && f.get() != v {
-		f.set(v)
-		MarkForLayoutWithinDockable(f)
-		MarkModified(f)
+	format := func(value measure.Weight) string {
+		return gurps.SheetSettingsFor(entity).DefaultWeightUnits.Format(value)
 	}
-}
-
-func (f *WeightField) setWithoutUndo(text string, focus bool) {
-	f.inUndo = true
-	f.SetText(text)
-	f.inUndo = false
-	if focus {
-		f.RequestFocus()
-		f.SelectAll()
+	extract := func(s string) (measure.Weight, error) {
+		return measure.WeightFromString(s, gurps.SheetSettingsFor(entity).DefaultWeightUnits)
 	}
-}
-
-// Sync the field to the current value.
-func (f *WeightField) Sync() {
-	value := f.get()
-	if f.minimum >= 0 && value < f.minimum {
-		value = f.minimum
-	} else if f.maximum > 0 && value > f.maximum {
-		value = f.maximum
-	}
-	f.setWithoutUndo(gurps.SheetSettingsFor(f.entity).DefaultWeightUnits.Format(value), false)
+	f := NewNumericField[measure.Weight](undoTitle, getPrototypes, get, set, format, extract, min, max)
+	f.RuneTypedCallback = f.DefaultRuneTyped
+	return f
 }

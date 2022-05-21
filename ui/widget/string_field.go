@@ -22,6 +22,7 @@ type StringField struct {
 	undoTitle string
 	get       func() string
 	set       func(string)
+	useGet    bool
 	inUndo    bool
 }
 
@@ -44,6 +45,7 @@ func newStringField(field *unison.Field, undoTitle string, get func() string, se
 		undoTitle: undoTitle,
 		get:       get,
 		set:       set,
+		useGet:    true,
 	}
 	f.Self = f
 	f.ModifiedCallback = f.modified
@@ -53,6 +55,20 @@ func newStringField(field *unison.Field, undoTitle string, get func() string, se
 		HGrab:  true,
 	})
 	return f
+}
+
+func (f *StringField) lostFocus() {
+	f.useGet = true
+	f.Sync()
+	f.DefaultFocusLost()
+}
+
+func (f *StringField) getData() string {
+	if f.useGet {
+		f.useGet = false
+		return f.get()
+	}
+	return f.Text()
 }
 
 func (f *StringField) modified() {
@@ -72,7 +88,7 @@ func (f *StringField) modified() {
 					}
 					return false
 				},
-				BeforeData: f.get(),
+				BeforeData: f.getData(),
 				AfterData:  text,
 			})
 		}
@@ -94,5 +110,5 @@ func (f *StringField) setWithoutUndo(text string, focus bool) {
 
 // Sync the field to the current value.
 func (f *StringField) Sync() {
-	f.setWithoutUndo(f.get(), false)
+	f.setWithoutUndo(f.getData(), false)
 }

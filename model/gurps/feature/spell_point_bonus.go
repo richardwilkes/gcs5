@@ -62,6 +62,11 @@ func NewSpellPointBonus() *SpellPointBonus {
 	}
 }
 
+// FeatureType implements Feature.
+func (s *SpellPointBonus) FeatureType() Type {
+	return s.Type
+}
+
 // Clone implements Feature.
 func (s *SpellPointBonus) Clone() Feature {
 	other := *s

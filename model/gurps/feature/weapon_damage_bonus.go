@@ -74,6 +74,11 @@ func NewWeaponDamageBonus() *WeaponDamageBonus {
 	}
 }
 
+// FeatureType implements Feature.
+func (w *WeaponDamageBonus) FeatureType() Type {
+	return w.Type
+}
+
 // Clone implements Feature.
 func (w *WeaponDamageBonus) Clone() Feature {
 	other := *w

@@ -196,6 +196,7 @@ func (e *editor[N, D]) UndoManager() *unison.UndoManager {
 }
 
 func (e *editor[N, D]) apply() {
+	e.Window().FocusNext() // Intentionally move the focus to ensure any pending edits are flushed
 	if mgr := unison.UndoManagerFor(e.owner); mgr != nil {
 		owner := e.owner
 		target := e.target

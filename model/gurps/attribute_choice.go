@@ -12,10 +12,25 @@
 package gurps
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/toolbox/i18n"
+)
+
+// AttributeFlags provides flags that can be set to extend the defined attribute choice list.
+type AttributeFlags byte
+
+// Possible AttributeFlags.
+const (
+	BlankFlag AttributeFlags = 1 << iota
+	TenFlag
+	SizeFlag
+	DodgeFlag
+	ParryFlag
+	BlockFlag
+	SkillFlag
 )
 
 // AttributeChoice holds a single attribute choice.
@@ -25,46 +40,46 @@ type AttributeChoice struct {
 }
 
 // AttributeChoices collects the available choices for attributes for the given entity, or nil.
-func AttributeChoices(entity *Entity, prefix string, includeSkills bool) []*AttributeChoice {
+func AttributeChoices(entity *Entity, prefix string, flags AttributeFlags, currentKey string) (choices []*AttributeChoice, current *AttributeChoice) {
 	if prefix != "" && !strings.HasSuffix(prefix, " ") {
 		prefix = prefix + " "
 	}
 	list := AttributeDefsFor(entity).List()
-	extra := 1
-	if includeSkills {
-		extra += 3
+	choices = make([]*AttributeChoice, 0, len(list)+8)
+	if flags&BlankFlag != 0 {
+		choices = append(choices, &AttributeChoice{})
 	}
-	choices := make([]*AttributeChoice, len(list)+extra)
-	i := 0
-	choices[i] = &AttributeChoice{
-		Key:   "10",
-		Title: prefix + "10",
+	if flags&TenFlag != 0 {
+		choices = append(choices, &AttributeChoice{Key: gid.Ten, Title: prefix + "10"})
 	}
-	i++
-	if includeSkills {
-		choices[i] = &AttributeChoice{
-			Key:   gid.Skill,
-			Title: prefix + i18n.Text("Skill"),
-		}
-		i++
-		choices[i] = &AttributeChoice{
-			Key:   gid.Parry,
-			Title: prefix + i18n.Text("Parry"),
-		}
-		i++
-		choices[i] = &AttributeChoice{
-			Key:   gid.Block,
-			Title: prefix + i18n.Text("Block"),
-		}
-		i++
+	for _, def := range list {
+		choices = append(choices, &AttributeChoice{Key: def.DefID, Title: prefix + def.Name})
 	}
-	for j, def := range list {
-		choices[j+i] = &AttributeChoice{
-			Key:   def.DefID,
-			Title: prefix + def.Name,
+	if flags&SizeFlag != 0 {
+		choices = append(choices, &AttributeChoice{Key: gid.SizeModifier, Title: prefix + i18n.Text("Size Modifier")})
+	}
+	if flags&DodgeFlag != 0 {
+		choices = append(choices, &AttributeChoice{Key: gid.Dodge, Title: prefix + i18n.Text("Dodge")})
+	}
+	if flags&ParryFlag != 0 {
+		choices = append(choices, &AttributeChoice{Key: gid.Parry, Title: prefix + i18n.Text("Parry")})
+	}
+	if flags&BlockFlag != 0 {
+		choices = append(choices, &AttributeChoice{Key: gid.Block, Title: prefix + i18n.Text("Block")})
+	}
+	if flags&SkillFlag != 0 {
+		choices = append(choices, &AttributeChoice{Key: gid.Skill, Title: prefix + i18n.Text("Skill")})
+	}
+	for _, choice := range choices {
+		if choice.Key == currentKey {
+			return choices, choice
 		}
 	}
-	return choices
+	current = &AttributeChoice{
+		Key:   currentKey,
+		Title: fmt.Sprintf(prefix+i18n.Text("unrecognized key (%s)"), currentKey),
+	}
+	return append(choices, current), current
 }
 
 func (c *AttributeChoice) String() string {

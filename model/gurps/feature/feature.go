@@ -23,6 +23,7 @@ import (
 // Feature holds data that affects another object.
 type Feature interface {
 	nameables.Nameables
+	FeatureType() Type
 	// FeatureMapKey returns the key used for matching within the feature map.
 	FeatureMapKey() string
 	Clone() Feature

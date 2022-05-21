@@ -91,12 +91,13 @@ func NewTemplate(filePath string, template *gurps.Template) unison.Dockable {
 		gc.DrawRect(rect, theme.PageVoidColor.Paint(gc, rect, unison.Fill))
 	}
 
-	t.scaleField = widget.NewPercentageField(func() int { return t.scale }, func(v int) {
+	scaleTitle := i18n.Text("Scale")
+	t.scaleField = widget.NewPercentageField(scaleTitle, func() int { return t.scale }, func(v int) {
 		t.scale = v
 		t.applyScale()
-	}, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax)
+	}, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, false, false)
 	t.scaleField.SetMarksModified(false)
-	t.scaleField.Tooltip = unison.NewTooltipWithText(i18n.Text("Scale"))
+	t.scaleField.Tooltip = unison.NewTooltipWithText(scaleTitle)
 
 	toolbar := unison.NewPanel()
 	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, unison.Insets{Bottom: 1},

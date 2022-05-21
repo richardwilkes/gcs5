@@ -173,7 +173,7 @@ func (d *pageRefMappingsDockable) createOffsetField(ref *settings.PageRef) {
 		func(v int) {
 			ref.Offset = v
 			settings.Global().PageRefs.Set(ref)
-		}, -9999, 9999, true)
+		}, -9999, 9999, true, false)
 	p.Tooltip = unison.NewTooltipWithText(i18n.Text(`If your PDF is opening up to the wrong page when opening
 page references, enter an offset here to compensate.`))
 	p.SetLayoutData(&unison.FlexLayoutData{

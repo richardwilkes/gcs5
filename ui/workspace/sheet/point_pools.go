@@ -72,11 +72,11 @@ func (p *PointPoolsPanel) rebuild(attrs *gurps.AttributeDefs) {
 		}
 		p.AddChild(p.createPointsField(attr))
 
-		var currentField *widget.NumericField
-		currentField = widget.NewNumericPageField(i18n.Text("Point Pool Current"),
+		var currentField *widget.DecimalField
+		currentField = widget.NewDecimalPageField(i18n.Text("Point Pool Current"),
 			func() fxp.Int {
 				if currentField != nil {
-					currentField.SetMaximum(attr.Maximum())
+					currentField.SetMinMax(currentField.Min(), attr.Maximum())
 				}
 				return attr.Current()
 			}, func(v fxp.Int) { attr.Damage = (attr.Maximum() - v).Max(0) }, fxp.Min, attr.Maximum(), true)
@@ -84,11 +84,11 @@ func (p *PointPoolsPanel) rebuild(attrs *gurps.AttributeDefs) {
 
 		p.AddChild(widget.NewPageLabel(i18n.Text("of")))
 
-		maximumField := widget.NewNumericPageField(i18n.Text("Point Pool Maximum"),
+		maximumField := widget.NewDecimalPageField(i18n.Text("Point Pool Maximum"),
 			func() fxp.Int { return attr.Maximum() },
 			func(v fxp.Int) {
 				attr.SetMaximum(v)
-				currentField.SetMaximum(v)
+				currentField.SetMinMax(currentField.Min(), v)
 				currentField.Sync()
 			}, fxp.Min, fxp.Max, true)
 		p.AddChild(maximumField)

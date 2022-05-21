@@ -39,6 +39,11 @@ func NewReactionBonus() *ReactionBonus {
 	}
 }
 
+// FeatureType implements Feature.
+func (r *ReactionBonus) FeatureType() Type {
+	return r.Type
+}
+
 // Clone implements Feature.
 func (r *ReactionBonus) Clone() Feature {
 	other := *r

@@ -23,8 +23,6 @@ import (
 const (
 	AttributeBonusType Type = iota
 	ConditionalModifierType
-	ContainedWeightReductionType
-	CostReductionType
 	DRBonusType
 	ReactionBonusType
 	SkillBonusType
@@ -32,7 +30,9 @@ const (
 	SpellBonusType
 	SpellPointBonusType
 	WeaponBonusType
-	LastType = WeaponBonusType
+	CostReductionType
+	ContainedWeightReductionType
+	LastType = ContainedWeightReductionType
 )
 
 var (
@@ -40,8 +40,6 @@ var (
 	AllType = []Type{
 		AttributeBonusType,
 		ConditionalModifierType,
-		ContainedWeightReductionType,
-		CostReductionType,
 		DRBonusType,
 		ReactionBonusType,
 		SkillBonusType,
@@ -49,6 +47,8 @@ var (
 		SpellBonusType,
 		SpellPointBonusType,
 		WeaponBonusType,
+		CostReductionType,
+		ContainedWeightReductionType,
 	}
 	typeData = []struct {
 		key    string
@@ -56,47 +56,47 @@ var (
 	}{
 		{
 			key:    "attribute_bonus",
-			string: i18n.Text("Attribute Bonus"),
+			string: i18n.Text("Gives an attribute modifier of"),
 		},
 		{
 			key:    "conditional_modifier",
-			string: i18n.Text("Conditional Modifier"),
-		},
-		{
-			key:    "contained_weight_reduction",
-			string: i18n.Text("Contained Weight Reduction"),
-		},
-		{
-			key:    "cost_reduction",
-			string: i18n.Text("Cost Reduction"),
+			string: i18n.Text("Gives a conditional modifier of"),
 		},
 		{
 			key:    "dr_bonus",
-			string: i18n.Text("DR Bonus"),
+			string: i18n.Text("Gives a DR bonus of"),
 		},
 		{
 			key:    "reaction_bonus",
-			string: i18n.Text("Reaction Bonus"),
+			string: i18n.Text("Gives a reaction modifier of"),
 		},
 		{
 			key:    "skill_bonus",
-			string: i18n.Text("Skill Bonus"),
+			string: i18n.Text("Gives a skill level modifier of"),
 		},
 		{
 			key:    "skill_point_bonus",
-			string: i18n.Text("Skill Point Bonus"),
+			string: i18n.Text("Gives a skill point modifier of"),
 		},
 		{
 			key:    "spell_bonus",
-			string: i18n.Text("Spell Bonus"),
+			string: i18n.Text("Gives a spell level modifier of"),
 		},
 		{
 			key:    "spell_point_bonus",
-			string: i18n.Text("Spell Point Bonus"),
+			string: i18n.Text("Gives a spell point modifier of"),
 		},
 		{
 			key:    "weapon_bonus",
-			string: i18n.Text("Weapon Bonus"),
+			string: i18n.Text("Gives a weapon damage modifier of"),
+		},
+		{
+			key:    "cost_reduction",
+			string: i18n.Text("Reduces the attribute cost of"),
+		},
+		{
+			key:    "contained_weight_reduction",
+			string: i18n.Text("Reduces the contained weight by"),
 		},
 	}
 )
