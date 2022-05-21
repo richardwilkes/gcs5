@@ -89,7 +89,7 @@ fi
 
 # Run the linters
 if [ "$LINT"x == "1x" ]; then
-  GOLANGCI_LINT_VERSION=1.46.0
+  GOLANGCI_LINT_VERSION=1.46.2
   TOOLS_DIR=$PWD/tools
   mkdir -p "$TOOLS_DIR"
   if [ ! -e "$TOOLS_DIR/golangci-lint" ] || [ "$("$TOOLS_DIR/golangci-lint" version 2>&1 | awk '{ print $4 }' || true)x" != "${GOLANGCI_LINT_VERSION}x" ]; then
