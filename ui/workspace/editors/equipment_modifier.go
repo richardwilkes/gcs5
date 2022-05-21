@@ -19,6 +19,8 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+const equipmentCostAndWeightPrototype = "-99.99 CF"
+
 // EditEquipmentModifier displays the editor for an equipment modifier.
 func EditEquipmentModifier(owner widget.Rebuildable, modifier *gurps.EquipmentModifier) {
 	displayEditor[*gurps.EquipmentModifier, *gurps.EquipmentModifierEditData](owner, modifier, initEquipmentModifierEditor)
@@ -57,7 +59,7 @@ func addEquipmentCostFields(parent *unison.Panel, e *editor[*gurps.EquipmentModi
 			e.editorData.CostAmount = e.editorData.CostType.Format(value)
 			widget.MarkModified(parent)
 		})
-	field.MinimumTextWidth = 50
+	field.SetMinimumTextWidthUsing(equipmentCostAndWeightPrototype)
 	wrapper.AddChild(field)
 	popup := unison.NewPopupMenu[string]()
 	for _, one := range equipment.AllModifierCostType {
@@ -83,7 +85,7 @@ func addEquipmentWeightFields(parent *unison.Panel, e *editor[*gurps.EquipmentMo
 			e.editorData.WeightAmount = e.editorData.WeightType.Format(value, units)
 			widget.MarkModified(parent)
 		})
-	field.MinimumTextWidth = 50
+	field.SetMinimumTextWidthUsing(equipmentCostAndWeightPrototype)
 	wrapper.AddChild(field)
 	popup := unison.NewPopupMenu[string]()
 	for _, one := range equipment.AllModifierWeightType {

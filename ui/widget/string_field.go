@@ -12,6 +12,7 @@
 package widget
 
 import (
+	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/unison"
 )
 
@@ -20,6 +21,7 @@ type StringField struct {
 	*unison.Field
 	undoID    int64
 	undoTitle string
+	last      string
 	get       func() string
 	set       func(string)
 	useGet    bool
@@ -43,11 +45,13 @@ func newStringField(field *unison.Field, undoTitle string, get func() string, se
 		Field:     field,
 		undoID:    unison.NextUndoID(),
 		undoTitle: undoTitle,
+		last:      get(),
 		get:       get,
 		set:       set,
 		useGet:    true,
 	}
 	f.Self = f
+	f.LostFocusCallback = f.lostFocus
 	f.ModifiedCallback = f.modified
 	f.Sync()
 	f.SetLayoutData(&unison.FlexLayoutData{
@@ -57,9 +61,14 @@ func newStringField(field *unison.Field, undoTitle string, get func() string, se
 	return f
 }
 
+// SetMinimumTextWidthUsing sets the MinimumTextWidth by measuring the provided text.
+func (f *StringField) SetMinimumTextWidthUsing(s string) {
+	f.MinimumTextWidth = xmath.Max(f.Font.SimpleWidth(s), 10)
+}
+
 func (f *StringField) lostFocus() {
 	f.useGet = true
-	f.Sync()
+	f.SetText(f.Text())
 	f.DefaultFocusLost()
 }
 
@@ -93,9 +102,12 @@ func (f *StringField) modified() {
 			})
 		}
 	}
-	f.set(text)
-	MarkForLayoutWithinDockable(f)
-	MarkModified(f)
+	if f.last != text {
+		f.last = text
+		f.set(text)
+		MarkForLayoutWithinDockable(f)
+		MarkModified(f)
+	}
 }
 
 func (f *StringField) setWithoutUndo(text string, focus bool) {

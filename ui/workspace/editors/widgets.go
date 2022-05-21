@@ -75,8 +75,7 @@ func addTechLevelRequired(parent *unison.Panel, fieldData **string, includeField
 		if *fieldData == nil {
 			field.SetEnabled(false)
 		}
-		insets := field.Border().Insets()
-		field.MinimumTextWidth = field.Font.SimpleWidth("12^") + insets.Width()
+		field.SetMinimumTextWidthUsing("12^")
 		wrapper.AddChild(field)
 		parent = wrapper
 	} else {

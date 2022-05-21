@@ -212,7 +212,7 @@ func (p *featuresPanel) createDRBonusPanel(f *feature.DRBonus) *unison.Panel {
 			widget.MarkModified(wrapper)
 		})
 	field.Watermark = gid.All
-	field.MinimumTextWidth = 100
+	field.SetMinimumTextWidthUsing("Specialization")
 	wrapper.AddChild(field)
 	wrapper.AddChild(widget.NewFieldTrailingLabel(i18n.Text("attacks")))
 	panel.AddChild(wrapper)
