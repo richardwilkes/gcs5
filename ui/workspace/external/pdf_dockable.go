@@ -133,7 +133,7 @@ func NewPDFDockable(filePath string) (unison.Dockable, error) {
 	pageLabel.Text = i18n.Text("Page")
 
 	d.pageNumberField = unison.NewField()
-	d.pageNumberField.MinimumTextWidth = d.pageNumberField.Font.SimpleWidth(strconv.Itoa(d.pdf.PageCount() * 10))
+	d.pageNumberField.SetMinimumTextWidthUsing(strconv.Itoa(d.pdf.PageCount() * 10))
 	d.pageNumberField.ModifiedCallback = func() {
 		if d.noUpdate {
 			return

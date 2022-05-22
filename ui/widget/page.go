@@ -17,7 +17,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/res"
-	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/unison"
 )
 
@@ -204,8 +203,7 @@ func NewDecimalPageField(undoTitle string, get func() fxp.Int, set func(fxp.Int)
 	field.SetBorder(field.UnfocusedBorder)
 	if !noMinWidth && min != fxp.Min && max != fxp.Max {
 		// Override to ignore fractional values
-		field.MinimumTextWidth = xmath.Max(field.Font.SimpleWidth(min.Trunc().String()),
-			field.Font.SimpleWidth(max.Trunc().String()))
+		field.SetMinimumTextWidthUsing(min.Trunc().String(), max.Trunc().String())
 	}
 	field.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,

@@ -12,7 +12,6 @@
 package widget
 
 import (
-	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/unison"
 )
 
@@ -59,11 +58,6 @@ func newStringField(field *unison.Field, undoTitle string, get func() string, se
 		HGrab:  true,
 	})
 	return f
-}
-
-// SetMinimumTextWidthUsing sets the MinimumTextWidth by measuring the provided text.
-func (f *StringField) SetMinimumTextWidthUsing(s string) {
-	f.MinimumTextWidth = xmath.Max(f.Font.SimpleWidth(s), 10)
 }
 
 func (f *StringField) lostFocus() {

@@ -195,12 +195,12 @@ func (f *NumericField[T]) SetMinMax(min, max T) {
 
 func (f *NumericField[T]) adjustMinimumTextWidth() {
 	if f.getPrototypes != nil {
-		f.MinimumTextWidth = 10
-		for _, v := range f.getPrototypes(f.min, f.max) {
-			if width := f.Font.SimpleWidth(f.Format(v)); width > f.MinimumTextWidth {
-				f.MinimumTextWidth = width
-			}
+		prototypes := f.getPrototypes(f.min, f.max)
+		candidates := make([]string, 0, len(prototypes))
+		for _, v := range prototypes {
+			candidates = append(candidates, f.Format(v))
 		}
+		f.SetMinimumTextWidthUsing(candidates...)
 	}
 }
 
