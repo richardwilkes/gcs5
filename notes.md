@@ -2,7 +2,6 @@
 
 #### Unison-specific work that needs to be done
 
-- Something is off about numeric field entry: when trying to insert a negative sign, it sometimes is ignored
 - Printing support in unison
 - Drag & drop support in the unison Table object
 - Carefully comb over the interface and identify areas where things aren't working well on Windows and Linux, since I
@@ -11,17 +10,10 @@
 #### GCS-specific work that needs to be done
 
 - Detail editors
-  - Advantages
-  - Advantage Modifiers
-  - Equipment
-  - Equipment Modifiers
-  - Skills
-  - Spells
-  - Features
-  - Prerequisites
-  - Modifiers
-  - Melee Weapons
-  - Ranged Weapons
+  - Features section
+  - Modifiers section
+  - Melee Weapons section
+  - Ranged Weapons section
 - Settings editors
   - Attributes
   - Body Type
