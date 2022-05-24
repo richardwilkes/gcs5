@@ -88,7 +88,6 @@ type Equipment struct {
 	Entity            *Entity
 	Parent            *Equipment
 	UnsatisfiedReason string
-	Satisfied         bool
 }
 
 type equipmentListData struct {
@@ -213,6 +212,7 @@ func (e *Equipment) CellData(column int, data *node.CellData) {
 		data.Type = node.Text
 		data.Primary = e.Description()
 		data.Secondary = e.SecondaryText()
+		data.UnsatisfiedReason = e.UnsatisfiedReason
 	case EquipmentUsesColumn:
 		if e.MaxUses > 0 {
 			data.Type = node.Text

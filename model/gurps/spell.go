@@ -62,7 +62,6 @@ type Spell struct {
 	Parent            *Spell
 	LevelData         skill.Level
 	UnsatisfiedReason string
-	Satisfied         bool
 }
 
 type spellListData struct {
@@ -184,6 +183,7 @@ func (s *Spell) CellData(column int, data *node.CellData) {
 		data.Type = node.Text
 		data.Primary = s.Description()
 		data.Secondary = s.SecondaryText()
+		data.UnsatisfiedReason = s.UnsatisfiedReason
 	case SpellResistColumn:
 		if !s.Container() {
 			data.Type = node.Text

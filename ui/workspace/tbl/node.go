@@ -20,6 +20,8 @@ import (
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/settings"
+	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -100,10 +102,12 @@ func (n *Node) ColumnCell(row, col int, selected bool) unison.Paneler {
 
 func applyBackgroundInkRecursively(panel *unison.Panel, selected bool) {
 	if label, ok := panel.Self.(*unison.Label); ok {
-		if selected {
-			label.OnBackgroundInk = unison.OnSelectionColor
-		} else {
-			label.OnBackgroundInk = unison.DefaultLabelTheme.OnBackgroundInk
+		if _, exists := label.ClientData()["exclude"]; !exists {
+			if selected {
+				label.OnBackgroundInk = unison.OnSelectionColor
+			} else {
+				label.OnBackgroundInk = unison.DefaultLabelTheme.OnBackgroundInk
+			}
 		}
 	}
 	for _, child := range panel.Children() {
@@ -169,8 +173,34 @@ func (n *Node) createLabelCell(c *node.CellData, width float32, selected, strike
 	if c.Secondary != "" {
 		n.addLabelCell(c, p, width, c.Secondary, n.secondaryFieldFont(), selected, false)
 	}
-	if c.Tooltip != "" {
-		p.Tooltip = unison.NewTooltipWithText(c.Tooltip)
+	tooltip := c.Tooltip
+	if c.UnsatisfiedReason != "" {
+		label := unison.NewLabel()
+		label.Font = n.secondaryFieldFont()
+		baseline := label.Font.Baseline()
+		label.Drawable = &unison.DrawableSVG{
+			SVG:  unison.TriangleExclamationSVG(),
+			Size: geom.NewSize(baseline, baseline),
+		}
+		label.Text = i18n.Text("Unsatisfied prerequisite(s)")
+		label.HAlign = c.Alignment
+		label.ClientData()["exclude"] = true
+		label.OnBackgroundInk = unison.OnErrorColor
+		label.SetBorder(unison.NewEmptyBorder(unison.Insets{
+			Top:    1,
+			Left:   4,
+			Bottom: 0,
+			Right:  4,
+		}))
+		label.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) {
+			gc.DrawRect(rect, unison.ErrorColor.Paint(gc, rect, unison.Fill))
+			label.DefaultDraw(gc, rect)
+		}
+		p.AddChild(label)
+		tooltip = c.UnsatisfiedReason
+	}
+	if tooltip != "" {
+		p.Tooltip = unison.NewTooltipWithText(tooltip)
 	}
 	return p
 }

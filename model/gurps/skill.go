@@ -54,7 +54,6 @@ type Skill struct {
 	Parent            *Skill
 	LevelData         skill.Level
 	UnsatisfiedReason string
-	Satisfied         bool
 }
 
 type skillListData struct {
@@ -173,6 +172,7 @@ func (s *Skill) CellData(column int, data *node.CellData) {
 		data.Type = node.Text
 		data.Primary = s.Description()
 		data.Secondary = s.SecondaryText()
+		data.UnsatisfiedReason = s.UnsatisfiedReason
 	case SkillDifficultyColumn:
 		if !s.Container() {
 			data.Type = node.Text

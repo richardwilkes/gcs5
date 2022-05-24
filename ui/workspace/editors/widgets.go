@@ -356,20 +356,26 @@ func adjustPopupBlank[T comparable](popup *unison.PopupMenu[T], blank bool) {
 	}
 }
 
-func addNameCriteriaPanel(parent *unison.Panel, strCriteria *criteria.String, hSpan int) {
-	addStringCriteriaPanel(parent, i18n.Text("whose name"), i18n.Text("Name Qualifier"), strCriteria, hSpan)
+func addNameCriteriaPanel(parent *unison.Panel, strCriteria *criteria.String, hSpan int, includeEmptyFiller bool) {
+	addStringCriteriaPanel(parent, i18n.Text("whose name"), i18n.Text("Name Qualifier"), strCriteria, hSpan, includeEmptyFiller)
 }
 
-func addSpecializationCriteriaPanel(parent *unison.Panel, strCriteria *criteria.String, hSpan int) {
-	addStringCriteriaPanel(parent, i18n.Text("and whose specialization"), i18n.Text("Specialization Qualifier"), strCriteria, hSpan)
+func addSpecializationCriteriaPanel(parent *unison.Panel, strCriteria *criteria.String, hSpan int, includeEmptyFiller bool) {
+	addStringCriteriaPanel(parent, i18n.Text("and whose specialization"), i18n.Text("Specialization Qualifier"), strCriteria, hSpan, includeEmptyFiller)
 }
 
-func addNotesCriteriaPanel(parent *unison.Panel, strCriteria *criteria.String, hSpan int) {
-	addStringCriteriaPanel(parent, i18n.Text("and whose notes"), i18n.Text("Notes Qualifier"), strCriteria, hSpan)
+func addTagCriteriaPanel(parent *unison.Panel, strCriteria *criteria.String, hSpan int, includeEmptyFiller bool) {
+	addStringCriteriaPanel(parent, i18n.Text("and at least one tag"), i18n.Text("Tag Qualifier"), strCriteria, hSpan, includeEmptyFiller)
 }
 
-func addStringCriteriaPanel(parent *unison.Panel, prefix, undoTitle string, strCriteria *criteria.String, hSpan int) (*unison.PopupMenu[string], *widget.StringField) {
-	parent.AddChild(unison.NewPanel())
+func addNotesCriteriaPanel(parent *unison.Panel, strCriteria *criteria.String, hSpan int, includeEmptyFiller bool) {
+	addStringCriteriaPanel(parent, i18n.Text("and whose notes"), i18n.Text("Notes Qualifier"), strCriteria, hSpan, includeEmptyFiller)
+}
+
+func addStringCriteriaPanel(parent *unison.Panel, prefix, undoTitle string, strCriteria *criteria.String, hSpan int, includeEmptyFiller bool) (*unison.PopupMenu[string], *widget.StringField) {
+	if includeEmptyFiller {
+		parent.AddChild(unison.NewPanel())
+	}
 	panel := unison.NewPanel()
 	panel.SetLayout(&unison.FlexLayout{
 		Columns:  2,
@@ -401,11 +407,10 @@ func addStringCriteriaPanel(parent *unison.Panel, prefix, undoTitle string, strC
 }
 
 func addLevelCriteriaPanel(parent *unison.Panel, numCriteria *criteria.Numeric, hSpan int, includeEmptyFiller bool) {
-	addNumericCriteriaPanel(parent, i18n.Text("and whose level"), i18n.Text("Level Qualifier"), numCriteria, 0,
-		fxp.Thousand, false, includeEmptyFiller, hSpan)
+	addNumericCriteriaPanel(parent, i18n.Text("and whose level"), i18n.Text("Level Qualifier"), numCriteria, 0, fxp.Thousand, hSpan, false, includeEmptyFiller)
 }
 
-func addNumericCriteriaPanel(parent *unison.Panel, prefix, undoTitle string, numCriteria *criteria.Numeric, min, max fxp.Int, integerOnly, includeEmptyFiller bool, hSpan int) {
+func addNumericCriteriaPanel(parent *unison.Panel, prefix, undoTitle string, numCriteria *criteria.Numeric, min, max fxp.Int, hSpan int, integerOnly, includeEmptyFiller bool) {
 	if includeEmptyFiller {
 		parent.AddChild(unison.NewPanel())
 	}

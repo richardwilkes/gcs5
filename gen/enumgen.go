@@ -653,18 +653,22 @@ func main() {
 		StandAlone: true,
 		Values: []enumValue{
 			{
-				Key: "all_colleges",
+				Key:    "all_colleges",
+				String: "to all colleges",
 			},
 			{
-				Key: "college_name",
+				Key:    "college_name",
+				String: "to the college whose name",
 			},
 			{
-				Name: "PowerSource",
-				Key:  "power_source_name",
+				Name:   "PowerSource",
+				Key:    "power_source_name",
+				String: "to the power source whose name",
 			},
 			{
-				Name: "Spell",
-				Key:  "spell_name",
+				Name:   "Spell",
+				Key:    "spell_name",
+				String: "to the spell whose name",
 			},
 		},
 	})

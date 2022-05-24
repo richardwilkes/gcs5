@@ -170,6 +170,9 @@ func (f *NumericField[T]) setWithoutUndo(text string, focus bool) {
 
 // Sync the field to the current value.
 func (f *NumericField[T]) Sync() {
+	if !f.Focused() {
+		f.useGet = true
+	}
 	f.setWithoutUndo(f.getData(), false)
 }
 

@@ -10,7 +10,6 @@
 #### GCS-specific work that needs to be done
 
 - Detail editors
-  - Features section
   - Modifiers section
   - Melee Weapons section
   - Ranged Weapons section
@@ -72,3 +71,4 @@
   makes it harder for users to discover they exist)
   - I'm currently thinking of just having a preference for making empty lists vanish when printing. That way they are
     discoverable in the UI, but don't clutter up the printed sheet if you don't want them to.
+- When a sheet is scrolled, tooltips don't seem to be coming up in the correct spot for cells in the tables

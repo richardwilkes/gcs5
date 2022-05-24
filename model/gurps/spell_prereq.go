@@ -134,7 +134,6 @@ func (s *SpellPrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xi
 		satisfied = !satisfied
 	}
 	if !satisfied && tooltip != nil {
-		tooltip.WriteByte('\n')
 		tooltip.WriteString(prefix)
 		tooltip.WriteString(HasText(s.Has))
 		if s.SubType == spell.CollegeCount {

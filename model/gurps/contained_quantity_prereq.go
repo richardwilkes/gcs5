@@ -84,7 +84,6 @@ func (c *ContainedQuantityPrereq) Satisfied(_ *Entity, exclude interface{}, tool
 		satisfied = !satisfied
 	}
 	if !satisfied && tooltip != nil {
-		tooltip.WriteByte('\n')
 		tooltip.WriteString(prefix)
 		tooltip.WriteString(HasText(c.Has))
 		tooltip.WriteString(i18n.Text(" a contained quantity which "))

@@ -104,7 +104,6 @@ func (a *AdvantagePrereq) Satisfied(entity *Entity, exclude interface{}, tooltip
 		satisfied = !satisfied
 	}
 	if !satisfied && tooltip != nil {
-		tooltip.WriteByte('\n')
 		tooltip.WriteString(prefix)
 		tooltip.WriteString(HasText(a.Has))
 		tooltip.WriteString(i18n.Text(" an advantage whose name "))

@@ -82,7 +82,6 @@ func (c *ContainedWeightPrereq) Satisfied(entity *Entity, exclude interface{}, t
 		satisfied = !satisfied
 	}
 	if !satisfied && tooltip != nil {
-		tooltip.WriteByte('\n')
 		tooltip.WriteString(prefix)
 		tooltip.WriteString(HasText(c.Has))
 		tooltip.WriteString(i18n.Text(" a contained weight which "))

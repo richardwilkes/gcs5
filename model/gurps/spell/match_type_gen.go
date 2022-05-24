@@ -42,19 +42,19 @@ var (
 	}{
 		{
 			key:    "all_colleges",
-			string: i18n.Text("All Colleges"),
+			string: i18n.Text("to all colleges"),
 		},
 		{
 			key:    "college_name",
-			string: i18n.Text("College Name"),
+			string: i18n.Text("to the college whose name"),
 		},
 		{
 			key:    "power_source_name",
-			string: i18n.Text("Power Source Name"),
+			string: i18n.Text("to the power source whose name"),
 		},
 		{
 			key:    "spell_name",
-			string: i18n.Text("Spell Name"),
+			string: i18n.Text("to the spell whose name"),
 		},
 	}
 )

@@ -70,8 +70,7 @@ func (p *prereqPanel) createPrereqListPanel(depth int, list *gurps.PrereqList) *
 	if inFront {
 		p.addAndOr(panel, list)
 	}
-	addNumericCriteriaPanel(panel, i18n.Text("When the Tech Level"), i18n.Text("When Tech Level"), &list.WhenTL, 0,
-		fxp.Twelve, true, true, 1)
+	addNumericCriteriaPanel(panel, i18n.Text("When the Tech Level"), i18n.Text("When Tech Level"), &list.WhenTL, 0, fxp.Twelve, 1, true, true)
 	popup := addBoolPopup(panel, i18n.Text("requires all of:"), i18n.Text("requires at least one of:"), &list.All)
 	callback := popup.SelectionCallback
 	popup.SelectionCallback = func(index int, item string) {
@@ -290,8 +289,8 @@ func (p *prereqPanel) createAdvantagePrereqPanel(depth int, pr *gurps.AdvantageP
 		HSpacing: unison.StdHSpacing,
 		VSpacing: unison.StdVSpacing,
 	})
-	addNameCriteriaPanel(panel, &pr.NameCriteria, columns-1)
-	addNotesCriteriaPanel(panel, &pr.NotesCriteria, columns-1)
+	addNameCriteriaPanel(panel, &pr.NameCriteria, columns-1, true)
+	addNotesCriteriaPanel(panel, &pr.NotesCriteria, columns-1, true)
 	addLevelCriteriaPanel(panel, &pr.LevelCriteria, columns-1, true)
 	return panel
 }
@@ -319,8 +318,7 @@ func (p *prereqPanel) createAttributePrereqPanel(depth int, pr *gurps.AttributeP
 	extra := gurps.SizeFlag | gurps.DodgeFlag | gurps.ParryFlag | gurps.BlockFlag
 	addAttributeChoicePopup(second, p.entity, noAndOr, &pr.Which, extra)
 	addAttributeChoicePopup(second, p.entity, i18n.Text("combined with"), &pr.CombinedWith, extra|gurps.BlankFlag)
-	addNumericCriteriaPanel(second, i18n.Text("which"), i18n.Text("Attribute Qualifier"), &pr.QualifierCriteria,
-		fxp.Min, fxp.Max, false, false, 1)
+	addNumericCriteriaPanel(second, i18n.Text("which"), i18n.Text("Attribute Qualifier"), &pr.QualifierCriteria, fxp.Min, fxp.Max, 1, false, false)
 	second.SetLayout(&unison.FlexLayout{
 		Columns:  len(second.Children()),
 		HSpacing: unison.StdHSpacing,
@@ -402,8 +400,8 @@ func (p *prereqPanel) createSkillPrereqPanel(depth int, pr *gurps.SkillPrereq) *
 		HSpacing: unison.StdHSpacing,
 		VSpacing: unison.StdVSpacing,
 	})
-	addNameCriteriaPanel(panel, &pr.NameCriteria, columns-1)
-	addSpecializationCriteriaPanel(panel, &pr.SpecializationCriteria, columns-1)
+	addNameCriteriaPanel(panel, &pr.NameCriteria, columns-1, true)
+	addSpecializationCriteriaPanel(panel, &pr.SpecializationCriteria, columns-1, true)
 	addLevelCriteriaPanel(panel, &pr.LevelCriteria, columns-1, true)
 	return panel
 }
@@ -430,7 +428,7 @@ func (p *prereqPanel) createSpellPrereqPanel(depth int, pr *gurps.SpellPrereq) *
 	second := unison.NewPanel()
 	second.SetLayoutData(&unison.FlexLayoutData{HSpan: columns - 1})
 	subTypePopup := addPopup[spell.ComparisonType](second, spell.AllComparisonType, &pr.SubType)
-	popup, field := addStringCriteriaPanel(second, "", i18n.Text("Spell Qualifier"), &pr.QualifierCriteria, 1)
+	popup, field := addStringCriteriaPanel(second, "", i18n.Text("Spell Qualifier"), &pr.QualifierCriteria, 1, false)
 	savedCallback := subTypePopup.SelectionCallback
 	subTypePopup.SelectionCallback = func(index int, item spell.ComparisonType) {
 		savedCallback(index, item)

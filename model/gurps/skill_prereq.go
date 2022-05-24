@@ -104,7 +104,6 @@ func (s *SkillPrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xi
 		satisfied = !satisfied
 	}
 	if !satisfied && tooltip != nil {
-		tooltip.WriteByte('\n')
 		tooltip.WriteString(prefix)
 		tooltip.WriteString(HasText(s.Has))
 		tooltip.WriteString(i18n.Text(" a skill whose name "))

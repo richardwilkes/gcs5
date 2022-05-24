@@ -817,9 +817,9 @@ func (ex *legacyExporter) processAdvantagesLoop(buffer []byte, f func(*gurps.Adv
 				case refKey:
 					ex.writeEncodedText(adq.PageRef)
 				case styleIndentWarningKey:
-					ex.handleStyleIndentWarning(adq.Depth(), adq.Satisfied)
+					ex.handleStyleIndentWarning(adq.Depth(), adq.UnsatisfiedReason == "")
 				case satisfiedKey:
-					ex.handleSatisfied(adq.Satisfied)
+					ex.handleSatisfied(adq.UnsatisfiedReason == "")
 				default:
 					switch {
 					case strings.HasPrefix(key, "DESCRIPTION_MODIFIER_NOTES"):
@@ -880,9 +880,9 @@ func (ex *legacyExporter) processSkillsLoop(buffer []byte) {
 			case refKey:
 				ex.writeEncodedText(s.PageRef)
 			case styleIndentWarningKey:
-				ex.handleStyleIndentWarning(s.Depth(), s.Satisfied)
+				ex.handleStyleIndentWarning(s.Depth(), s.UnsatisfiedReason == "")
 			case satisfiedKey:
-				ex.handleSatisfied(s.Satisfied)
+				ex.handleSatisfied(s.UnsatisfiedReason == "")
 			default:
 				switch {
 				case strings.HasPrefix(key, "DESCRIPTION_MODIFIER_NOTES"):
@@ -950,9 +950,9 @@ func (ex *legacyExporter) processSpellsLoop(buffer []byte) {
 			case refKey:
 				ex.writeEncodedText(s.PageRef)
 			case styleIndentWarningKey:
-				ex.handleStyleIndentWarning(s.Depth(), s.Satisfied)
+				ex.handleStyleIndentWarning(s.Depth(), s.UnsatisfiedReason == "")
 			case satisfiedKey:
-				ex.handleSatisfied(s.Satisfied)
+				ex.handleSatisfied(s.UnsatisfiedReason == "")
 			default:
 				switch {
 				case strings.HasPrefix(key, "DESCRIPTION_MODIFIER_NOTES"):
@@ -1011,9 +1011,9 @@ func (ex *legacyExporter) processEquipmentLoop(buffer []byte, carried bool) {
 				case refKey:
 					ex.writeEncodedText(eqp.PageRef)
 				case styleIndentWarningKey:
-					ex.handleStyleIndentWarning(eqp.Depth(), eqp.Satisfied)
+					ex.handleStyleIndentWarning(eqp.Depth(), eqp.UnsatisfiedReason == "")
 				case satisfiedKey:
-					ex.handleSatisfied(eqp.Satisfied)
+					ex.handleSatisfied(eqp.UnsatisfiedReason == "")
 				case "STATE":
 					switch {
 					case !carried:

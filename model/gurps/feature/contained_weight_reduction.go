@@ -63,8 +63,8 @@ func (c *ContainedWeightReduction) IsPercentageReduction() bool {
 	return strings.HasSuffix(c.Reduction, "%")
 }
 
-// PercentageReduction returns the percentage (where 1% is 1, not 0.01) the weight should be reduced by. Will return 0 if
-// this is not a percentage.
+// PercentageReduction returns the percentage (where 1% is 1, not 0.01) the weight should be reduced by. Will return 0
+// if this is not a percentage.
 func (c *ContainedWeightReduction) PercentageReduction() fxp.Int {
 	if !c.IsPercentageReduction() {
 		return 0
@@ -78,4 +78,17 @@ func (c *ContainedWeightReduction) FixedReduction(defUnits measure.WeightUnits) 
 		return 0
 	}
 	return measure.WeightFromStringForced(c.Reduction, defUnits)
+}
+
+// ExtractContainedWeightReduction extracts the weight reduction (which may be a weight or a percentage) and returns
+// a sanitized result. If 'err' is not nil, then the input was bad. Even in that case, however, a valid string is
+// returned.
+func ExtractContainedWeightReduction(s string, defUnits measure.WeightUnits) (string, error) {
+	s = strings.TrimSpace(s)
+	if strings.HasSuffix(s, "%") {
+		v, err := fxp.FromString(strings.TrimSpace(s[:len(s)-1]))
+		return v.String() + "%", err
+	}
+	w, err := measure.WeightFromString(s, defUnits)
+	return defUnits.Format(w), err
 }

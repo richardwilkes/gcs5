@@ -83,7 +83,6 @@ func (a *AttributePrereq) Satisfied(entity *Entity, _ interface{}, tooltip *xio.
 		satisfied = !satisfied
 	}
 	if !satisfied && tooltip != nil {
-		tooltip.WriteByte('\n')
 		tooltip.WriteString(prefix)
 		tooltip.WriteString(HasText(a.Has))
 		tooltip.WriteByte(' ')

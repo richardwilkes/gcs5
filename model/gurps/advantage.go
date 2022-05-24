@@ -54,7 +54,6 @@ type Advantage struct {
 	Entity            *Entity
 	Parent            *Advantage
 	UnsatisfiedReason string
-	Satisfied         bool
 }
 
 type advantageListData struct {
@@ -164,6 +163,7 @@ func (a *Advantage) CellData(column int, data *node.CellData) {
 		data.Primary = a.String()
 		data.Secondary = a.SecondaryText()
 		data.Disabled = a.Disabled
+		data.UnsatisfiedReason = a.UnsatisfiedReason
 	case AdvantagePointsColumn:
 		data.Type = node.Text
 		data.Primary = a.AdjustedPoints().String()

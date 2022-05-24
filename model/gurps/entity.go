@@ -302,75 +302,57 @@ func processFeature(parent fmt.Stringer, m map[string][]feature.Feature, f featu
 }
 
 func (e *Entity) processPrereqs() {
-	const prefix = "\n- "
+	const prefix = "\n● "
 	notMetPrefix := i18n.Text("Prerequisites have not been met:")
 	TraverseAdvantages(func(a *Advantage) bool {
-		if a.Container() || a.Prereq == nil {
-			a.Satisfied = true
-			a.UnsatisfiedReason = ""
-		} else {
+		a.UnsatisfiedReason = ""
+		if !a.Container() && a.Prereq != nil {
 			var tooltip xio.ByteBuffer
-			if a.Satisfied = a.Prereq.Satisfied(e, a, &tooltip, prefix); a.Satisfied {
-				a.UnsatisfiedReason = ""
-			} else {
+			if !a.Prereq.Satisfied(e, a, &tooltip, prefix) {
 				a.UnsatisfiedReason = notMetPrefix + tooltip.String()
 			}
 		}
 		return false
 	}, true, e.Advantages...)
 	TraverseSkills(func(s *Skill) bool {
-		if s.Container() {
-			s.Satisfied = true
-			s.UnsatisfiedReason = ""
-		} else {
+		s.UnsatisfiedReason = ""
+		if !s.Container() {
 			var tooltip xio.ByteBuffer
-			if s.Prereq == nil {
-				s.Satisfied = true
-			} else {
-				s.Satisfied = s.Prereq.Satisfied(e, s, &tooltip, prefix)
+			satisfied := true
+			if s.Prereq != nil {
+				satisfied = s.Prereq.Satisfied(e, s, &tooltip, prefix)
 			}
-			if s.Satisfied && s.Type == gid.Technique {
-				s.Satisfied = s.TechniqueSatisfied(&tooltip, prefix)
+			if satisfied && s.Type == gid.Technique {
+				satisfied = s.TechniqueSatisfied(&tooltip, prefix)
 			}
-			if s.Satisfied {
-				s.UnsatisfiedReason = ""
-			} else {
+			if !satisfied {
 				s.UnsatisfiedReason = notMetPrefix + tooltip.String()
 			}
 		}
 		return false
 	}, e.Skills...)
 	TraverseSpells(func(s *Spell) bool {
-		if s.Container() {
-			s.Satisfied = true
-			s.UnsatisfiedReason = ""
-		} else {
+		s.UnsatisfiedReason = ""
+		if !s.Container() {
 			var tooltip xio.ByteBuffer
-			if s.Prereq == nil {
-				s.Satisfied = true
-			} else {
-				s.Satisfied = s.Prereq.Satisfied(e, s, &tooltip, prefix)
+			satisfied := true
+			if s.Prereq != nil {
+				satisfied = s.Prereq.Satisfied(e, s, &tooltip, prefix)
 			}
-			if s.Satisfied && s.Type == gid.RitualMagicSpell {
-				s.Satisfied = s.RitualMagicSatisfied(&tooltip, prefix)
+			if satisfied && s.Type == gid.RitualMagicSpell {
+				satisfied = s.RitualMagicSatisfied(&tooltip, prefix)
 			}
-			if s.Satisfied {
-				s.UnsatisfiedReason = ""
-			} else {
+			if !satisfied {
 				s.UnsatisfiedReason = notMetPrefix + tooltip.String()
 			}
 		}
 		return false
 	}, e.Spells...)
 	equipmentFunc := func(eqp *Equipment) bool {
-		if eqp.Prereq == nil {
-			eqp.Satisfied = true
-			eqp.UnsatisfiedReason = ""
-		} else {
+		eqp.UnsatisfiedReason = ""
+		if eqp.Prereq != nil {
 			var tooltip xio.ByteBuffer
-			if eqp.Satisfied = eqp.Prereq.Satisfied(e, eqp, &tooltip, prefix); eqp.Satisfied {
-				eqp.UnsatisfiedReason = ""
-			} else {
+			if !eqp.Prereq.Satisfied(e, eqp, &tooltip, prefix) {
 				eqp.UnsatisfiedReason = notMetPrefix + tooltip.String()
 			}
 		}

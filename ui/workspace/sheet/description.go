@@ -150,8 +150,10 @@ func (d *DescriptionPanel) createColumn2() *unison.Panel {
 
 	title = i18n.Text("TL")
 	column.AddChild(widget.NewPageLabelEnd(title))
-	column.AddChild(widget.NewStringPageField(title, func() string { return d.entity.Profile.TechLevel },
-		func(s string) { d.entity.Profile.TechLevel = s }))
+	tlField := widget.NewStringPageField(title, func() string { return d.entity.Profile.TechLevel },
+		func(s string) { d.entity.Profile.TechLevel = s })
+	tlField.Tooltip = unison.NewTooltipWithText(gurps.TechLevelInfo)
+	column.AddChild(tlField)
 
 	return column
 }
