@@ -60,6 +60,7 @@ func newUpdateLibraryAction(id int, lib *library.Library) *unison.Action {
 		} else {
 			action.Title = fmt.Sprintf(i18n.Text("%s is up to date (re-download v%s)"), lib.Title, currentVersion)
 		}
+		action.EnabledCallback = notEnabled
 		action.ExecuteCallback = unimplemented
 	}
 	return action
@@ -69,6 +70,7 @@ func newShowLibraryFolderAction(id int, lib *library.Library) *unison.Action {
 	return &unison.Action{
 		ID:              id,
 		Title:           fmt.Sprintf(i18n.Text("Show %s on Disk"), lib.Title),
+		EnabledCallback: notEnabled,
 		ExecuteCallback: unimplemented,
 	}
 }
@@ -77,6 +79,7 @@ func newShowLibraryFolderAction(id int, lib *library.Library) *unison.Action {
 var ChangeLibraryLocations = &unison.Action{
 	ID:              constants.ChangeLibraryLocationsItemID,
 	Title:           i18n.Text("Change Library Locations"),
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 

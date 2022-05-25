@@ -44,7 +44,7 @@ var SponsorGCSDevelopment = &unison.Action{
 // MakeDonation opens the web site for make a donation.
 var MakeDonation = &unison.Action{
 	ID:    constants.MakeDonationItemID,
-	Title: i18n.Text("Make A Donation For GCS Development"),
+	Title: i18n.Text("Make a One-time Donation for GCS Development"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
 		showWebPage("https://paypal.me/GURPSCharacterSheet")
 	},
@@ -54,6 +54,7 @@ var MakeDonation = &unison.Action{
 var UpdateApp = &unison.Action{
 	ID:              constants.UpdateAppItemID,
 	Title:           i18n.Text("Checking for GCS updates…"),
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 

@@ -123,5 +123,6 @@ var SwapDefaults = &unison.Action{
 	ID:              constants.SwapDefaultsItemID,
 	Title:           i18n.Text("Swap Defaults"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyX, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }

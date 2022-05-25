@@ -47,7 +47,6 @@ const (
 	IncrementTechLevelItemID
 	DecrementTechLevelItemID
 	SwapDefaultsItemID
-	JumpToSearchItemID
 	ItemMenuID
 	AdvantagesMenuID
 	NewAdvantageItemID

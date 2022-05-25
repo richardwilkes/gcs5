@@ -95,9 +95,11 @@ var NewCharacterSheet = &unison.Action{
 
 // NewCharacterTemplate creates a new character template.
 var NewCharacterTemplate = &unison.Action{
-	ID:              constants.NewTemplateItemID,
-	Title:           i18n.Text("New Character Template"),
-	ExecuteCallback: unimplemented,
+	ID:    constants.NewTemplateItemID,
+	Title: i18n.Text("New Character Template"),
+	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+		workspace.DisplayNewDockable(nil, sheet.NewTemplate("untitled.gct", gurps.NewTemplate()))
+	},
 }
 
 // NewAdvantagesLibrary creates a new advantages library.
@@ -220,6 +222,7 @@ var Save = &unison.Action{
 	ID:              constants.SaveItemID,
 	Title:           i18n.Text("Save"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyS, Modifiers: unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -228,6 +231,7 @@ var SaveAs = &unison.Action{
 	ID:              constants.SaveAsItemID,
 	Title:           i18n.Text("Save As…"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyS, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -236,5 +240,6 @@ var Print = &unison.Action{
 	ID:              constants.PrintItemID,
 	Title:           i18n.Text("Print…"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyP, Modifiers: unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }

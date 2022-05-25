@@ -77,6 +77,7 @@ var DefaultSheetSettings = &unison.Action{
 var PerSheetAttributeSettings = &unison.Action{
 	ID:              constants.PerSheetAttributeSettingsItemID,
 	Title:           i18n.Text("Attributes…"),
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -84,6 +85,7 @@ var PerSheetAttributeSettings = &unison.Action{
 var DefaultAttributeSettings = &unison.Action{
 	ID:              constants.DefaultAttributeSettingsItemID,
 	Title:           i18n.Text("Default Attributes…"),
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -91,6 +93,7 @@ var DefaultAttributeSettings = &unison.Action{
 var PerSheetBodyTypeSettings = &unison.Action{
 	ID:              constants.PerSheetBodyTypeSettingsItemID,
 	Title:           i18n.Text("Body Type…"),
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -98,6 +101,7 @@ var PerSheetBodyTypeSettings = &unison.Action{
 var DefaultBodyTypeSettings = &unison.Action{
 	ID:              constants.DefaultBodyTypeSettingsItemID,
 	Title:           i18n.Text("Default Body Type…"),
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 

@@ -139,6 +139,7 @@ var NewAdvantage = &unison.Action{
 	ID:              constants.NewAdvantageItemID,
 	Title:           i18n.Text("New Advantage"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -147,6 +148,7 @@ var NewAdvantageContainer = &unison.Action{
 	ID:              constants.NewAdvantageContainerItemID,
 	Title:           i18n.Text("New Advantage Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -155,6 +157,7 @@ var NewAdvantageModifier = &unison.Action{
 	ID:              constants.NewAdvantageModifierItemID,
 	Title:           i18n.Text("New Advantage Modifier"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.OptionModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -163,6 +166,7 @@ var NewAdvantageContainerModifier = &unison.Action{
 	ID:              constants.NewAdvantageContainerModifierItemID,
 	Title:           i18n.Text("New Advantage Modifier Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -170,6 +174,7 @@ var NewAdvantageContainerModifier = &unison.Action{
 var AddNaturalAttacksAdvantage = &unison.Action{
 	ID:              constants.AddNaturalAttacksAdvantageItemID,
 	Title:           i18n.Text("Add Natural Attacks Advantage"),
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -178,6 +183,7 @@ var NewSkill = &unison.Action{
 	ID:              constants.NewSkillItemID,
 	Title:           i18n.Text("New Skill"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -186,6 +192,7 @@ var NewSkillContainer = &unison.Action{
 	ID:              constants.NewSkillContainerItemID,
 	Title:           i18n.Text("New Skill Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -194,6 +201,7 @@ var NewTechnique = &unison.Action{
 	ID:              constants.NewTechniqueItemID,
 	Title:           i18n.Text("New Technique"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyT, Modifiers: unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -202,6 +210,7 @@ var NewSpell = &unison.Action{
 	ID:              constants.NewSpellItemID,
 	Title:           i18n.Text("New Spell"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyB, Modifiers: unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -210,6 +219,7 @@ var NewSpellContainer = &unison.Action{
 	ID:              constants.NewSpellContainerItemID,
 	Title:           i18n.Text("New Spell Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyB, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -218,6 +228,7 @@ var NewRitualMagicSpell = &unison.Action{
 	ID:              constants.NewRitualMagicSpellItemID,
 	Title:           i18n.Text("New Ritual Magic Spell"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyB, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -226,6 +237,7 @@ var NewCarriedEquipment = &unison.Action{
 	ID:              constants.NewCarriedEquipmentItemID,
 	Title:           i18n.Text("New Carried Equipment"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -234,6 +246,7 @@ var NewCarriedEquipmentContainer = &unison.Action{
 	ID:              constants.NewCarriedEquipmentContainerItemID,
 	Title:           i18n.Text("New Carried Equipment Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -242,6 +255,7 @@ var NewOtherEquipment = &unison.Action{
 	ID:              constants.NewOtherEquipmentItemID,
 	Title:           i18n.Text("New Other Equipment"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.OptionModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -250,6 +264,7 @@ var NewOtherEquipmentContainer = &unison.Action{
 	ID:              constants.NewOtherEquipmentContainerItemID,
 	Title:           i18n.Text("New Other Equipment Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -258,6 +273,7 @@ var NewEquipmentModifier = &unison.Action{
 	ID:              constants.NewEquipmentModifierItemID,
 	Title:           i18n.Text("New Equipment Modifier"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -266,6 +282,7 @@ var NewEquipmentContainerModifier = &unison.Action{
 	ID:              constants.NewEquipmentContainerModifierItemID,
 	Title:           i18n.Text("New Equipment Modifier Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -274,6 +291,7 @@ var NewNote = &unison.Action{
 	ID:              constants.NewNoteItemID,
 	Title:           i18n.Text("New Note"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -282,6 +300,7 @@ var NewNoteContainer = &unison.Action{
 	ID:              constants.NewNoteContainerItemID,
 	Title:           i18n.Text("New Note Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -299,6 +318,7 @@ var CopyToSheet = &unison.Action{
 	ID:              constants.CopyToSheetItemID,
 	Title:           i18n.Text("Copy to Character Sheet"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyC, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -307,6 +327,7 @@ var CopyToTemplate = &unison.Action{
 	ID:              constants.CopyToTemplateItemID,
 	Title:           i18n.Text("Copy to Template"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyT, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -315,6 +336,7 @@ var ApplyTemplate = &unison.Action{
 	ID:              constants.ApplyTemplateItemID,
 	Title:           i18n.Text("Apply Template to Character Sheet"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyA, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -323,6 +345,7 @@ var OpenOnePageReference = &unison.Action{
 	ID:              constants.OpenOnePageReferenceItemID,
 	Title:           i18n.Text("Open Page Reference"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyG, Modifiers: unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -331,5 +354,6 @@ var OpenEachPageReference = &unison.Action{
 	ID:              constants.OpenEachPageReferenceItemID,
 	Title:           i18n.Text("Open Each Page Reference"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyG, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }

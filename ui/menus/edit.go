@@ -28,7 +28,6 @@ func registerEditMenuActions() {
 	settings.RegisterKeyBinding("delete", unison.DeleteAction)
 	settings.RegisterKeyBinding("select_all", unison.SelectAllAction)
 	settings.RegisterKeyBinding("convert_to_container", ConvertToContainer)
-	settings.RegisterKeyBinding("jump_to_search", JumpToSearch)
 }
 
 func setupEditMenu(bar unison.Menu) {
@@ -46,10 +45,6 @@ func setupEditMenu(bar unison.Menu) {
 	m.InsertSeparator(i, false)
 	i++
 	m.InsertMenu(i, createStateMenu(f))
-	i++
-	m.InsertSeparator(i, false)
-	i++
-	m.InsertItem(i, JumpToSearch.NewMenuItem(f))
 }
 
 // Undo the last action.
@@ -105,6 +100,7 @@ var Duplicate = &unison.Action{
 	ID:              constants.DuplicateItemID,
 	Title:           i18n.Text("Duplicate"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyU, Modifiers: unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }
 
@@ -112,13 +108,6 @@ var Duplicate = &unison.Action{
 var ConvertToContainer = &unison.Action{
 	ID:              constants.ConvertToContainerItemID,
 	Title:           i18n.Text("Convert to Container"),
-	ExecuteCallback: unimplemented,
-}
-
-// JumpToSearch switches the focus to the search widget..
-var JumpToSearch = &unison.Action{
-	ID:              constants.JumpToSearchItemID,
-	Title:           i18n.Text("Jump to Search"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyJ, Modifiers: unison.OSMenuCmdModifier()},
+	EnabledCallback: notEnabled,
 	ExecuteCallback: unimplemented,
 }

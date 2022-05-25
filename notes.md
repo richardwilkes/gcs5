@@ -20,7 +20,6 @@
 - Prompt to save when closing a modified document
 - General completion of menu item actions (many are currently placeholders)
   - File
-    - New Character Template
     - Save
     - Save As...
     - Print...
@@ -29,7 +28,6 @@
   - Edit
     - Duplicate
     - Convert to Container
-    - Jump to Search
   - Item
     - New Advantage
     - New Advantage Container
