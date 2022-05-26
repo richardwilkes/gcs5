@@ -26,51 +26,69 @@ type ListProvider interface {
 
 // AdvantageListProvider defines the method needed to access the advantage list data.
 type AdvantageListProvider interface {
+	EntityProvider
 	AdvantageList() []*Advantage
+	SetAdvantageList(list []*Advantage)
 }
 
 // EquipmentListProvider defines the method needed to access the equipment list data.
 type EquipmentListProvider interface {
+	EntityProvider
 	CarriedEquipmentList() []*Equipment
+	SetCarriedEquipmentList(list []*Equipment)
 	OtherEquipmentList() []*Equipment
+	SetOtherEquipmentList(list []*Equipment)
 }
 
 // NoteListProvider defines the method needed to access the note list data.
 type NoteListProvider interface {
+	EntityProvider
 	NoteList() []*Note
+	SetNoteList(list []*Note)
 }
 
 // SkillListProvider defines the method needed to access the skill list data.
 type SkillListProvider interface {
+	EntityProvider
 	SkillList() []*Skill
+	SetSkillList(list []*Skill)
 }
 
 // SpellListProvider defines the method needed to access the spell list data.
 type SpellListProvider interface {
+	EntityProvider
 	SpellList() []*Spell
+	SetSpellList(list []*Spell)
 }
 
 // AdvantageModifierListProvider defines the method needed to access the advantage modifier list data.
 type AdvantageModifierListProvider interface {
+	EntityProvider
 	AdvantageModifierList() []*AdvantageModifier
+	SetAdvantageModifierList(list []*AdvantageModifier)
 }
 
 // EquipmentModifierListProvider defines the method needed to access the equipment modifier list data.
 type EquipmentModifierListProvider interface {
+	EntityProvider
 	EquipmentModifierList() []*EquipmentModifier
+	SetEquipmentModifierList(list []*EquipmentModifier)
 }
 
 // ConditionalModifierListProvider defines the method needed to access the conditional modifier list data.
 type ConditionalModifierListProvider interface {
+	EntityProvider
 	ConditionalModifiers() []*ConditionalModifier
 }
 
 // ReactionModifierListProvider defines the method needed to access the reaction modifier list data.
 type ReactionModifierListProvider interface {
+	EntityProvider
 	Reactions() []*ConditionalModifier
 }
 
 // WeaponListProvider defines the method needed to access the weapon list data.
 type WeaponListProvider interface {
+	EntityProvider
 	EquippedWeapons(weapon.Type) []*Weapon
 }

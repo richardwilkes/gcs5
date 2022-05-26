@@ -139,8 +139,8 @@ var NewAdvantage = &unison.Action{
 	ID:              constants.NewAdvantageItemID,
 	Title:           i18n.Text("New Advantage"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
+	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
+	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
 }
 
 // NewAdvantageContainer creates a new advantage container.
@@ -148,8 +148,8 @@ var NewAdvantageContainer = &unison.Action{
 	ID:              constants.NewAdvantageContainerItemID,
 	Title:           i18n.Text("New Advantage Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
+	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
+	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
 }
 
 // NewAdvantageModifier creates a new advantage modifier.

@@ -50,6 +50,11 @@ var (
 	_ ListProvider          = &Entity{}
 )
 
+// EntityProvider provides a way to retrieve a (possibly nil) Entity.
+type EntityProvider interface {
+	Entity() *Entity
+}
+
 // EntityData holds the Entity data that is written to disk.
 type EntityData struct {
 	Type             datafile.Type          `json:"type"`
@@ -114,6 +119,11 @@ func NewEntity(entityType datafile.Type) *Entity {
 	entity.ModifiedOn = entity.CreatedOn
 	entity.Recalculate()
 	return entity
+}
+
+// Entity implements EntityProvider.
+func (e *Entity) Entity() *Entity {
+	return e
 }
 
 // Save the Entity to a file as JSON.
@@ -1184,9 +1194,19 @@ func (e *Entity) AdvantageList() []*Advantage {
 	return e.Advantages
 }
 
+// SetAdvantageList implements ListProvider
+func (e *Entity) SetAdvantageList(list []*Advantage) {
+	e.Advantages = list
+}
+
 // CarriedEquipmentList implements ListProvider
 func (e *Entity) CarriedEquipmentList() []*Equipment {
 	return e.CarriedEquipment
+}
+
+// SetCarriedEquipmentList implements ListProvider
+func (e *Entity) SetCarriedEquipmentList(list []*Equipment) {
+	e.CarriedEquipment = list
 }
 
 // OtherEquipmentList implements ListProvider
@@ -1194,9 +1214,19 @@ func (e *Entity) OtherEquipmentList() []*Equipment {
 	return e.OtherEquipment
 }
 
+// SetOtherEquipmentList implements ListProvider
+func (e *Entity) SetOtherEquipmentList(list []*Equipment) {
+	e.OtherEquipment = list
+}
+
 // SkillList implements ListProvider
 func (e *Entity) SkillList() []*Skill {
 	return e.Skills
+}
+
+// SetSkillList implements ListProvider
+func (e *Entity) SetSkillList(list []*Skill) {
+	e.Skills = list
 }
 
 // SpellList implements ListProvider
@@ -1204,9 +1234,19 @@ func (e *Entity) SpellList() []*Spell {
 	return e.Spells
 }
 
+// SetSpellList implements ListProvider
+func (e *Entity) SetSpellList(list []*Spell) {
+	e.Spells = list
+}
+
 // NoteList implements ListProvider
 func (e *Entity) NoteList() []*Note {
 	return e.Notes
+}
+
+// SetNoteList implements ListProvider
+func (e *Entity) SetNoteList(list []*Note) {
+	e.Notes = list
 }
 
 // CRC64 computes a CRC-64 value for the canonical disk format of the data. The ModifiedOn field is ignored for this

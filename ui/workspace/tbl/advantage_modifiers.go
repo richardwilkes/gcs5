@@ -13,6 +13,8 @@ package tbl
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -34,6 +36,10 @@ func NewAdvantageModifiersProvider(provider gurps.AdvantageModifierListProvider)
 	return &advModProvider{
 		provider: provider,
 	}
+}
+
+func (p *advModProvider) Entity() *gurps.Entity {
+	return p.provider.Entity()
 }
 
 func (p *advModProvider) Headers() []unison.TableColumnHeader {
@@ -78,4 +84,19 @@ func (p *advModProvider) HierarchyColumnIndex() int {
 
 func (p *advModProvider) ExcessWidthColumnIndex() int {
 	return p.HierarchyColumnIndex()
+}
+
+func (p *advModProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
+	for _, row := range table.SelectedRows(false) {
+		if node, ok := row.(*Node); ok {
+			var a *gurps.AdvantageModifier
+			if a, ok = node.Data().(*gurps.AdvantageModifier); ok {
+				editors.EditAdvantageModifier(owner, a)
+			}
+		}
+	}
+}
+
+func (p *advModProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, container bool) {
+	// TODO: Implement
 }

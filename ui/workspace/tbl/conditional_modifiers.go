@@ -13,6 +13,7 @@ package tbl
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -32,6 +33,10 @@ func NewConditionalModifiersProvider(provider gurps.ConditionalModifierListProvi
 	return &condModProvider{
 		provider: provider,
 	}
+}
+
+func (p *condModProvider) Entity() *gurps.Entity {
+	return p.provider.Entity()
 }
 
 func (p *condModProvider) Headers() []unison.TableColumnHeader {
@@ -72,4 +77,10 @@ func (p *condModProvider) ExcessWidthColumnIndex() int {
 		}
 	}
 	return 0
+}
+
+func (p *condModProvider) OpenEditor(_ widget.Rebuildable, _ *unison.Table) {
+}
+
+func (p *condModProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table, _ bool) {
 }

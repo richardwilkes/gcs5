@@ -12,11 +12,13 @@
 package sheet
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/gurps"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/library"
@@ -78,6 +80,7 @@ type Sheet struct {
 	LiftingPanel       *LiftingPanel
 	DamagePanel        *DamagePanel
 	Lists              [listCount]*PageList
+	cancelRebuildFunc  context.CancelFunc
 	rebuild            bool
 	full               bool
 }
@@ -168,6 +171,10 @@ func NewSheet(filePath string, entity *gurps.Entity) unison.Dockable {
 	s.AddChild(s.scroll)
 
 	s.applyScale()
+
+	s.CanPerformCmdCallback = s.canPerformCmd
+	s.PerformCmdCallback = s.performCmd
+
 	return s
 }
 
@@ -416,29 +423,61 @@ func (s *Sheet) MarkForRebuild(full bool) {
 	}
 	if !s.rebuild {
 		s.rebuild = true
+		ctx, cancel := context.WithCancel(context.Background())
+		s.cancelRebuildFunc = cancel
 		unison.InvokeTaskAfter(func() {
-			doFull := s.full
-			s.rebuild = false
-			s.full = false
-			s.entity.Recalculate()
-			if doFull {
-				selMap := make([]map[uuid.UUID]bool, listCount)
-				for i, one := range s.Lists {
-					if one != nil {
-						selMap[i] = one.RecordSelection()
-					}
-				}
-				defer func() {
-					for i, one := range s.Lists {
-						if one != nil {
-							one.ApplySelection(selMap[i])
-						}
-					}
-				}()
-				s.createLists()
+			abort := ctx.Err() != nil
+			cancel()
+			if !abort {
+				s.Rebuild(s.full)
 			}
-			widget.DeepSync(s)
 		}, 50*time.Millisecond)
+	}
+}
+
+// Rebuild implements widget.Rebuildable.
+func (s *Sheet) Rebuild(full bool) {
+	if s.cancelRebuildFunc != nil {
+		s.cancelRebuildFunc()
+		s.cancelRebuildFunc = nil
+	}
+	s.rebuild = false
+	s.full = false
+	s.entity.Recalculate()
+	if full {
+		selMap := make([]map[uuid.UUID]bool, listCount)
+		for i, one := range s.Lists {
+			if one != nil {
+				selMap[i] = one.RecordSelection()
+			}
+		}
+		defer func() {
+			for i, one := range s.Lists {
+				if one != nil {
+					one.ApplySelection(selMap[i])
+				}
+			}
+		}()
+		s.createLists()
+	}
+	widget.DeepSync(s)
+}
+
+func (s *Sheet) canPerformCmd(_ any, id int) bool {
+	switch id {
+	case constants.NewAdvantageItemID, constants.NewAdvantageContainerItemID:
+		return true
+	default:
+		return false
+	}
+}
+
+func (s *Sheet) performCmd(_ any, id int) {
+	switch id {
+	case constants.NewAdvantageItemID:
+		s.Lists[advantagesListIndex].CreateItem(s, false)
+	case constants.NewAdvantageContainerItemID:
+		s.Lists[advantagesListIndex].CreateItem(s, true)
 	}
 }
 

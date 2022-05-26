@@ -12,11 +12,13 @@
 package sheet
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/gurps"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/library"
@@ -41,17 +43,18 @@ var (
 // Template holds the view for a GURPS character template.
 type Template struct {
 	unison.Panel
-	path       string
-	undoMgr    *unison.UndoManager
-	scroll     *unison.ScrollPanel
-	template   *gurps.Template
-	crc        uint64
-	scale      int
-	content    *templateContent
-	scaleField *widget.PercentageField
-	Lists      [listCount]*PageList
-	rebuild    bool
-	full       bool
+	path              string
+	undoMgr           *unison.UndoManager
+	scroll            *unison.ScrollPanel
+	template          *gurps.Template
+	crc               uint64
+	scale             int
+	content           *templateContent
+	scaleField        *widget.PercentageField
+	Lists             [listCount]*PageList
+	cancelRebuildFunc context.CancelFunc
+	rebuild           bool
+	full              bool
 }
 
 // NewTemplateFromFile loads a GURPS template file and creates a new unison.Dockable for it.
@@ -116,6 +119,10 @@ func NewTemplate(filePath string, template *gurps.Template) unison.Dockable {
 	t.AddChild(t.scroll)
 
 	t.applyScale()
+
+	t.CanPerformCmdCallback = t.canPerformCmd
+	t.PerformCmdCallback = t.performCmd
+
 	return t
 }
 
@@ -244,27 +251,59 @@ func (d *Template) MarkForRebuild(full bool) {
 	}
 	if !d.rebuild {
 		d.rebuild = true
+		ctx, cancel := context.WithCancel(context.Background())
+		d.cancelRebuildFunc = cancel
 		unison.InvokeTaskAfter(func() {
-			doFull := d.full
-			d.rebuild = false
-			d.full = false
-			if doFull {
-				selMap := make([]map[uuid.UUID]bool, listCount)
-				for i, one := range d.Lists {
-					if one != nil {
-						selMap[i] = one.RecordSelection()
-					}
-				}
-				defer func() {
-					for i, one := range d.Lists {
-						if one != nil {
-							one.ApplySelection(selMap[i])
-						}
-					}
-				}()
-				d.createLists()
+			abort := ctx.Err() != nil
+			cancel()
+			if !abort {
+				d.Rebuild(d.full)
 			}
-			widget.DeepSync(d)
 		}, 50*time.Millisecond)
+	}
+}
+
+// Rebuild implements widget.Rebuildable.
+func (d *Template) Rebuild(full bool) {
+	if d.cancelRebuildFunc != nil {
+		d.cancelRebuildFunc()
+		d.cancelRebuildFunc = nil
+	}
+	d.rebuild = false
+	d.full = false
+	if full {
+		selMap := make([]map[uuid.UUID]bool, listCount)
+		for i, one := range d.Lists {
+			if one != nil {
+				selMap[i] = one.RecordSelection()
+			}
+		}
+		defer func() {
+			for i, one := range d.Lists {
+				if one != nil {
+					one.ApplySelection(selMap[i])
+				}
+			}
+		}()
+		d.createLists()
+	}
+	widget.DeepSync(d)
+}
+
+func (d *Template) canPerformCmd(_ any, id int) bool {
+	switch id {
+	case constants.NewAdvantageItemID, constants.NewAdvantageContainerItemID:
+		return true
+	default:
+		return false
+	}
+}
+
+func (d *Template) performCmd(_ any, id int) {
+	switch id {
+	case constants.NewAdvantageItemID:
+		d.Lists[advantagesListIndex].CreateItem(d, false)
+	case constants.NewAdvantageContainerItemID:
+		d.Lists[advantagesListIndex].CreateItem(d, true)
 	}
 }

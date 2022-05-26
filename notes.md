@@ -29,8 +29,6 @@
     - Duplicate
     - Convert to Container
   - Item
-    - New Advantage
-    - New Advantage Container
     - New Advantage Modifier
     - New Advantage Modifier Container
     - Add Natural Attacks Advantage

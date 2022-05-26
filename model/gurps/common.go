@@ -22,6 +22,7 @@ import (
 var (
 	NoAdditionalModifiers = i18n.Text("No additional modifiers")
 	IncludesModifiersFrom = i18n.Text("Includes modifiers from")
+	PageRefTooltipText    = i18n.Text(`A reference to the book and page the item appears on e.g. B22 would refer to "Basic Set", page 22`)
 )
 
 func convertOldCategoriesToTags(tags, categories []string) []string {

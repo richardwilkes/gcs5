@@ -48,6 +48,8 @@ const (
 	DecrementTechLevelItemID
 	SwapDefaultsItemID
 	ItemMenuID
+	NewItemItemID
+	NewContainerItemID
 	AdvantagesMenuID
 	NewAdvantageItemID
 	NewAdvantageContainerItemID

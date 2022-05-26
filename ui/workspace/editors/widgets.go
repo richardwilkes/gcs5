@@ -21,7 +21,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -35,7 +34,7 @@ func addSpecializationLabelAndField(parent *unison.Panel, fieldData *string) {
 }
 
 func addPageRefLabelAndField(parent *unison.Panel, fieldData *string) {
-	addLabelAndStringField(parent, i18n.Text("Page Reference"), tbl.PageRefTooltipText, fieldData)
+	addLabelAndStringField(parent, i18n.Text("Page Reference"), gurps.PageRefTooltipText, fieldData)
 }
 
 func addNotesLabelAndField(parent *unison.Panel, fieldData *string) {

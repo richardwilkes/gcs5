@@ -14,6 +14,7 @@ package tbl
 import (
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/gcs/model/theme"
@@ -339,4 +340,39 @@ func (n *Node) secondaryFieldFont() unison.Font {
 		return theme.PageFieldSecondaryFont
 	}
 	return theme.FieldSecondaryFont
+}
+
+// FindRowIndexByID returns the row index of the row with the given ID in the given table.
+func FindRowIndexByID(table *unison.Table, id uuid.UUID) int {
+	_, i := rowIndex(id, 0, table.TopLevelRows())
+	return i
+}
+
+func rowIndex(id uuid.UUID, startIndex int, rows []unison.TableRowData) (updatedStartIndex, result int) {
+	for _, row := range rows {
+		if n, ok := row.(*Node); ok {
+			if id == n.Data().UUID() {
+				return 0, startIndex
+			}
+		}
+		startIndex++
+		if row.IsOpen() {
+			if startIndex, result = rowIndex(id, startIndex, row.ChildRows()); result != -1 {
+				return 0, result
+			}
+		}
+	}
+	return startIndex, -1
+}
+
+// PerformAction will ask the given panel to perform the action associated with the given ID, if allowed.
+func PerformAction(paneler unison.Paneler, id int) {
+	p := paneler.AsPanel()
+	can := true
+	if p.CanPerformCmdCallback != nil {
+		can = p.CanPerformCmdCallback(nil, id)
+	}
+	if can && p.PerformCmdCallback != nil {
+		p.PerformCmdCallback(nil, id)
+	}
 }

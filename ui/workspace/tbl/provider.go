@@ -11,13 +11,20 @@
 
 package tbl
 
-import "github.com/richardwilkes/unison"
+import (
+	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/unison"
+)
 
 // TableProvider defines the methods a table provider must contain.
 type TableProvider interface {
+	gurps.EntityProvider
 	Headers() []unison.TableColumnHeader
 	RowData(table *unison.Table) []unison.TableRowData
 	SyncHeader(headers []unison.TableColumnHeader)
 	HierarchyColumnIndex() int
 	ExcessWidthColumnIndex() int
+	OpenEditor(owner widget.Rebuildable, table *unison.Table)
+	CreateItem(owner widget.Rebuildable, table *unison.Table, container bool)
 }

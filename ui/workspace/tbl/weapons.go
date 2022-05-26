@@ -14,6 +14,7 @@ package tbl
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
+	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -63,6 +64,10 @@ func NewWeaponsProvider(provider gurps.WeaponListProvider, weaponType weapon.Typ
 		p.colMap = rangedWeaponColMap
 	}
 	return p
+}
+
+func (p *weaponsProvider) Entity() *gurps.Entity {
+	return p.provider.Entity()
 }
 
 func (p *weaponsProvider) Headers() []unison.TableColumnHeader {
@@ -127,4 +132,10 @@ func (p *weaponsProvider) ExcessWidthColumnIndex() int {
 		}
 	}
 	return 0
+}
+
+func (p *weaponsProvider) OpenEditor(_ widget.Rebuildable, _ *unison.Table) {
+}
+
+func (p *weaponsProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table, _ bool) {
 }

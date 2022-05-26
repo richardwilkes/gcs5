@@ -12,15 +12,13 @@
 package tbl
 
 import (
+	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
-
-// PageRefTooltipText holds the tooltip text that should be used for the page references.
-var PageRefTooltipText = i18n.Text(`A reference to the book and page the item appears on e.g. B22 would refer to "Basic Set", page 22`)
 
 // NewHeader creates a new list header.
 func NewHeader(title, tooltip string, forPage bool) unison.TableColumnHeader {
@@ -74,7 +72,7 @@ func NewSVGPairHeader(leftSVG, rightSVG *unison.SVG, tooltip string, forPage boo
 
 // NewPageRefHeader creates a new page reference header.
 func NewPageRefHeader(forPage bool) unison.TableColumnHeader {
-	return NewSVGHeader(res.BookmarkSVG, PageRefTooltipText, forPage)
+	return NewSVGHeader(res.BookmarkSVG, gurps.PageRefTooltipText, forPage)
 }
 
 // NewEquippedHeader creates a new equipped header.

@@ -13,6 +13,8 @@ package tbl
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -71,6 +73,10 @@ func NewSpellsProvider(provider gurps.SpellListProvider, forPage bool) TableProv
 		p.colMap = spellListColMap
 	}
 	return p
+}
+
+func (p *spellsProvider) Entity() *gurps.Entity {
+	return p.provider.Entity()
 }
 
 func (p *spellsProvider) Headers() []unison.TableColumnHeader {
@@ -138,4 +144,19 @@ func (p *spellsProvider) HierarchyColumnIndex() int {
 
 func (p *spellsProvider) ExcessWidthColumnIndex() int {
 	return p.HierarchyColumnIndex()
+}
+
+func (p *spellsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
+	for _, row := range table.SelectedRows(false) {
+		if node, ok := row.(*Node); ok {
+			var s *gurps.Spell
+			if s, ok = node.Data().(*gurps.Spell); ok {
+				editors.EditSpell(owner, s)
+			}
+		}
+	}
+}
+
+func (p *spellsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, container bool) {
+	// TODO: Implement
 }

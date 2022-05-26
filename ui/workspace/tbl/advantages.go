@@ -12,10 +12,14 @@
 package tbl
 
 import (
+	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
+	"golang.org/x/exp/slices"
 )
 
 var (
@@ -50,6 +54,10 @@ func NewAdvantagesProvider(provider gurps.AdvantageListProvider, forPage bool) T
 		p.colMap = advantageListColMap
 	}
 	return p
+}
+
+func (p *advantagesProvider) Entity() *gurps.Entity {
+	return p.provider.Entity()
 }
 
 func (p *advantagesProvider) Headers() []unison.TableColumnHeader {
@@ -94,4 +102,57 @@ func (p *advantagesProvider) HierarchyColumnIndex() int {
 
 func (p *advantagesProvider) ExcessWidthColumnIndex() int {
 	return p.HierarchyColumnIndex()
+}
+
+func (p *advantagesProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
+	for _, row := range table.SelectedRows(false) {
+		if node, ok := row.(*Node); ok {
+			var a *gurps.Advantage
+			if a, ok = node.Data().(*gurps.Advantage); ok {
+				editors.EditAdvantage(owner, a)
+			}
+		}
+	}
+}
+
+func (p *advantagesProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, container bool) {
+	var a *gurps.Advantage
+	i := table.FirstSelectedRowIndex()
+	if i != -1 {
+		if n, ok := table.RowFromIndex(i).(*Node); ok {
+			var target *gurps.Advantage
+			if target, ok = n.Data().(*gurps.Advantage); ok {
+				if n.CanHaveChildRows() {
+					a = gurps.NewAdvantage(p.Entity(), target, container)
+					target.Children = append(target.Children, a)
+				} else {
+					parent := n.ParentRow()
+					if n, ok = parent.(*Node); ok {
+						var pOne *gurps.Advantage
+						if pOne, ok = n.Data().(*gurps.Advantage); ok {
+							a = gurps.NewAdvantage(p.Entity(), pOne, container)
+							pOne.Children = slices.Insert(pOne.Children, slices.Index(pOne.Children, target)+1, a)
+						}
+					} else {
+						a = gurps.NewAdvantage(p.Entity(), nil, container)
+						list := p.provider.AdvantageList()
+						p.provider.SetAdvantageList(slices.Insert(list, slices.Index(list, target)+1, a))
+					}
+				}
+			}
+		}
+	}
+	if a == nil {
+		a = gurps.NewAdvantage(p.Entity(), nil, container)
+		p.provider.SetAdvantageList(append(p.provider.AdvantageList(), a))
+	}
+	widget.MarkModified(table)
+	table.ClearSelection()
+	table.SetTopLevelRows(p.RowData(table))
+	owner.Rebuild(true)
+	index := FindRowIndexByID(table, a.ID)
+	table.SelectByIndex(index)
+	table.ScrollRowCellIntoView(index, 0)
+	table.RequestFocus()
+	PerformAction(table, constants.OpenEditorItemID)
 }

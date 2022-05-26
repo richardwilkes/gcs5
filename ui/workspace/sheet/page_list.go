@@ -19,7 +19,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/gcs/ui/workspace/tbl"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath"
@@ -40,25 +39,16 @@ type PageList struct {
 
 // NewAdvantagesPageList creates the advantages page list.
 func NewAdvantagesPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
-	p := newPageList(tbl.NewAdvantagesProvider(provider, true))
+	p := newPageList(owner, tbl.NewAdvantagesProvider(provider, true))
 	p.installToggleStateHandler()
 	p.installIncrementHandler()
 	p.installDecrementHandler()
-	p.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
-		for _, row := range p.table.SelectedRows(false) {
-			if node, ok := row.(*tbl.Node); ok {
-				if advantage, ok2 := node.Data().(*gurps.Advantage); ok2 {
-					editors.EditAdvantage(owner, advantage)
-				}
-			}
-		}
-	})
 	return p
 }
 
 // NewCarriedEquipmentPageList creates the carried equipment page list.
 func NewCarriedEquipmentPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
-	p := newPageList(tbl.NewEquipmentProvider(provider, true, true))
+	p := newPageList(owner, tbl.NewEquipmentProvider(provider, true, true))
 	p.installToggleStateHandler()
 	p.installIncrementHandler()
 	p.installDecrementHandler()
@@ -66,115 +56,69 @@ func NewCarriedEquipmentPageList(owner widget.Rebuildable, provider gurps.ListPr
 	p.installDecrementUsesHandler()
 	p.installIncrementTechLevelHandler()
 	p.installDecrementTechLevelHandler()
-	p.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
-		for _, row := range p.table.SelectedRows(false) {
-			if node, ok := row.(*tbl.Node); ok {
-				if one, ok2 := node.Data().(*gurps.Equipment); ok2 {
-					editors.EditEquipment(owner, one, true)
-				}
-			}
-		}
-	})
 	return p
 }
 
 // NewOtherEquipmentPageList creates the other equipment page list.
 func NewOtherEquipmentPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
-	p := newPageList(tbl.NewEquipmentProvider(provider, true, false))
+	p := newPageList(owner, tbl.NewEquipmentProvider(provider, true, false))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
 	p.installIncrementUsesHandler()
 	p.installDecrementUsesHandler()
 	p.installIncrementTechLevelHandler()
 	p.installDecrementTechLevelHandler()
-	p.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
-		for _, row := range p.table.SelectedRows(false) {
-			if node, ok := row.(*tbl.Node); ok {
-				if one, ok2 := node.Data().(*gurps.Equipment); ok2 {
-					editors.EditEquipment(owner, one, false)
-				}
-			}
-		}
-	})
 	return p
 }
 
 // NewSkillsPageList creates the skills page list.
 func NewSkillsPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
-	p := newPageList(tbl.NewSkillsProvider(provider, true))
+	p := newPageList(owner, tbl.NewSkillsProvider(provider, true))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
 	p.installIncrementSkillHandler()
 	p.installDecrementSkillHandler()
 	p.installIncrementTechLevelHandler()
 	p.installDecrementTechLevelHandler()
-	p.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
-		for _, row := range p.table.SelectedRows(false) {
-			if node, ok := row.(*tbl.Node); ok {
-				if skill, ok2 := node.Data().(*gurps.Skill); ok2 {
-					editors.EditSkill(owner, skill)
-				}
-			}
-		}
-	})
 	return p
 }
 
 // NewSpellsPageList creates the spells page list.
 func NewSpellsPageList(owner widget.Rebuildable, provider gurps.SpellListProvider) *PageList {
-	p := newPageList(tbl.NewSpellsProvider(provider, true))
+	p := newPageList(owner, tbl.NewSpellsProvider(provider, true))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
 	p.installIncrementSkillHandler()
 	p.installDecrementSkillHandler()
-	p.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
-		for _, row := range p.table.SelectedRows(false) {
-			if node, ok := row.(*tbl.Node); ok {
-				if spell, ok2 := node.Data().(*gurps.Spell); ok2 {
-					editors.EditSpell(owner, spell)
-				}
-			}
-		}
-	})
 	return p
 }
 
 // NewNotesPageList creates the notes page list.
 func NewNotesPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
-	p := newPageList(tbl.NewNotesProvider(provider, true))
-	p.installPerformHandlers(constants.OpenEditorItemID, func() bool { return true }, func() {
-		for _, row := range p.table.SelectedRows(false) {
-			if node, ok := row.(*tbl.Node); ok {
-				if note, ok2 := node.Data().(*gurps.Note); ok2 {
-					editors.EditNote(owner, note)
-				}
-			}
-		}
-	})
-	return p
+	return newPageList(owner, tbl.NewNotesProvider(provider, true))
 }
 
 // NewConditionalModifiersPageList creates the conditional modifiers page list.
 func NewConditionalModifiersPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewConditionalModifiersProvider(entity))
+	return newPageList(nil, tbl.NewConditionalModifiersProvider(entity))
 }
 
 // NewReactionsPageList creates the reaction modifiers page list.
 func NewReactionsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewReactionModifiersProvider(entity))
+	return newPageList(nil, tbl.NewReactionModifiersProvider(entity))
 }
 
 // NewMeleeWeaponsPageList creates the melee weapons page list.
 func NewMeleeWeaponsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewWeaponsProvider(entity, weapon.Melee))
+	return newPageList(nil, tbl.NewWeaponsProvider(entity, weapon.Melee))
 }
 
 // NewRangedWeaponsPageList creates the ranged weapons page list.
 func NewRangedWeaponsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(tbl.NewWeaponsProvider(entity, weapon.Ranged))
+	return newPageList(nil, tbl.NewWeaponsProvider(entity, weapon.Ranged))
 }
 
-func newPageList(provider tbl.TableProvider) *PageList {
+func newPageList(owner widget.Rebuildable, provider tbl.TableProvider) *PageList {
 	p := &PageList{
 		table:         unison.NewTable(),
 		provider:      provider,
@@ -280,6 +224,17 @@ func newPageList(provider tbl.TableProvider) *PageList {
 	p.table.SetTopLevelRows(p.provider.RowData(p.table))
 	p.AddChild(p.tableHeader)
 	p.AddChild(p.table)
+	if owner != nil {
+		p.installPerformHandlers(constants.OpenEditorItemID,
+			func() bool { return true },
+			func() { p.provider.OpenEditor(owner, p.table) })
+		p.installPerformHandlers(constants.NewItemItemID,
+			func() bool { return true },
+			func() { p.provider.CreateItem(owner, p.table, false) })
+		p.installPerformHandlers(constants.NewContainerItemID,
+			func() bool { return true },
+			func() { p.provider.CreateItem(owner, p.table, true) })
+	}
 	return p
 }
 
@@ -690,6 +645,22 @@ func (p *PageList) installDecrementTechLevelHandler() {
 	})
 }
 
+// SelectedNodes returns the set of selected nodes. If 'minimal' is true, then children of selected rows that may also
+// be selected are not returned, just the topmost row that is selected in any given hierarchy.
+func (p *PageList) SelectedNodes(minimal bool) []*tbl.Node {
+	if p == nil {
+		return nil
+	}
+	rows := p.table.SelectedRows(minimal)
+	selection := make([]*tbl.Node, 0, len(rows))
+	for _, row := range rows {
+		if n, ok := row.(*tbl.Node); ok {
+			selection = append(selection, n)
+		}
+	}
+	return selection
+}
+
 // RecordSelection collects the currently selected row UUIDs.
 func (p *PageList) RecordSelection() map[uuid.UUID]bool {
 	if p == nil {
@@ -707,13 +678,12 @@ func (p *PageList) RecordSelection() map[uuid.UUID]bool {
 
 // ApplySelection locates the rows with the given UUIDs and selects them, replacing any existing selection.
 func (p *PageList) ApplySelection(selection map[uuid.UUID]bool) {
+	p.table.ClearSelection()
 	if len(selection) != 0 {
 		_, indexes := p.collectRowMappings(0, make([]int, 0, len(selection)), selection, p.table.TopLevelRows())
 		if len(indexes) != 0 {
 			p.table.SelectByIndex(indexes...)
 		}
-	} else {
-		p.table.ClearSelection()
 	}
 }
 
@@ -743,4 +713,9 @@ func (p *PageList) collectRowMappings(index int, indexes []int, selection map[uu
 		}
 	}
 	return index, indexes
+}
+
+// CreateItem calls CreateItem on the contained TableProvider.
+func (p *PageList) CreateItem(owner widget.Rebuildable, container bool) {
+	p.provider.CreateItem(owner, p.table, container)
 }

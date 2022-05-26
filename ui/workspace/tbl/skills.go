@@ -13,6 +13,8 @@ package tbl
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -63,6 +65,10 @@ func NewSkillsProvider(provider gurps.SkillListProvider, forPage bool) TableProv
 	return p
 }
 
+func (p *skillsProvider) Entity() *gurps.Entity {
+	return p.provider.Entity()
+}
+
 func (p *skillsProvider) Headers() []unison.TableColumnHeader {
 	var headers []unison.TableColumnHeader
 	for i := 0; i < len(p.colMap); i++ {
@@ -111,4 +117,19 @@ func (p *skillsProvider) HierarchyColumnIndex() int {
 
 func (p *skillsProvider) ExcessWidthColumnIndex() int {
 	return p.HierarchyColumnIndex()
+}
+
+func (p *skillsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
+	for _, row := range table.SelectedRows(false) {
+		if node, ok := row.(*Node); ok {
+			var s *gurps.Skill
+			if s, ok = node.Data().(*gurps.Skill); ok {
+				editors.EditSkill(owner, s)
+			}
+		}
+	}
+}
+
+func (p *skillsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, container bool) {
+	// TODO: Implement
 }

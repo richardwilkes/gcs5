@@ -64,6 +64,11 @@ func NewTemplate() *Template {
 	return template
 }
 
+// Entity implements EntityProvider.
+func (t *Template) Entity() *Entity {
+	return nil
+}
+
 // Save the Template to a file as JSON.
 func (t *Template) Save(filePath string) error {
 	return jio.SaveToFile(context.Background(), filePath, t)
@@ -74,9 +79,19 @@ func (t *Template) AdvantageList() []*Advantage {
 	return t.Advantages
 }
 
+// SetAdvantageList implements ListProvider
+func (t *Template) SetAdvantageList(list []*Advantage) {
+	t.Advantages = list
+}
+
 // CarriedEquipmentList implements ListProvider
 func (t *Template) CarriedEquipmentList() []*Equipment {
 	return t.Equipment
+}
+
+// SetCarriedEquipmentList implements ListProvider
+func (t *Template) SetCarriedEquipmentList(list []*Equipment) {
+	t.Equipment = list
 }
 
 // OtherEquipmentList implements ListProvider
@@ -84,9 +99,18 @@ func (t *Template) OtherEquipmentList() []*Equipment {
 	return nil
 }
 
+// SetOtherEquipmentList implements ListProvider
+func (t *Template) SetOtherEquipmentList(_ []*Equipment) {
+}
+
 // SkillList implements ListProvider
 func (t *Template) SkillList() []*Skill {
 	return t.Skills
+}
+
+// SetSkillList implements ListProvider
+func (t *Template) SetSkillList(list []*Skill) {
+	t.Skills = list
 }
 
 // SpellList implements ListProvider
@@ -94,9 +118,19 @@ func (t *Template) SpellList() []*Spell {
 	return t.Spells
 }
 
+// SetSpellList implements ListProvider
+func (t *Template) SetSpellList(list []*Spell) {
+	t.Spells = list
+}
+
 // NoteList implements ListProvider
 func (t *Template) NoteList() []*Note {
 	return t.Notes
+}
+
+// SetNoteList implements ListProvider
+func (t *Template) SetNoteList(list []*Note) {
+	t.Notes = list
 }
 
 // CRC64 computes a CRC-64 value for the canonical disk format of the data.

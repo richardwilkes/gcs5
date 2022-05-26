@@ -13,6 +13,8 @@ package tbl
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -34,6 +36,10 @@ func NewNotesProvider(provider gurps.NoteListProvider, forPage bool) TableProvid
 		provider: provider,
 		forPage:  forPage,
 	}
+}
+
+func (p *notesProvider) Entity() *gurps.Entity {
+	return p.provider.Entity()
 }
 
 func (p *notesProvider) Headers() []unison.TableColumnHeader {
@@ -74,4 +80,19 @@ func (p *notesProvider) HierarchyColumnIndex() int {
 
 func (p *notesProvider) ExcessWidthColumnIndex() int {
 	return p.HierarchyColumnIndex()
+}
+
+func (p *notesProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
+	for _, row := range table.SelectedRows(false) {
+		if node, ok := row.(*Node); ok {
+			var n *gurps.Note
+			if n, ok = node.Data().(*gurps.Note); ok {
+				editors.EditNote(owner, n)
+			}
+		}
+	}
+}
+
+func (p *notesProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, container bool) {
+	// TODO: Implement
 }

@@ -13,6 +13,7 @@ package tbl
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -32,6 +33,10 @@ func NewReactionModifiersProvider(provider gurps.ReactionModifierListProvider) T
 	return &reactionModProvider{
 		provider: provider,
 	}
+}
+
+func (p *reactionModProvider) Entity() *gurps.Entity {
+	return p.provider.Entity()
 }
 
 func (p *reactionModProvider) Headers() []unison.TableColumnHeader {
@@ -72,4 +77,10 @@ func (p *reactionModProvider) ExcessWidthColumnIndex() int {
 		}
 	}
 	return 0
+}
+
+func (p *reactionModProvider) OpenEditor(_ widget.Rebuildable, _ *unison.Table) {
+}
+
+func (p *reactionModProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table, _ bool) {
 }

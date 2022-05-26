@@ -15,6 +15,8 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -82,6 +84,10 @@ func NewEquipmentProvider(provider gurps.EquipmentListProvider, forPage, carried
 		p.colMap = equipmentListColMap
 	}
 	return p
+}
+
+func (p *equipmentProvider) Entity() *gurps.Entity {
+	return p.provider.Entity()
 }
 
 func (p *equipmentProvider) Headers() []unison.TableColumnHeader {
@@ -180,4 +186,19 @@ func (p *equipmentProvider) descriptionText() string {
 		}
 	}
 	return title
+}
+
+func (p *equipmentProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
+	for _, row := range table.SelectedRows(false) {
+		if node, ok := row.(*Node); ok {
+			var e *gurps.Equipment
+			if e, ok = node.Data().(*gurps.Equipment); ok {
+				editors.EditEquipment(owner, e, p.carried)
+			}
+		}
+	}
+}
+
+func (p *equipmentProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, container bool) {
+	// TODO: Implement
 }
