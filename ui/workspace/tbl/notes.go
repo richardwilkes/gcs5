@@ -88,9 +88,12 @@ func (p *notesProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table
 }
 
 func (p *notesProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
-	CreateItem[*gurps.Note](owner, p.Entity(), table, variant == ContainerItemVariant, gurps.NewNote,
+	item := gurps.NewNote(p.Entity(), nil, variant == ContainerItemVariant)
+	InsertItem[*gurps.Note](owner, table, item,
+		func(target, parent *gurps.Note) { target.Parent = parent },
 		func(target *gurps.Note) []*gurps.Note { return target.Children },
 		func(target *gurps.Note, children []*gurps.Note) { target.Children = children },
 		p.provider.NoteList, p.provider.SetNoteList, p.RowData,
 		func(target *gurps.Note) uuid.UUID { return target.ID })
+	editors.EditNote(owner, item)
 }

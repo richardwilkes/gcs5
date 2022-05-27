@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/gcs/model/theme"
@@ -379,41 +378,41 @@ func PerformAction(paneler unison.Paneler, id int) {
 	}
 }
 
-// IDer defines the minimum necessary for use of CreateItem(), OpenEditor(), and ExtractFromRowData().
+// IDer defines the minimum necessary for use of InsertItem(), OpenEditor(), and ExtractFromRowData().
 type IDer interface {
 	comparable
 	UUID() uuid.UUID
 }
 
-// CreateItem creates an item in a table.
-func CreateItem[T IDer](owner widget.Rebuildable, entity *gurps.Entity, table *unison.Table, container bool, create func(entity *gurps.Entity, parent T, container bool) T, childrenOf func(target T) []T, setChildren func(target T, children []T), topList func() []T, setTopList func([]T), rowData func(table *unison.Table) []unison.TableRowData, id func(T) uuid.UUID) {
-	var item, zero T
+// InsertItem inserts an item into a table.
+func InsertItem[T IDer](owner widget.Rebuildable, table *unison.Table, item T, setParent func(target, parent T), childrenOf func(target T) []T, setChildren func(target T, children []T), topList func() []T, setTopList func([]T), rowData func(table *unison.Table) []unison.TableRowData, id func(T) uuid.UUID) {
+	var target, zero T
 	i := table.FirstSelectedRowIndex()
 	if i != -1 {
 		row := table.RowFromIndex(i)
-		if target := ExtractFromRowData[T](row); target != zero {
+		if target = ExtractFromRowData[T](row); target != zero {
 			if row.CanHaveChildRows() {
 				// Target is container, append to end of that container
-				item = create(entity, target, container)
+				setParent(item, target)
 				setChildren(target, append(childrenOf(target), item))
 			} else {
 				// Target isn't a container. If it has a parent, insert after the target within that parent.
 				if parent := ExtractFromRowData[T](row.ParentRow()); parent != zero {
-					item = create(entity, parent, container)
+					setParent(item, parent)
 					children := childrenOf(parent)
 					setChildren(parent, slices.Insert(children, slices.Index(children, target)+1, item))
 				} else {
 					// Otherwise, insert after the target within the top-level list.
-					item = create(entity, zero, container)
+					setParent(item, zero)
 					list := topList()
 					setTopList(slices.Insert(list, slices.Index(list, target)+1, item))
 				}
 			}
 		}
 	}
-	if item == zero {
+	if target == zero {
 		// There was no selection, so append to the end of the top-level list.
-		item = create(entity, zero, container)
+		setParent(item, zero)
 		setTopList(append(topList(), item))
 	}
 	widget.MarkModified(table)
@@ -422,8 +421,7 @@ func CreateItem[T IDer](owner widget.Rebuildable, entity *gurps.Entity, table *u
 	table.SelectByIndex(index)
 	table.ScrollRowCellIntoView(index, 0)
 	table.RequestFocus()
-	owner.Rebuild(true) // After this point, 'table' will no longer point to the in-use table
-	PerformAction(table, constants.OpenEditorItemID)
+	owner.Rebuild(true)
 }
 
 // ExtractFromRowData extracts a specific type of data from the row data.

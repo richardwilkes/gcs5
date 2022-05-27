@@ -345,6 +345,11 @@ func (d *Template) performCmd(_ any, id int) {
 	case constants.NewNoteContainerItemID:
 		d.Lists[notesListIndex].CreateItem(d, tbl.ContainerItemVariant)
 	case constants.AddNaturalAttacksAdvantageItemID:
-		// TODO: Implement
+		tbl.InsertItem[*gurps.Advantage](d, d.Lists[advantagesListIndex].table, gurps.NewNaturalAttacks(nil, nil),
+			func(target, parent *gurps.Advantage) { target.Parent = parent },
+			func(target *gurps.Advantage) []*gurps.Advantage { return target.Children },
+			func(target *gurps.Advantage, children []*gurps.Advantage) { target.Children = children },
+			d.template.AdvantageList, d.template.SetAdvantageList, d.Lists[advantagesListIndex].provider.RowData,
+			func(target *gurps.Advantage) uuid.UUID { return target.ID })
 	}
 }

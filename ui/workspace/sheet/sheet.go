@@ -518,7 +518,12 @@ func (s *Sheet) performCmd(_ any, id int) {
 	case constants.NewNoteContainerItemID:
 		s.Lists[notesListIndex].CreateItem(s, tbl.ContainerItemVariant)
 	case constants.AddNaturalAttacksAdvantageItemID:
-		// TODO: Implement
+		tbl.InsertItem[*gurps.Advantage](s, s.Lists[advantagesListIndex].table, gurps.NewNaturalAttacks(s.entity, nil),
+			func(target, parent *gurps.Advantage) { target.Parent = parent },
+			func(target *gurps.Advantage) []*gurps.Advantage { return target.Children },
+			func(target *gurps.Advantage, children []*gurps.Advantage) { target.Children = children },
+			s.entity.AdvantageList, s.entity.SetAdvantageList, s.Lists[advantagesListIndex].provider.RowData,
+			func(target *gurps.Advantage) uuid.UUID { return target.ID })
 	}
 }
 

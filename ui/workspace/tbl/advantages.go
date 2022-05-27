@@ -108,9 +108,12 @@ func (p *advantagesProvider) OpenEditor(owner widget.Rebuildable, table *unison.
 }
 
 func (p *advantagesProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
-	CreateItem[*gurps.Advantage](owner, p.Entity(), table, variant == ContainerItemVariant, gurps.NewAdvantage,
+	item := gurps.NewAdvantage(p.Entity(), nil, variant == ContainerItemVariant)
+	InsertItem[*gurps.Advantage](owner, table, item,
+		func(target, parent *gurps.Advantage) { target.Parent = parent },
 		func(target *gurps.Advantage) []*gurps.Advantage { return target.Children },
 		func(target *gurps.Advantage, children []*gurps.Advantage) { target.Children = children },
 		p.provider.AdvantageList, p.provider.SetAdvantageList, p.RowData,
 		func(target *gurps.Advantage) uuid.UUID { return target.ID })
+	editors.EditAdvantage(owner, item)
 }

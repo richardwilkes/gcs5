@@ -125,15 +125,21 @@ func (p *skillsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Tabl
 }
 
 func (p *skillsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
-	create := gurps.NewSkill
-	if variant == AlternateItemVariant {
-		create = func(entity *gurps.Entity, parent *gurps.Skill, container bool) *gurps.Skill {
-			return gurps.NewTechnique(entity, parent, "")
-		}
+	var item *gurps.Skill
+	switch variant {
+	case NoItemVariant:
+		item = gurps.NewSkill(p.Entity(), nil, false)
+	case ContainerItemVariant:
+		item = gurps.NewSkill(p.Entity(), nil, true)
+	case AlternateItemVariant:
+		item = gurps.NewTechnique(p.Entity(), nil, "")
+	default:
+		jot.Fatal(1, "unhandled variant")
 	}
-	CreateItem[*gurps.Skill](owner, p.Entity(), table, variant == ContainerItemVariant, create,
+	InsertItem[*gurps.Skill](owner, table, item, func(target, parent *gurps.Skill) { target.Parent = parent },
 		func(target *gurps.Skill) []*gurps.Skill { return target.Children },
 		func(target *gurps.Skill, children []*gurps.Skill) { target.Children = children },
 		p.provider.SkillList, p.provider.SetSkillList, p.RowData,
 		func(target *gurps.Skill) uuid.UUID { return target.ID })
+	editors.EditSkill(owner, item)
 }

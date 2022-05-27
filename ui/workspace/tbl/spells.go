@@ -152,13 +152,21 @@ func (p *spellsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Tabl
 }
 
 func (p *spellsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
-	create := gurps.NewSpell
-	if variant == AlternateItemVariant {
-		create = gurps.NewRitualMagicSpell
+	var item *gurps.Spell
+	switch variant {
+	case NoItemVariant:
+		item = gurps.NewSpell(p.Entity(), nil, false)
+	case ContainerItemVariant:
+		item = gurps.NewSpell(p.Entity(), nil, true)
+	case AlternateItemVariant:
+		item = gurps.NewRitualMagicSpell(p.Entity(), nil, false)
+	default:
+		jot.Fatal(1, "unhandled variant")
 	}
-	CreateItem[*gurps.Spell](owner, p.Entity(), table, variant == ContainerItemVariant, create,
+	InsertItem[*gurps.Spell](owner, table, item, func(target, parent *gurps.Spell) { target.Parent = parent },
 		func(target *gurps.Spell) []*gurps.Spell { return target.Children },
 		func(target *gurps.Spell, children []*gurps.Spell) { target.Children = children },
 		p.provider.SpellList, p.provider.SetSpellList, p.RowData,
 		func(target *gurps.Spell) uuid.UUID { return target.ID })
+	editors.EditSpell(owner, item)
 }

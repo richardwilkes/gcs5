@@ -200,9 +200,12 @@ func (p *equipmentProvider) CreateItem(owner widget.Rebuildable, table *unison.T
 		topListFunc = p.provider.CarriedEquipmentList
 		setTopListFunc = p.provider.SetCarriedEquipmentList
 	}
-	CreateItem[*gurps.Equipment](owner, p.Entity(), table, variant == ContainerItemVariant, gurps.NewEquipment,
+	item := gurps.NewEquipment(p.Entity(), nil, variant == ContainerItemVariant)
+	InsertItem[*gurps.Equipment](owner, table, item,
+		func(target, parent *gurps.Equipment) { target.Parent = parent },
 		func(target *gurps.Equipment) []*gurps.Equipment { return target.Children },
 		func(target *gurps.Equipment, children []*gurps.Equipment) { target.Children = children },
 		topListFunc, setTopListFunc, p.RowData,
 		func(target *gurps.Equipment) uuid.UUID { return target.ID })
+	editors.EditEquipment(owner, item, p.carried)
 }
