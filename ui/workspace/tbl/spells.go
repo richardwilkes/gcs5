@@ -12,6 +12,7 @@
 package tbl
 
 import (
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/editors"
@@ -147,16 +148,17 @@ func (p *spellsProvider) ExcessWidthColumnIndex() int {
 }
 
 func (p *spellsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
-	for _, row := range table.SelectedRows(false) {
-		if node, ok := row.(*Node); ok {
-			var s *gurps.Spell
-			if s, ok = node.Data().(*gurps.Spell); ok {
-				editors.EditSpell(owner, s)
-			}
-		}
-	}
+	OpenEditor[*gurps.Spell](table, func(item *gurps.Spell) { editors.EditSpell(owner, item) })
 }
 
-func (p *spellsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, container bool) {
-	// TODO: Implement
+func (p *spellsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
+	create := gurps.NewSpell
+	if variant == AlternateItemVariant {
+		create = gurps.NewRitualMagicSpell
+	}
+	CreateItem[*gurps.Spell](owner, p.Entity(), table, variant == ContainerItemVariant, create,
+		func(target *gurps.Spell) []*gurps.Spell { return target.Children },
+		func(target *gurps.Spell, children []*gurps.Spell) { target.Children = children },
+		p.provider.SpellList, p.provider.SetSpellList, p.RowData,
+		func(target *gurps.Spell) uuid.UUID { return target.ID })
 }

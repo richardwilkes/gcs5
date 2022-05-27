@@ -82,5 +82,5 @@ func (p *reactionModProvider) ExcessWidthColumnIndex() int {
 func (p *reactionModProvider) OpenEditor(_ widget.Rebuildable, _ *unison.Table) {
 }
 
-func (p *reactionModProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table, _ bool) {
+func (p *reactionModProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table, _ ItemVariant) {
 }

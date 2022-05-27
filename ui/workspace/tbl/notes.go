@@ -12,6 +12,7 @@
 package tbl
 
 import (
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/editors"
@@ -83,16 +84,13 @@ func (p *notesProvider) ExcessWidthColumnIndex() int {
 }
 
 func (p *notesProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
-	for _, row := range table.SelectedRows(false) {
-		if node, ok := row.(*Node); ok {
-			var n *gurps.Note
-			if n, ok = node.Data().(*gurps.Note); ok {
-				editors.EditNote(owner, n)
-			}
-		}
-	}
+	OpenEditor[*gurps.Note](table, func(item *gurps.Note) { editors.EditNote(owner, item) })
 }
 
-func (p *notesProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, container bool) {
-	// TODO: Implement
+func (p *notesProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
+	CreateItem[*gurps.Note](owner, p.Entity(), table, variant == ContainerItemVariant, gurps.NewNote,
+		func(target *gurps.Note) []*gurps.Note { return target.Children },
+		func(target *gurps.Note, children []*gurps.Note) { target.Children = children },
+		p.provider.NoteList, p.provider.SetNoteList, p.RowData,
+		func(target *gurps.Note) uuid.UUID { return target.ID })
 }

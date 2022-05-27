@@ -17,6 +17,16 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+// ItemVariant holds the type of item variant to create.
+type ItemVariant int
+
+// Possible values for ItemVariant.
+const (
+	NoItemVariant ItemVariant = iota
+	ContainerItemVariant
+	AlternateItemVariant
+)
+
 // TableProvider defines the methods a table provider must contain.
 type TableProvider interface {
 	gurps.EntityProvider
@@ -26,5 +36,5 @@ type TableProvider interface {
 	HierarchyColumnIndex() int
 	ExcessWidthColumnIndex() int
 	OpenEditor(owner widget.Rebuildable, table *unison.Table)
-	CreateItem(owner widget.Rebuildable, table *unison.Table, container bool)
+	CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant)
 }

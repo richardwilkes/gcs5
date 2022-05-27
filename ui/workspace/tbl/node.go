@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/gcs/model/theme"
@@ -24,6 +25,7 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
+	"golang.org/x/exp/slices"
 )
 
 var (
@@ -374,5 +376,74 @@ func PerformAction(paneler unison.Paneler, id int) {
 	}
 	if can && p.PerformCmdCallback != nil {
 		p.PerformCmdCallback(nil, id)
+	}
+}
+
+// IDer defines the minimum necessary for use of CreateItem(), OpenEditor(), and ExtractFromRowData().
+type IDer interface {
+	comparable
+	UUID() uuid.UUID
+}
+
+// CreateItem creates an item in a table.
+func CreateItem[T IDer](owner widget.Rebuildable, entity *gurps.Entity, table *unison.Table, container bool, create func(entity *gurps.Entity, parent T, container bool) T, childrenOf func(target T) []T, setChildren func(target T, children []T), topList func() []T, setTopList func([]T), rowData func(table *unison.Table) []unison.TableRowData, id func(T) uuid.UUID) {
+	var a, zero T
+	i := table.FirstSelectedRowIndex()
+	if i != -1 {
+		row := table.RowFromIndex(i)
+		if target := ExtractFromRowData[T](row); target != zero {
+			if row.CanHaveChildRows() {
+				// Target is container, append to end of that container
+				a = create(entity, target, container)
+				setChildren(target, append(childrenOf(target), a))
+			} else {
+				// Target isn't a container. If it has a parent, insert after the target within that parent.
+				if parent := ExtractFromRowData[T](row.ParentRow()); parent != zero {
+					a = create(entity, parent, container)
+					children := childrenOf(parent)
+					setChildren(parent, slices.Insert(children, slices.Index(children, target)+1, a))
+				} else {
+					// Otherwise, insert after the target within the top-level list.
+					a = create(entity, zero, container)
+					list := topList()
+					setTopList(slices.Insert(list, slices.Index(list, target)+1, a))
+				}
+			}
+		}
+	}
+	if a == zero {
+		// There was no selection, so append to the end of the top-level list.
+		a = create(entity, zero, container)
+		setTopList(append(topList(), a))
+	}
+	widget.MarkModified(table)
+	table.SetTopLevelRows(rowData(table))
+	index := FindRowIndexByID(table, id(a))
+	table.SelectByIndex(index)
+	table.ScrollRowCellIntoView(index, 0)
+	table.RequestFocus()
+	owner.Rebuild(true) // After this point, 'table' will no longer point to the in-use table
+	PerformAction(table, constants.OpenEditorItemID)
+}
+
+// ExtractFromRowData extracts a specific type of data from the row data.
+func ExtractFromRowData[T IDer](row unison.TableRowData) T {
+	if n, ok := row.(*Node); ok {
+		var target T
+		if target, ok = n.Data().(T); ok {
+			return target
+		}
+	}
+	var zero T
+	return zero
+}
+
+// OpenEditor opens an editor for each selected row in the table.
+func OpenEditor[T IDer](table *unison.Table, edit func(item T)) {
+	var zero T
+	for _, row := range table.SelectedRows(false) {
+		if a := ExtractFromRowData[T](row); a != zero {
+			edit(a)
+		}
 	}
 }

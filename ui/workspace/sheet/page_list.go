@@ -226,14 +226,8 @@ func newPageList(owner widget.Rebuildable, provider tbl.TableProvider) *PageList
 	p.AddChild(p.table)
 	if owner != nil {
 		p.installPerformHandlers(constants.OpenEditorItemID,
-			func() bool { return true },
+			func() bool { return p.table.HasSelection() },
 			func() { p.provider.OpenEditor(owner, p.table) })
-		p.installPerformHandlers(constants.NewItemItemID,
-			func() bool { return true },
-			func() { p.provider.CreateItem(owner, p.table, false) })
-		p.installPerformHandlers(constants.NewContainerItemID,
-			func() bool { return true },
-			func() { p.provider.CreateItem(owner, p.table, true) })
 	}
 	return p
 }
@@ -716,6 +710,6 @@ func (p *PageList) collectRowMappings(index int, indexes []int, selection map[uu
 }
 
 // CreateItem calls CreateItem on the contained TableProvider.
-func (p *PageList) CreateItem(owner widget.Rebuildable, container bool) {
-	p.provider.CreateItem(owner, p.table, container)
+func (p *PageList) CreateItem(owner widget.Rebuildable, variant tbl.ItemVariant) {
+	p.provider.CreateItem(owner, p.table, variant)
 }

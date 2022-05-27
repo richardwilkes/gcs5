@@ -26,6 +26,7 @@ import (
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
+	"github.com/richardwilkes/gcs/ui/workspace/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio/fs"
@@ -292,7 +293,20 @@ func (d *Template) Rebuild(full bool) {
 
 func (d *Template) canPerformCmd(_ any, id int) bool {
 	switch id {
-	case constants.NewAdvantageItemID, constants.NewAdvantageContainerItemID:
+	case constants.NewAdvantageItemID,
+		constants.NewAdvantageContainerItemID,
+		constants.NewSkillItemID,
+		constants.NewSkillContainerItemID,
+		constants.NewTechniqueItemID,
+		constants.NewSpellItemID,
+		constants.NewSpellContainerItemID,
+		constants.NewRitualMagicSpellItemID,
+		constants.NewCarriedEquipmentItemID,
+		constants.NewCarriedEquipmentContainerItemID,
+		constants.NewOtherEquipmentItemID,
+		constants.NewOtherEquipmentContainerItemID,
+		constants.NewNoteItemID,
+		constants.NewNoteContainerItemID:
 		return true
 	default:
 		return false
@@ -302,8 +316,32 @@ func (d *Template) canPerformCmd(_ any, id int) bool {
 func (d *Template) performCmd(_ any, id int) {
 	switch id {
 	case constants.NewAdvantageItemID:
-		d.Lists[advantagesListIndex].CreateItem(d, false)
+		d.Lists[advantagesListIndex].CreateItem(d, tbl.NoItemVariant)
 	case constants.NewAdvantageContainerItemID:
-		d.Lists[advantagesListIndex].CreateItem(d, true)
+		d.Lists[advantagesListIndex].CreateItem(d, tbl.ContainerItemVariant)
+	case constants.NewSkillItemID:
+		d.Lists[skillsListIndex].CreateItem(d, tbl.NoItemVariant)
+	case constants.NewSkillContainerItemID:
+		d.Lists[skillsListIndex].CreateItem(d, tbl.ContainerItemVariant)
+	case constants.NewTechniqueItemID:
+		d.Lists[skillsListIndex].CreateItem(d, tbl.AlternateItemVariant)
+	case constants.NewSpellItemID:
+		d.Lists[spellsListIndex].CreateItem(d, tbl.NoItemVariant)
+	case constants.NewSpellContainerItemID:
+		d.Lists[spellsListIndex].CreateItem(d, tbl.ContainerItemVariant)
+	case constants.NewRitualMagicSpellItemID:
+		d.Lists[spellsListIndex].CreateItem(d, tbl.AlternateItemVariant)
+	case constants.NewCarriedEquipmentItemID:
+		d.Lists[carriedEquipmentListIndex].CreateItem(d, tbl.NoItemVariant)
+	case constants.NewCarriedEquipmentContainerItemID:
+		d.Lists[carriedEquipmentListIndex].CreateItem(d, tbl.ContainerItemVariant)
+	case constants.NewOtherEquipmentItemID:
+		d.Lists[otherEquipmentListIndex].CreateItem(d, tbl.NoItemVariant)
+	case constants.NewOtherEquipmentContainerItemID:
+		d.Lists[otherEquipmentListIndex].CreateItem(d, tbl.ContainerItemVariant)
+	case constants.NewNoteItemID:
+		d.Lists[notesListIndex].CreateItem(d, tbl.NoItemVariant)
+	case constants.NewNoteContainerItemID:
+		d.Lists[notesListIndex].CreateItem(d, tbl.ContainerItemVariant)
 	}
 }

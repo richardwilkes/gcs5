@@ -43,6 +43,7 @@ type TableDockable struct {
 	unison.Panel
 	path            string
 	provider        tbl.TableProvider
+	canCreateIDs    map[int]bool
 	canPerformMap   map[int]func() bool
 	performMap      map[int]func()
 	lockButton      *unison.Button
@@ -89,17 +90,8 @@ func NewAdvantageTableDockableFromFile(filePath string) (unison.Dockable, error)
 
 // NewAdvantageTableDockable creates a new unison.Dockable for advantage list files.
 func NewAdvantageTableDockable(filePath string, advantages []*gurps.Advantage) unison.Dockable {
-	t := NewTableDockable(filePath, tbl.NewAdvantagesProvider(&advantageListProvider{advantages: advantages}, false))
-	t.installPerformHandlers(constants.OpenEditorItemID,
-		func() bool { return true },
-		func() { t.provider.OpenEditor(t, t.table) })
-	t.installPerformHandlers(constants.NewItemItemID,
-		func() bool { return true },
-		func() { t.provider.CreateItem(t, t.table, false) })
-	t.installPerformHandlers(constants.NewContainerItemID,
-		func() bool { return true },
-		func() { t.provider.CreateItem(t, t.table, true) })
-	return t
+	return NewTableDockable(filePath, tbl.NewAdvantagesProvider(&advantageListProvider{advantages: advantages}, false),
+		constants.NewAdvantageItemID, constants.NewAdvantageContainerItemID)
 }
 
 type advantageModifierListProvider struct {
@@ -130,11 +122,9 @@ func NewAdvantageModifierTableDockableFromFile(filePath string) (unison.Dockable
 
 // NewAdvantageModifierTableDockable creates a new unison.Dockable for advantage modifier list files.
 func NewAdvantageModifierTableDockable(filePath string, modifiers []*gurps.AdvantageModifier) unison.Dockable {
-	t := NewTableDockable(filePath, tbl.NewAdvantageModifiersProvider(&advantageModifierListProvider{modifiers: modifiers}))
-	t.installPerformHandlers(constants.OpenEditorItemID,
-		func() bool { return true },
-		func() { t.provider.OpenEditor(t, t.table) })
-	return t
+	return NewTableDockable(filePath,
+		tbl.NewAdvantageModifiersProvider(&advantageModifierListProvider{modifiers: modifiers}),
+		constants.NewAdvantageModifierItemID, constants.NewAdvantageContainerModifierItemID)
 }
 
 type equipmentListProvider struct {
@@ -173,11 +163,8 @@ func NewEquipmentTableDockableFromFile(filePath string) (unison.Dockable, error)
 
 // NewEquipmentTableDockable creates a new unison.Dockable for equipment list files.
 func NewEquipmentTableDockable(filePath string, equipment []*gurps.Equipment) unison.Dockable {
-	t := NewTableDockable(filePath, tbl.NewEquipmentProvider(&equipmentListProvider{other: equipment}, false, false))
-	t.installPerformHandlers(constants.OpenEditorItemID,
-		func() bool { return true },
-		func() { t.provider.OpenEditor(t, t.table) })
-	return t
+	return NewTableDockable(filePath, tbl.NewEquipmentProvider(&equipmentListProvider{other: equipment}, false, false),
+		constants.NewCarriedEquipmentItemID, constants.NewCarriedEquipmentContainerItemID)
 }
 
 type equipmentModifierListProvider struct {
@@ -208,11 +195,9 @@ func NewEquipmentModifierTableDockableFromFile(filePath string) (unison.Dockable
 
 // NewEquipmentModifierTableDockable creates a new unison.Dockable for equipment modifier list files.
 func NewEquipmentModifierTableDockable(filePath string, modifiers []*gurps.EquipmentModifier) unison.Dockable {
-	t := NewTableDockable(filePath, tbl.NewEquipmentModifiersProvider(&equipmentModifierListProvider{modifiers: modifiers}))
-	t.installPerformHandlers(constants.OpenEditorItemID,
-		func() bool { return true },
-		func() { t.provider.OpenEditor(t, t.table) })
-	return t
+	return NewTableDockable(filePath,
+		tbl.NewEquipmentModifiersProvider(&equipmentModifierListProvider{modifiers: modifiers}),
+		constants.NewEquipmentModifierItemID, constants.NewEquipmentContainerModifierItemID)
 }
 
 type skillListProvider struct {
@@ -242,11 +227,8 @@ func NewSkillTableDockableFromFile(filePath string) (unison.Dockable, error) {
 
 // NewSkillTableDockable creates a new unison.Dockable for skill list files.
 func NewSkillTableDockable(filePath string, skills []*gurps.Skill) unison.Dockable {
-	t := NewTableDockable(filePath, tbl.NewSkillsProvider(&skillListProvider{skills: skills}, false))
-	t.installPerformHandlers(constants.OpenEditorItemID,
-		func() bool { return true },
-		func() { t.provider.OpenEditor(t, t.table) })
-	return t
+	return NewTableDockable(filePath, tbl.NewSkillsProvider(&skillListProvider{skills: skills}, false),
+		constants.NewSkillItemID, constants.NewSkillContainerItemID, constants.NewTechniqueItemID)
 }
 
 type spellListProvider struct {
@@ -276,11 +258,8 @@ func NewSpellTableDockableFromFile(filePath string) (unison.Dockable, error) {
 
 // NewSpellTableDockable creates a new unison.Dockable for spell list files.
 func NewSpellTableDockable(filePath string, spells []*gurps.Spell) unison.Dockable {
-	t := NewTableDockable(filePath, tbl.NewSpellsProvider(&spellListProvider{spells: spells}, false))
-	t.installPerformHandlers(constants.OpenEditorItemID,
-		func() bool { return true },
-		func() { t.provider.OpenEditor(t, t.table) })
-	return t
+	return NewTableDockable(filePath, tbl.NewSpellsProvider(&spellListProvider{spells: spells}, false),
+		constants.NewSpellItemID, constants.NewSpellContainerItemID, constants.NewRitualMagicSpellItemID)
 }
 
 type noteListProvider struct {
@@ -310,18 +289,16 @@ func NewNoteTableDockableFromFile(filePath string) (unison.Dockable, error) {
 
 // NewNoteTableDockable creates a new unison.Dockable for note list files.
 func NewNoteTableDockable(filePath string, notes []*gurps.Note) unison.Dockable {
-	t := NewTableDockable(filePath, tbl.NewNotesProvider(&noteListProvider{notes: notes}, false))
-	t.installPerformHandlers(constants.OpenEditorItemID,
-		func() bool { return true },
-		func() { t.provider.OpenEditor(t, t.table) })
-	return t
+	return NewTableDockable(filePath, tbl.NewNotesProvider(&noteListProvider{notes: notes}, false),
+		constants.NewNoteItemID, constants.NewNoteContainerItemID)
 }
 
 // NewTableDockable creates a new TableDockable for list data files.
-func NewTableDockable(filePath string, provider tbl.TableProvider) *TableDockable {
+func NewTableDockable(filePath string, provider tbl.TableProvider, canCreateIDs ...int) *TableDockable {
 	d := &TableDockable{
 		path:          filePath,
 		provider:      provider,
+		canCreateIDs:  make(map[int]bool),
 		canPerformMap: make(map[int]func() bool),
 		performMap:    make(map[int]func()),
 		scroll:        unison.NewScrollPanel(),
@@ -330,6 +307,10 @@ func NewTableDockable(filePath string, provider tbl.TableProvider) *TableDockabl
 	}
 	d.Self = d
 	d.SetLayout(&unison.FlexLayout{Columns: 1})
+
+	for _, id := range canCreateIDs {
+		d.canCreateIDs[id] = true
+	}
 
 	headers := provider.Headers()
 	d.table.ColumnSizes = make([]unison.ColumnSize, len(headers))
@@ -343,6 +324,9 @@ func NewTableDockable(filePath string, provider tbl.TableProvider) *TableDockabl
 	d.table.HierarchyColumnIndex = provider.HierarchyColumnIndex()
 	d.table.SetTopLevelRows(provider.RowData(d.table))
 	d.table.SizeColumnsToFit(true)
+	d.installPerformHandlers(constants.OpenEditorItemID,
+		func() bool { return d.table.HasSelection() },
+		func() { d.provider.OpenEditor(d, d.table) })
 	d.table.CanPerformCmdCallback = func(_ interface{}, id int) bool {
 		if f, ok := d.canPerformMap[id]; ok {
 			return f()
@@ -631,19 +615,34 @@ func (d *TableDockable) Rebuild(_ bool) {
 }
 
 func (d *TableDockable) canPerformCmd(_ any, id int) bool {
-	switch id {
-	case constants.NewAdvantageItemID, constants.NewAdvantageContainerItemID:
+	if d.canCreateIDs[id] {
 		return true
-	default:
-		return false
 	}
+	return false
 }
 
 func (d *TableDockable) performCmd(_ any, id int) {
 	switch id {
-	case constants.NewAdvantageItemID:
-		d.provider.CreateItem(d, d.table, false)
-	case constants.NewAdvantageContainerItemID:
-		d.provider.CreateItem(d, d.table, true)
+	case constants.NewAdvantageItemID,
+		constants.NewAdvantageModifierItemID,
+		constants.NewSkillItemID,
+		constants.NewSpellItemID,
+		constants.NewCarriedEquipmentItemID,
+		constants.NewOtherEquipmentItemID,
+		constants.NewEquipmentModifierItemID,
+		constants.NewNoteItemID:
+		d.provider.CreateItem(d, d.table, tbl.NoItemVariant)
+	case constants.NewAdvantageContainerItemID,
+		constants.NewAdvantageContainerModifierItemID,
+		constants.NewSkillContainerItemID,
+		constants.NewSpellContainerItemID,
+		constants.NewCarriedEquipmentContainerItemID,
+		constants.NewOtherEquipmentContainerItemID,
+		constants.NewEquipmentContainerModifierItemID,
+		constants.NewNoteContainerItemID:
+		d.provider.CreateItem(d, d.table, tbl.ContainerItemVariant)
+	case constants.NewTechniqueItemID,
+		constants.NewRitualMagicSpellItemID:
+		d.provider.CreateItem(d, d.table, tbl.AlternateItemVariant)
 	}
 }

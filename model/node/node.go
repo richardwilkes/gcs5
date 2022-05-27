@@ -11,7 +11,9 @@
 
 package node
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 // Node defines the methods required of nodes in our tables.
 type Node interface {

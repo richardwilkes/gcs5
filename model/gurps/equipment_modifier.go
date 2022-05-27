@@ -83,7 +83,7 @@ func SaveEquipmentModifiers(modifiers []*EquipmentModifier, filePath string) err
 }
 
 // NewEquipmentModifier creates an EquipmentModifier.
-func NewEquipmentModifier(entity *Entity, container bool) *EquipmentModifier {
+func NewEquipmentModifier(entity *Entity, _ *EquipmentModifier, container bool) *EquipmentModifier {
 	a := &EquipmentModifier{
 		EquipmentModifierData: EquipmentModifierData{
 			ContainerBase: newContainerBase[*EquipmentModifier](equipmentModifierTypeKey, container),

@@ -81,7 +81,7 @@ func SaveAdvantageModifiers(modifiers []*AdvantageModifier, filePath string) err
 }
 
 // NewAdvantageModifier creates an AdvantageModifier.
-func NewAdvantageModifier(entity *Entity, container bool) *AdvantageModifier {
+func NewAdvantageModifier(entity *Entity, _ *AdvantageModifier, container bool) *AdvantageModifier {
 	a := &AdvantageModifier{
 		AdvantageModifierData: AdvantageModifierData{
 			ContainerBase: newContainerBase[*AdvantageModifier](advantageModifierTypeKey, container),

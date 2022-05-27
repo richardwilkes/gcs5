@@ -137,5 +137,5 @@ func (p *weaponsProvider) ExcessWidthColumnIndex() int {
 func (p *weaponsProvider) OpenEditor(_ widget.Rebuildable, _ *unison.Table) {
 }
 
-func (p *weaponsProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table, _ bool) {
+func (p *weaponsProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table, _ ItemVariant) {
 }

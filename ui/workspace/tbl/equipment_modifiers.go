@@ -12,6 +12,7 @@
 package tbl
 
 import (
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/editors"
@@ -93,16 +94,16 @@ func (p *eqpModProvider) ExcessWidthColumnIndex() int {
 }
 
 func (p *eqpModProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
-	for _, row := range table.SelectedRows(false) {
-		if node, ok := row.(*Node); ok {
-			var e *gurps.EquipmentModifier
-			if e, ok = node.Data().(*gurps.EquipmentModifier); ok {
-				editors.EditEquipmentModifier(owner, e)
-			}
-		}
-	}
+	OpenEditor[*gurps.EquipmentModifier](table, func(item *gurps.EquipmentModifier) {
+		editors.EditEquipmentModifier(owner, item)
+	})
 }
 
-func (p *eqpModProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, container bool) {
-	// TODO: Implement
+func (p *eqpModProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
+	CreateItem[*gurps.EquipmentModifier](owner, p.Entity(), table,
+		variant == ContainerItemVariant, gurps.NewEquipmentModifier,
+		func(target *gurps.EquipmentModifier) []*gurps.EquipmentModifier { return target.Children },
+		func(target *gurps.EquipmentModifier, children []*gurps.EquipmentModifier) { target.Children = children },
+		p.provider.EquipmentModifierList, p.provider.SetEquipmentModifierList, p.RowData,
+		func(target *gurps.EquipmentModifier) uuid.UUID { return target.ID })
 }

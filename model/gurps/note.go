@@ -72,7 +72,7 @@ func SaveNotes(notes []*Note, filePath string) error {
 }
 
 // NewNote creates a new Note.
-func NewNote(parent *Note, container bool) *Note {
+func NewNote(_ *Entity, parent *Note, container bool) *Note {
 	n := &Note{
 		NoteData: NoteData{
 			ContainerBase: newContainerBase[*Note](noteTypeKey, container),

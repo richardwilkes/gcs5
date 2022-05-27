@@ -12,6 +12,7 @@
 package tbl
 
 import (
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/editors"
@@ -120,16 +121,19 @@ func (p *skillsProvider) ExcessWidthColumnIndex() int {
 }
 
 func (p *skillsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
-	for _, row := range table.SelectedRows(false) {
-		if node, ok := row.(*Node); ok {
-			var s *gurps.Skill
-			if s, ok = node.Data().(*gurps.Skill); ok {
-				editors.EditSkill(owner, s)
-			}
-		}
-	}
+	OpenEditor[*gurps.Skill](table, func(item *gurps.Skill) { editors.EditSkill(owner, item) })
 }
 
-func (p *skillsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, container bool) {
-	// TODO: Implement
+func (p *skillsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
+	create := gurps.NewSkill
+	if variant == AlternateItemVariant {
+		create = func(entity *gurps.Entity, parent *gurps.Skill, container bool) *gurps.Skill {
+			return gurps.NewTechnique(entity, parent, "")
+		}
+	}
+	CreateItem[*gurps.Skill](owner, p.Entity(), table, variant == ContainerItemVariant, create,
+		func(target *gurps.Skill) []*gurps.Skill { return target.Children },
+		func(target *gurps.Skill, children []*gurps.Skill) { target.Children = children },
+		p.provider.SkillList, p.provider.SetSkillList, p.RowData,
+		func(target *gurps.Skill) uuid.UUID { return target.ID })
 }

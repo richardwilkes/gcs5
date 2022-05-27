@@ -14,6 +14,7 @@ package tbl
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/editors"
@@ -189,16 +190,19 @@ func (p *equipmentProvider) descriptionText() string {
 }
 
 func (p *equipmentProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
-	for _, row := range table.SelectedRows(false) {
-		if node, ok := row.(*Node); ok {
-			var e *gurps.Equipment
-			if e, ok = node.Data().(*gurps.Equipment); ok {
-				editors.EditEquipment(owner, e, p.carried)
-			}
-		}
-	}
+	OpenEditor[*gurps.Equipment](table, func(item *gurps.Equipment) { editors.EditEquipment(owner, item, p.carried) })
 }
 
-func (p *equipmentProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, container bool) {
-	// TODO: Implement
+func (p *equipmentProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
+	topListFunc := p.provider.OtherEquipmentList
+	setTopListFunc := p.provider.SetOtherEquipmentList
+	if p.carried {
+		topListFunc = p.provider.CarriedEquipmentList
+		setTopListFunc = p.provider.SetCarriedEquipmentList
+	}
+	CreateItem[*gurps.Equipment](owner, p.Entity(), table, variant == ContainerItemVariant, gurps.NewEquipment,
+		func(target *gurps.Equipment) []*gurps.Equipment { return target.Children },
+		func(target *gurps.Equipment, children []*gurps.Equipment) { target.Children = children },
+		topListFunc, setTopListFunc, p.RowData,
+		func(target *gurps.Equipment) uuid.UUID { return target.ID })
 }

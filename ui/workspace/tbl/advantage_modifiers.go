@@ -12,6 +12,7 @@
 package tbl
 
 import (
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/editors"
@@ -87,16 +88,16 @@ func (p *advModProvider) ExcessWidthColumnIndex() int {
 }
 
 func (p *advModProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
-	for _, row := range table.SelectedRows(false) {
-		if node, ok := row.(*Node); ok {
-			var a *gurps.AdvantageModifier
-			if a, ok = node.Data().(*gurps.AdvantageModifier); ok {
-				editors.EditAdvantageModifier(owner, a)
-			}
-		}
-	}
+	OpenEditor[*gurps.AdvantageModifier](table, func(item *gurps.AdvantageModifier) {
+		editors.EditAdvantageModifier(owner, item)
+	})
 }
 
-func (p *advModProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, container bool) {
-	// TODO: Implement
+func (p *advModProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
+	CreateItem[*gurps.AdvantageModifier](owner, p.Entity(), table, variant == ContainerItemVariant,
+		gurps.NewAdvantageModifier,
+		func(target *gurps.AdvantageModifier) []*gurps.AdvantageModifier { return target.Children },
+		func(target *gurps.AdvantageModifier, children []*gurps.AdvantageModifier) { target.Children = children },
+		p.provider.AdvantageModifierList, p.provider.SetAdvantageModifierList, p.RowData,
+		func(target *gurps.AdvantageModifier) uuid.UUID { return target.ID })
 }

@@ -102,7 +102,7 @@ func NewSpell(entity *Entity, parent *Spell, container bool) *Spell {
 }
 
 // NewRitualMagicSpell creates a new Ritual Magic Spell.
-func NewRitualMagicSpell(entity *Entity, parent *Spell) *Spell {
+func NewRitualMagicSpell(entity *Entity, parent *Spell, _ bool) *Spell {
 	s := newSpell(entity, parent, gid.RitualMagicSpell, false)
 	s.RitualSkillName = "Ritual Magic"
 	s.Points = 0
