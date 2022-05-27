@@ -387,38 +387,38 @@ type IDer interface {
 
 // CreateItem creates an item in a table.
 func CreateItem[T IDer](owner widget.Rebuildable, entity *gurps.Entity, table *unison.Table, container bool, create func(entity *gurps.Entity, parent T, container bool) T, childrenOf func(target T) []T, setChildren func(target T, children []T), topList func() []T, setTopList func([]T), rowData func(table *unison.Table) []unison.TableRowData, id func(T) uuid.UUID) {
-	var a, zero T
+	var item, zero T
 	i := table.FirstSelectedRowIndex()
 	if i != -1 {
 		row := table.RowFromIndex(i)
 		if target := ExtractFromRowData[T](row); target != zero {
 			if row.CanHaveChildRows() {
 				// Target is container, append to end of that container
-				a = create(entity, target, container)
-				setChildren(target, append(childrenOf(target), a))
+				item = create(entity, target, container)
+				setChildren(target, append(childrenOf(target), item))
 			} else {
 				// Target isn't a container. If it has a parent, insert after the target within that parent.
 				if parent := ExtractFromRowData[T](row.ParentRow()); parent != zero {
-					a = create(entity, parent, container)
+					item = create(entity, parent, container)
 					children := childrenOf(parent)
-					setChildren(parent, slices.Insert(children, slices.Index(children, target)+1, a))
+					setChildren(parent, slices.Insert(children, slices.Index(children, target)+1, item))
 				} else {
 					// Otherwise, insert after the target within the top-level list.
-					a = create(entity, zero, container)
+					item = create(entity, zero, container)
 					list := topList()
-					setTopList(slices.Insert(list, slices.Index(list, target)+1, a))
+					setTopList(slices.Insert(list, slices.Index(list, target)+1, item))
 				}
 			}
 		}
 	}
-	if a == zero {
+	if item == zero {
 		// There was no selection, so append to the end of the top-level list.
-		a = create(entity, zero, container)
-		setTopList(append(topList(), a))
+		item = create(entity, zero, container)
+		setTopList(append(topList(), item))
 	}
 	widget.MarkModified(table)
 	table.SetTopLevelRows(rowData(table))
-	index := FindRowIndexByID(table, id(a))
+	index := FindRowIndexByID(table, id(item))
 	table.SelectByIndex(index)
 	table.ScrollRowCellIntoView(index, 0)
 	table.RequestFocus()

@@ -479,7 +479,8 @@ func (s *Sheet) canPerformCmd(_ any, id int) bool {
 		constants.NewOtherEquipmentItemID,
 		constants.NewOtherEquipmentContainerItemID,
 		constants.NewNoteItemID,
-		constants.NewNoteContainerItemID:
+		constants.NewNoteContainerItemID,
+		constants.AddNaturalAttacksAdvantageItemID:
 		return true
 	default:
 		return false
@@ -516,6 +517,8 @@ func (s *Sheet) performCmd(_ any, id int) {
 		s.Lists[notesListIndex].CreateItem(s, tbl.NoItemVariant)
 	case constants.NewNoteContainerItemID:
 		s.Lists[notesListIndex].CreateItem(s, tbl.ContainerItemVariant)
+	case constants.AddNaturalAttacksAdvantageItemID:
+		// TODO: Implement
 	}
 }
 
