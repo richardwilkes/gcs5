@@ -30,8 +30,6 @@
     - Convert to Container
   - Item
     - Add Natural Attacks Advantage
-    - New Technique
-    - New Ritual Magic Spell
     - Copy to Character Sheet
     - Copy to Template
     - Apply Template to Character Sheet
