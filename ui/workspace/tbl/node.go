@@ -314,14 +314,9 @@ func (n *Node) createPageRefCell(text, highlight string, selected bool) unison.P
 			return true
 		}
 		label.MouseDownCallback = func(where unison.Point, button, clickCount int, mod unison.Modifiers) bool {
-			var list []string
-			for _, one := range strings.FieldsFunc(text, func(ch rune) bool { return ch == ',' || ch == ';' || ch == ' ' }) {
-				if one = strings.TrimSpace(one); one != "" {
-					list = append(list, one)
-				}
-			}
+			list := settings.ExtractPageReferences(text)
 			if len(list) != 0 {
-				settings.OpenPageReference(label.Window(), list[0], highlight)
+				settings.OpenPageReference(label.Window(), list[0], highlight, nil)
 			}
 			return true
 		}

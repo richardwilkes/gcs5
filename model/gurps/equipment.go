@@ -254,7 +254,7 @@ func (e *Equipment) CellData(column int, data *node.CellData) {
 	case EquipmentTagsColumn:
 		data.Type = node.Text
 		data.Primary = CombineTags(e.Tags)
-	case EquipmentReferenceColumn:
+	case EquipmentReferenceColumn, node.PageRefCellAlias:
 		data.Type = node.PageRef
 		data.Primary = e.PageRef
 		data.Secondary = e.Name

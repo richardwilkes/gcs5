@@ -16,6 +16,7 @@ import (
 	"io/fs"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
@@ -31,9 +32,24 @@ type pageRefMappingsDockable struct {
 	content *unison.Panel
 }
 
+// ExtractPageReferences extracts any page references from the string.
+func ExtractPageReferences(s string) []string {
+	var list []string
+	for _, one := range strings.FieldsFunc(s, func(ch rune) bool { return ch == ',' || ch == ';' || ch == ' ' }) {
+		if one = strings.TrimSpace(one); one != "" {
+			list = append(list, one)
+		}
+	}
+	return list
+}
+
 // OpenPageReference opens the given page reference in the given window, which should contain a workspace. May pass nil
-// for wnd to let it pick the first such window it discovers.
-func OpenPageReference(wnd *unison.Window, ref, highlight string) {
+// for wnd to let it pick the first such window it discovers. Returns true if the the user asked to cancel further
+// processing.
+func OpenPageReference(wnd *unison.Window, ref, highlight string, promptContext map[string]bool) bool {
+	if promptContext == nil {
+		promptContext = make(map[string]bool)
+	}
 	i := len(ref) - 1
 	for i >= 0 {
 		ch := ref[i]
@@ -47,24 +63,35 @@ func OpenPageReference(wnd *unison.Window, ref, highlight string) {
 	if i > 0 {
 		page, err := strconv.Atoi(ref[i:])
 		if err != nil {
-			return
+			return false
 		}
 		key := ref[:i]
 		s := settings.Global()
 		pageRef := s.PageRefs.Lookup(key)
-		if pageRef == nil {
-			// TODO: Need to let the user know *what* the dialog is for!
-			dialog := unison.NewOpenDialog()
-			dialog.SetAllowsMultipleSelection(false)
-			dialog.SetResolvesAliases(true)
-			dialog.SetAllowedExtensions("pdf")
-			if dialog.RunModal() {
-				pageRef = &settings.PageRef{
-					ID:   key,
-					Path: dialog.Paths()[0],
+		if pageRef == nil && !promptContext[key] {
+			pdfName := PageRefKeyToName(key)
+			if pdfName != "" {
+				pdfName = fmt.Sprintf(i18n.Text("\nThis key is normally mapped to a PDF named:\n%s"), pdfName)
+			}
+			switch unison.YesNoCancelDialog(fmt.Sprintf(i18n.Text(`There is no valid mapping for page reference key "%s".
+Would you like to create one by choosing a PDF to map to this key?`), key), pdfName) {
+			case unison.ModalResponseDiscard:
+				promptContext[key] = true
+			case unison.ModalResponseOK:
+				dialog := unison.NewOpenDialog()
+				dialog.SetAllowsMultipleSelection(false)
+				dialog.SetResolvesAliases(true)
+				dialog.SetAllowedExtensions("pdf")
+				if dialog.RunModal() {
+					pageRef = &settings.PageRef{
+						ID:   key,
+						Path: dialog.Paths()[0],
+					}
+					s.PageRefs.Set(pageRef)
+					RefreshPageRefMappingsView()
 				}
-				s.PageRefs.Set(pageRef)
-				RefreshPageRefMappingsView()
+			case unison.ModalResponseCancel:
+				return true
 			}
 		}
 		if pageRef != nil {
@@ -79,6 +106,7 @@ func OpenPageReference(wnd *unison.Window, ref, highlight string) {
 			}
 		}
 	}
+	return false
 }
 
 // RefreshPageRefMappingsView causes the Page References Mappings view to be refreshed if it is open.

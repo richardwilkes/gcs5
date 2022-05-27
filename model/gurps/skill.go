@@ -181,7 +181,7 @@ func (s *Skill) CellData(column int, data *node.CellData) {
 	case SkillTagsColumn:
 		data.Type = node.Text
 		data.Primary = CombineTags(s.Tags)
-	case SkillReferenceColumn:
+	case SkillReferenceColumn, node.PageRefCellAlias:
 		data.Type = node.PageRef
 		data.Primary = s.PageRef
 		data.Secondary = s.Name

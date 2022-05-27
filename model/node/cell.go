@@ -13,6 +13,9 @@ package node
 
 import "github.com/richardwilkes/unison"
 
+// PageRefCellAlias is used an alias to request the page reference cell, if any.
+const PageRefCellAlias = -10
+
 // CellData holds data for creating a cell's visual representation.
 type CellData struct {
 	Type              CellType

@@ -327,6 +327,15 @@ func NewTableDockable(filePath string, provider tbl.TableProvider, canCreateIDs 
 	d.installPerformHandlers(constants.OpenEditorItemID,
 		func() bool { return d.table.HasSelection() },
 		func() { d.provider.OpenEditor(d, d.table) })
+	canOpenPageRefFunc := tbl.NewCanOpenPageRefFunc(d.table)
+	d.installPerformHandlers(constants.OpenOnePageReferenceItemID, canOpenPageRefFunc, tbl.NewOpenPageRefFunc(d.table))
+	d.installPerformHandlers(constants.OpenEachPageReferenceItemID, canOpenPageRefFunc,
+		tbl.NewOpenEachPageRefFunc(d.table))
+	mouseDownCallback := d.table.MouseDownCallback
+	d.table.MouseDownCallback = func(where unison.Point, button, clickCount int, mod unison.Modifiers) bool {
+		d.table.RequestFocus() // TODO: This isn't enough. Need automatic focus propagation to parent if not handled.
+		return mouseDownCallback(where, button, clickCount, mod)
+	}
 	d.table.CanPerformCmdCallback = func(_ interface{}, id int) bool {
 		if f, ok := d.canPerformMap[id]; ok {
 			return f()
@@ -614,14 +623,14 @@ func (d *TableDockable) Rebuild(_ bool) {
 	d.table.SyncToModel()
 }
 
-func (d *TableDockable) canPerformCmd(_ any, id int) bool {
+func (d *TableDockable) canPerformCmd(source any, id int) bool {
 	if d.canCreateIDs[id] {
 		return true
 	}
-	return false
+	return d.table.CanPerformCmdCallback(source, id)
 }
 
-func (d *TableDockable) performCmd(_ any, id int) {
+func (d *TableDockable) performCmd(source any, id int) {
 	switch id {
 	case constants.NewAdvantageItemID,
 		constants.NewAdvantageModifierItemID,
@@ -644,5 +653,7 @@ func (d *TableDockable) performCmd(_ any, id int) {
 	case constants.NewTechniqueItemID,
 		constants.NewRitualMagicSpellItemID:
 		d.provider.CreateItem(d, d.table, tbl.AlternateItemVariant)
+	default:
+		d.table.PerformCmdCallback(source, id)
 	}
 }

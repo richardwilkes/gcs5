@@ -112,5 +112,7 @@ func (m *ConditionalModifier) CellData(column int, data *node.CellData) {
 	case ConditionalModifierDescriptionColumn:
 		data.Type = node.Text
 		data.Primary = m.From
+	case node.PageRefCellAlias:
+		data.Type = node.PageRef
 	}
 }

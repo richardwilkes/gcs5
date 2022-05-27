@@ -621,6 +621,8 @@ func (w *Weapon) CellData(column int, data *node.CellData) {
 		data.Primary = w.Bulk
 	case WeaponRecoilColumn:
 		data.Primary = w.Recoil
+	case node.PageRefCellAlias:
+		data.Type = node.PageRef
 	}
 	data.Tooltip = buffer.String()
 }

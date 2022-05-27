@@ -227,7 +227,7 @@ func (s *Spell) CellData(column int, data *node.CellData) {
 	case SpellTagsColumn:
 		data.Type = node.Text
 		data.Primary = CombineTags(s.Tags)
-	case SpellReferenceColumn:
+	case SpellReferenceColumn, node.PageRefCellAlias:
 		data.Type = node.PageRef
 		data.Primary = s.PageRef
 		data.Secondary = s.Name

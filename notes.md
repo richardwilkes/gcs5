@@ -9,6 +9,7 @@
 
 #### GCS-specific work that needs to be done
 
+- Revise action handling, since relying on the focus isn't always workable
 - Detail editors
   - Modifiers section
   - Melee Weapons section
@@ -29,12 +30,9 @@
     - Duplicate
     - Convert to Container
   - Item
-    - Add Natural Attacks Advantage
     - Copy to Character Sheet
     - Copy to Template
     - Apply Template to Character Sheet
-    - Open Page Reference
-    - Open Each Page Reference
   - Library
     - Show <library> on Disk
     - Update <library> to <version>

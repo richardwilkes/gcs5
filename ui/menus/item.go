@@ -345,8 +345,8 @@ var OpenOnePageReference = &unison.Action{
 	ID:              constants.OpenOnePageReferenceItemID,
 	Title:           i18n.Text("Open Page Reference"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyG, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // OpenEachPageReference opens each page reference associated with the selected items.
@@ -354,6 +354,6 @@ var OpenEachPageReference = &unison.Action{
 	ID:              constants.OpenEachPageReferenceItemID,
 	Title:           i18n.Text("Open Each Page Reference"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyG, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }

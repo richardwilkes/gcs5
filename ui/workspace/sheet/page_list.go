@@ -229,12 +229,20 @@ func newPageList(owner widget.Rebuildable, provider tbl.TableProvider) *PageList
 			func() bool { return p.table.HasSelection() },
 			func() { p.provider.OpenEditor(owner, p.table) })
 	}
+	p.installOpenPageReferenceHandlers()
 	return p
 }
 
 func (p *PageList) installPerformHandlers(id int, can func() bool, do func()) {
 	p.canPerformMap[id] = can
 	p.performMap[id] = do
+}
+
+func (p *PageList) installOpenPageReferenceHandlers() {
+	canOpenPageRefFunc := tbl.NewCanOpenPageRefFunc(p.table)
+	p.installPerformHandlers(constants.OpenOnePageReferenceItemID, canOpenPageRefFunc, tbl.NewOpenPageRefFunc(p.table))
+	p.installPerformHandlers(constants.OpenEachPageReferenceItemID, canOpenPageRefFunc,
+		tbl.NewOpenEachPageRefFunc(p.table))
 }
 
 func (p *PageList) installToggleStateHandler() {

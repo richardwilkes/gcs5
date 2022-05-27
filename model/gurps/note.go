@@ -110,7 +110,7 @@ func (n *Note) CellData(column int, data *node.CellData) {
 	case NoteTextColumn:
 		data.Type = node.Text
 		data.Primary = n.Text
-	case NoteReferenceColumn:
+	case NoteReferenceColumn, node.PageRefCellAlias:
 		data.Type = node.PageRef
 		data.Primary = n.PageRef
 		data.Secondary = n.Text

@@ -145,7 +145,7 @@ func (a *AdvantageModifier) CellData(column int, data *node.CellData) {
 	case AdvantageModifierTagsColumn:
 		data.Type = node.Text
 		data.Primary = CombineTags(a.Tags)
-	case AdvantageModifierReferenceColumn:
+	case AdvantageModifierReferenceColumn, node.PageRefCellAlias:
 		data.Type = node.PageRef
 		data.Primary = a.PageRef
 		data.Secondary = a.Name
