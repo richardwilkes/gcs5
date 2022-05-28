@@ -22,6 +22,7 @@ import (
 	"github.com/richardwilkes/gcs/ui/workspace/tbl"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -127,12 +128,6 @@ func newPageList(owner widget.Rebuildable, provider tbl.TableProvider) *PageList
 	}
 	p.Self = p
 	p.SetLayout(&unison.FlexLayout{Columns: 1})
-	p.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		VAlign: unison.FillAlignment,
-		HGrab:  true,
-		VGrab:  true,
-	})
 	p.SetBorder(unison.NewLineBorder(theme.HeaderColor, 0, unison.NewUniformInsets(1), false))
 	p.table.DividerInk = theme.HeaderColor
 	p.table.MinimumRowHeight = theme.PageFieldPrimaryFont.LineHeight()
@@ -230,6 +225,14 @@ func newPageList(owner widget.Rebuildable, provider tbl.TableProvider) *PageList
 			func() { p.provider.OpenEditor(owner, p.table) })
 	}
 	p.installOpenPageReferenceHandlers()
+	_, pref, _ := p.tableHeader.Sizes(geom.Size[float32]{})
+	p.SetLayoutData(&unison.FlexLayoutData{
+		MinSize: geom.NewSize(0, pref.Height*2),
+		HAlign:  unison.FillAlignment,
+		VAlign:  unison.FillAlignment,
+		HGrab:   true,
+		VGrab:   true,
+	})
 	return p
 }
 
