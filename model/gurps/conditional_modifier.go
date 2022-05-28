@@ -94,7 +94,7 @@ func (m *ConditionalModifier) Open() bool {
 }
 
 // SetOpen sets the current open state for this node.
-func (m *ConditionalModifier) SetOpen(open bool) {
+func (m *ConditionalModifier) SetOpen(_ bool) {
 }
 
 // NodeChildren returns the children of this node, if any.
