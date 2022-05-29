@@ -464,7 +464,7 @@ func (s *Sheet) Rebuild(full bool) {
 	widget.DeepSync(s)
 }
 
-func (s *Sheet) canPerformCmd(_ any, id int) bool {
+func (s *Sheet) canPerformCmd(_ any, id int) (enabled, handled bool) {
 	switch id {
 	case constants.NewAdvantageItemID,
 		constants.NewAdvantageContainerItemID,
@@ -481,13 +481,13 @@ func (s *Sheet) canPerformCmd(_ any, id int) bool {
 		constants.NewNoteItemID,
 		constants.NewNoteContainerItemID,
 		constants.AddNaturalAttacksAdvantageItemID:
-		return true
+		return true, true
 	default:
-		return false
+		return false, false
 	}
 }
 
-func (s *Sheet) performCmd(_ any, id int) {
+func (s *Sheet) performCmd(_ any, id int) bool {
 	switch id {
 	case constants.NewAdvantageItemID:
 		s.Lists[advantagesListIndex].CreateItem(s, tbl.NoItemVariant)
@@ -524,7 +524,10 @@ func (s *Sheet) performCmd(_ any, id int) {
 			func(target *gurps.Advantage, children []*gurps.Advantage) { target.Children = children },
 			s.entity.AdvantageList, s.entity.SetAdvantageList, s.Lists[advantagesListIndex].provider.RowData,
 			func(target *gurps.Advantage) uuid.UUID { return target.ID })
+	default:
+		return false
 	}
+	return true
 }
 
 func drawBandedBackground(p unison.Paneler, gc *unison.Canvas, rect unison.Rect, start, step int) {

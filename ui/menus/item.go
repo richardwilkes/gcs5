@@ -139,8 +139,8 @@ var NewAdvantage = &unison.Action{
 	ID:              constants.NewAdvantageItemID,
 	Title:           i18n.Text("New Advantage"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewAdvantageContainer creates a new advantage container.
@@ -148,8 +148,8 @@ var NewAdvantageContainer = &unison.Action{
 	ID:              constants.NewAdvantageContainerItemID,
 	Title:           i18n.Text("New Advantage Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewAdvantageModifier creates a new advantage modifier.
@@ -157,8 +157,8 @@ var NewAdvantageModifier = &unison.Action{
 	ID:              constants.NewAdvantageModifierItemID,
 	Title:           i18n.Text("New Advantage Modifier"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.OptionModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewAdvantageContainerModifier creates a new advantage container modifier.
@@ -166,16 +166,16 @@ var NewAdvantageContainerModifier = &unison.Action{
 	ID:              constants.NewAdvantageContainerModifierItemID,
 	Title:           i18n.Text("New Advantage Modifier Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // AddNaturalAttacksAdvantage creates the natural attacks advantage.
 var AddNaturalAttacksAdvantage = &unison.Action{
 	ID:              constants.AddNaturalAttacksAdvantageItemID,
 	Title:           i18n.Text("Add Natural Attacks Advantage"),
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewSkill creates a new skill.
@@ -183,8 +183,8 @@ var NewSkill = &unison.Action{
 	ID:              constants.NewSkillItemID,
 	Title:           i18n.Text("New Skill"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewSkillContainer creates a new skill container.
@@ -192,8 +192,8 @@ var NewSkillContainer = &unison.Action{
 	ID:              constants.NewSkillContainerItemID,
 	Title:           i18n.Text("New Skill Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewTechnique creates a new technique.
@@ -201,8 +201,8 @@ var NewTechnique = &unison.Action{
 	ID:              constants.NewTechniqueItemID,
 	Title:           i18n.Text("New Technique"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyT, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewSpell creates a new spell.
@@ -210,8 +210,8 @@ var NewSpell = &unison.Action{
 	ID:              constants.NewSpellItemID,
 	Title:           i18n.Text("New Spell"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyB, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewSpellContainer creates a new spell container.
@@ -219,8 +219,8 @@ var NewSpellContainer = &unison.Action{
 	ID:              constants.NewSpellContainerItemID,
 	Title:           i18n.Text("New Spell Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyB, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewRitualMagicSpell creates a new ritual magic spell.
@@ -228,8 +228,8 @@ var NewRitualMagicSpell = &unison.Action{
 	ID:              constants.NewRitualMagicSpellItemID,
 	Title:           i18n.Text("New Ritual Magic Spell"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyB, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewCarriedEquipment creates a new equipment item.
@@ -237,8 +237,8 @@ var NewCarriedEquipment = &unison.Action{
 	ID:              constants.NewCarriedEquipmentItemID,
 	Title:           i18n.Text("New Carried Equipment"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewCarriedEquipmentContainer creates a new equipment container.
@@ -246,8 +246,8 @@ var NewCarriedEquipmentContainer = &unison.Action{
 	ID:              constants.NewCarriedEquipmentContainerItemID,
 	Title:           i18n.Text("New Carried Equipment Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewOtherEquipment creates a new equipment item.
@@ -255,8 +255,8 @@ var NewOtherEquipment = &unison.Action{
 	ID:              constants.NewOtherEquipmentItemID,
 	Title:           i18n.Text("New Other Equipment"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.OptionModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewOtherEquipmentContainer creates a new equipment container.
@@ -264,8 +264,8 @@ var NewOtherEquipmentContainer = &unison.Action{
 	ID:              constants.NewOtherEquipmentContainerItemID,
 	Title:           i18n.Text("New Other Equipment Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewEquipmentModifier creates a new equipment modifier.
@@ -273,8 +273,8 @@ var NewEquipmentModifier = &unison.Action{
 	ID:              constants.NewEquipmentModifierItemID,
 	Title:           i18n.Text("New Equipment Modifier"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewEquipmentContainerModifier creates a new equipment container modifier.
@@ -282,8 +282,8 @@ var NewEquipmentContainerModifier = &unison.Action{
 	ID:              constants.NewEquipmentContainerModifierItemID,
 	Title:           i18n.Text("New Equipment Modifier Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewNote creates a new note.
@@ -291,8 +291,8 @@ var NewNote = &unison.Action{
 	ID:              constants.NewNoteItemID,
 	Title:           i18n.Text("New Note"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // NewNoteContainer creates a new note container.
@@ -300,8 +300,8 @@ var NewNoteContainer = &unison.Action{
 	ID:              constants.NewNoteContainerItemID,
 	Title:           i18n.Text("New Note Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: RouteActionToFocusedDockableEnabledFunc,
-	ExecuteCallback: RouteActionToFocusedDockableExecuteFunc,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // OpenEditor opens an editor for the selected item(s).

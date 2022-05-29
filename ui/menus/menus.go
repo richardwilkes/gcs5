@@ -17,7 +17,6 @@ import (
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/about"
-	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -56,37 +55,4 @@ func Setup(wnd *unison.Window) {
 // TODO: Implement each call site
 func unimplemented(a *unison.Action, _ interface{}) {
 	unison.ErrorDialogWithMessage("Unimplemented Action:", a.Title)
-}
-
-// RouteActionToFocusedDockableEnabledFunc is intended to be the EnabledCallback for actions that will route to the
-// currently focused Dockable and call CanPerformCmdCallback() on them.
-func RouteActionToFocusedDockableEnabledFunc(action *unison.Action, src any) bool {
-	if wnd := unison.ActiveWindow(); wnd != nil {
-		if dc := unison.FocusedDockContainerFor(wnd); dc != nil {
-			if current := dc.CurrentDockable(); current != nil {
-				p := current.AsPanel()
-				if p.CanPerformCmdCallback != nil {
-					result := false
-					toolbox.Call(func() { result = p.CanPerformCmdCallback(src, action.ID) })
-					return result
-				}
-			}
-		}
-	}
-	return false
-}
-
-// RouteActionToFocusedDockableExecuteFunc is intended to be the ExecuteCallback for actions that will route to the
-// currently focused Dockable and call PerformCmdCallback() on them.
-func RouteActionToFocusedDockableExecuteFunc(action *unison.Action, src any) {
-	if wnd := unison.ActiveWindow(); wnd != nil {
-		if dc := unison.FocusedDockContainerFor(wnd); dc != nil {
-			if current := dc.CurrentDockable(); current != nil {
-				p := current.AsPanel()
-				if p.PerformCmdCallback != nil {
-					toolbox.Call(func() { p.PerformCmdCallback(src, action.ID) })
-				}
-			}
-		}
-	}
 }

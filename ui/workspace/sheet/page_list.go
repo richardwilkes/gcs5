@@ -164,20 +164,22 @@ func newPageList(owner widget.Rebuildable, provider tbl.TableProvider) *PageList
 	p.table.FrameChangeCallback = func() {
 		p.table.SizeColumnsToFitWithExcessIn(p.provider.ExcessWidthColumnIndex())
 	}
-	p.table.CanPerformCmdCallback = func(_ interface{}, id int) bool {
+	p.table.CanPerformCmdCallback = func(_ interface{}, id int) (enabled, handled bool) {
 		if f, ok := p.canPerformMap[id]; ok {
-			return f()
+			return f(), true
+		}
+		return false, false
+	}
+	p.table.PerformCmdCallback = func(_ interface{}, id int) bool {
+		if f, ok := p.performMap[id]; ok {
+			f()
+			return true
 		}
 		return false
 	}
-	p.table.PerformCmdCallback = func(_ interface{}, id int) {
-		if f, ok := p.performMap[id]; ok {
-			f()
-		}
-	}
 	p.table.SelectionDoubleClickCallback = func() {
-		if p.table.CanPerformCmdCallback(nil, constants.OpenEditorItemID) {
-			p.table.PerformCmdCallback(nil, constants.OpenEditorItemID)
+		if enabled, _ := p.table.CanPerformCmd(nil, constants.OpenEditorItemID); enabled {
+			p.table.PerformCmd(nil, constants.OpenEditorItemID)
 		}
 	}
 	p.tableHeader = unison.NewTableHeader(p.table, headers...)

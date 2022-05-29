@@ -44,8 +44,6 @@ type TableDockable struct {
 	path            string
 	provider        tbl.TableProvider
 	canCreateIDs    map[int]bool
-	canPerformMap   map[int]func() bool
-	performMap      map[int]func()
 	lockButton      *unison.Button
 	hierarchyButton *unison.Button
 	sizeToFitButton *unison.Button
@@ -296,14 +294,12 @@ func NewNoteTableDockable(filePath string, notes []*gurps.Note) unison.Dockable 
 // NewTableDockable creates a new TableDockable for list data files.
 func NewTableDockable(filePath string, provider tbl.TableProvider, canCreateIDs ...int) *TableDockable {
 	d := &TableDockable{
-		path:          filePath,
-		provider:      provider,
-		canCreateIDs:  make(map[int]bool),
-		canPerformMap: make(map[int]func() bool),
-		performMap:    make(map[int]func()),
-		scroll:        unison.NewScrollPanel(),
-		table:         unison.NewTable(),
-		scale:         settings.Global().General.InitialListUIScale,
+		path:         filePath,
+		provider:     provider,
+		canCreateIDs: make(map[int]bool),
+		scroll:       unison.NewScrollPanel(),
+		table:        unison.NewTable(),
+		scale:        settings.Global().General.InitialListUIScale,
 	}
 	d.Self = d
 	d.SetLayout(&unison.FlexLayout{Columns: 1})
@@ -324,32 +320,14 @@ func NewTableDockable(filePath string, provider tbl.TableProvider, canCreateIDs 
 	d.table.HierarchyColumnIndex = provider.HierarchyColumnIndex()
 	d.table.SetTopLevelRows(provider.RowData(d.table))
 	d.table.SizeColumnsToFit(true)
-	d.installPerformHandlers(constants.OpenEditorItemID,
-		func() bool { return d.table.HasSelection() },
-		func() { d.provider.OpenEditor(d, d.table) })
-	canOpenPageRefFunc := tbl.NewCanOpenPageRefFunc(d.table)
-	d.installPerformHandlers(constants.OpenOnePageReferenceItemID, canOpenPageRefFunc, tbl.NewOpenPageRefFunc(d.table))
-	d.installPerformHandlers(constants.OpenEachPageReferenceItemID, canOpenPageRefFunc,
-		tbl.NewOpenEachPageRefFunc(d.table))
 	mouseDownCallback := d.table.MouseDownCallback
 	d.table.MouseDownCallback = func(where unison.Point, button, clickCount int, mod unison.Modifiers) bool {
-		d.table.RequestFocus() // TODO: This isn't enough. Need automatic focus propagation to parent if not handled.
+		d.table.RequestFocus()
 		return mouseDownCallback(where, button, clickCount, mod)
 	}
-	d.table.CanPerformCmdCallback = func(_ interface{}, id int) bool {
-		if f, ok := d.canPerformMap[id]; ok {
-			return f()
-		}
-		return false
-	}
-	d.table.PerformCmdCallback = func(_ interface{}, id int) {
-		if f, ok := d.performMap[id]; ok {
-			f()
-		}
-	}
 	d.table.SelectionDoubleClickCallback = func() {
-		if d.table.CanPerformCmdCallback(nil, constants.OpenEditorItemID) {
-			d.table.PerformCmdCallback(nil, constants.OpenEditorItemID)
+		if enabled, _ := d.table.CanPerformCmd(nil, constants.OpenEditorItemID); enabled {
+			d.table.PerformCmd(nil, constants.OpenEditorItemID)
 		}
 	}
 
@@ -460,11 +438,6 @@ func NewTableDockable(filePath string, provider tbl.TableProvider, canCreateIDs 
 // DockableKind implements widget.DockableKind
 func (d *TableDockable) DockableKind() string {
 	return widget.ListDockableKind
-}
-
-func (d *TableDockable) installPerformHandlers(id int, can func() bool, do func()) {
-	d.canPerformMap[id] = can
-	d.performMap[id] = do
 }
 
 func (d *TableDockable) applyScale() {
@@ -623,15 +596,29 @@ func (d *TableDockable) Rebuild(_ bool) {
 	d.table.SyncToModel()
 }
 
-func (d *TableDockable) canPerformCmd(source any, id int) bool {
-	if d.canCreateIDs[id] {
-		return true
+func (d *TableDockable) canPerformCmd(_ any, id int) (enabled, handled bool) {
+	switch id {
+	case constants.OpenEditorItemID:
+		return d.table.HasSelection(), true
+	case constants.OpenOnePageReferenceItemID,
+		constants.OpenEachPageReferenceItemID:
+		return tbl.CanOpenPageRef(d.table), true
+	default:
+		if d.canCreateIDs[id] {
+			return true, true
+		}
+		return false, false
 	}
-	return d.table.CanPerformCmdCallback(source, id)
 }
 
-func (d *TableDockable) performCmd(source any, id int) {
+func (d *TableDockable) performCmd(_ any, id int) bool {
 	switch id {
+	case constants.OpenEditorItemID:
+		d.provider.OpenEditor(d, d.table)
+	case constants.OpenOnePageReferenceItemID:
+		tbl.OpenPageRef(d.table)
+	case constants.OpenEachPageReferenceItemID:
+		tbl.OpenEachPageRef(d.table)
 	case constants.NewAdvantageItemID,
 		constants.NewAdvantageModifierItemID,
 		constants.NewSkillItemID,
@@ -654,6 +641,7 @@ func (d *TableDockable) performCmd(source any, id int) {
 		constants.NewRitualMagicSpellItemID:
 		d.provider.CreateItem(d, d.table, tbl.AlternateItemVariant)
 	default:
-		d.table.PerformCmdCallback(source, id)
+		return false
 	}
+	return true
 }

@@ -25,8 +25,8 @@ github.com/richardwilkes/rpgtools v1.4.1 h1:uoQKvM64owkU5gKYAlqZuWDvIfKcs8OCVRsX
 github.com/richardwilkes/rpgtools v1.4.1/go.mod h1:w4bCZ1a0YGKPzSA/Yr3XinTMVLlYOKEnrormltb1r9s=
 github.com/richardwilkes/toolbox v1.71.0 h1:EGP85A7/g4up/H33BiG5QNLo1JUpNCCaqonvYFYADT4=
 github.com/richardwilkes/toolbox v1.71.0/go.mod h1:g+k+F8zSEDtJ5zyTkewmQTByfnLxnVi7gOqfDQgLoxc=
-github.com/richardwilkes/unison v0.16.1-0.20220527213533-3c13a94871bc h1:09IIZkXY57vLHj0k67aZWG11+cBvswJD9NKGtb7I+xg=
-github.com/richardwilkes/unison v0.16.1-0.20220527213533-3c13a94871bc/go.mod h1:gcUNnMcfEf/vUg2wmzfbXQ7CTOBb2RKrlmn9Y52/Yqk=
+github.com/richardwilkes/unison v0.16.1-0.20220529172633-ccbf515e5654 h1:ZdBo4IuCL22J58dih+i5enoz6UPo1ZgX8Td17GVRkqU=
+github.com/richardwilkes/unison v0.16.1-0.20220529172633-ccbf515e5654/go.mod h1:lB9OA5L34HXIh+5FW043meL44C8ewclPY8ixLTOQ4xM=
 github.com/rogpeppe/go-internal v1.8.0 h1:FCbCCtXNOY3UtUuHUYaghJg4y7Fd14rXifAYUAtL9R8=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.7.1 h1:5TQK59W5E3v0r2duFAb7P95B6hEeOyEnHRa8MjYSMTY=

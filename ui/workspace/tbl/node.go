@@ -361,18 +361,6 @@ func rowIndex(id uuid.UUID, startIndex int, rows []unison.TableRowData) (updated
 	return startIndex, -1
 }
 
-// PerformAction will ask the given panel to perform the action associated with the given ID, if allowed.
-func PerformAction(paneler unison.Paneler, id int) {
-	p := paneler.AsPanel()
-	can := true
-	if p.CanPerformCmdCallback != nil {
-		can = p.CanPerformCmdCallback(nil, id)
-	}
-	if can && p.PerformCmdCallback != nil {
-		p.PerformCmdCallback(nil, id)
-	}
-}
-
 // IDer defines the minimum necessary for use of InsertItem(), OpenEditor(), and ExtractFromRowData().
 type IDer interface {
 	comparable

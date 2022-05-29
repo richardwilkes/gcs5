@@ -291,7 +291,7 @@ func (d *Template) Rebuild(full bool) {
 	widget.DeepSync(d)
 }
 
-func (d *Template) canPerformCmd(_ any, id int) bool {
+func (d *Template) canPerformCmd(_ any, id int) (enabled, handled bool) {
 	switch id {
 	case constants.NewAdvantageItemID,
 		constants.NewAdvantageContainerItemID,
@@ -308,13 +308,13 @@ func (d *Template) canPerformCmd(_ any, id int) bool {
 		constants.NewNoteItemID,
 		constants.NewNoteContainerItemID,
 		constants.AddNaturalAttacksAdvantageItemID:
-		return true
+		return true, true
 	default:
-		return false
+		return false, false
 	}
 }
 
-func (d *Template) performCmd(_ any, id int) {
+func (d *Template) performCmd(_ any, id int) bool {
 	switch id {
 	case constants.NewAdvantageItemID:
 		d.Lists[advantagesListIndex].CreateItem(d, tbl.NoItemVariant)
@@ -351,5 +351,8 @@ func (d *Template) performCmd(_ any, id int) {
 			func(target *gurps.Advantage, children []*gurps.Advantage) { target.Children = children },
 			d.template.AdvantageList, d.template.SetAdvantageList, d.Lists[advantagesListIndex].provider.RowData,
 			func(target *gurps.Advantage) uuid.UUID { return target.ID })
+	default:
+		return false
 	}
+	return true
 }
