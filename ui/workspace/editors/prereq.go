@@ -145,7 +145,7 @@ func (p *prereqPanel) createButtonsPanel(parent *unison.Panel, depth int, data g
 		}
 		buttons.AddChild(addPrereqButton)
 
-		addPrereqListButton := unison.NewSVGButton(res.CircledVerticalElipsisSVG)
+		addPrereqListButton := unison.NewSVGButton(res.CircledVerticalEllipsisSVG)
 		addPrereqListButton.ClickCallback = func() {
 			newList := gurps.NewPrereqList()
 			newList.Parent = prereqList
