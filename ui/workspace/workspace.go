@@ -12,7 +12,9 @@
 package workspace
 
 import (
+	"fmt"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -20,6 +22,7 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
+	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/unison"
 )
 
@@ -200,42 +203,43 @@ func DockContainerHoldsExtension(dc *unison.DockContainer, ext ...string) bool {
 	return false
 }
 
-// MayAttemptCloseOfDockable returns true if the given Dockable and any grouped Dockables associated with it may be
-// closed.
-func MayAttemptCloseOfDockable(d unison.Dockable) bool {
+// MayAttemptCloseOfGroup returns true if the grouped Dockables associated with the given dockable may be closed.
+func MayAttemptCloseOfGroup(d unison.Dockable) bool {
 	allow := true
-	for _, wnd := range unison.Windows() {
-		if ws := FromWindow(wnd); ws != nil {
-			ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
-				for _, other := range dc.Dockables() {
-					if fe, ok := other.(widget.GroupedCloser); ok && fe.CloseWithGroup(d) {
-						if !fe.MayAttemptClose() {
-							allow = false
-							return true
-						}
-					}
-				}
-				return false
-			})
+	traverseGroup(d, func(target widget.GroupedCloser) bool {
+		if !target.MayAttemptClose() {
+			allow = false
+			return true
 		}
-	}
+		return false
+	})
 	return allow
 }
 
-// AttemptCloseOfDockable attempts to close the given Dockable and any grouped Dockables associated with it.
-func AttemptCloseOfDockable(d unison.Dockable) bool {
+// CloseGroup attempts to close any grouped Dockables associated with the given Dockable.
+func CloseGroup(d unison.Dockable) bool {
 	allow := true
+	traverseGroup(d, func(target widget.GroupedCloser) bool {
+		if !target.MayAttemptClose() {
+			allow = false
+			return true
+		}
+		if !target.AttemptClose() {
+			allow = false
+			return true
+		}
+		return false
+	})
+	return allow
+}
+
+func traverseGroup(d unison.Dockable, f func(target widget.GroupedCloser) bool) {
 	for _, wnd := range unison.Windows() {
 		if ws := FromWindow(wnd); ws != nil {
 			ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
 				for _, other := range dc.Dockables() {
 					if fe, ok := other.(widget.GroupedCloser); ok && fe.CloseWithGroup(d) {
-						if !fe.MayAttemptClose() {
-							allow = false
-							return true
-						}
-						if !fe.AttemptClose() {
-							allow = false
+						if f(fe) {
 							return true
 						}
 					}
@@ -244,11 +248,42 @@ func AttemptCloseOfDockable(d unison.Dockable) bool {
 			})
 		}
 	}
-	if !allow {
+}
+
+// SaveDockable attempts to save the contents of the dockable using its existing path.
+func SaveDockable(d FileBackedDockable, saver func(path string) error, setUnmodified func()) bool {
+	path := d.BackingFilePath()
+	if err := saver(path); err != nil {
+		unison.ErrorDialogWithError(fmt.Sprintf(i18n.Text("Unable to save %s"), fs.BaseName(path)), err)
 		return false
 	}
+	setUnmodified()
 	if dc := unison.DockContainerFor(d); dc != nil {
-		dc.Close(d)
+		dc.UpdateTitle(d)
 	}
 	return true
+}
+
+// SaveDockableAs attempts to save the contents of the dockable, prompting for a new path.
+func SaveDockableAs(d FileBackedDockable, extension string, saver func(path string) error, setUnmodifiedAndNewPath func(path string)) bool {
+	dialog := unison.NewSaveDialog()
+	existingPath := d.BackingFilePath()
+	dir := filepath.Dir(existingPath)
+	if existingPath != dir {
+		dialog.SetInitialDirectory(dir)
+	}
+	dialog.SetAllowedExtensions(extension)
+	if dialog.RunModal() {
+		path := dialog.Path()
+		if err := saver(path); err != nil {
+			unison.ErrorDialogWithError(fmt.Sprintf(i18n.Text("Unable to save as %s"), fs.BaseName(path)), err)
+			return false
+		}
+		setUnmodifiedAndNewPath(path)
+		if dc := unison.DockContainerFor(d); dc != nil {
+			dc.UpdateTitle(d)
+		}
+		return true
+	}
+	return false
 }

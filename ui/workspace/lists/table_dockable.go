@@ -28,40 +28,45 @@ import (
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/gcs/ui/workspace/tbl"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/unison"
 )
 
 var (
-	_ widget.Rebuildable    = &TableDockable{}
-	_ unison.Dockable       = &TableDockable{}
-	_ widget.DockableKind   = &TableDockable{}
-	_ widget.ModifiableRoot = &TableDockable{}
+	_ workspace.FileBackedDockable = &TableDockable{}
+	_ unison.UndoManagerProvider   = &TableDockable{}
+	_ widget.ModifiableRoot        = &TableDockable{}
+	_ widget.Rebuildable           = &TableDockable{}
+	_ widget.DockableKind          = &TableDockable{}
+	_ unison.TabCloser             = &TableDockable{}
 )
 
 // TableDockable holds the view for a file that contains a (potentially hierarchical) list of data.
 type TableDockable struct {
 	unison.Panel
-	path            string
-	extension       string
-	provider        tbl.TableProvider
-	saver           func(path string) error
-	canCreateIDs    map[int]bool
-	hierarchyButton *unison.Button
-	sizeToFitButton *unison.Button
-	scale           int
-	scaleField      *widget.PercentageField
-	backButton      *unison.Button
-	forwardButton   *unison.Button
-	searchField     *unison.Field
-	matchesLabel    *unison.Label
-	scroll          *unison.ScrollPanel
-	tableHeader     *unison.TableHeader
-	table           *unison.Table
-	searchResult    []unison.TableRowData
-	searchIndex     int
-	modified        bool
+	path              string
+	extension         string
+	undoMgr           *unison.UndoManager
+	provider          tbl.TableProvider
+	saver             func(path string) error
+	canCreateIDs      map[int]bool
+	hierarchyButton   *unison.Button
+	sizeToFitButton   *unison.Button
+	scale             int
+	scaleField        *widget.PercentageField
+	backButton        *unison.Button
+	forwardButton     *unison.Button
+	searchField       *unison.Field
+	matchesLabel      *unison.Label
+	scroll            *unison.ScrollPanel
+	tableHeader       *unison.TableHeader
+	table             *unison.Table
+	searchResult      []unison.TableRowData
+	searchIndex       int
+	modified          bool
+	needsSaveAsPrompt bool
 }
 
 type advantageListProvider struct {
@@ -86,11 +91,13 @@ func NewAdvantageTableDockableFromFile(filePath string) (unison.Dockable, error)
 	if err != nil {
 		return nil, err
 	}
-	return NewAdvantageTableDockable(filePath, advantages), nil
+	d := NewAdvantageTableDockable(filePath, advantages)
+	d.needsSaveAsPrompt = false
+	return d, nil
 }
 
 // NewAdvantageTableDockable creates a new unison.Dockable for advantage list files.
-func NewAdvantageTableDockable(filePath string, advantages []*gurps.Advantage) unison.Dockable {
+func NewAdvantageTableDockable(filePath string, advantages []*gurps.Advantage) *TableDockable {
 	provider := &advantageListProvider{advantages: advantages}
 	return NewTableDockable(filePath, library.AdvantagesExt, tbl.NewAdvantagesProvider(provider, false),
 		func(path string) error { return gurps.SaveAdvantages(provider.AdvantageList(), path) },
@@ -120,11 +127,13 @@ func NewAdvantageModifierTableDockableFromFile(filePath string) (unison.Dockable
 	if err != nil {
 		return nil, err
 	}
-	return NewAdvantageModifierTableDockable(filePath, modifiers), nil
+	d := NewAdvantageModifierTableDockable(filePath, modifiers)
+	d.needsSaveAsPrompt = false
+	return d, nil
 }
 
 // NewAdvantageModifierTableDockable creates a new unison.Dockable for advantage modifier list files.
-func NewAdvantageModifierTableDockable(filePath string, modifiers []*gurps.AdvantageModifier) unison.Dockable {
+func NewAdvantageModifierTableDockable(filePath string, modifiers []*gurps.AdvantageModifier) *TableDockable {
 	provider := &advantageModifierListProvider{modifiers: modifiers}
 	return NewTableDockable(filePath, library.AdvantageModifiersExt,
 		tbl.NewAdvantageModifiersProvider(provider),
@@ -163,11 +172,13 @@ func NewEquipmentTableDockableFromFile(filePath string) (unison.Dockable, error)
 	if err != nil {
 		return nil, err
 	}
-	return NewEquipmentTableDockable(filePath, equipment), nil
+	d := NewEquipmentTableDockable(filePath, equipment)
+	d.needsSaveAsPrompt = false
+	return d, nil
 }
 
 // NewEquipmentTableDockable creates a new unison.Dockable for equipment list files.
-func NewEquipmentTableDockable(filePath string, equipment []*gurps.Equipment) unison.Dockable {
+func NewEquipmentTableDockable(filePath string, equipment []*gurps.Equipment) *TableDockable {
 	provider := &equipmentListProvider{other: equipment}
 	return NewTableDockable(filePath, library.EquipmentExt, tbl.NewEquipmentProvider(provider, false, false),
 		func(path string) error { return gurps.SaveEquipment(provider.OtherEquipmentList(), path) },
@@ -197,11 +208,13 @@ func NewEquipmentModifierTableDockableFromFile(filePath string) (unison.Dockable
 	if err != nil {
 		return nil, err
 	}
-	return NewEquipmentModifierTableDockable(filePath, modifiers), nil
+	d := NewEquipmentModifierTableDockable(filePath, modifiers)
+	d.needsSaveAsPrompt = false
+	return d, nil
 }
 
 // NewEquipmentModifierTableDockable creates a new unison.Dockable for equipment modifier list files.
-func NewEquipmentModifierTableDockable(filePath string, modifiers []*gurps.EquipmentModifier) unison.Dockable {
+func NewEquipmentModifierTableDockable(filePath string, modifiers []*gurps.EquipmentModifier) *TableDockable {
 	provider := &equipmentModifierListProvider{modifiers: modifiers}
 	return NewTableDockable(filePath, library.EquipmentModifiersExt,
 		tbl.NewEquipmentModifiersProvider(provider),
@@ -231,11 +244,13 @@ func NewSkillTableDockableFromFile(filePath string) (unison.Dockable, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewSkillTableDockable(filePath, skills), nil
+	d := NewSkillTableDockable(filePath, skills)
+	d.needsSaveAsPrompt = false
+	return d, nil
 }
 
 // NewSkillTableDockable creates a new unison.Dockable for skill list files.
-func NewSkillTableDockable(filePath string, skills []*gurps.Skill) unison.Dockable {
+func NewSkillTableDockable(filePath string, skills []*gurps.Skill) *TableDockable {
 	provider := &skillListProvider{skills: skills}
 	return NewTableDockable(filePath, library.SkillsExt, tbl.NewSkillsProvider(provider, false),
 		func(path string) error { return gurps.SaveSkills(provider.SkillList(), path) },
@@ -264,11 +279,13 @@ func NewSpellTableDockableFromFile(filePath string) (unison.Dockable, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewSpellTableDockable(filePath, spells), nil
+	d := NewSpellTableDockable(filePath, spells)
+	d.needsSaveAsPrompt = false
+	return d, nil
 }
 
 // NewSpellTableDockable creates a new unison.Dockable for spell list files.
-func NewSpellTableDockable(filePath string, spells []*gurps.Spell) unison.Dockable {
+func NewSpellTableDockable(filePath string, spells []*gurps.Spell) *TableDockable {
 	provider := &spellListProvider{spells: spells}
 	return NewTableDockable(filePath, library.SpellsExt, tbl.NewSpellsProvider(provider, false),
 		func(path string) error { return gurps.SaveSpells(provider.SpellList(), path) },
@@ -297,11 +314,13 @@ func NewNoteTableDockableFromFile(filePath string) (unison.Dockable, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewNoteTableDockable(filePath, notes), nil
+	d := NewNoteTableDockable(filePath, notes)
+	d.needsSaveAsPrompt = false
+	return d, nil
 }
 
 // NewNoteTableDockable creates a new unison.Dockable for note list files.
-func NewNoteTableDockable(filePath string, notes []*gurps.Note) unison.Dockable {
+func NewNoteTableDockable(filePath string, notes []*gurps.Note) *TableDockable {
 	provider := &noteListProvider{notes: notes}
 	return NewTableDockable(filePath, library.NotesExt, tbl.NewNotesProvider(provider, false),
 		func(path string) error { return gurps.SaveNotes(provider.NoteList(), path) },
@@ -311,14 +330,16 @@ func NewNoteTableDockable(filePath string, notes []*gurps.Note) unison.Dockable 
 // NewTableDockable creates a new TableDockable for list data files.
 func NewTableDockable(filePath, extension string, provider tbl.TableProvider, saver func(path string) error, canCreateIDs ...int) *TableDockable {
 	d := &TableDockable{
-		path:         filePath,
-		extension:    extension,
-		provider:     provider,
-		saver:        saver,
-		canCreateIDs: make(map[int]bool),
-		scroll:       unison.NewScrollPanel(),
-		table:        unison.NewTable(),
-		scale:        settings.Global().General.InitialListUIScale,
+		path:              filePath,
+		extension:         extension,
+		undoMgr:           unison.NewUndoManager(200, func(err error) { jot.Error(err) }),
+		provider:          provider,
+		saver:             saver,
+		canCreateIDs:      make(map[int]bool),
+		scroll:            unison.NewScrollPanel(),
+		table:             unison.NewTable(),
+		scale:             settings.Global().General.InitialListUIScale,
+		needsSaveAsPrompt: true,
 	}
 	d.Self = d
 	d.SetLayout(&unison.FlexLayout{Columns: 1})
@@ -449,6 +470,11 @@ func NewTableDockable(filePath, extension string, provider tbl.TableProvider, sa
 	return d
 }
 
+// UndoManager implements undo.Provider
+func (d *TableDockable) UndoManager() *unison.UndoManager {
+	return d.undoMgr
+}
+
 // DockableKind implements widget.DockableKind
 func (d *TableDockable) DockableKind() string {
 	return widget.ListDockableKind
@@ -503,12 +529,45 @@ func (d *TableDockable) MarkModified() {
 
 // MayAttemptClose implements unison.TabCloser
 func (d *TableDockable) MayAttemptClose() bool {
-	return workspace.MayAttemptCloseOfDockable(d)
+	return workspace.MayAttemptCloseOfGroup(d)
 }
 
 // AttemptClose implements unison.TabCloser
 func (d *TableDockable) AttemptClose() bool {
-	return workspace.AttemptCloseOfDockable(d)
+	if !workspace.CloseGroup(d) {
+		return false
+	}
+	if d.Modified() {
+		switch unison.YesNoCancelDialog(fmt.Sprintf(i18n.Text("Save changes made to\n%s?"), d.Title()), "") {
+		case unison.ModalResponseDiscard:
+		case unison.ModalResponseOK:
+			if !d.save(false) {
+				return false
+			}
+		case unison.ModalResponseCancel:
+			return false
+		}
+	}
+	if dc := unison.DockContainerFor(d); dc != nil {
+		dc.Close(d)
+	}
+	return true
+}
+
+func (d *TableDockable) save(forceSaveAs bool) bool {
+	success := false
+	if forceSaveAs || d.needsSaveAsPrompt {
+		success = workspace.SaveDockableAs(d, d.extension, d.saver, func(path string) {
+			d.modified = false
+			d.path = path
+		})
+	} else {
+		success = workspace.SaveDockable(d, d.saver, func() { d.modified = false })
+	}
+	if success {
+		d.needsSaveAsPrompt = false
+	}
+	return success
 }
 
 func (d *TableDockable) toggleHierarchy() {
@@ -632,32 +691,9 @@ func (d *TableDockable) performCmd(_ any, id int) bool {
 	case constants.OpenEachPageReferenceItemID:
 		tbl.OpenEachPageRef(d.table)
 	case constants.SaveItemID:
-		if err := d.saver(d.path); err != nil {
-			unison.ErrorDialogWithError(fmt.Sprintf(i18n.Text("Unable to save %s"), fs.BaseName(d.path)), err)
-		} else {
-			d.modified = false
-			if dc := unison.DockContainerFor(d); dc != nil {
-				dc.UpdateTitle(d)
-			}
-		}
+		d.save(false)
 	case constants.SaveAsItemID:
-		dialog := unison.NewSaveDialog()
-		if d.path != filepath.Dir(d.path) {
-			dialog.SetInitialDirectory(filepath.Dir(d.path))
-		}
-		dialog.SetAllowedExtensions(d.extension)
-		if dialog.RunModal() {
-			path := dialog.Path()
-			if err := d.saver(path); err != nil {
-				unison.ErrorDialogWithError(fmt.Sprintf(i18n.Text("Unable to save as %s"), fs.BaseName(path)), err)
-			} else {
-				d.modified = false
-				d.path = path
-				if dc := unison.DockContainerFor(d); dc != nil {
-					dc.UpdateTitle(d)
-				}
-			}
-		}
+		d.save(true)
 	case constants.NewAdvantageItemID,
 		constants.NewAdvantageModifierItemID,
 		constants.NewSkillItemID,

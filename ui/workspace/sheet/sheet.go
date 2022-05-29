@@ -13,6 +13,7 @@ package sheet
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -55,6 +56,7 @@ var (
 	_ widget.ModifiableRoot        = &Sheet{}
 	_ widget.Rebuildable           = &Sheet{}
 	_ widget.DockableKind          = &Sheet{}
+	_ unison.TabCloser             = &Sheet{}
 )
 
 // Sheet holds the view for a GURPS character sheet.
@@ -84,6 +86,7 @@ type Sheet struct {
 	cancelRebuildFunc  context.CancelFunc
 	rebuild            bool
 	full               bool
+	needsSaveAsPrompt  bool
 }
 
 // ActiveSheet returns the currently active sheet.
@@ -104,19 +107,22 @@ func NewSheetFromFile(filePath string) (unison.Dockable, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewSheet(filePath, entity), nil
+	s := NewSheet(filePath, entity)
+	s.needsSaveAsPrompt = false
+	return s, nil
 }
 
 // NewSheet creates a new unison.Dockable for GURPS character sheet files.
-func NewSheet(filePath string, entity *gurps.Entity) unison.Dockable {
+func NewSheet(filePath string, entity *gurps.Entity) *Sheet {
 	s := &Sheet{
-		path:    filePath,
-		undoMgr: unison.NewUndoManager(200, func(err error) { jot.Error(err) }),
-		scroll:  unison.NewScrollPanel(),
-		entity:  entity,
-		crc:     entity.CRC64(),
-		scale:   settings.Global().General.InitialSheetUIScale,
-		pages:   unison.NewPanel(),
+		path:              filePath,
+		undoMgr:           unison.NewUndoManager(200, func(err error) { jot.Error(err) }),
+		scroll:            unison.NewScrollPanel(),
+		entity:            entity,
+		crc:               entity.CRC64(),
+		scale:             settings.Global().General.InitialSheetUIScale,
+		pages:             unison.NewPanel(),
+		needsSaveAsPrompt: true,
 	}
 	s.Self = s
 	s.SetLayout(&unison.FlexLayout{
@@ -233,12 +239,45 @@ func (s *Sheet) Modified() bool {
 
 // MayAttemptClose implements unison.TabCloser
 func (s *Sheet) MayAttemptClose() bool {
-	return workspace.MayAttemptCloseOfDockable(s)
+	return workspace.MayAttemptCloseOfGroup(s)
 }
 
 // AttemptClose implements unison.TabCloser
 func (s *Sheet) AttemptClose() bool {
-	return workspace.AttemptCloseOfDockable(s)
+	if !workspace.CloseGroup(s) {
+		return false
+	}
+	if s.Modified() {
+		switch unison.YesNoCancelDialog(fmt.Sprintf(i18n.Text("Save changes made to\n%s?"), s.Title()), "") {
+		case unison.ModalResponseDiscard:
+		case unison.ModalResponseOK:
+			if !s.save(false) {
+				return false
+			}
+		case unison.ModalResponseCancel:
+			return false
+		}
+	}
+	if dc := unison.DockContainerFor(s); dc != nil {
+		dc.Close(s)
+	}
+	return true
+}
+
+func (s *Sheet) save(forceSaveAs bool) bool {
+	success := false
+	if forceSaveAs || s.needsSaveAsPrompt {
+		success = workspace.SaveDockableAs(s, library.SheetExt, s.entity.Save, func(path string) {
+			s.crc = s.entity.CRC64()
+			s.path = path
+		})
+	} else {
+		success = workspace.SaveDockable(s, s.entity.Save, func() { s.crc = s.entity.CRC64() })
+	}
+	if success {
+		s.needsSaveAsPrompt = false
+	}
+	return success
 }
 
 func (s *Sheet) createTopBlock() *Page {
@@ -466,7 +505,10 @@ func (s *Sheet) Rebuild(full bool) {
 
 func (s *Sheet) canPerformCmd(_ any, id int) (enabled, handled bool) {
 	switch id {
-	case constants.NewAdvantageItemID,
+	case constants.SaveItemID:
+		return s.Modified(), true
+	case constants.SaveAsItemID,
+		constants.NewAdvantageItemID,
 		constants.NewAdvantageContainerItemID,
 		constants.NewSkillItemID,
 		constants.NewSkillContainerItemID,
@@ -489,6 +531,10 @@ func (s *Sheet) canPerformCmd(_ any, id int) (enabled, handled bool) {
 
 func (s *Sheet) performCmd(_ any, id int) bool {
 	switch id {
+	case constants.SaveItemID:
+		s.save(false)
+	case constants.SaveAsItemID:
+		s.save(true)
 	case constants.NewAdvantageItemID:
 		s.Lists[advantagesListIndex].CreateItem(s, tbl.NoItemVariant)
 	case constants.NewAdvantageContainerItemID:
