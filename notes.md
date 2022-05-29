@@ -9,7 +9,6 @@
 
 #### GCS-specific work that needs to be done
 
-- Revise action handling, since relying on the focus isn't always workable
 - Detail editors
   - Modifiers section
   - Melee Weapons section
@@ -18,12 +17,8 @@
   - Attributes
   - Body Type
 - Library configuration dialogs
-- Prompt to save when closing a modified document
 - General completion of menu item actions (many are currently placeholders)
   - File
-    - Save
-    - Save As...
-    - Print...
     - Recent Files list
     - Export To list
   - Edit
