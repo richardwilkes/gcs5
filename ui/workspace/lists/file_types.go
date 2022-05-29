@@ -20,16 +20,16 @@ import (
 
 // RegisterFileTypes registers GCS file types.
 func RegisterFileTypes() {
-	registerExportableGCSFileInfo(".gcs", res.GCSSheetSVG, sheet.NewSheetFromFile)
-	registerGCSFileInfo(".gct", []string{".gct"}, res.GCSTemplateSVG, sheet.NewTemplateFromFile)
-	groupWith := []string{".adq", ".adm", ".eqp", ".eqm", ".skl", ".spl", ".not"}
-	registerGCSFileInfo(".adq", groupWith, res.GCSAdvantagesSVG, NewAdvantageTableDockableFromFile)
-	registerGCSFileInfo(".adm", groupWith, res.GCSAdvantageModifiersSVG, NewAdvantageModifierTableDockableFromFile)
-	registerGCSFileInfo(".eqp", groupWith, res.GCSEquipmentSVG, NewEquipmentTableDockableFromFile)
-	registerGCSFileInfo(".eqm", groupWith, res.GCSEquipmentModifiersSVG, NewEquipmentModifierTableDockableFromFile)
-	registerGCSFileInfo(".skl", groupWith, res.GCSSkillsSVG, NewSkillTableDockableFromFile)
-	registerGCSFileInfo(".spl", groupWith, res.GCSSpellsSVG, NewSpellTableDockableFromFile)
-	registerGCSFileInfo(".not", groupWith, res.GCSNotesSVG, NewNoteTableDockableFromFile)
+	registerExportableGCSFileInfo(library.SheetExt, res.GCSSheetSVG, sheet.NewSheetFromFile)
+	registerGCSFileInfo(library.TemplatesExt, []string{library.TemplatesExt}, res.GCSTemplateSVG, sheet.NewTemplateFromFile)
+	groupWith := []string{library.AdvantagesExt, library.AdvantageModifiersExt, library.EquipmentExt, library.EquipmentModifiersExt, library.SkillsExt, library.SpellsExt, library.NotesExt}
+	registerGCSFileInfo(library.AdvantagesExt, groupWith, res.GCSAdvantagesSVG, NewAdvantageTableDockableFromFile)
+	registerGCSFileInfo(library.AdvantageModifiersExt, groupWith, res.GCSAdvantageModifiersSVG, NewAdvantageModifierTableDockableFromFile)
+	registerGCSFileInfo(library.EquipmentExt, groupWith, res.GCSEquipmentSVG, NewEquipmentTableDockableFromFile)
+	registerGCSFileInfo(library.EquipmentModifiersExt, groupWith, res.GCSEquipmentModifiersSVG, NewEquipmentModifierTableDockableFromFile)
+	registerGCSFileInfo(library.SkillsExt, groupWith, res.GCSSkillsSVG, NewSkillTableDockableFromFile)
+	registerGCSFileInfo(library.SpellsExt, groupWith, res.GCSSpellsSVG, NewSpellTableDockableFromFile)
+	registerGCSFileInfo(library.NotesExt, groupWith, res.GCSNotesSVG, NewNoteTableDockableFromFile)
 }
 
 func registerGCSFileInfo(ext string, groupWith []string, svg *unison.SVG, loader func(filePath string) (unison.Dockable, error)) {

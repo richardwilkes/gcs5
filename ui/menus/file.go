@@ -18,7 +18,7 @@ import (
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/workspace"
-	gurpsui "github.com/richardwilkes/gcs/ui/workspace/lists"
+	"github.com/richardwilkes/gcs/ui/workspace/lists"
 	"github.com/richardwilkes/gcs/ui/workspace/sheet"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -89,7 +89,7 @@ var NewCharacterSheet = &unison.Action{
 	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.OSMenuCmdModifier()},
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
 		entity := gurps.NewEntity(datafile.PC)
-		workspace.DisplayNewDockable(nil, sheet.NewSheet(entity.Profile.Name+".gcs", entity))
+		workspace.DisplayNewDockable(nil, sheet.NewSheet(entity.Profile.Name+library.SheetExt, entity))
 	},
 }
 
@@ -98,7 +98,7 @@ var NewCharacterTemplate = &unison.Action{
 	ID:    constants.NewTemplateItemID,
 	Title: i18n.Text("New Character Template"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		workspace.DisplayNewDockable(nil, sheet.NewTemplate("untitled.gct", gurps.NewTemplate()))
+		workspace.DisplayNewDockable(nil, sheet.NewTemplate("untitled"+library.TemplatesExt, gurps.NewTemplate()))
 	},
 }
 
@@ -107,7 +107,7 @@ var NewAdvantagesLibrary = &unison.Action{
 	ID:    constants.NewAdvantagesLibraryItemID,
 	Title: i18n.Text("New Advantages Library"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		workspace.DisplayNewDockable(nil, gurpsui.NewAdvantageTableDockable("Advantages.adq", nil))
+		workspace.DisplayNewDockable(nil, lists.NewAdvantageTableDockable("Advantages"+library.AdvantagesExt, nil))
 	},
 }
 
@@ -116,7 +116,7 @@ var NewAdvantageModifiersLibrary = &unison.Action{
 	ID:    constants.NewAdvantageModifiersLibraryItemID,
 	Title: i18n.Text("New Advantage Modifiers Library"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		workspace.DisplayNewDockable(nil, gurpsui.NewAdvantageModifierTableDockable("Advantage Modifiers.adm", nil))
+		workspace.DisplayNewDockable(nil, lists.NewAdvantageModifierTableDockable("Advantage Modifiers"+library.AdvantageModifiersExt, nil))
 	},
 }
 
@@ -125,7 +125,7 @@ var NewEquipmentLibrary = &unison.Action{
 	ID:    constants.NewEquipmentLibraryItemID,
 	Title: i18n.Text("New Equipment Library"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		workspace.DisplayNewDockable(nil, gurpsui.NewEquipmentTableDockable("Equipment.eqp", nil))
+		workspace.DisplayNewDockable(nil, lists.NewEquipmentTableDockable("Equipment"+library.EquipmentExt, nil))
 	},
 }
 
@@ -134,7 +134,7 @@ var NewEquipmentModifiersLibrary = &unison.Action{
 	ID:    constants.NewEquipmentModifiersLibraryItemID,
 	Title: i18n.Text("New Equipment Modifiers Library"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		workspace.DisplayNewDockable(nil, gurpsui.NewEquipmentModifierTableDockable("Equipment Modifiers.eqm", nil))
+		workspace.DisplayNewDockable(nil, lists.NewEquipmentModifierTableDockable("Equipment Modifiers"+library.EquipmentModifiersExt, nil))
 	},
 }
 
@@ -143,7 +143,7 @@ var NewNotesLibrary = &unison.Action{
 	ID:    constants.NewNotesLibraryItemID,
 	Title: i18n.Text("New Notes Library"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		workspace.DisplayNewDockable(nil, gurpsui.NewNoteTableDockable("Notes.not", nil))
+		workspace.DisplayNewDockable(nil, lists.NewNoteTableDockable("Notes"+library.NotesExt, nil))
 	},
 }
 
@@ -152,7 +152,7 @@ var NewSkillsLibrary = &unison.Action{
 	ID:    constants.NewSkillsLibraryItemID,
 	Title: i18n.Text("New Skills Library"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		workspace.DisplayNewDockable(nil, gurpsui.NewSkillTableDockable("Skills.skl", nil))
+		workspace.DisplayNewDockable(nil, lists.NewSkillTableDockable("Skills"+library.SkillsExt, nil))
 	},
 }
 
@@ -161,7 +161,7 @@ var NewSpellsLibrary = &unison.Action{
 	ID:    constants.NewSpellsLibraryItemID,
 	Title: i18n.Text("New Spells Library"),
 	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
-		workspace.DisplayNewDockable(nil, gurpsui.NewSpellTableDockable("Spells.spl", nil))
+		workspace.DisplayNewDockable(nil, lists.NewSpellTableDockable("Spells"+library.SpellsExt, nil))
 	},
 }
 
@@ -222,8 +222,8 @@ var Save = &unison.Action{
 	ID:              constants.SaveItemID,
 	Title:           i18n.Text("Save"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyS, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // SaveAs saves to a new file.
@@ -231,8 +231,8 @@ var SaveAs = &unison.Action{
 	ID:              constants.SaveAsItemID,
 	Title:           i18n.Text("Save As…"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyS, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // Print the content.
@@ -240,6 +240,6 @@ var Print = &unison.Action{
 	ID:              constants.PrintItemID,
 	Title:           i18n.Text("Print…"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyP, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }

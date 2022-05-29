@@ -26,6 +26,19 @@ const (
 	OpenFolder   = "folder-open"
 )
 
+// Known file extensions.
+const (
+	AdvantagesExt         = ".adq"
+	AdvantageModifiersExt = ".adm"
+	EquipmentExt          = ".eqp"
+	EquipmentModifiersExt = ".eqm"
+	SkillsExt             = ".skl"
+	SpellsExt             = ".spl"
+	NotesExt              = ".not"
+	TemplatesExt          = ".gct"
+	SheetExt              = ".gcs"
+)
+
 // FileInfo contains some static information about a given file type.
 type FileInfo struct {
 	Extension             string

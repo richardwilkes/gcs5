@@ -18,6 +18,7 @@ import (
 
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/export"
+	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio/fs"
 )
@@ -26,7 +27,7 @@ import (
 func ToText(tmplPath string, fileList []string) {
 	for _, one := range fileList {
 		switch strings.ToLower(filepath.Ext(one)) {
-		case ".gcs":
+		case library.SheetExt:
 			entity, err := gurps.NewEntityFromFile(os.DirFS(filepath.Dir(one)), filepath.Base(one))
 			if err != nil {
 				jot.Fatal(1, err)

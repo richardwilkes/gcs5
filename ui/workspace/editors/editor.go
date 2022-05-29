@@ -217,5 +217,6 @@ func (e *editor[N, D]) apply() {
 		})
 	}
 	e.editorData.ApplyTo(e.target)
+	widget.MarkModified(e.owner)
 	e.owner.MarkForRebuild(true)
 }
