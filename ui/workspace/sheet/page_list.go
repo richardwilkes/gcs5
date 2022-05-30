@@ -159,13 +159,13 @@ func newPageList(owner widget.Rebuildable, provider tbl.TableProvider) *PageList
 	p.table.FrameChangeCallback = func() {
 		p.table.SizeColumnsToFitWithExcessIn(p.provider.ExcessWidthColumnIndex())
 	}
-	p.table.CanPerformCmdCallback = func(_ interface{}, id int) (enabled, handled bool) {
+	p.table.CanPerformCmdCallback = func(_ any, id int) (enabled, handled bool) {
 		if f, ok := p.canPerformMap[id]; ok {
 			return f(), true
 		}
 		return false, false
 	}
-	p.table.PerformCmdCallback = func(_ interface{}, id int) bool {
+	p.table.PerformCmdCallback = func(_ any, id int) bool {
 		if f, ok := p.performMap[id]; ok {
 			f()
 			return true

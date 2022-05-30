@@ -57,8 +57,8 @@ var PerSheetSettings = &unison.Action{
 	ID:              constants.PerSheetSettingsItemID,
 	Title:           i18n.Text("Sheet Settings…"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyComma, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: func(_ *unison.Action, _ interface{}) bool { return sheet.ActiveSheet() != nil },
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	EnabledCallback: func(_ *unison.Action, _ any) bool { return sheet.ActiveSheet() != nil },
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		if s := sheet.ActiveSheet(); s != nil {
 			uisettings.ShowSheetSettings(s)
 		}
@@ -70,7 +70,7 @@ var DefaultSheetSettings = &unison.Action{
 	ID:              constants.DefaultSheetSettingsItemID,
 	Title:           i18n.Text("Default Sheet Settings…"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyComma, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { uisettings.ShowSheetSettings(nil) },
+	ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowSheetSettings(nil) },
 }
 
 // PerSheetAttributeSettings opens the attributes settings for the foremost character sheet.
@@ -109,33 +109,33 @@ var DefaultBodyTypeSettings = &unison.Action{
 var GeneralSettings = &unison.Action{
 	ID:              constants.GeneralSettingsItemID,
 	Title:           i18n.Text("General Settings…"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { uisettings.ShowGeneralSettings() },
+	ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowGeneralSettings() },
 }
 
 // PageRefMappings opens the page reference mappings.
 var PageRefMappings = &unison.Action{
 	ID:              constants.PageRefMappingsItemID,
 	Title:           i18n.Text("Page Reference Mappings…"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { uisettings.ShowPageRefMappings() },
+	ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowPageRefMappings() },
 }
 
 // ColorSettings opens the color settings.
 var ColorSettings = &unison.Action{
 	ID:              constants.ColorSettingsItemID,
 	Title:           i18n.Text("Colors…"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { uisettings.ShowColorSettings() },
+	ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowColorSettings() },
 }
 
 // FontSettings opens the font settings.
 var FontSettings = &unison.Action{
 	ID:              constants.FontSettingsItemID,
 	Title:           i18n.Text("Fonts…"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { uisettings.ShowFontSettings() },
+	ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowFontSettings() },
 }
 
 // MenuKeySettings opens the menu key settings.
 var MenuKeySettings = &unison.Action{
 	ID:              constants.MenuKeySettingsItemID,
 	Title:           i18n.Text("Menu Keys…"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) { uisettings.ShowMenuKeySettings() },
+	ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowMenuKeySettings() },
 }

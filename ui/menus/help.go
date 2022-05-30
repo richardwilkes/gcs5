@@ -36,7 +36,7 @@ func setupHelpMenu(bar unison.Menu) {
 var SponsorGCSDevelopment = &unison.Action{
 	ID:    constants.SponsorGCSDevelopmentItemID,
 	Title: i18n.Text("Sponsor GCS Development"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		showWebPage("https://github.com/sponsors/richardwilkes")
 	},
 }
@@ -45,7 +45,7 @@ var SponsorGCSDevelopment = &unison.Action{
 var MakeDonation = &unison.Action{
 	ID:    constants.MakeDonationItemID,
 	Title: i18n.Text("Make a One-time Donation for GCS Development"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		showWebPage("https://paypal.me/GURPSCharacterSheet")
 	},
 }
@@ -62,7 +62,7 @@ var UpdateApp = &unison.Action{
 var ReleaseNotes = &unison.Action{
 	ID:    constants.ReleaseNotesItemID,
 	Title: i18n.Text("Release Notes"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		showWebPage("https://github.com/richardwilkes/gcs/releases")
 	},
 }
@@ -71,7 +71,7 @@ var ReleaseNotes = &unison.Action{
 var License = &unison.Action{
 	ID:    constants.ReleaseNotesItemID,
 	Title: i18n.Text("License"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		showWebPage("https://github.com/richardwilkes/gcs/blob/master/LICENSE")
 	},
 }
@@ -80,7 +80,7 @@ var License = &unison.Action{
 var WebSite = &unison.Action{
 	ID:    constants.WebSiteItemID,
 	Title: i18n.Text("Web Site"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		showWebPage("https://" + constants.WebSiteDomain)
 	},
 }
@@ -89,7 +89,7 @@ var WebSite = &unison.Action{
 var MailingList = &unison.Action{
 	ID:    constants.MailingListItemID,
 	Title: i18n.Text("Mailing Lists"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		showWebPage("https://groups.io/g/gcs")
 	},
 }

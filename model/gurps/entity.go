@@ -57,22 +57,22 @@ type EntityProvider interface {
 
 // EntityData holds the Entity data that is written to disk.
 type EntityData struct {
-	Type             datafile.Type          `json:"type"`
-	Version          int                    `json:"version"`
-	ID               uuid.UUID              `json:"id"`
-	TotalPoints      fxp.Int                `json:"total_points"`
-	Profile          *Profile               `json:"profile,omitempty"`
-	SheetSettings    *SheetSettings         `json:"settings,omitempty"`
-	Attributes       *Attributes            `json:"attributes,omitempty"`
-	Advantages       []*Advantage           `json:"advantages,omitempty"`
-	Skills           []*Skill               `json:"skills,omitempty"`
-	Spells           []*Spell               `json:"spells,omitempty"`
-	CarriedEquipment []*Equipment           `json:"equipment,omitempty"`
-	OtherEquipment   []*Equipment           `json:"other_equipment,omitempty"`
-	Notes            []*Note                `json:"notes,omitempty"`
-	CreatedOn        jio.Time               `json:"created_date"`
-	ModifiedOn       jio.Time               `json:"modified_date"`
-	ThirdParty       map[string]interface{} `json:"third_party,omitempty"`
+	Type             datafile.Type  `json:"type"`
+	Version          int            `json:"version"`
+	ID               uuid.UUID      `json:"id"`
+	TotalPoints      fxp.Int        `json:"total_points"`
+	Profile          *Profile       `json:"profile,omitempty"`
+	SheetSettings    *SheetSettings `json:"settings,omitempty"`
+	Attributes       *Attributes    `json:"attributes,omitempty"`
+	Advantages       []*Advantage   `json:"advantages,omitempty"`
+	Skills           []*Skill       `json:"skills,omitempty"`
+	Spells           []*Spell       `json:"spells,omitempty"`
+	CarriedEquipment []*Equipment   `json:"equipment,omitempty"`
+	OtherEquipment   []*Equipment   `json:"other_equipment,omitempty"`
+	Notes            []*Note        `json:"notes,omitempty"`
+	CreatedOn        jio.Time       `json:"created_date"`
+	ModifiedOn       jio.Time       `json:"modified_date"`
+	ThirdParty       map[string]any `json:"third_party,omitempty"`
 }
 
 // Entity holds the base information for various types of entities: PC, NPC, Creature, etc.

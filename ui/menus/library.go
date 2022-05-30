@@ -83,6 +83,6 @@ var ChangeLibraryLocations = &unison.Action{
 	ExecuteCallback: unimplemented,
 }
 
-func notEnabled(_ *unison.Action, _ interface{}) bool {
+func notEnabled(_ *unison.Action, _ any) bool {
 	return false
 }

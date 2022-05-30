@@ -67,7 +67,7 @@ func evalToString(e *eval.Evaluator, arguments string) (string, error) {
 	return fmt.Sprintf("%v", v), nil
 }
 
-func evalAdvantageLevel(e *eval.Evaluator, arguments string) (interface{}, error) {
+func evalAdvantageLevel(e *eval.Evaluator, arguments string) (any, error) {
 	entity, ok := e.Resolver.(*Entity)
 	if !ok || entity.Type != datafile.PC {
 		return -fxp.One, nil
@@ -86,7 +86,7 @@ func evalAdvantageLevel(e *eval.Evaluator, arguments string) (interface{}, error
 	return levels, nil
 }
 
-func evalDice(e *eval.Evaluator, arguments string) (interface{}, error) {
+func evalDice(e *eval.Evaluator, arguments string) (any, error) {
 	var argList []int
 	for arguments != "" {
 		var arg string
@@ -131,7 +131,7 @@ func evalDice(e *eval.Evaluator, arguments string) (interface{}, error) {
 	return d.String(), nil
 }
 
-func evalRoll(e *eval.Evaluator, arguments string) (interface{}, error) {
+func evalRoll(e *eval.Evaluator, arguments string) (any, error) {
 	if strings.IndexByte(arguments, '(') != -1 {
 		var err error
 		if arguments, err = evalToString(e, arguments); err != nil {
@@ -141,7 +141,7 @@ func evalRoll(e *eval.Evaluator, arguments string) (interface{}, error) {
 	return fxp.From(dice.New(arguments).Roll(false)), nil
 }
 
-func evalSigned(e *eval.Evaluator, arguments string) (interface{}, error) {
+func evalSigned(e *eval.Evaluator, arguments string) (any, error) {
 	n, err := evalToNumber(e, arguments)
 	if err != nil {
 		return nil, err
@@ -149,7 +149,7 @@ func evalSigned(e *eval.Evaluator, arguments string) (interface{}, error) {
 	return n.StringWithSign(), nil
 }
 
-func evalSSRT(e *eval.Evaluator, arguments string) (interface{}, error) {
+func evalSSRT(e *eval.Evaluator, arguments string) (any, error) {
 	// Takes 3 args: length (number), units (string), flag (bool) indicating for size (true) or speed/range (false)
 	var arg string
 	arg, arguments = eval.NextArg(arguments)
@@ -178,7 +178,7 @@ func evalSSRT(e *eval.Evaluator, arguments string) (interface{}, error) {
 	return fxp.From(result), nil
 }
 
-func evalSSRTYards(e *eval.Evaluator, arguments string) (interface{}, error) {
+func evalSSRTYards(e *eval.Evaluator, arguments string) (any, error) {
 	v, err := evalToNumber(e, arguments)
 	if err != nil {
 		return nil, err

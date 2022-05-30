@@ -101,7 +101,7 @@ func (p *PrereqList) ApplyNameableKeys(m map[string]string) {
 }
 
 // Satisfied implements Prereq.
-func (p *PrereqList) Satisfied(entity *Entity, exclude interface{}, buffer *xio.ByteBuffer, prefix string) bool {
+func (p *PrereqList) Satisfied(entity *Entity, exclude any, buffer *xio.ByteBuffer, prefix string) bool {
 	if p.WhenTL.Compare != criteria.AnyNumber {
 		tl, _, _ := ExtractTechLevel(entity.Profile.TechLevel)
 		if tl < 0 {

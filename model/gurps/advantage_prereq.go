@@ -84,7 +84,7 @@ func (a *AdvantagePrereq) ApplyNameableKeys(m map[string]string) {
 }
 
 // Satisfied implements Prereq.
-func (a *AdvantagePrereq) Satisfied(entity *Entity, exclude interface{}, tooltip *xio.ByteBuffer, prefix string) bool {
+func (a *AdvantagePrereq) Satisfied(entity *Entity, exclude any, tooltip *xio.ByteBuffer, prefix string) bool {
 	satisfied := false
 	TraverseAdvantages(func(adq *Advantage) bool {
 		if exclude == adq || !a.NameCriteria.Matches(adq.Name) {

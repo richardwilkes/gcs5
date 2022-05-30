@@ -23,7 +23,7 @@ import (
 )
 
 // SaveToFile writes the data as JSON to the given path. Parent directories will be created automatically, if needed.
-func SaveToFile(ctx context.Context, path string, data interface{}) error {
+func SaveToFile(ctx context.Context, path string, data any) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
 		return errs.Wrap(err)
 	}
@@ -36,7 +36,7 @@ func SaveToFile(ctx context.Context, path string, data interface{}) error {
 }
 
 // Save writes the data as JSON.
-func Save(ctx context.Context, w io.Writer, data interface{}) error {
+func Save(ctx context.Context, w io.Writer, data any) error {
 	encoder := json.NewEncoder(w)
 	encoder.SetContext(ctx)
 	encoder.SetEscapeHTML(false)

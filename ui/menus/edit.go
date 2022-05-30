@@ -52,7 +52,7 @@ var Undo = &unison.Action{
 	ID:         constants.UndoItemID,
 	Title:      unison.CannotUndoTitle(),
 	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyZ, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: func(action *unison.Action, _ interface{}) bool {
+	EnabledCallback: func(action *unison.Action, _ any) bool {
 		if wnd := unison.ActiveWindow(); wnd != nil {
 			if mgr := wnd.UndoManager(); mgr != nil {
 				action.Title = mgr.UndoTitle()
@@ -62,7 +62,7 @@ var Undo = &unison.Action{
 		action.Title = unison.CannotUndoTitle()
 		return false
 	},
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		if wnd := unison.ActiveWindow(); wnd != nil {
 			if mgr := wnd.UndoManager(); mgr != nil {
 				mgr.Undo()
@@ -76,7 +76,7 @@ var Redo = &unison.Action{
 	ID:         constants.RedoItemID,
 	Title:      unison.CannotRedoTitle(),
 	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyY, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: func(action *unison.Action, _ interface{}) bool {
+	EnabledCallback: func(action *unison.Action, _ any) bool {
 		if wnd := unison.ActiveWindow(); wnd != nil {
 			if mgr := wnd.UndoManager(); mgr != nil {
 				action.Title = mgr.RedoTitle()
@@ -86,7 +86,7 @@ var Redo = &unison.Action{
 		action.Title = unison.CannotRedoTitle()
 		return false
 	},
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		if wnd := unison.ActiveWindow(); wnd != nil {
 			if mgr := wnd.UndoManager(); mgr != nil {
 				mgr.Redo()

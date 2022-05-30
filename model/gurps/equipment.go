@@ -183,7 +183,7 @@ func (e *Equipment) UnmarshalJSON(data []byte) error {
 		if e.Quantity == 0 {
 			// Old formats omitted the quantity for containers. Try to see if it was omitted or if it was explicitly
 			// set to zero.
-			m := make(map[string]interface{})
+			m := make(map[string]any)
 			if err := json.Unmarshal(data, &m); err == nil {
 				if _, exists := m["quantity"]; !exists {
 					e.Quantity = fxp.One

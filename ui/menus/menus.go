@@ -53,6 +53,6 @@ func Setup(wnd *unison.Window) {
 }
 
 // TODO: Implement each call site
-func unimplemented(a *unison.Action, _ interface{}) {
+func unimplemented(a *unison.Action, _ any) {
 	unison.ErrorDialogWithMessage("Unimplemented Action:", a.Title)
 }

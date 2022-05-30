@@ -73,7 +73,7 @@ func (a *AttributePrereq) ApplyNameableKeys(_ map[string]string) {
 }
 
 // Satisfied implements Prereq.
-func (a *AttributePrereq) Satisfied(entity *Entity, _ interface{}, tooltip *xio.ByteBuffer, prefix string) bool {
+func (a *AttributePrereq) Satisfied(entity *Entity, _ any, tooltip *xio.ByteBuffer, prefix string) bool {
 	value := entity.ResolveAttributeCurrent(a.Which)
 	if a.CombinedWith != "" {
 		value += entity.ResolveAttributeCurrent(a.CombinedWith)

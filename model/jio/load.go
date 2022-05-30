@@ -24,7 +24,7 @@ import (
 )
 
 // LoadFromFile loads JSON data from the specified path.
-func LoadFromFile(ctx context.Context, path string, data interface{}) error {
+func LoadFromFile(ctx context.Context, path string, data any) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return errs.NewWithCause(path, err)
@@ -34,7 +34,7 @@ func LoadFromFile(ctx context.Context, path string, data interface{}) error {
 }
 
 // LoadFromFS loads JSON data from the specified filesystem path.
-func LoadFromFS(ctx context.Context, fileSystem fs.FS, path string, data interface{}) error {
+func LoadFromFS(ctx context.Context, fileSystem fs.FS, path string, data any) error {
 	f, err := fileSystem.Open(path)
 	if err != nil {
 		return errs.NewWithCause(path, err)
@@ -44,7 +44,7 @@ func LoadFromFS(ctx context.Context, fileSystem fs.FS, path string, data interfa
 }
 
 // Load JSON data.
-func Load(ctx context.Context, r io.Reader, data interface{}) error {
+func Load(ctx context.Context, r io.Reader, data any) error {
 	decoder := json.NewDecoder(bufio.NewReader(r))
 	decoder.SetContext(ctx)
 	decoder.UseNumber()
