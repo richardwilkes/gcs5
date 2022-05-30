@@ -5,7 +5,7 @@ output:
   sort-results: true
 linters-settings:
   depguard:
-    list-type: blacklist
+    list-type: denylist
     include-go-root: true
     packages:
       - log

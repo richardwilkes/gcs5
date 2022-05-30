@@ -19,7 +19,6 @@
 - Library configuration dialogs
 - Completion of menu item actions
   - File
-    - Recent Files list
     - Export To list
   - Edit
     - Duplicate

@@ -236,6 +236,7 @@ func OpenFile(wnd *unison.Window, filePath string) (dockable unison.Dockable, wa
 		unison.ErrorDialogWithError(i18n.Text("Unable to open file"), err)
 		return nil, false
 	}
+	settings.Global().AddRecentFile(filePath)
 	DisplayNewDockable(wnd, d)
 	return d, false
 }

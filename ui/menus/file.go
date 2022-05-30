@@ -12,6 +12,8 @@
 package menus
 
 import (
+	"path/filepath"
+
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/datafile"
@@ -74,11 +76,41 @@ func setupFileMenu(bar unison.Menu) {
 	m.InsertItem(i, Print.NewMenuItem(f))
 }
 
-func recentFilesUpdater(_ unison.Menu) {
-	// TODO: Implement
+func recentFilesUpdater(menu unison.Menu) {
+	menu.RemoveAll()
+	list := settings.Global().ListRecentFiles()
+	m := make(map[string]int, len(list))
+	for _, f := range list {
+		title := filepath.Base(f)
+		m[title] = m[title] + 1
+	}
+	for i, f := range list {
+		title := filepath.Base(f)
+		if m[title] > 1 {
+			title = f
+		}
+		menu.InsertItem(-1, createOpenRecentFileAction(i, f, title).NewMenuItem(menu.Factory()))
+	}
+	if menu.Count() == 0 {
+		item := menu.Factory().NewItem(0, i18n.Text("No recent files available"), unison.KeyBinding{}, func(_ unison.MenuItem) bool {
+			return false
+		}, nil)
+		menu.InsertItem(-1, item)
+	}
 }
 
-func exportToUpdater(_ unison.Menu) {
+func createOpenRecentFileAction(index int, path, title string) *unison.Action {
+	return &unison.Action{
+		ID:    constants.RecentFieldBaseItemID + index,
+		Title: title,
+		ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+			workspace.OpenFile(nil, path)
+		},
+	}
+}
+
+func exportToUpdater(menu unison.Menu) {
+	menu.RemoveAll()
 	// TODO: Implement
 }
 

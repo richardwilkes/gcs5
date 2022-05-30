@@ -303,6 +303,7 @@ func SaveDockableAs(d FileBackedDockable, extension string, saver func(path stri
 			return false
 		}
 		setUnmodifiedAndNewPath(path)
+		settings.Global().AddRecentFile(path)
 		if dc := unison.DockContainerFor(d); dc != nil {
 			dc.UpdateTitle(d)
 		}
