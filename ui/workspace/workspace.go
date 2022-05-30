@@ -128,6 +128,7 @@ func NewWorkspace(wnd *unison.Window) *Workspace {
 	w.TopDock.DockTo(w.DocumentDock, dc, unison.RightSide)
 	dc.SetCurrentDockable(w.Navigator)
 	wnd.ClientData()[workspaceClientDataKey] = w
+	wnd.AllowCloseCallback = w.allowClose
 	wnd.WillCloseCallback = w.willClose
 	// On some platforms, this needs to be done after a delay... but we do it without the delay, too, so that
 	// well-behaved platforms don't flash
@@ -136,6 +137,28 @@ func NewWorkspace(wnd *unison.Window) *Workspace {
 		w.TopDock.RootDockLayout().SetDividerPosition(settings.Global().LibraryExplorer.DividerPosition)
 	}, time.Millisecond)
 	return w
+}
+
+func (w *Workspace) allowClose() bool {
+	may := true
+	w.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
+		for _, other := range dc.Dockables() {
+			if tc, ok2 := other.(unison.TabCloser); ok2 {
+				if _, ok := other.(widget.GroupedCloser); !ok {
+					if !tc.MayAttemptClose() {
+						may = false
+						return true
+					}
+					if !tc.AttemptClose() {
+						may = false
+						return true
+					}
+				}
+			}
+		}
+		return false
+	})
+	return may
 }
 
 func (w *Workspace) willClose() {
