@@ -658,11 +658,6 @@ func (d *TableDockable) adjustForMatch() {
 	d.matchesLabel.Parent().MarkForLayoutAndRedraw()
 }
 
-// MarkForRebuild implements widget.Rebuildable.
-func (d *TableDockable) MarkForRebuild(_ bool) {
-	d.table.EventuallySyncToModel()
-}
-
 // Rebuild implements widget.Rebuildable.
 func (d *TableDockable) Rebuild(_ bool) {
 	d.table.SyncToModel()

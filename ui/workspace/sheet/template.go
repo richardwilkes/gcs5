@@ -12,11 +12,9 @@
 package sheet
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/constants"
@@ -55,9 +53,6 @@ type Template struct {
 	content           *templateContent
 	scaleField        *widget.PercentageField
 	Lists             [listCount]*PageList
-	cancelRebuildFunc context.CancelFunc
-	rebuild           bool
-	full              bool
 	needsSaveAsPrompt bool
 }
 
@@ -280,37 +275,12 @@ func (d *Template) createLists() {
 // SheetSettingsUpdated implements gurps.SheetSettingsResponder.
 func (d *Template) SheetSettingsUpdated(entity *gurps.Entity, blockLayout bool) {
 	if entity == nil {
-		d.MarkForRebuild(blockLayout)
-	}
-}
-
-// MarkForRebuild implements widget.Rebuildable.
-func (d *Template) MarkForRebuild(full bool) {
-	if full {
-		d.full = full
-	}
-	if !d.rebuild {
-		d.rebuild = true
-		ctx, cancel := context.WithCancel(context.Background())
-		d.cancelRebuildFunc = cancel
-		unison.InvokeTaskAfter(func() {
-			abort := ctx.Err() != nil
-			cancel()
-			if !abort {
-				d.Rebuild(d.full)
-			}
-		}, 50*time.Millisecond)
+		d.Rebuild(blockLayout)
 	}
 }
 
 // Rebuild implements widget.Rebuildable.
 func (d *Template) Rebuild(full bool) {
-	if d.cancelRebuildFunc != nil {
-		d.cancelRebuildFunc()
-		d.cancelRebuildFunc = nil
-	}
-	d.rebuild = false
-	d.full = false
 	if full {
 		selMap := make([]map[uuid.UUID]bool, listCount)
 		for i, one := range d.Lists {

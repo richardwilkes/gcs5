@@ -12,7 +12,6 @@
 package sheet
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -83,9 +82,7 @@ type Sheet struct {
 	LiftingPanel       *LiftingPanel
 	DamagePanel        *DamagePanel
 	Lists              [listCount]*PageList
-	cancelRebuildFunc  context.CancelFunc
-	rebuild            bool
-	full               bool
+	awaitingUpdate     bool
 	needsSaveAsPrompt  bool
 }
 
@@ -239,10 +236,19 @@ func (s *Sheet) Modified() bool {
 
 // MarkModified implements widget.ModifiableRoot.
 func (s *Sheet) MarkModified() {
-	s.MiscPanel.UpdateModified()
-	widget.DeepSync(s)
-	if dc := unison.DockContainerFor(s); dc != nil {
-		dc.UpdateTitle(s)
+	if !s.awaitingUpdate {
+		s.awaitingUpdate = true
+		unison.InvokeTaskAfter(func() {
+			s.MiscPanel.UpdateModified()
+			// TODO: This is still too slow when the lists have more than a few rows of content.
+			//       It impinges on interactive typing. Looks like most of the time is spent in updating the tables.
+			//       Unfortunately, there isn't a fast way to determine that the content doesn't need to be refreshed.
+			widget.DeepSync(s)
+			if dc := unison.DockContainerFor(s); dc != nil {
+				dc.UpdateTitle(s)
+			}
+			s.awaitingUpdate = false
+		}, time.Millisecond*100)
 	}
 }
 
@@ -452,37 +458,12 @@ func (s *Sheet) createLists() {
 // SheetSettingsUpdated implements gurps.SheetSettingsResponder.
 func (s *Sheet) SheetSettingsUpdated(entity *gurps.Entity, blockLayout bool) {
 	if s.entity == entity {
-		s.MarkForRebuild(blockLayout)
-	}
-}
-
-// MarkForRebuild implements widget.Rebuildable.
-func (s *Sheet) MarkForRebuild(full bool) {
-	if full {
-		s.full = full
-	}
-	if !s.rebuild {
-		s.rebuild = true
-		ctx, cancel := context.WithCancel(context.Background())
-		s.cancelRebuildFunc = cancel
-		unison.InvokeTaskAfter(func() {
-			abort := ctx.Err() != nil
-			cancel()
-			if !abort {
-				s.Rebuild(s.full)
-			}
-		}, 50*time.Millisecond)
+		s.Rebuild(blockLayout)
 	}
 }
 
 // Rebuild implements widget.Rebuildable.
 func (s *Sheet) Rebuild(full bool) {
-	if s.cancelRebuildFunc != nil {
-		s.cancelRebuildFunc()
-		s.cancelRebuildFunc = nil
-	}
-	s.rebuild = false
-	s.full = false
 	s.entity.Recalculate()
 	if full {
 		selMap := make([]map[uuid.UUID]bool, listCount)

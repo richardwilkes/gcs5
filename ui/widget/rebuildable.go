@@ -21,7 +21,5 @@ import (
 type Rebuildable interface {
 	unison.Paneler
 	fmt.Stringer
-	// MarkForRebuild causes the panel to rebuild itself from the underlying data at the next available opportunity.
-	MarkForRebuild(full bool)
 	Rebuild(full bool)
 }
