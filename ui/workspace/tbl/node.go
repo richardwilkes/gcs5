@@ -27,6 +27,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+const excludeMarker = "exclude"
+
 var (
 	_ unison.TableRowData = &Node{}
 	_ Matcher             = &Node{}
@@ -83,17 +85,17 @@ func (n *Node) ChildRows() []unison.TableRowData {
 }
 
 // ColumnCell returns the cell for the given column index.
-func (n *Node) ColumnCell(row, col int, selected bool) unison.Paneler {
+func (n *Node) ColumnCell(row, col int, foreground, _ unison.Ink, _, _, _ bool) unison.Paneler {
 	var cellData node.CellData
 	if column, exists := n.colMap[col]; exists {
 		n.data.CellData(column, &cellData)
 	}
 	width := n.table.CellWidth(row, col)
 	if n.cellCache[col].Matches(width, &cellData) {
-		applyBackgroundInkRecursively(n.cellCache[col].Panel.AsPanel(), selected)
+		applyForegroundInkRecursively(n.cellCache[col].Panel.AsPanel(), foreground)
 		return n.cellCache[col].Panel
 	}
-	cell := n.CellFromCellData(&cellData, width, selected)
+	cell := n.CellFromCellData(&cellData, width, foreground)
 	n.cellCache[col] = &CellCache{
 		Panel: cell,
 		Data:  cellData,
@@ -102,18 +104,14 @@ func (n *Node) ColumnCell(row, col int, selected bool) unison.Paneler {
 	return cell
 }
 
-func applyBackgroundInkRecursively(panel *unison.Panel, selected bool) {
+func applyForegroundInkRecursively(panel *unison.Panel, foreground unison.Ink) {
 	if label, ok := panel.Self.(*unison.Label); ok {
-		if _, exists := label.ClientData()["exclude"]; !exists {
-			if selected {
-				label.OnBackgroundInk = unison.OnSelectionColor
-			} else {
-				label.OnBackgroundInk = unison.DefaultLabelTheme.OnBackgroundInk
-			}
+		if _, exists := label.ClientData()[excludeMarker]; !exists {
+			label.OnBackgroundInk = foreground
 		}
 	}
 	for _, child := range panel.Children() {
-		applyBackgroundInkRecursively(child, selected)
+		applyForegroundInkRecursively(child, foreground)
 	}
 }
 
@@ -152,28 +150,28 @@ func (n *Node) Match(text string) bool {
 }
 
 // CellFromCellData creates a new panel for the given cell data.
-func (n *Node) CellFromCellData(c *node.CellData, width float32, selected bool) unison.Paneler {
+func (n *Node) CellFromCellData(c *node.CellData, width float32, foreground unison.Ink) unison.Paneler {
 	switch c.Type {
 	case node.Text:
-		return n.createLabelCell(c, width, selected, c.Disabled)
+		return n.createLabelCell(c, width, foreground, c.Disabled)
 	case node.Toggle:
-		return n.createToggleCell(c, selected)
+		return n.createToggleCell(c, foreground)
 	case node.PageRef:
-		return n.createPageRefCell(c.Primary, c.Secondary, selected)
+		return n.createPageRefCell(c.Primary, c.Secondary, foreground)
 	default:
 		return unison.NewPanel()
 	}
 }
 
-func (n *Node) createLabelCell(c *node.CellData, width float32, selected, strikeThrough bool) unison.Paneler {
+func (n *Node) createLabelCell(c *node.CellData, width float32, foreground unison.Ink, strikeThrough bool) unison.Paneler {
 	p := unison.NewPanel()
 	p.SetLayout(&unison.FlexLayout{
 		Columns: 1,
 		HAlign:  c.Alignment,
 	})
-	n.addLabelCell(c, p, width, c.Primary, n.primaryFieldFont(), selected, strikeThrough)
+	n.addLabelCell(c, p, width, c.Primary, n.primaryFieldFont(), foreground, strikeThrough)
 	if c.Secondary != "" {
-		n.addLabelCell(c, p, width, c.Secondary, n.secondaryFieldFont(), selected, false)
+		n.addLabelCell(c, p, width, c.Secondary, n.secondaryFieldFont(), foreground, false)
 	}
 	tooltip := c.Tooltip
 	if c.UnsatisfiedReason != "" {
@@ -186,7 +184,7 @@ func (n *Node) createLabelCell(c *node.CellData, width float32, selected, strike
 		}
 		label.Text = i18n.Text("Unsatisfied prerequisite(s)")
 		label.HAlign = c.Alignment
-		label.ClientData()["exclude"] = true
+		label.ClientData()[excludeMarker] = true
 		label.OnBackgroundInk = unison.OnErrorColor
 		label.SetBorder(unison.NewEmptyBorder(unison.Insets{
 			Top:    1,
@@ -207,7 +205,7 @@ func (n *Node) createLabelCell(c *node.CellData, width float32, selected, strike
 	return p
 }
 
-func (n *Node) addLabelCell(c *node.CellData, parent *unison.Panel, width float32, text string, f unison.Font, selected, strikeThrough bool) {
+func (n *Node) addLabelCell(c *node.CellData, parent *unison.Panel, width float32, text string, f unison.Font, foreground unison.Ink, strikeThrough bool) {
 	decoration := &unison.TextDecoration{
 		Font:          f,
 		StrikeThrough: strikeThrough,
@@ -224,14 +222,12 @@ func (n *Node) addLabelCell(c *node.CellData, parent *unison.Panel, width float3
 		label.Font = f
 		label.StrikeThrough = strikeThrough
 		label.HAlign = c.Alignment
-		if selected {
-			label.OnBackgroundInk = unison.OnSelectionColor
-		}
+		label.OnBackgroundInk = foreground
 		parent.AddChild(label)
 	}
 }
 
-func (n *Node) createToggleCell(c *node.CellData, selected bool) unison.Paneler {
+func (n *Node) createToggleCell(c *node.CellData, foreground unison.Ink) unison.Paneler {
 	check := unison.NewLabel()
 	check.Font = n.primaryFieldFont()
 	check.SetBorder(unison.NewEmptyBorder(unison.Insets{Top: 1}))
@@ -244,9 +240,7 @@ func (n *Node) createToggleCell(c *node.CellData, selected bool) unison.Paneler 
 	}
 	check.HAlign = c.Alignment
 	check.VAlign = unison.StartAlignment
-	if selected {
-		check.OnBackgroundInk = unison.OnSelectionColor
-	}
+	check.OnBackgroundInk = foreground
 	if c.Tooltip != "" {
 		check.Tooltip = unison.NewTooltipWithText(c.Tooltip)
 	}
@@ -274,13 +268,11 @@ func (n *Node) createToggleCell(c *node.CellData, selected bool) unison.Paneler 
 	return check
 }
 
-func (n *Node) createPageRefCell(text, highlight string, selected bool) unison.Paneler {
+func (n *Node) createPageRefCell(text, highlight string, foreground unison.Ink) unison.Paneler {
 	label := unison.NewLabel()
 	label.Font = n.primaryFieldFont()
 	label.VAlign = unison.StartAlignment
-	if selected {
-		label.OnBackgroundInk = unison.OnSelectionColor
-	}
+	label.OnBackgroundInk = foreground
 	parts := strings.FieldsFunc(text, func(ch rune) bool { return ch == ',' || ch == ';' || ch == ' ' })
 	switch len(parts) {
 	case 0:

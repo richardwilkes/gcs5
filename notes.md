@@ -18,8 +18,6 @@
   - Body Type
 - Library configuration dialogs
 - Completion of menu item actions
-  - File
-    - Export To list
   - Edit
     - Duplicate
     - Convert to Container

@@ -241,17 +241,15 @@ func OpenFile(wnd *unison.Window, filePath string) (dockable unison.Dockable, wa
 	return d, false
 }
 
-func createNodeCell(ext, title string, selected bool) *unison.Panel {
+func createNodeCell(ext, title string, foreground unison.Ink) unison.Paneler {
 	size := unison.LabelFont.Size() + 5
 	fi := library.FileInfoFor(ext)
 	label := unison.NewLabel()
+	label.LabelTheme.OnBackgroundInk = foreground
 	label.Text = title
 	label.Drawable = &unison.DrawableSVG{
 		SVG:  fi.SVG,
 		Size: unison.NewSize(size, size),
 	}
-	if selected {
-		label.LabelTheme.OnBackgroundInk = unison.OnSelectionColor
-	}
-	return label.AsPanel()
+	return label
 }

@@ -67,6 +67,8 @@ var (
 		{ID: "on_selection", Title: i18n.Text("On Selection"), Color: unison.OnSelectionColor},
 		{ID: "inactive_selection", Title: i18n.Text("Inactive Selection"), Color: unison.InactiveSelectionColor},
 		{ID: "on_inactive_selection", Title: i18n.Text("On Inactive Selection"), Color: unison.OnInactiveSelectionColor},
+		{ID: "indirect_selection", Title: i18n.Text("Indirect Selection"), Color: unison.IndirectSelectionColor},
+		{ID: "on_indirect_selection", Title: i18n.Text("On Indirect Selection"), Color: unison.OnIndirectSelectionColor},
 		{ID: "scroll", Title: i18n.Text("Scroll"), Color: unison.ScrollColor},
 		{ID: "scroll_rollover", Title: i18n.Text("Scroll Rollover"), Color: unison.ScrollRolloverColor},
 		{ID: "scroll_edge", Title: i18n.Text("Scroll Edge"), Color: unison.ScrollEdgeColor},

@@ -76,13 +76,13 @@ func (n *LibraryNode) CellDataForSort(index int) string {
 }
 
 // ColumnCell returns the cell for the given column index.
-func (n *LibraryNode) ColumnCell(_, col int, selected bool) unison.Paneler {
+func (n *LibraryNode) ColumnCell(_, col int, foreground, _ unison.Ink, _, _, _ bool) unison.Paneler {
 	switch col {
 	case 0:
 		if n.open {
-			return createNodeCell(library.OpenFolder, n.library.Title, selected)
+			return createNodeCell(library.OpenFolder, n.library.Title, foreground)
 		}
-		return createNodeCell(library.ClosedFolder, n.library.Title, selected)
+		return createNodeCell(library.ClosedFolder, n.library.Title, foreground)
 	default:
 		jot.Errorf("column index out of range (0-0): %d", col)
 		return unison.NewLabel()
