@@ -237,6 +237,15 @@ func (s *Sheet) Modified() bool {
 	return s.crc != s.entity.CRC64()
 }
 
+// MarkModified implements widget.ModifiableRoot.
+func (s *Sheet) MarkModified() {
+	s.MiscPanel.UpdateModified()
+	widget.DeepSync(s)
+	if dc := unison.DockContainerFor(s); dc != nil {
+		dc.UpdateTitle(s)
+	}
+}
+
 // MayAttemptClose implements unison.TabCloser
 func (s *Sheet) MayAttemptClose() bool {
 	return workspace.MayAttemptCloseOfGroup(s)
@@ -440,15 +449,6 @@ func (s *Sheet) createLists() {
 	page.ApplyPreferredSize()
 }
 
-// MarkModified implements widget.ModifiableRoot.
-func (s *Sheet) MarkModified() {
-	s.MiscPanel.UpdateModified()
-	widget.DeepSync(s)
-	if dc := unison.DockContainerFor(s); dc != nil {
-		dc.UpdateTitle(s)
-	}
-}
-
 // SheetSettingsUpdated implements gurps.SheetSettingsResponder.
 func (s *Sheet) SheetSettingsUpdated(entity *gurps.Entity, blockLayout bool) {
 	if s.entity == entity {
@@ -501,6 +501,9 @@ func (s *Sheet) Rebuild(full bool) {
 		s.createLists()
 	}
 	widget.DeepSync(s)
+	if dc := unison.DockContainerFor(s); dc != nil {
+		dc.UpdateTitle(s)
+	}
 }
 
 func (s *Sheet) canPerformCmd(_ any, id int) (enabled, handled bool) {

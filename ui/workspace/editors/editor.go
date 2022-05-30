@@ -206,17 +206,16 @@ func (e *editor[N, D]) apply() {
 			EditCost: 1,
 			UndoFunc: func(edit *unison.UndoEdit[D]) {
 				edit.BeforeData.ApplyTo(target)
-				owner.MarkForRebuild(true)
+				owner.Rebuild(true)
 			},
 			RedoFunc: func(edit *unison.UndoEdit[D]) {
 				edit.AfterData.ApplyTo(target)
-				owner.MarkForRebuild(true)
+				owner.Rebuild(true)
 			},
 			BeforeData: e.beforeData,
 			AfterData:  e.editorData,
 		})
 	}
 	e.editorData.ApplyTo(e.target)
-	widget.MarkModified(e.owner)
-	e.owner.MarkForRebuild(true)
+	e.owner.Rebuild(true)
 }

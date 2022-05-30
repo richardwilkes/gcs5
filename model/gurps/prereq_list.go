@@ -41,7 +41,7 @@ func NewPrereqList() *PrereqList {
 
 // ShouldOmit implements json.Omitter.
 func (p *PrereqList) ShouldOmit() bool {
-	return p == nil || (p.All && p.WhenTL.Compare == criteria.AtLeast && p.WhenTL.Qualifier == 0 && len(p.Prereqs) == 0)
+	return p == nil || len(p.Prereqs) == 0
 }
 
 // PrereqType implements Prereq.

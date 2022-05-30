@@ -328,6 +328,9 @@ func (d *Template) Rebuild(full bool) {
 		d.createLists()
 	}
 	widget.DeepSync(d)
+	if dc := unison.DockContainerFor(d); dc != nil {
+		dc.UpdateTitle(d)
+	}
 }
 
 func (d *Template) canPerformCmd(_ any, id int) (enabled, handled bool) {

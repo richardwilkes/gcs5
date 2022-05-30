@@ -12,15 +12,19 @@
 package lists
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/richardwilkes/gcs/constants"
+	"github.com/richardwilkes/gcs/model/crc"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
@@ -63,9 +67,9 @@ type TableDockable struct {
 	scroll            *unison.ScrollPanel
 	tableHeader       *unison.TableHeader
 	table             *unison.Table
+	crc               uint64
 	searchResult      []unison.TableRowData
 	searchIndex       int
-	modified          bool
 	needsSaveAsPrompt bool
 }
 
@@ -467,6 +471,8 @@ func NewTableDockable(filePath, extension string, provider tbl.TableProvider, sa
 
 	d.CanPerformCmdCallback = d.canPerformCmd
 	d.PerformCmdCallback = d.performCmd
+
+	d.crc = d.crc64()
 	return d
 }
 
@@ -516,12 +522,11 @@ func (d *TableDockable) BackingFilePath() string {
 
 // Modified implements workspace.FileBackedDockable
 func (d *TableDockable) Modified() bool {
-	return d.modified
+	return d.crc != d.crc64()
 }
 
 // MarkModified implements widget.ModifiableRoot.
 func (d *TableDockable) MarkModified() {
-	d.modified = true
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.UpdateTitle(d)
 	}
@@ -558,11 +563,11 @@ func (d *TableDockable) save(forceSaveAs bool) bool {
 	success := false
 	if forceSaveAs || d.needsSaveAsPrompt {
 		success = workspace.SaveDockableAs(d, d.extension, d.saver, func(path string) {
-			d.modified = false
+			d.crc = d.crc64()
 			d.path = path
 		})
 	} else {
-		success = workspace.SaveDockable(d, d.saver, func() { d.modified = false })
+		success = workspace.SaveDockable(d, d.saver, func() { d.crc = d.crc64() })
 	}
 	if success {
 		d.needsSaveAsPrompt = false
@@ -661,6 +666,9 @@ func (d *TableDockable) MarkForRebuild(_ bool) {
 // Rebuild implements widget.Rebuildable.
 func (d *TableDockable) Rebuild(_ bool) {
 	d.table.SyncToModel()
+	if dc := unison.DockContainerFor(d); dc != nil {
+		dc.UpdateTitle(d)
+	}
 }
 
 func (d *TableDockable) canPerformCmd(_ any, id int) (enabled, handled bool) {
@@ -671,7 +679,7 @@ func (d *TableDockable) canPerformCmd(_ any, id int) (enabled, handled bool) {
 		constants.OpenEachPageReferenceItemID:
 		return tbl.CanOpenPageRef(d.table), true
 	case constants.SaveItemID:
-		return d.modified, true
+		return d.Modified(), true
 	case constants.SaveAsItemID:
 		return true, true
 	default:
@@ -719,4 +727,19 @@ func (d *TableDockable) performCmd(_ any, id int) bool {
 		return false
 	}
 	return true
+}
+
+func (d *TableDockable) crc64() uint64 {
+	var buffer bytes.Buffer
+	rows := d.provider.RowData(d.table)
+	data := make([]any, 0, len(rows))
+	for _, row := range rows {
+		if n, ok := row.(*tbl.Node); ok {
+			data = append(data, n.Data())
+		}
+	}
+	if err := jio.Save(context.Background(), &buffer, data); err != nil {
+		return 0
+	}
+	return crc.Bytes(0, buffer.Bytes())
 }

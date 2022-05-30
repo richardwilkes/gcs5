@@ -17,7 +17,7 @@
   - Attributes
   - Body Type
 - Library configuration dialogs
-- General completion of menu item actions (many are currently placeholders)
+- Completion of menu item actions
   - File
     - Recent Files list
     - Export To list
