@@ -67,6 +67,7 @@ type legacyExporter struct {
 
 // LegacyExport performs the text template export function that matches the old Java code base.
 func LegacyExport(entity *gurps.Entity, templatePath, exportPath string) (err error) {
+	entity.Recalculate()
 	ex := &legacyExporter{
 		entity:       entity,
 		exportPath:   exportPath,

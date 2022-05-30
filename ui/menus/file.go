@@ -12,19 +12,30 @@
 package menus
 
 import (
+	"errors"
+	"io/fs"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/datafile"
+	"github.com/richardwilkes/gcs/model/gurps/export"
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/gcs/ui/workspace/lists"
 	"github.com/richardwilkes/gcs/ui/workspace/sheet"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/log/jot"
+	"github.com/richardwilkes/toolbox/txt"
+	xfs "github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/unison"
 )
+
+const outputTemplatesDirName = "Output Templates"
 
 func registerFileMenuActions() {
 	settings.RegisterKeyBinding("new.char.sheet", NewCharacterSheet)
@@ -92,10 +103,7 @@ func recentFilesUpdater(menu unison.Menu) {
 		menu.InsertItem(-1, createOpenRecentFileAction(i, f, title).NewMenuItem(menu.Factory()))
 	}
 	if menu.Count() == 0 {
-		item := menu.Factory().NewItem(0, i18n.Text("No recent files available"), unison.KeyBinding{}, func(_ unison.MenuItem) bool {
-			return false
-		}, nil)
-		menu.InsertItem(-1, item)
+		appendDisabledMenuItem(menu, i18n.Text("No recent files available"))
 	}
 }
 
@@ -103,7 +111,7 @@ func createOpenRecentFileAction(index int, path, title string) *unison.Action {
 	return &unison.Action{
 		ID:    constants.RecentFieldBaseItemID + index,
 		Title: title,
-		ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+		ExecuteCallback: func(_ *unison.Action, _ any) {
 			workspace.OpenFile(nil, path)
 		},
 	}
@@ -111,7 +119,60 @@ func createOpenRecentFileAction(index int, path, title string) *unison.Action {
 
 func exportToUpdater(menu unison.Menu) {
 	menu.RemoveAll()
-	// TODO: Implement
+	index := 0
+	for _, lib := range settings.Global().Libraries().List() {
+		dir := lib.Path()
+		entries, err := fs.ReadDir(os.DirFS(dir), outputTemplatesDirName)
+		if err != nil {
+			if !errors.Is(err, fs.ErrNotExist) {
+				jot.Error(errs.Wrap(err))
+			}
+			continue
+		}
+		list := make([]string, 0, len(entries))
+		for _, entry := range entries {
+			name := entry.Name()
+			fullPath := filepath.Join(dir, outputTemplatesDirName, name)
+			if !strings.HasPrefix(name, ".") && xfs.FileExists(fullPath) {
+				list = append(list, fullPath)
+			}
+		}
+		if len(list) > 0 {
+			txt.SortStringsNaturalAscending(list)
+			appendDisabledMenuItem(menu, lib.Title)
+			for _, one := range list {
+				menu.InsertItem(-1, createExportToTextAction(index, one).NewMenuItem(menu.Factory()))
+				index++
+			}
+		}
+	}
+	if menu.Count() == 0 {
+		appendDisabledMenuItem(menu, i18n.Text("No export templates available"))
+	}
+}
+
+func createExportToTextAction(index int, path string) *unison.Action {
+	return &unison.Action{
+		ID:              constants.ExportToTextBaseItemID + index,
+		Title:           xfs.TrimExtension(filepath.Base(path)),
+		EnabledCallback: func(_ *unison.Action, _ any) bool { return sheet.ActiveSheet() != nil },
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			if s := sheet.ActiveSheet(); s != nil {
+				dialog := unison.NewSaveDialog()
+				dialog.SetAllowedExtensions(filepath.Ext(path))
+				if dialog.RunModal() {
+					if err := export.LegacyExport(s.Entity(), path, dialog.Path()); err != nil {
+						unison.ErrorDialogWithError(i18n.Text("Export failed"), err)
+					}
+				}
+			}
+		},
+	}
+}
+
+func appendDisabledMenuItem(menu unison.Menu, title string) {
+	item := menu.Factory().NewItem(0, title, unison.KeyBinding{}, func(_ unison.MenuItem) bool { return false }, nil)
+	menu.InsertItem(-1, item)
 }
 
 // NewCharacterSheet creates a new character sheet.
@@ -119,7 +180,7 @@ var NewCharacterSheet = &unison.Action{
 	ID:         constants.NewSheetItemID,
 	Title:      i18n.Text("New Character Sheet"),
 	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		entity := gurps.NewEntity(datafile.PC)
 		workspace.DisplayNewDockable(nil, sheet.NewSheet(entity.Profile.Name+library.SheetExt, entity))
 	},
@@ -129,7 +190,7 @@ var NewCharacterSheet = &unison.Action{
 var NewCharacterTemplate = &unison.Action{
 	ID:    constants.NewTemplateItemID,
 	Title: i18n.Text("New Character Template"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		workspace.DisplayNewDockable(nil, sheet.NewTemplate("untitled"+library.TemplatesExt, gurps.NewTemplate()))
 	},
 }
@@ -138,7 +199,7 @@ var NewCharacterTemplate = &unison.Action{
 var NewAdvantagesLibrary = &unison.Action{
 	ID:    constants.NewAdvantagesLibraryItemID,
 	Title: i18n.Text("New Advantages Library"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		workspace.DisplayNewDockable(nil, lists.NewAdvantageTableDockable("Advantages"+library.AdvantagesExt, nil))
 	},
 }
@@ -147,7 +208,7 @@ var NewAdvantagesLibrary = &unison.Action{
 var NewAdvantageModifiersLibrary = &unison.Action{
 	ID:    constants.NewAdvantageModifiersLibraryItemID,
 	Title: i18n.Text("New Advantage Modifiers Library"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		workspace.DisplayNewDockable(nil, lists.NewAdvantageModifierTableDockable("Advantage Modifiers"+library.AdvantageModifiersExt, nil))
 	},
 }
@@ -156,7 +217,7 @@ var NewAdvantageModifiersLibrary = &unison.Action{
 var NewEquipmentLibrary = &unison.Action{
 	ID:    constants.NewEquipmentLibraryItemID,
 	Title: i18n.Text("New Equipment Library"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		workspace.DisplayNewDockable(nil, lists.NewEquipmentTableDockable("Equipment"+library.EquipmentExt, nil))
 	},
 }
@@ -165,7 +226,7 @@ var NewEquipmentLibrary = &unison.Action{
 var NewEquipmentModifiersLibrary = &unison.Action{
 	ID:    constants.NewEquipmentModifiersLibraryItemID,
 	Title: i18n.Text("New Equipment Modifiers Library"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		workspace.DisplayNewDockable(nil, lists.NewEquipmentModifierTableDockable("Equipment Modifiers"+library.EquipmentModifiersExt, nil))
 	},
 }
@@ -174,7 +235,7 @@ var NewEquipmentModifiersLibrary = &unison.Action{
 var NewNotesLibrary = &unison.Action{
 	ID:    constants.NewNotesLibraryItemID,
 	Title: i18n.Text("New Notes Library"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		workspace.DisplayNewDockable(nil, lists.NewNoteTableDockable("Notes"+library.NotesExt, nil))
 	},
 }
@@ -183,7 +244,7 @@ var NewNotesLibrary = &unison.Action{
 var NewSkillsLibrary = &unison.Action{
 	ID:    constants.NewSkillsLibraryItemID,
 	Title: i18n.Text("New Skills Library"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		workspace.DisplayNewDockable(nil, lists.NewSkillTableDockable("Skills"+library.SkillsExt, nil))
 	},
 }
@@ -192,7 +253,7 @@ var NewSkillsLibrary = &unison.Action{
 var NewSpellsLibrary = &unison.Action{
 	ID:    constants.NewSpellsLibraryItemID,
 	Title: i18n.Text("New Spells Library"),
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		workspace.DisplayNewDockable(nil, lists.NewSpellTableDockable("Spells"+library.SpellsExt, nil))
 	},
 }
@@ -202,7 +263,7 @@ var Open = &unison.Action{
 	ID:         constants.OpenItemID,
 	Title:      i18n.Text("Open…"),
 	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyO, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		dialog := unison.NewOpenDialog()
 		dialog.SetAllowsMultipleSelection(true)
 		dialog.SetResolvesAliases(true)
@@ -218,7 +279,7 @@ var CloseTab = &unison.Action{
 	ID:         constants.CloseTabID,
 	Title:      i18n.Text("Close"),
 	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyW, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: func(_ *unison.Action, _ interface{}) bool {
+	EnabledCallback: func(_ *unison.Action, _ any) bool {
 		if wnd := unison.ActiveWindow(); wnd != nil {
 			if workspace.FromWindow(wnd) == nil {
 				return true // not the workspace, so allow regular window close
@@ -233,7 +294,7 @@ var CloseTab = &unison.Action{
 		}
 		return false
 	},
-	ExecuteCallback: func(_ *unison.Action, _ interface{}) {
+	ExecuteCallback: func(_ *unison.Action, _ any) {
 		if wnd := unison.ActiveWindow(); wnd != nil {
 			if workspace.FromWindow(wnd) == nil {
 				// not the workspace, so allow regular window close

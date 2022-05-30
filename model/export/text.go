@@ -24,21 +24,20 @@ import (
 )
 
 // ToText exports the files to a text representation.
-func ToText(tmplPath string, fileList []string) {
+func ToText(tmplPath string, fileList []string) error {
 	for _, one := range fileList {
 		switch strings.ToLower(filepath.Ext(one)) {
 		case library.SheetExt:
 			entity, err := gurps.NewEntityFromFile(os.DirFS(filepath.Dir(one)), filepath.Base(one))
 			if err != nil {
-				jot.Fatal(1, err)
+				return err
 			}
-			entity.Recalculate()
-			// TODO: Really should provide a way to specify the output file
 			if err = export.LegacyExport(entity, tmplPath, fs.TrimExtension(one)+filepath.Ext(tmplPath)); err != nil {
-				jot.Fatal(1, err)
+				return err
 			}
 		default:
 			jot.Warn("ignoring: " + one)
 		}
 	}
+	return nil
 }

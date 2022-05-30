@@ -54,7 +54,9 @@ func main() {
 				cl.FatalMsg(one + i18n.Text(" is not exportable."))
 			}
 		}
-		export.ToText(textTmplPath, fileList)
+		if err := export.ToText(textTmplPath, fileList); err != nil {
+			cl.FatalMsg(err.Error())
+		}
 	} else {
 		ui.Start(fileList) // Never returns
 	}

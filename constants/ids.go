@@ -98,5 +98,6 @@ const (
 	MailingListItemID
 	ChangeLibraryLocationsItemID
 	LibraryBaseItemID
-	RecentFieldBaseItemID = LibraryBaseItemID + 1000
+	RecentFieldBaseItemID  = LibraryBaseItemID + 1000
+	ExportToTextBaseItemID = RecentFieldBaseItemID + 1000
 )
