@@ -291,7 +291,7 @@ func (a *Advantage) Description() string {
 func (a *Advantage) String() string {
 	var buffer strings.Builder
 	buffer.WriteString(a.Name)
-	if a.IsLeveled() && a.Levels > 0 {
+	if a.IsLeveled() {
 		buffer.WriteByte(' ')
 		buffer.WriteString(a.Levels.String())
 	}
