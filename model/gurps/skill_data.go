@@ -38,7 +38,7 @@ func (d *SkillData) ClearUnusedFieldsForType() {
 	if d.Container() {
 		d.Specialization = ""
 		d.TechLevel = nil
-		d.Difficulty = AttributeDifficulty{}
+		d.Difficulty = AttributeDifficulty{omit: true}
 		d.Points = 0
 		d.EncumbrancePenaltyMultiplier = 0
 		d.DefaultedFrom = nil
@@ -48,5 +48,7 @@ func (d *SkillData) ClearUnusedFieldsForType() {
 		d.Prereq = nil
 		d.Weapons = nil
 		d.Features = nil
+	} else {
+		d.Difficulty.omit = false
 	}
 }

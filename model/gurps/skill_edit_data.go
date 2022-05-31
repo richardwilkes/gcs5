@@ -30,7 +30,7 @@ type SkillEditData struct {
 	Tags                         []string            `json:"tags,omitempty"`
 	Specialization               string              `json:"specialization,omitempty"`                 // Non-container only
 	TechLevel                    *string             `json:"tech_level,omitempty"`                     // Non-container only
-	Difficulty                   AttributeDifficulty `json:"difficulty"`                               // Non-container only
+	Difficulty                   AttributeDifficulty `json:"difficulty,omitempty"`                     // Non-container only
 	Points                       fxp.Int             `json:"points,omitempty"`                         // Non-container only
 	EncumbrancePenaltyMultiplier fxp.Int             `json:"encumbrance_penalty_multiplier,omitempty"` // Non-container only
 	DefaultedFrom                *SkillDefault       `json:"defaulted_from,omitempty"`                 // Non-container only

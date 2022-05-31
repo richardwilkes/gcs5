@@ -27,7 +27,7 @@ type SpellEditData struct {
 	VTTNotes          string              `json:"vtt_notes,omitempty"`
 	Tags              []string            `json:"tags,omitempty"`
 	TechLevel         *string             `json:"tech_level,omitempty"`       // Non-container only
-	Difficulty        AttributeDifficulty `json:"difficulty"`                 // Non-container only
+	Difficulty        AttributeDifficulty `json:"difficulty,omitempty"`       // Non-container only
 	College           CollegeList         `json:"college,omitempty"`          // Non-container only
 	PowerSource       string              `json:"power_source,omitempty"`     // Non-container only
 	Class             string              `json:"spell_class,omitempty"`      // Non-container only

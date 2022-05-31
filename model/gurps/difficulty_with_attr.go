@@ -23,6 +23,7 @@ import (
 type AttributeDifficulty struct {
 	Attribute  string
 	Difficulty skill.Difficulty
+	omit       bool
 }
 
 // Description returns a formatted description.
@@ -39,6 +40,11 @@ func (a *AttributeDifficulty) Key() string {
 		return a.Difficulty.Key()
 	}
 	return a.Attribute + "/" + a.Difficulty.Key()
+}
+
+// ShouldOmit implements json.Omitter.
+func (a AttributeDifficulty) ShouldOmit() bool {
+	return a.omit
 }
 
 // MarshalJSON implements json.Marshaler.

@@ -31,7 +31,7 @@ func (d *SpellData) ClearUnusedFieldsForType() {
 	d.clearUnusedFields()
 	if d.Container() {
 		d.TechLevel = nil
-		d.Difficulty = AttributeDifficulty{}
+		d.Difficulty = AttributeDifficulty{omit: true}
 		d.College = nil
 		d.PowerSource = ""
 		d.Class = ""
@@ -45,5 +45,7 @@ func (d *SpellData) ClearUnusedFieldsForType() {
 		d.Points = 0
 		d.Prereq = nil
 		d.Weapons = nil
+	} else {
+		d.Difficulty.omit = false
 	}
 }
