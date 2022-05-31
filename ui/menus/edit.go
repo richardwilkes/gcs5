@@ -100,14 +100,14 @@ var Duplicate = &unison.Action{
 	ID:              constants.DuplicateItemID,
 	Title:           i18n.Text("Duplicate"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyU, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
 // ConvertToContainer converts the currently selected item into a container.
 var ConvertToContainer = &unison.Action{
 	ID:              constants.ConvertToContainerItemID,
 	Title:           i18n.Text("Convert to Container"),
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }

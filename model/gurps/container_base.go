@@ -21,7 +21,8 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-const containerKeyPostfix = "_container"
+// ContainerKeyPostfix is the key postfix used to identify containers.
+const ContainerKeyPostfix = "_container"
 
 // ContainerBase holds the type and ID of the data.
 type ContainerBase[T node.Node] struct {
@@ -33,7 +34,7 @@ type ContainerBase[T node.Node] struct {
 
 func newContainerBase[T node.Node](typeKey string, isContainer bool) ContainerBase[T] {
 	if isContainer {
-		typeKey += containerKeyPostfix
+		typeKey += ContainerKeyPostfix
 	}
 	return ContainerBase[T]{
 		ID:     id.NewUUID(),
@@ -49,7 +50,7 @@ func (c *ContainerBase[T]) UUID() uuid.UUID {
 
 // Container returns true if this is a container.
 func (c *ContainerBase[T]) Container() bool {
-	return strings.HasSuffix(c.Type, containerKeyPostfix)
+	return strings.HasSuffix(c.Type, ContainerKeyPostfix)
 }
 
 func (c *ContainerBase[T]) kind(base string) string {

@@ -21,7 +21,6 @@
 - Completion of menu item actions
   - Edit
     - Duplicate
-    - Convert to Container
   - Item
     - Copy to Character Sheet
     - Copy to Template
@@ -43,3 +42,6 @@
   - I'm currently thinking of just having a preference for making empty lists vanish when printing. That way they are
     discoverable in the UI, but don't clutter up the printed sheet if you don't want them to.
 - When a sheet is scrolled, tooltips don't seem to be coming up in the correct spot for cells in the tables
+- Need to retain previous focus when doing rebuilds... since in the "full" case, the tables are replaced with new ones,
+  the focus is lost if it was within one of the tables.
+- Need to add undo capture around all of the edit operations. Currently many are missing outside of the detailed editors

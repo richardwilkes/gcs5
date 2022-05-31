@@ -464,6 +464,8 @@ func (s *Sheet) SheetSettingsUpdated(entity *gurps.Entity, blockLayout bool) {
 
 // Rebuild implements widget.Rebuildable.
 func (s *Sheet) Rebuild(full bool) {
+	// TODO: Need to retain previous focus... since in the "full" case, the tables are replaced with new ones, the focus
+	//       is lost if it was within one of the tables.
 	s.entity.Recalculate()
 	if full {
 		selMap := make([]map[uuid.UUID]bool, listCount)
