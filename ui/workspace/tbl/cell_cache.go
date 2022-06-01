@@ -12,18 +12,18 @@
 package tbl
 
 import (
-	"github.com/richardwilkes/gcs/model/node"
+	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/unison"
 )
 
 // CellCache holds data for a table row's cell to reduce the need to constantly recreate them.
 type CellCache struct {
 	Panel unison.Paneler
-	Data  node.CellData
+	Data  gurps.CellData
 	Width float32
 }
 
 // Matches returns true if the provided width and data match the current contents.
-func (c *CellCache) Matches(width float32, data *node.CellData) bool {
+func (c *CellCache) Matches(width float32, data *gurps.CellData) bool {
 	return c != nil && c.Panel != nil && c.Width == width && c.Data == *data
 }

@@ -23,7 +23,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/jio"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -32,8 +31,9 @@ import (
 )
 
 var (
-	_ WeaponOwner = &Equipment{}
-	_ node.Node   = &Equipment{}
+	_ WeaponOwner       = &Equipment{}
+	_ Node              = &Equipment{}
+	_ TechLevelProvider = &Equipment{}
 )
 
 // Columns that can be used with the equipment method .CellData()
@@ -198,64 +198,64 @@ func (e *Equipment) UnmarshalJSON(data []byte) error {
 }
 
 // CellData returns the cell data information for the given column.
-func (e *Equipment) CellData(column int, data *node.CellData) {
+func (e *Equipment) CellData(column int, data *CellData) {
 	switch column {
 	case EquipmentEquippedColumn:
-		data.Type = node.Toggle
+		data.Type = Toggle
 		data.Checked = e.Equipped
 		data.Alignment = unison.MiddleAlignment
 	case EquipmentQuantityColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = e.Quantity.String()
 		data.Alignment = unison.EndAlignment
 	case EquipmentDescriptionColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = e.Description()
 		data.Secondary = e.SecondaryText()
 		data.UnsatisfiedReason = e.UnsatisfiedReason
 	case EquipmentUsesColumn:
 		if e.MaxUses > 0 {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = strconv.Itoa(e.Uses)
 			data.Alignment = unison.EndAlignment
 		}
 	case EquipmentMaxUsesColumn:
 		if e.MaxUses > 0 {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = strconv.Itoa(e.MaxUses)
 			data.Alignment = unison.EndAlignment
 		}
 	case EquipmentTLColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = e.TechLevel
 		data.Alignment = unison.EndAlignment
 	case EquipmentLCColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = e.LegalityClass
 		data.Alignment = unison.EndAlignment
 	case EquipmentCostColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = e.AdjustedValue().String()
 		data.Alignment = unison.EndAlignment
 	case EquipmentExtendedCostColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = e.ExtendedValue().String()
 		data.Alignment = unison.EndAlignment
 	case EquipmentWeightColumn:
-		data.Type = node.Text
+		data.Type = Text
 		units := SheetSettingsFor(e.Entity).DefaultWeightUnits
 		data.Primary = units.Format(e.AdjustedWeight(false, units))
 		data.Alignment = unison.EndAlignment
 	case EquipmentExtendedWeightColumn:
-		data.Type = node.Text
+		data.Type = Text
 		units := SheetSettingsFor(e.Entity).DefaultWeightUnits
 		data.Primary = units.Format(e.ExtendedWeight(false, units))
 		data.Alignment = unison.EndAlignment
 	case EquipmentTagsColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = CombineTags(e.Tags)
-	case EquipmentReferenceColumn, node.PageRefCellAlias:
-		data.Type = node.PageRef
+	case EquipmentReferenceColumn, PageRefCellAlias:
+		data.Type = PageRef
 		data.Primary = e.PageRef
 		data.Secondary = e.Name
 	}
@@ -494,4 +494,14 @@ func (e *Equipment) ModifierNotes() string {
 		}
 	}
 	return buffer.String()
+}
+
+// TL implements TechLevelProvider.
+func (e *Equipment) TL() string {
+	return e.TechLevel
+}
+
+// SetTL implements TechLevelProvider.
+func (e *Equipment) SetTL(tl string) {
+	e.TechLevel = tl
 }

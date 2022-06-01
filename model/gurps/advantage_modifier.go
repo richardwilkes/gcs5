@@ -21,7 +21,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/jio"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -29,7 +28,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-var _ node.Node = &AdvantageModifier{}
+var _ Node = &AdvantageModifier{}
 
 // Columns that can be used with the advantage modifier method .CellData()
 const (
@@ -131,22 +130,22 @@ func (a *AdvantageModifier) UnmarshalJSON(data []byte) error {
 }
 
 // CellData returns the cell data information for the given column.
-func (a *AdvantageModifier) CellData(column int, data *node.CellData) {
+func (a *AdvantageModifier) CellData(column int, data *CellData) {
 	switch column {
 	case AdvantageModifierDescriptionColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = a.Name
 		data.Secondary = a.SecondaryText()
 	case AdvantageModifierCostColumn:
 		if !a.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = a.CostDescription()
 		}
 	case AdvantageModifierTagsColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = CombineTags(a.Tags)
-	case AdvantageModifierReferenceColumn, node.PageRefCellAlias:
-		data.Type = node.PageRef
+	case AdvantageModifierReferenceColumn, PageRefCellAlias:
+		data.Type = PageRef
 		data.Primary = a.PageRef
 		data.Secondary = a.Name
 	}

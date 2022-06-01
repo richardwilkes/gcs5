@@ -16,7 +16,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
@@ -38,7 +37,7 @@ var (
 type Node struct {
 	table     *unison.Table
 	parent    unison.TableRowData
-	data      node.Node
+	data      gurps.Node
 	children  []unison.TableRowData
 	cellCache []*CellCache
 	colMap    map[int]int
@@ -46,7 +45,7 @@ type Node struct {
 }
 
 // NewNode creates a new node for a table.
-func NewNode(table *unison.Table, parent unison.TableRowData, colMap map[int]int, data node.Node, forPage bool) *Node {
+func NewNode(table *unison.Table, parent unison.TableRowData, colMap map[int]int, data gurps.Node, forPage bool) *Node {
 	return &Node{
 		table:     table,
 		parent:    parent,
@@ -68,7 +67,7 @@ func (n *Node) CanHaveChildRows() bool {
 }
 
 // Data returns the underlying data object.
-func (n *Node) Data() node.Node {
+func (n *Node) Data() gurps.Node {
 	return n.data
 }
 
@@ -86,7 +85,7 @@ func (n *Node) ChildRows() []unison.TableRowData {
 
 // ColumnCell returns the cell for the given column index.
 func (n *Node) ColumnCell(row, col int, foreground, _ unison.Ink, _, _, _ bool) unison.Paneler {
-	var cellData node.CellData
+	var cellData gurps.CellData
 	if column, exists := n.colMap[col]; exists {
 		n.data.CellData(column, &cellData)
 	}
@@ -131,7 +130,7 @@ func (n *Node) SetOpen(open bool) {
 // CellDataForSort returns the string that represents the data in the specified cell.
 func (n *Node) CellDataForSort(index int) string {
 	if column, exists := n.colMap[index]; exists {
-		var data node.CellData
+		var data gurps.CellData
 		n.data.CellData(column, &data)
 		return data.ForSort()
 	}
@@ -150,20 +149,20 @@ func (n *Node) Match(text string) bool {
 }
 
 // CellFromCellData creates a new panel for the given cell data.
-func (n *Node) CellFromCellData(c *node.CellData, width float32, foreground unison.Ink) unison.Paneler {
+func (n *Node) CellFromCellData(c *gurps.CellData, width float32, foreground unison.Ink) unison.Paneler {
 	switch c.Type {
-	case node.Text:
+	case gurps.Text:
 		return n.createLabelCell(c, width, foreground, c.Disabled)
-	case node.Toggle:
+	case gurps.Toggle:
 		return n.createToggleCell(c, foreground)
-	case node.PageRef:
+	case gurps.PageRef:
 		return n.createPageRefCell(c.Primary, c.Secondary, foreground)
 	default:
 		return unison.NewPanel()
 	}
 }
 
-func (n *Node) createLabelCell(c *node.CellData, width float32, foreground unison.Ink, strikeThrough bool) unison.Paneler {
+func (n *Node) createLabelCell(c *gurps.CellData, width float32, foreground unison.Ink, strikeThrough bool) unison.Paneler {
 	p := unison.NewPanel()
 	p.SetLayout(&unison.FlexLayout{
 		Columns: 1,
@@ -205,7 +204,7 @@ func (n *Node) createLabelCell(c *node.CellData, width float32, foreground uniso
 	return p
 }
 
-func (n *Node) addLabelCell(c *node.CellData, parent *unison.Panel, width float32, text string, f unison.Font, foreground unison.Ink, strikeThrough bool) {
+func (n *Node) addLabelCell(c *gurps.CellData, parent *unison.Panel, width float32, text string, f unison.Font, foreground unison.Ink, strikeThrough bool) {
 	decoration := &unison.TextDecoration{
 		Font:          f,
 		StrikeThrough: strikeThrough,
@@ -227,7 +226,7 @@ func (n *Node) addLabelCell(c *node.CellData, parent *unison.Panel, width float3
 	}
 }
 
-func (n *Node) createToggleCell(c *node.CellData, foreground unison.Ink) unison.Paneler {
+func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison.Paneler {
 	check := unison.NewLabel()
 	check.Font = n.primaryFieldFont()
 	check.SetBorder(unison.NewEmptyBorder(unison.Insets{Top: 1}))
@@ -353,14 +352,8 @@ func rowIndex(id uuid.UUID, startIndex int, rows []unison.TableRowData) (updated
 	return startIndex, -1
 }
 
-// IDer defines the minimum necessary for use of InsertItem(), OpenEditor(), and ExtractFromRowData().
-type IDer interface {
-	comparable
-	UUID() uuid.UUID
-}
-
 // InsertItem inserts an item into a table.
-func InsertItem[T IDer](owner widget.Rebuildable, table *unison.Table, item T, setParent func(target, parent T), childrenOf func(target T) []T, setChildren func(target T, children []T), topList func() []T, setTopList func([]T), rowData func(table *unison.Table) []unison.TableRowData, id func(T) uuid.UUID) {
+func InsertItem[T comparable](owner widget.Rebuildable, table *unison.Table, item T, setParent func(target, parent T), childrenOf func(target T) []T, setChildren func(target T, children []T), topList func() []T, setTopList func([]T), rowData func(table *unison.Table) []unison.TableRowData, id func(T) uuid.UUID) {
 	var target, zero T
 	i := table.FirstSelectedRowIndex()
 	if i != -1 {
@@ -400,7 +393,7 @@ func InsertItem[T IDer](owner widget.Rebuildable, table *unison.Table, item T, s
 }
 
 // ExtractFromRowData extracts a specific type of data from the row data.
-func ExtractFromRowData[T IDer](row unison.TableRowData) T {
+func ExtractFromRowData[T any](row unison.TableRowData) T {
 	if n, ok := row.(*Node); ok {
 		var target T
 		if target, ok = n.Data().(T); ok {
@@ -412,7 +405,7 @@ func ExtractFromRowData[T IDer](row unison.TableRowData) T {
 }
 
 // OpenEditor opens an editor for each selected row in the table.
-func OpenEditor[T IDer](table *unison.Table, edit func(item T)) {
+func OpenEditor[T comparable](table *unison.Table, edit func(item T)) {
 	var zero T
 	for _, row := range table.SelectedRows(false) {
 		if a := ExtractFromRowData[T](row); a != zero {

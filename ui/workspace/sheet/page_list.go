@@ -55,8 +55,8 @@ func NewCarriedEquipmentPageList(owner widget.Rebuildable, provider gurps.ListPr
 	p.installDecrementHandler()
 	p.installIncrementUsesHandler()
 	p.installDecrementUsesHandler()
-	p.installIncrementTechLevelHandler()
-	p.installDecrementTechLevelHandler()
+	p.installIncrementTechLevelHandler(owner)
+	p.installDecrementTechLevelHandler(owner)
 	p.installConvertToContainerHandler(owner)
 	return p
 }
@@ -68,8 +68,8 @@ func NewOtherEquipmentPageList(owner widget.Rebuildable, provider gurps.ListProv
 	p.installDecrementHandler()
 	p.installIncrementUsesHandler()
 	p.installDecrementUsesHandler()
-	p.installIncrementTechLevelHandler()
-	p.installDecrementTechLevelHandler()
+	p.installIncrementTechLevelHandler(owner)
+	p.installDecrementTechLevelHandler(owner)
 	p.installConvertToContainerHandler(owner)
 	return p
 }
@@ -81,8 +81,8 @@ func NewSkillsPageList(owner widget.Rebuildable, provider gurps.ListProvider) *P
 	p.installDecrementHandler()
 	p.installIncrementSkillHandler()
 	p.installDecrementSkillHandler()
-	p.installIncrementTechLevelHandler()
-	p.installDecrementTechLevelHandler()
+	p.installIncrementTechLevelHandler(owner)
+	p.installDecrementTechLevelHandler(owner)
 	return p
 }
 
@@ -552,106 +552,16 @@ func (p *PageList) installDecrementSkillHandler() {
 	})
 }
 
-func (p *PageList) installIncrementTechLevelHandler() {
-	p.installPerformHandlers(constants.IncrementTechLevelItemID, func() bool {
-		for _, row := range p.table.SelectedRows(false) {
-			if n, ok := row.(*tbl.Node); ok {
-				switch item := n.Data().(type) {
-				case *gurps.Equipment:
-					return true
-				case *gurps.Skill:
-					if !item.Container() && item.TechLevel != nil {
-						return true
-					}
-				case *gurps.Spell:
-					if !item.Container() && item.TechLevel != nil {
-						return true
-					}
-				}
-			}
-		}
-		return false
-	}, func() {
-		var entity *gurps.Entity
-		var changed bool
-		for _, row := range p.table.SelectedRows(false) {
-			if n, ok := row.(*tbl.Node); ok {
-				switch item := n.Data().(type) {
-				case *gurps.Equipment:
-					if item.TechLevel, changed = gurps.AdjustTechLevel(item.TechLevel, fxp.One); changed {
-						entity = item.Entity
-					}
-				case *gurps.Skill:
-					if !item.Container() && item.TechLevel != nil {
-						if *item.TechLevel, changed = gurps.AdjustTechLevel(*item.TechLevel, fxp.One); changed {
-							entity = item.Entity
-						}
-					}
-				case *gurps.Spell:
-					if !item.Container() && item.TechLevel != nil {
-						if *item.TechLevel, changed = gurps.AdjustTechLevel(*item.TechLevel, fxp.One); changed {
-							entity = item.Entity
-						}
-					}
-				}
-			}
-		}
-		if entity != nil {
-			entity.Recalculate()
-			widget.MarkModified(p)
-		}
-	})
+func (p *PageList) installIncrementTechLevelHandler(owner widget.Rebuildable) {
+	p.installPerformHandlers(constants.IncrementTechLevelItemID,
+		func() bool { return canAdjustTechLevel(p.table, fxp.One) },
+		func() { adjustTechLevel(owner, p.table, fxp.One) })
 }
 
-func (p *PageList) installDecrementTechLevelHandler() {
-	p.installPerformHandlers(constants.DecrementTechLevelItemID, func() bool {
-		for _, row := range p.table.SelectedRows(false) {
-			if n, ok := row.(*tbl.Node); ok {
-				switch item := n.Data().(type) {
-				case *gurps.Equipment:
-					return true
-				case *gurps.Skill:
-					if !item.Container() && item.TechLevel != nil {
-						return true
-					}
-				case *gurps.Spell:
-					if !item.Container() && item.TechLevel != nil {
-						return true
-					}
-				}
-			}
-		}
-		return false
-	}, func() {
-		var entity *gurps.Entity
-		var changed bool
-		for _, row := range p.table.SelectedRows(false) {
-			if n, ok := row.(*tbl.Node); ok {
-				switch item := n.Data().(type) {
-				case *gurps.Equipment:
-					if item.TechLevel, changed = gurps.AdjustTechLevel(item.TechLevel, -fxp.One); changed {
-						entity = item.Entity
-					}
-				case *gurps.Skill:
-					if !item.Container() && item.TechLevel != nil {
-						if *item.TechLevel, changed = gurps.AdjustTechLevel(*item.TechLevel, -fxp.One); changed {
-							entity = item.Entity
-						}
-					}
-				case *gurps.Spell:
-					if !item.Container() && item.TechLevel != nil {
-						if *item.TechLevel, changed = gurps.AdjustTechLevel(*item.TechLevel, -fxp.One); changed {
-							entity = item.Entity
-						}
-					}
-				}
-			}
-		}
-		if entity != nil {
-			entity.Recalculate()
-			widget.MarkModified(p)
-		}
-	})
+func (p *PageList) installDecrementTechLevelHandler(owner widget.Rebuildable) {
+	p.installPerformHandlers(constants.DecrementTechLevelItemID,
+		func() bool { return canAdjustTechLevel(p.table, -fxp.One) },
+		func() { adjustTechLevel(owner, p.table, -fxp.One) })
 }
 
 func (p *PageList) installConvertToContainerHandler(owner widget.Rebuildable) {

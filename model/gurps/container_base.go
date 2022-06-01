@@ -17,7 +17,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/id"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
@@ -25,14 +24,14 @@ import (
 const ContainerKeyPostfix = "_container"
 
 // ContainerBase holds the type and ID of the data.
-type ContainerBase[T node.Node] struct {
+type ContainerBase[T Node] struct {
 	ID       uuid.UUID `json:"id"`
 	Type     string    `json:"type"`
 	IsOpen   bool      `json:"open,omitempty"`     // Container only
 	Children []T       `json:"children,omitempty"` // Container only
 }
 
-func newContainerBase[T node.Node](typeKey string, isContainer bool) ContainerBase[T] {
+func newContainerBase[T Node](typeKey string, isContainer bool) ContainerBase[T] {
 	if isContainer {
 		typeKey += ContainerKeyPostfix
 	}
@@ -71,9 +70,9 @@ func (c *ContainerBase[T]) SetOpen(open bool) {
 }
 
 // NodeChildren returns the children of this node, if any.
-func (c *ContainerBase[T]) NodeChildren() []node.Node {
+func (c *ContainerBase[T]) NodeChildren() []Node {
 	if c.Container() {
-		children := make([]node.Node, len(c.Children))
+		children := make([]Node, len(c.Children))
 		for i, child := range c.Children {
 			children[i] = child
 		}

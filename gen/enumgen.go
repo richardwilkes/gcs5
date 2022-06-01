@@ -893,7 +893,7 @@ func main() {
 		},
 	})
 	processSourceTemplate(enumTmpl, &enumInfo{
-		Pkg:        "model/node",
+		Pkg:        "model/gurps",
 		Name:       "cell_type",
 		Desc:       "holds the type of table cell",
 		StandAlone: true,

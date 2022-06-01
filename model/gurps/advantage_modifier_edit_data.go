@@ -15,11 +15,10 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/toolbox/txt"
 )
 
-var _ node.EditorData[*AdvantageModifier] = &AdvantageModifierEditData{}
+var _ EditorData[*AdvantageModifier] = &AdvantageModifierEditData{}
 
 // AdvantageModifierEditData holds the AdvantageModifier data that can be edited by the UI detail editor.
 type AdvantageModifierEditData struct {

@@ -26,7 +26,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -34,7 +33,7 @@ import (
 	"github.com/richardwilkes/toolbox/xio"
 )
 
-var _ node.Node = &Weapon{}
+var _ Node = &Weapon{}
 
 // Columns that can be used with the weapon method .CellData()
 const (
@@ -583,14 +582,14 @@ func (w *Weapon) SetOpen(_ bool) {
 }
 
 // NodeChildren returns the children of this node, if any.
-func (w *Weapon) NodeChildren() []node.Node {
+func (w *Weapon) NodeChildren() []Node {
 	return nil
 }
 
 // CellData returns the cell data information for the given column.
-func (w *Weapon) CellData(column int, data *node.CellData) {
+func (w *Weapon) CellData(column int, data *CellData) {
 	var buffer xio.ByteBuffer
-	data.Type = node.Text
+	data.Type = Text
 	switch column {
 	case WeaponDescriptionColumn:
 		data.Primary = w.String()
@@ -621,8 +620,17 @@ func (w *Weapon) CellData(column int, data *node.CellData) {
 		data.Primary = w.Bulk
 	case WeaponRecoilColumn:
 		data.Primary = w.Recoil
-	case node.PageRefCellAlias:
-		data.Type = node.PageRef
+	case PageRefCellAlias:
+		data.Type = PageRef
 	}
 	data.Tooltip = buffer.String()
+}
+
+// OwningEntity returns the owning Entity.
+func (w *Weapon) OwningEntity() *Entity {
+	return w.Entity()
+}
+
+// SetOwningEntity sets the owning entity and configures any sub-components as needed.
+func (w *Weapon) SetOwningEntity(_ *Entity) {
 }

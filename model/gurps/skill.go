@@ -23,7 +23,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/jio"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -32,7 +31,10 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-var _ node.Node = &Skill{}
+var (
+	_ Node              = &Skill{}
+	_ TechLevelProvider = &Skill{}
+)
 
 // Columns that can be used with the skill method .CellData()
 const (
@@ -166,28 +168,28 @@ func (s *Skill) UnmarshalJSON(data []byte) error {
 }
 
 // CellData returns the cell data information for the given column.
-func (s *Skill) CellData(column int, data *node.CellData) {
+func (s *Skill) CellData(column int, data *CellData) {
 	switch column {
 	case SkillDescriptionColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = s.Description()
 		data.Secondary = s.SecondaryText()
 		data.UnsatisfiedReason = s.UnsatisfiedReason
 	case SkillDifficultyColumn:
 		if !s.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = s.Difficulty.Description(s.Entity)
 		}
 	case SkillTagsColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = CombineTags(s.Tags)
-	case SkillReferenceColumn, node.PageRefCellAlias:
-		data.Type = node.PageRef
+	case SkillReferenceColumn, PageRefCellAlias:
+		data.Type = PageRef
 		data.Primary = s.PageRef
 		data.Secondary = s.Name
 	case SkillLevelColumn:
 		if !s.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			level := s.CalculateLevel()
 			data.Primary = level.LevelAsString(s.Container())
 			if level.Tooltip != "" {
@@ -197,11 +199,11 @@ func (s *Skill) CellData(column int, data *node.CellData) {
 		}
 	case SkillRelativeLevelColumn:
 		if !s.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = FormatRelativeSkill(s.Entity, s.Type, s.Difficulty, s.AdjustedRelativeLevel())
 		}
 	case SkillPointsColumn:
-		data.Type = node.Text
+		data.Type = Text
 		var tooltip xio.ByteBuffer
 		data.Primary = s.AdjustedPoints(&tooltip).String()
 		data.Alignment = unison.EndAlignment
@@ -663,4 +665,19 @@ func (s *Skill) TechniqueSatisfied(tooltip *xio.ByteBuffer, prefix string) bool 
 		tooltip.WriteString(s.TechniqueDefault.FullName(s.Entity))
 	}
 	return satisfied
+}
+
+// TL implements TechLevelProvider.
+func (s *Skill) TL() string {
+	if s.TechLevel != nil {
+		return *s.TechLevel
+	}
+	return ""
+}
+
+// SetTL implements TechLevelProvider.
+func (s *Skill) SetTL(tl string) {
+	if s.TechLevel != nil {
+		*s.TechLevel = tl
+	}
 }

@@ -22,14 +22,13 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/jio"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/txt"
 	"golang.org/x/exp/slices"
 )
 
-var _ node.Node = &EquipmentModifier{}
+var _ Node = &EquipmentModifier{}
 
 // Columns that can be used with the equipment modifier method .CellData()
 const (
@@ -133,32 +132,32 @@ func (e *EquipmentModifier) UnmarshalJSON(data []byte) error {
 }
 
 // CellData returns the cell data information for the given column.
-func (e *EquipmentModifier) CellData(column int, data *node.CellData) {
+func (e *EquipmentModifier) CellData(column int, data *CellData) {
 	switch column {
 	case EquipmentModifierDescriptionColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = e.Name
 		data.Secondary = e.SecondaryText()
 	case EquipmentModifierTechLevelColumn:
 		if !e.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = e.TechLevel
 		}
 	case EquipmentModifierCostColumn:
 		if !e.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = e.CostDescription()
 		}
 	case EquipmentModifierWeightColumn:
 		if !e.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = e.WeightDescription()
 		}
 	case EquipmentModifierTagsColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = CombineTags(e.Tags)
-	case EquipmentModifierReferenceColumn, node.PageRefCellAlias:
-		data.Type = node.PageRef
+	case EquipmentModifierReferenceColumn, PageRefCellAlias:
+		data.Type = PageRef
 		data.Primary = e.PageRef
 		data.Secondary = e.Name
 	}

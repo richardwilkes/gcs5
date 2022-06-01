@@ -16,7 +16,6 @@ import (
 	"reflect"
 
 	"github.com/richardwilkes/gcs/model/gurps"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
@@ -35,7 +34,7 @@ var (
 	_ widget.GroupedCloser       = &editor[*gurps.Note, *gurps.NoteEditData]{}
 )
 
-type editor[N node.Node, D node.EditorData[N]] struct {
+type editor[N gurps.Node, D gurps.EditorData[N]] struct {
 	unison.Panel
 	owner                widget.Rebuildable
 	target               N
@@ -48,7 +47,7 @@ type editor[N node.Node, D node.EditorData[N]] struct {
 	promptForSave        bool
 }
 
-func displayEditor[N node.Node, D node.EditorData[N]](owner widget.Rebuildable, target N, initContent func(*editor[N, D], *unison.Panel) func()) {
+func displayEditor[N gurps.Node, D gurps.EditorData[N]](owner widget.Rebuildable, target N, initContent func(*editor[N, D], *unison.Panel) func()) {
 	lookFor := target.UUID()
 	ws, dc, found := workspace.Activate(func(d unison.Dockable) bool {
 		if e, ok := d.(*editor[N, D]); ok {

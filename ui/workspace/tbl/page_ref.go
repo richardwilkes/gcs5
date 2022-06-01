@@ -12,7 +12,7 @@
 package tbl
 
 import (
-	"github.com/richardwilkes/gcs/model/node"
+	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/workspace/settings"
 	"github.com/richardwilkes/unison"
 )
@@ -26,8 +26,8 @@ func NewCanOpenPageRefFunc(table *unison.Table) func() bool {
 func CanOpenPageRef(table *unison.Table) bool {
 	for _, row := range table.SelectedRows(false) {
 		if n, ok := row.(*Node); ok {
-			var data node.CellData
-			n.Data().CellData(node.PageRefCellAlias, &data)
+			var data gurps.CellData
+			n.Data().CellData(gurps.PageRefCellAlias, &data)
 			if len(settings.ExtractPageReferences(data.Primary)) != 0 {
 				return true
 			}
@@ -46,8 +46,8 @@ func OpenPageRef(table *unison.Table) {
 	promptCtx := make(map[string]bool)
 	for _, row := range table.SelectedRows(false) {
 		if n, ok := row.(*Node); ok {
-			var data node.CellData
-			n.Data().CellData(node.PageRefCellAlias, &data)
+			var data gurps.CellData
+			n.Data().CellData(gurps.PageRefCellAlias, &data)
 			for _, one := range settings.ExtractPageReferences(data.Primary) {
 				if settings.OpenPageReference(table.Window(), one, data.Secondary, promptCtx) {
 					return
@@ -67,8 +67,8 @@ func OpenEachPageRef(table *unison.Table) {
 	promptCtx := make(map[string]bool)
 	for _, row := range table.SelectedRows(false) {
 		if n, ok := row.(*Node); ok {
-			var data node.CellData
-			n.Data().CellData(node.PageRefCellAlias, &data)
+			var data gurps.CellData
+			n.Data().CellData(gurps.PageRefCellAlias, &data)
 			for _, one := range settings.ExtractPageReferences(data.Primary) {
 				if settings.OpenPageReference(table.Window(), one, data.Secondary, promptCtx) {
 					return

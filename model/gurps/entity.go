@@ -232,6 +232,9 @@ func (e *Entity) ensureAttachments() {
 	for _, one := range e.OtherEquipment {
 		one.SetOwningEntity(e)
 	}
+	for _, one := range e.Notes {
+		one.SetOwningEntity(e)
+	}
 }
 
 func (e *Entity) processFeatures() {

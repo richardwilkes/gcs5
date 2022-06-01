@@ -22,7 +22,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
 	"github.com/richardwilkes/gcs/model/jio"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -32,7 +31,7 @@ import (
 
 var (
 	_ WeaponOwner = &Advantage{}
-	_ node.Node   = &Advantage{}
+	_ Node        = &Advantage{}
 )
 
 // Columns that can be used with the advantage method .CellData()
@@ -156,23 +155,23 @@ func (a *Advantage) transferOldTypeFlagToTags(name string, flag bool) {
 }
 
 // CellData returns the cell data information for the given column.
-func (a *Advantage) CellData(column int, data *node.CellData) {
+func (a *Advantage) CellData(column int, data *CellData) {
 	switch column {
 	case AdvantageDescriptionColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = a.String()
 		data.Secondary = a.SecondaryText()
 		data.Disabled = a.Disabled
 		data.UnsatisfiedReason = a.UnsatisfiedReason
 	case AdvantagePointsColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = a.AdjustedPoints().String()
 		data.Alignment = unison.EndAlignment
 	case AdvantageTagsColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = CombineTags(a.Tags)
-	case AdvantageReferenceColumn, node.PageRefCellAlias:
-		data.Type = node.PageRef
+	case AdvantageReferenceColumn, PageRefCellAlias:
+		data.Type = PageRef
 		data.Primary = a.PageRef
 		data.Secondary = a.Name
 	}

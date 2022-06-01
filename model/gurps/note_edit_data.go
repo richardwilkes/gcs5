@@ -11,9 +11,7 @@
 
 package gurps
 
-import "github.com/richardwilkes/gcs/model/node"
-
-var _ node.EditorData[*Note] = &NoteEditData{}
+var _ EditorData[*Note] = &NoteEditData{}
 
 // NoteEditData holds the Note data that can be edited by the UI detail editor.
 type NoteEditData struct {

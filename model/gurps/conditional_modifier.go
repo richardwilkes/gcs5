@@ -14,13 +14,12 @@ package gurps
 import (
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/fxp"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/unison"
 )
 
-var _ node.Node = &ConditionalModifier{}
+var _ Node = &ConditionalModifier{}
 
 // Columns that can be used with the conditional modifier method .CellData()
 const (
@@ -98,21 +97,30 @@ func (m *ConditionalModifier) SetOpen(_ bool) {
 }
 
 // NodeChildren returns the children of this node, if any.
-func (m *ConditionalModifier) NodeChildren() []node.Node {
+func (m *ConditionalModifier) NodeChildren() []Node {
 	return nil
 }
 
 // CellData returns the cell data information for the given column.
-func (m *ConditionalModifier) CellData(column int, data *node.CellData) {
+func (m *ConditionalModifier) CellData(column int, data *CellData) {
 	switch column {
 	case ConditionalModifierValueColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = m.Total().StringWithSign()
 		data.Alignment = unison.EndAlignment
 	case ConditionalModifierDescriptionColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = m.From
-	case node.PageRefCellAlias:
-		data.Type = node.PageRef
+	case PageRefCellAlias:
+		data.Type = PageRef
 	}
+}
+
+// OwningEntity returns the owning Entity.
+func (m *ConditionalModifier) OwningEntity() *Entity {
+	return nil
+}
+
+// SetOwningEntity sets the owning entity and configures any sub-components as needed.
+func (m *ConditionalModifier) SetOwningEntity(_ *Entity) {
 }

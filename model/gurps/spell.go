@@ -23,7 +23,6 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/jio"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -32,7 +31,10 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-var _ node.Node = &Spell{}
+var (
+	_ Node              = &Spell{}
+	_ TechLevelProvider = &Spell{}
+)
 
 // Columns that can be used with the spell method .CellData()
 const (
@@ -177,63 +179,63 @@ func (s *Spell) UnmarshalJSON(data []byte) error {
 }
 
 // CellData returns the cell data information for the given column.
-func (s *Spell) CellData(column int, data *node.CellData) {
+func (s *Spell) CellData(column int, data *CellData) {
 	switch column {
 	case SpellDescriptionColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = s.Description()
 		data.Secondary = s.SecondaryText()
 		data.UnsatisfiedReason = s.UnsatisfiedReason
 	case SpellResistColumn:
 		if !s.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = s.Resist
 		}
 	case SpellClassColumn:
 		if !s.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = s.Class
 		}
 	case SpellCollegeColumn:
 		if !s.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = strings.Join(s.College, ", ")
 		}
 	case SpellCastCostColumn:
 		if !s.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = s.CastingCost
 		}
 	case SpellMaintainCostColumn:
 		if !s.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = s.MaintenanceCost
 		}
 	case SpellCastTimeColumn:
 		if !s.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = s.CastingTime
 		}
 	case SpellDurationColumn:
 		if !s.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = s.Duration
 		}
 	case SpellDifficultyColumn:
 		if !s.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			data.Primary = s.Difficulty.Description(s.Entity)
 		}
 	case SpellTagsColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = CombineTags(s.Tags)
-	case SpellReferenceColumn, node.PageRefCellAlias:
-		data.Type = node.PageRef
+	case SpellReferenceColumn, PageRefCellAlias:
+		data.Type = PageRef
 		data.Primary = s.PageRef
 		data.Secondary = s.Name
 	case SpellLevelColumn:
 		if !s.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			level := s.CalculateLevel()
 			data.Primary = level.LevelAsString(s.Container())
 			if level.Tooltip != "" {
@@ -243,7 +245,7 @@ func (s *Spell) CellData(column int, data *node.CellData) {
 		}
 	case SpellRelativeLevelColumn:
 		if !s.Container() {
-			data.Type = node.Text
+			data.Type = Text
 			rsl := s.AdjustedRelativeLevel()
 			if rsl == fxp.Min {
 				data.Primary = "-"
@@ -255,7 +257,7 @@ func (s *Spell) CellData(column int, data *node.CellData) {
 			}
 		}
 	case SpellPointsColumn:
-		data.Type = node.Text
+		data.Type = Text
 		var tooltip xio.ByteBuffer
 		data.Primary = s.AdjustedPoints(&tooltip).String()
 		data.Alignment = unison.EndAlignment
@@ -263,7 +265,7 @@ func (s *Spell) CellData(column int, data *node.CellData) {
 			data.Tooltip = IncludesModifiersFrom + ":" + tooltip.String()
 		}
 	case SpellDescriptionForPageColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = s.Description()
 		data.Secondary = s.SecondaryText()
 		if !s.Container() {
@@ -703,4 +705,19 @@ func bestCollegeSpellPointBonus(entity *Entity, colleges, tags []string, tooltip
 		best = 0
 	}
 	return best
+}
+
+// TL implements TechLevelProvider.
+func (s *Spell) TL() string {
+	if s.TechLevel != nil {
+		return *s.TechLevel
+	}
+	return ""
+}
+
+// SetTL implements TechLevelProvider.
+func (s *Spell) SetTL(tl string) {
+	if s.TechLevel != nil {
+		*s.TechLevel = tl
+	}
 }

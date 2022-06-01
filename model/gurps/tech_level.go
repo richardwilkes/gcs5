@@ -17,6 +17,13 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 )
 
+// TechLevelProvider defines methods that a TechLevel provider must implement.
+type TechLevelProvider interface {
+	Node
+	TL() string
+	SetTL(tl string)
+}
+
 // ExtractTechLevel extracts the first number it finds in the string and returns that as the tech level. The start and
 // end (inclusive) indexes within the string where the number resided are returned, but will be -1 if the string didn't
 // contain a resolvable number. The returned tech level will be clamped to the range 0 to 12.

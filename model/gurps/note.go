@@ -17,12 +17,11 @@ import (
 
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/jio"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 )
 
-var _ node.Node = &Note{}
+var _ Node = &Note{}
 
 // Columns that can be used with the note method .CellData()
 const (
@@ -38,6 +37,7 @@ const (
 // Note holds a note.
 type Note struct {
 	NoteData
+	Entity *Entity
 	Parent *Note
 }
 
@@ -72,11 +72,12 @@ func SaveNotes(notes []*Note, filePath string) error {
 }
 
 // NewNote creates a new Note.
-func NewNote(_ *Entity, parent *Note, container bool) *Note {
+func NewNote(entity *Entity, parent *Note, container bool) *Note {
 	n := &Note{
 		NoteData: NoteData{
 			ContainerBase: newContainerBase[*Note](noteTypeKey, container),
 		},
+		Entity: entity,
 		Parent: parent,
 	}
 	n.Text = n.Kind()
@@ -105,13 +106,13 @@ func (n *Note) UnmarshalJSON(data []byte) error {
 }
 
 // CellData returns the cell data information for the given column.
-func (n *Note) CellData(column int, data *node.CellData) {
+func (n *Note) CellData(column int, data *CellData) {
 	switch column {
 	case NoteTextColumn:
-		data.Type = node.Text
+		data.Type = Text
 		data.Primary = n.Text
-	case NoteReferenceColumn, node.PageRefCellAlias:
-		data.Type = node.PageRef
+	case NoteReferenceColumn, PageRefCellAlias:
+		data.Type = PageRef
 		data.Primary = n.PageRef
 		data.Secondary = n.Text
 	}
@@ -126,4 +127,19 @@ func (n *Note) Depth() int {
 		p = p.Parent
 	}
 	return count
+}
+
+// OwningEntity returns the owning Entity.
+func (n *Note) OwningEntity() *Entity {
+	return n.Entity
+}
+
+// SetOwningEntity sets the owning entity and configures any sub-components as needed.
+func (n *Note) SetOwningEntity(entity *Entity) {
+	n.Entity = entity
+	if n.Container() {
+		for _, child := range n.Children {
+			child.SetOwningEntity(entity)
+		}
+	}
 }

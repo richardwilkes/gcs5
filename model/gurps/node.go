@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package node
+package gurps
 
 import (
 	"github.com/google/uuid"
@@ -18,6 +18,8 @@ import (
 // Node defines the methods required of nodes in our tables.
 type Node interface {
 	UUID() uuid.UUID
+	OwningEntity() *Entity
+	SetOwningEntity(entity *Entity)
 	Kind() string
 	Container() bool
 	NodeChildren() []Node

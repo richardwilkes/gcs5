@@ -15,11 +15,10 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/toolbox/txt"
 )
 
-var _ node.EditorData[*Equipment] = &EquipmentEditData{}
+var _ EditorData[*Equipment] = &EquipmentEditData{}
 
 // EquipmentEditData holds the Equipment data that can be edited by the UI detail editor.
 type EquipmentEditData struct {

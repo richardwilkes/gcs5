@@ -15,11 +15,10 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/toolbox/txt"
 )
 
-var _ node.EditorData[*Skill] = &SkillEditData{}
+var _ EditorData[*Skill] = &SkillEditData{}
 
 // SkillEditData holds the Skill data that can be edited by the UI detail editor.
 type SkillEditData struct {

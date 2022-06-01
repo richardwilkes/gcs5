@@ -13,11 +13,10 @@ package gurps
 
 import (
 	"github.com/richardwilkes/gcs/model/fxp"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/toolbox/txt"
 )
 
-var _ node.EditorData[*Spell] = &SpellEditData{}
+var _ EditorData[*Spell] = &SpellEditData{}
 
 // SpellEditData holds the Spell data that can be edited by the UI detail editor.
 type SpellEditData struct {

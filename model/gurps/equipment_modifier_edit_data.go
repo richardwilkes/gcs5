@@ -14,11 +14,10 @@ package gurps
 import (
 	"github.com/richardwilkes/gcs/model/gurps/equipment"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
-	"github.com/richardwilkes/gcs/model/node"
 	"github.com/richardwilkes/toolbox/txt"
 )
 
-var _ node.EditorData[*EquipmentModifier] = &EquipmentModifierEditData{}
+var _ EditorData[*EquipmentModifier] = &EquipmentModifierEditData{}
 
 // EquipmentModifierEditData holds the EquipmentModifier data that can be edited by the UI detail editor.
 type EquipmentModifierEditData struct {
