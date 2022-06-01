@@ -133,7 +133,6 @@ func (f *NumericField[T]) modified() {
 			mgr.Add(&unison.UndoEdit[string]{
 				ID:       f.undoID,
 				EditName: f.undoTitle,
-				EditCost: 1,
 				UndoFunc: func(e *unison.UndoEdit[string]) { f.setWithoutUndo(e.BeforeData, true) },
 				RedoFunc: func(e *unison.UndoEdit[string]) { f.setWithoutUndo(e.AfterData, true) },
 				AbsorbFunc: func(e *unison.UndoEdit[string], other unison.Undoable) bool {

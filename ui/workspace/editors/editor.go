@@ -203,7 +203,6 @@ func (e *editor[N, D]) apply() {
 		mgr.Add(&unison.UndoEdit[D]{
 			ID:       unison.NextUndoID(),
 			EditName: fmt.Sprintf(i18n.Text("%s Changes"), target.Kind()),
-			EditCost: 1,
 			UndoFunc: func(edit *unison.UndoEdit[D]) {
 				edit.BeforeData.ApplyTo(target)
 				owner.Rebuild(true)

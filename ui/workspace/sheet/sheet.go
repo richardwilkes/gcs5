@@ -399,6 +399,18 @@ func (s *Sheet) createLists() {
 	if len(children) < 2 {
 		return
 	}
+	h, v := s.scroll.Position()
+	refocusOn := -1
+	if wnd := s.Window(); wnd != nil {
+		if focus := wnd.Focus(); focus != nil {
+			for i, one := range s.Lists {
+				if one.table.Self == focus.Self {
+					refocusOn = i
+					break
+				}
+			}
+		}
+	}
 	for i := len(children) - 1; i > 1; i-- {
 		page.RemoveChildAtIndex(i)
 	}
@@ -453,6 +465,10 @@ func (s *Sheet) createLists() {
 		page.AddChild(rowPanel)
 	}
 	page.ApplyPreferredSize()
+	if refocusOn != -1 {
+		s.Lists[refocusOn].table.RequestFocus()
+	}
+	s.scroll.SetPosition(h, v)
 }
 
 // SheetSettingsUpdated implements gurps.SheetSettingsResponder.

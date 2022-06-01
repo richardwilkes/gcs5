@@ -232,6 +232,18 @@ func (d *Template) save(forceSaveAs bool) bool {
 }
 
 func (d *Template) createLists() {
+	h, v := d.scroll.Position()
+	refocusOn := -1
+	if wnd := d.Window(); wnd != nil {
+		if focus := wnd.Focus(); focus != nil {
+			for i, one := range d.Lists {
+				if one.table.Self == focus.Self {
+					refocusOn = i
+					break
+				}
+			}
+		}
+	}
 	d.content.RemoveAllChildren()
 	for _, col := range settings.Global().Sheet.BlockLayout.ByRow() {
 		rowPanel := unison.NewPanel()
@@ -270,6 +282,10 @@ func (d *Template) createLists() {
 		}
 	}
 	d.content.ApplyPreferredSize()
+	if refocusOn != -1 {
+		d.Lists[refocusOn].table.RequestFocus()
+	}
+	d.scroll.SetPosition(h, v)
 }
 
 // SheetSettingsUpdated implements gurps.SheetSettingsResponder.

@@ -20,7 +20,6 @@ import (
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/tbl"
-	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/geom"
@@ -656,63 +655,9 @@ func (p *PageList) installDecrementTechLevelHandler() {
 }
 
 func (p *PageList) installConvertToContainerHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.ConvertToContainerItemID, func() bool {
-		for _, row := range p.table.SelectedRows(false) {
-			if eqp := tbl.ExtractFromRowData[*gurps.Equipment](row); eqp != nil && !eqp.Container() {
-				return true
-			}
-		}
-		return false
-	}, func() {
-		type containerConversion struct {
-			Target   *gurps.Equipment
-			Type     string
-			Quantity fxp.Int
-		}
-		var before, after []*containerConversion
-		for _, row := range p.table.SelectedRows(false) {
-			if eqp := tbl.ExtractFromRowData[*gurps.Equipment](row); eqp != nil && !eqp.Container() {
-				before = append(before, &containerConversion{
-					Target:   eqp,
-					Type:     eqp.Type,
-					Quantity: eqp.Quantity,
-				})
-				eqp.Type += gurps.ContainerKeyPostfix
-				eqp.Quantity = fxp.One
-				after = append(after, &containerConversion{
-					Target:   eqp,
-					Type:     eqp.Type,
-					Quantity: eqp.Quantity,
-				})
-			}
-		}
-		if len(before) > 0 {
-			if mgr := unison.UndoManagerFor(p); mgr != nil {
-				mgr.Add(&unison.UndoEdit[[]*containerConversion]{
-					ID:       unison.NextUndoID(),
-					EditName: i18n.Text("Convert to Container"),
-					EditCost: 1,
-					UndoFunc: func(edit *unison.UndoEdit[[]*containerConversion]) {
-						for _, one := range edit.BeforeData {
-							one.Target.Type = one.Type
-							one.Target.Quantity = one.Quantity
-						}
-						owner.Rebuild(true)
-					},
-					RedoFunc: func(edit *unison.UndoEdit[[]*containerConversion]) {
-						for _, one := range edit.AfterData {
-							one.Target.Type = one.Type
-							one.Target.Quantity = one.Quantity
-						}
-						owner.Rebuild(true)
-					},
-					BeforeData: before,
-					AfterData:  after,
-				})
-			}
-			owner.Rebuild(true)
-		}
-	})
+	p.installPerformHandlers(constants.ConvertToContainerItemID,
+		func() bool { return canConvertToContainer(p.table) },
+		func() { convertToContainer(owner, p.table) })
 }
 
 // SelectedNodes returns the set of selected nodes. If 'minimal' is true, then children of selected rows that may also
