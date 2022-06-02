@@ -12,7 +12,6 @@
 package sheet
 
 import (
-	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/tbl"
@@ -35,22 +34,19 @@ func (c *containerConversionList) Apply() {
 }
 
 type containerConversion struct {
-	Target   *gurps.Equipment
-	Type     string
-	Quantity fxp.Int
+	Target *gurps.Equipment
+	Type   string
 }
 
 func newContainerConversion(target *gurps.Equipment) *containerConversion {
 	return &containerConversion{
-		Target:   target,
-		Type:     target.Type,
-		Quantity: target.Quantity,
+		Target: target,
+		Type:   target.Type,
 	}
 }
 
 func (c *containerConversion) Apply() {
 	c.Target.Type = c.Type
-	c.Target.Quantity = c.Quantity
 }
 
 func canConvertToContainer(table *unison.Table) bool {
@@ -69,7 +65,6 @@ func convertToContainer(owner widget.Rebuildable, table *unison.Table) {
 		if eqp := tbl.ExtractFromRowData[*gurps.Equipment](row); eqp != nil && !eqp.Container() {
 			before.List = append(before.List, newContainerConversion(eqp))
 			eqp.Type += gurps.ContainerKeyPostfix
-			eqp.Quantity = fxp.One
 			after.List = append(after.List, newContainerConversion(eqp))
 		}
 	}

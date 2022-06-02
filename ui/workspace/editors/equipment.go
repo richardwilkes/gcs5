@@ -28,18 +28,16 @@ func EditEquipment(owner widget.Rebuildable, equipment *gurps.Equipment, carried
 		addNameLabelAndField(content, &e.editorData.Name)
 		addNotesLabelAndField(content, &e.editorData.LocalNotes)
 		addVTTNotesLabelAndField(content, &e.editorData.VTTNotes)
-		if !e.target.Container() {
-			qtyLabel := i18n.Text("Quantity")
-			if carried {
-				wrapper := addFlowWrapper(content, qtyLabel, 2)
-				addDecimalField(wrapper, qtyLabel, "", &e.editorData.Quantity, 0, fxp.Max-1)
-				addCheckBox(wrapper, i18n.Text("Equipped"), &e.editorData.Equipped)
-			} else {
-				addLabelAndDecimalField(content, qtyLabel, "", &e.editorData.Quantity, 0, fxp.Max-1)
-			}
-		}
 		addLabelAndStringField(content, i18n.Text("Tech Level"), gurps.TechLevelInfo, &e.editorData.TechLevel)
 		addLabelAndStringField(content, i18n.Text("Legality Class"), gurps.LegalityClassInfo, &e.editorData.LegalityClass)
+		qtyLabel := i18n.Text("Quantity")
+		if carried {
+			wrapper := addFlowWrapper(content, qtyLabel, 2)
+			addDecimalField(wrapper, qtyLabel, "", &e.editorData.Quantity, 0, fxp.Max-1)
+			addCheckBox(wrapper, i18n.Text("Equipped"), &e.editorData.Equipped)
+		} else {
+			addLabelAndDecimalField(content, qtyLabel, "", &e.editorData.Quantity, 0, fxp.Max-1)
+		}
 		valueLabel := i18n.Text("Value")
 		wrapper := addFlowWrapper(content, valueLabel, 3)
 		addDecimalField(wrapper, valueLabel, "", &e.editorData.Value, 0, fxp.Max-1)
@@ -47,12 +45,13 @@ func EditEquipment(owner widget.Rebuildable, equipment *gurps.Equipment, carried
 		wrapper.AddChild(widget.NewNonEditableField(func(field *widget.NonEditableField) {
 			var value fxp.Int
 			if e.editorData.Quantity > 0 {
-				value = gurps.ValueAdjustedForModifiers(e.editorData.Value, e.editorData.Modifiers).Mul(e.editorData.Quantity)
+				value = gurps.ValueAdjustedForModifiers(e.editorData.Value, e.editorData.Modifiers)
 				if e.target.Container() {
 					for _, one := range e.target.Children {
 						value += one.ExtendedValue()
 					}
 				}
+				value = value.Mul(e.editorData.Quantity)
 			}
 			field.Text = value.Comma()
 			field.MarkForLayoutAndRedraw()

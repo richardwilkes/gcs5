@@ -346,13 +346,13 @@ func (e *Equipment) ExtendedValue() fxp.Int {
 	if e.Quantity <= 0 {
 		return 0
 	}
-	value := e.AdjustedValue().Mul(e.Quantity)
+	value := e.AdjustedValue()
 	if e.Container() {
 		for _, one := range e.Children {
 			value += one.ExtendedValue()
 		}
 	}
-	return value
+	return value.Mul(e.Quantity)
 }
 
 // AdjustedWeight returns the weight after adjustments for any modifiers. Does not include the weight of children.
@@ -375,7 +375,7 @@ func ExtendedWeightAdjustedForModifiers(defUnits measure.WeightUnits, qty fxp.In
 	}
 	var base fxp.Int
 	if !forSkills || !weightIgnoredForSkills {
-		base = fxp.Int(WeightAdjustedForModifiers(baseWeight, modifiers, defUnits)).Mul(qty)
+		base = fxp.Int(WeightAdjustedForModifiers(baseWeight, modifiers, defUnits))
 	}
 	if len(children) != 0 {
 		var contained fxp.Int
@@ -412,7 +412,7 @@ func ExtendedWeightAdjustedForModifiers(defUnits measure.WeightUnits, qty fxp.In
 		}
 		base += (contained - reduction).Max(0)
 	}
-	return measure.Weight(base)
+	return measure.Weight(base.Mul(qty))
 }
 
 // FillWithNameableKeys adds any nameable keys found in this Advantage to the provided map.
