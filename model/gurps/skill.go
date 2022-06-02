@@ -32,8 +32,9 @@ import (
 )
 
 var (
-	_ Node              = &Skill{}
-	_ TechLevelProvider = &Skill{}
+	_ Node                    = &Skill{}
+	_ TechLevelProvider       = &Skill{}
+	_ SkillAdjustmentProvider = &Skill{}
 )
 
 // Columns that can be used with the skill method .CellData()
@@ -386,6 +387,17 @@ func (s *Skill) AdjustedRelativeLevel() fxp.Int {
 	return fxp.Min
 }
 
+// RawPoints returns the unadjusted points.
+func (s *Skill) RawPoints() fxp.Int {
+	return s.Points
+}
+
+// SetRawPoints sets the unadjusted points and updates the level. Returns true if the level changed.
+func (s *Skill) SetRawPoints(points fxp.Int) bool {
+	s.Points = points
+	return s.UpdateLevel()
+}
+
 // AdjustedPoints returns the points, adjusted for any bonuses.
 func (s *Skill) AdjustedPoints(tooltip *xio.ByteBuffer) fxp.Int {
 	if s.Container() {
@@ -420,8 +432,7 @@ func (s *Skill) IncrementSkillLevel() {
 		}
 		oldLevel := s.CalculateLevel().Level
 		for points := basePoints; points < maxPoints; points += fxp.One {
-			s.Points = points
-			s.UpdateLevel()
+			s.SetRawPoints(points)
 			if s.CalculateLevel().Level > oldLevel {
 				break
 			}
@@ -442,8 +453,7 @@ func (s *Skill) DecrementSkillLevel() {
 		minPoints = minPoints.Max(0)
 		oldLevel := s.CalculateLevel().Level
 		for points := basePoints; points >= minPoints; points -= fxp.One {
-			s.Points = points
-			s.UpdateLevel()
+			s.SetRawPoints(points)
 			if s.CalculateLevel().Level < oldLevel {
 				break
 			}
@@ -451,8 +461,7 @@ func (s *Skill) DecrementSkillLevel() {
 		if s.Points > 0 {
 			oldLevel = s.CalculateLevel().Level
 			for s.Points > 0 {
-				s.Points -= fxp.One
-				s.UpdateLevel()
+				s.SetRawPoints((s.Points - fxp.One).Max(0))
 				if s.CalculateLevel().Level != oldLevel {
 					s.Points += fxp.One
 					break

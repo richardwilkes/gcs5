@@ -13,6 +13,7 @@ package gurps
 
 import (
 	"github.com/google/uuid"
+	"github.com/richardwilkes/gcs/model/fxp"
 )
 
 // Node defines the methods required of nodes in our tables.
@@ -26,6 +27,20 @@ type Node interface {
 	Open() bool
 	SetOpen(open bool)
 	CellData(column int, data *CellData)
+}
+
+// RawPointsAdjuster defines methods for nodes that can have their raw points adjusted must implement.
+type RawPointsAdjuster interface {
+	Node
+	RawPoints() fxp.Int
+	SetRawPoints(points fxp.Int) bool
+}
+
+// SkillAdjustmentProvider defines methods for nodes that can have their skill level adjusted must implement.
+type SkillAdjustmentProvider interface {
+	RawPointsAdjuster
+	IncrementSkillLevel()
+	DecrementSkillLevel()
 }
 
 // EditorData defines the methods required of editor data.

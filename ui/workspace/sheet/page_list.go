@@ -79,8 +79,8 @@ func NewSkillsPageList(owner widget.Rebuildable, provider gurps.ListProvider) *P
 	p := newPageList(owner, tbl.NewSkillsProvider(provider, true))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
-	p.installIncrementSkillHandler()
-	p.installDecrementSkillHandler()
+	p.installIncrementSkillHandler(owner)
+	p.installDecrementSkillHandler(owner)
 	p.installIncrementTechLevelHandler(owner)
 	p.installDecrementTechLevelHandler(owner)
 	return p
@@ -91,8 +91,8 @@ func NewSpellsPageList(owner widget.Rebuildable, provider gurps.SpellListProvide
 	p := newPageList(owner, tbl.NewSpellsProvider(provider, true))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
-	p.installIncrementSkillHandler()
-	p.installDecrementSkillHandler()
+	p.installIncrementSkillHandler(owner)
+	p.installDecrementSkillHandler(owner)
 	return p
 }
 
@@ -468,88 +468,16 @@ func (p *PageList) installDecrementUsesHandler() {
 	})
 }
 
-func (p *PageList) installIncrementSkillHandler() {
-	p.installPerformHandlers(constants.IncrementSkillLevelItemID, func() bool {
-		for _, row := range p.table.SelectedRows(false) {
-			if n, ok := row.(*tbl.Node); ok {
-				switch item := n.Data().(type) {
-				case *gurps.Skill:
-					if !item.Container() {
-						return true
-					}
-				case *gurps.Spell:
-					if !item.Container() {
-						return true
-					}
-				}
-			}
-		}
-		return false
-	}, func() {
-		var entity *gurps.Entity
-		for _, row := range p.table.SelectedRows(false) {
-			if n, ok := row.(*tbl.Node); ok {
-				switch item := n.Data().(type) {
-				case *gurps.Skill:
-					if !item.Container() {
-						item.IncrementSkillLevel()
-						entity = item.Entity
-					}
-				case *gurps.Spell:
-					if !item.Container() {
-						item.IncrementSkillLevel()
-						entity = item.Entity
-					}
-				}
-			}
-		}
-		if entity != nil {
-			entity.Recalculate()
-			widget.MarkModified(p)
-		}
-	})
+func (p *PageList) installIncrementSkillHandler(owner widget.Rebuildable) {
+	p.installPerformHandlers(constants.IncrementSkillLevelItemID,
+		func() bool { return canAdjustSkillLevel(p.table, true) },
+		func() { adjustSkillLevel(owner, p.table, true) })
 }
 
-func (p *PageList) installDecrementSkillHandler() {
-	p.installPerformHandlers(constants.DecrementSkillLevelItemID, func() bool {
-		for _, row := range p.table.SelectedRows(false) {
-			if n, ok := row.(*tbl.Node); ok {
-				switch item := n.Data().(type) {
-				case *gurps.Skill:
-					if !item.Container() && item.Points > 0 {
-						return true
-					}
-				case *gurps.Spell:
-					if !item.Container() && item.Points > 0 {
-						return true
-					}
-				}
-			}
-		}
-		return false
-	}, func() {
-		var entity *gurps.Entity
-		for _, row := range p.table.SelectedRows(false) {
-			if n, ok := row.(*tbl.Node); ok {
-				switch item := n.Data().(type) {
-				case *gurps.Skill:
-					if !item.Container() {
-						item.DecrementSkillLevel()
-						entity = item.Entity
-					}
-				case *gurps.Spell:
-					if !item.Container() {
-						item.DecrementSkillLevel()
-						entity = item.Entity
-					}
-				}
-			}
-		}
-		if entity != nil {
-			entity.Recalculate()
-			widget.MarkModified(p)
-		}
-	})
+func (p *PageList) installDecrementSkillHandler(owner widget.Rebuildable) {
+	p.installPerformHandlers(constants.DecrementSkillLevelItemID,
+		func() bool { return canAdjustSkillLevel(p.table, false) },
+		func() { adjustSkillLevel(owner, p.table, false) })
 }
 
 func (p *PageList) installIncrementTechLevelHandler(owner widget.Rebuildable) {

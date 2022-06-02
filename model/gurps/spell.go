@@ -32,8 +32,9 @@ import (
 )
 
 var (
-	_ Node              = &Spell{}
-	_ TechLevelProvider = &Spell{}
+	_ Node                    = &Spell{}
+	_ TechLevelProvider       = &Spell{}
+	_ SkillAdjustmentProvider = &Spell{}
 )
 
 // Columns that can be used with the spell method .CellData()
@@ -107,8 +108,7 @@ func NewSpell(entity *Entity, parent *Spell, container bool) *Spell {
 func NewRitualMagicSpell(entity *Entity, parent *Spell, _ bool) *Spell {
 	s := newSpell(entity, parent, gid.RitualMagicSpell, false)
 	s.RitualSkillName = "Ritual Magic"
-	s.Points = 0
-	s.UpdateLevel()
+	s.SetRawPoints(0)
 	return s
 }
 
@@ -372,8 +372,7 @@ func (s *Spell) IncrementSkillLevel() {
 		}
 		oldLevel := s.CalculateLevel().Level
 		for points := basePoints; points < maxPoints; points += fxp.One {
-			s.Points = points
-			s.UpdateLevel()
+			s.SetRawPoints(points)
 			if s.CalculateLevel().Level > oldLevel {
 				break
 			}
@@ -394,8 +393,7 @@ func (s *Spell) DecrementSkillLevel() {
 		minPoints = minPoints.Max(0)
 		oldLevel := s.CalculateLevel().Level
 		for points := basePoints; points >= minPoints; points -= fxp.One {
-			s.Points = points
-			s.UpdateLevel()
+			s.SetRawPoints(points)
 			if s.CalculateLevel().Level < oldLevel {
 				break
 			}
@@ -403,8 +401,7 @@ func (s *Spell) DecrementSkillLevel() {
 		if s.Points > 0 {
 			oldLevel = s.CalculateLevel().Level
 			for s.Points > 0 {
-				s.Points -= fxp.One
-				s.UpdateLevel()
+				s.SetRawPoints((s.Points - fxp.One).Max(0))
 				if s.CalculateLevel().Level != oldLevel {
 					s.Points += fxp.One
 					break
@@ -657,6 +654,17 @@ func (s *Spell) String() string {
 		}
 	}
 	return buffer.String()
+}
+
+// RawPoints returns the unadjusted points.
+func (s *Spell) RawPoints() fxp.Int {
+	return s.Points
+}
+
+// SetRawPoints sets the unadjusted points and updates the level. Returns true if the level changed.
+func (s *Spell) SetRawPoints(points fxp.Int) bool {
+	s.Points = points
+	return s.UpdateLevel()
 }
 
 // AdjustedPoints returns the points, adjusted for any bonuses.
