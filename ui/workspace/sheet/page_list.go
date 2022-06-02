@@ -21,7 +21,6 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/tbl"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
@@ -53,8 +52,8 @@ func NewCarriedEquipmentPageList(owner widget.Rebuildable, provider gurps.ListPr
 	p.installToggleStateHandler()
 	p.installIncrementHandler()
 	p.installDecrementHandler()
-	p.installIncrementUsesHandler()
-	p.installDecrementUsesHandler()
+	p.installIncrementUsesHandler(owner)
+	p.installDecrementUsesHandler(owner)
 	p.installIncrementTechLevelHandler(owner)
 	p.installDecrementTechLevelHandler(owner)
 	p.installConvertToContainerHandler(owner)
@@ -66,8 +65,8 @@ func NewOtherEquipmentPageList(owner widget.Rebuildable, provider gurps.ListProv
 	p := newPageList(owner, tbl.NewEquipmentProvider(provider, true, false))
 	p.installIncrementHandler()
 	p.installDecrementHandler()
-	p.installIncrementUsesHandler()
-	p.installDecrementUsesHandler()
+	p.installIncrementUsesHandler(owner)
+	p.installDecrementUsesHandler(owner)
 	p.installIncrementTechLevelHandler(owner)
 	p.installDecrementTechLevelHandler(owner)
 	p.installConvertToContainerHandler(owner)
@@ -412,60 +411,16 @@ func decrement(value fxp.Int) fxp.Int {
 	return v
 }
 
-func (p *PageList) installIncrementUsesHandler() {
-	p.installPerformHandlers(constants.IncrementUsesItemID, func() bool {
-		for _, row := range p.table.SelectedRows(false) {
-			if n, ok := row.(*tbl.Node); ok {
-				var e *gurps.Equipment
-				if e, ok = n.Data().(*gurps.Equipment); ok && e.Uses < e.MaxUses {
-					return true
-				}
-			}
-		}
-		return false
-	}, func() {
-		updated := false
-		for _, row := range p.table.SelectedRows(false) {
-			if n, ok := row.(*tbl.Node); ok {
-				var e *gurps.Equipment
-				if e, ok = n.Data().(*gurps.Equipment); ok && e.Uses < e.MaxUses {
-					e.Uses = xmath.Min(e.Uses+1, e.MaxUses)
-					updated = true
-				}
-			}
-		}
-		if updated {
-			widget.MarkModified(p)
-		}
-	})
+func (p *PageList) installIncrementUsesHandler(owner widget.Rebuildable) {
+	p.installPerformHandlers(constants.IncrementUsesItemID,
+		func() bool { return canAdjustUses(p.table, 1) },
+		func() { adjustUses(owner, p.table, 1) })
 }
 
-func (p *PageList) installDecrementUsesHandler() {
-	p.installPerformHandlers(constants.DecrementUsesItemID, func() bool {
-		for _, row := range p.table.SelectedRows(false) {
-			if n, ok := row.(*tbl.Node); ok {
-				var e *gurps.Equipment
-				if e, ok = n.Data().(*gurps.Equipment); ok && e.MaxUses > 0 && e.Uses > 0 {
-					return true
-				}
-			}
-		}
-		return false
-	}, func() {
-		updated := false
-		for _, row := range p.table.SelectedRows(false) {
-			if n, ok := row.(*tbl.Node); ok {
-				var e *gurps.Equipment
-				if e, ok = n.Data().(*gurps.Equipment); ok && e.MaxUses > 0 && e.Uses > 0 {
-					e.Uses = xmath.Max(e.Uses-1, 0)
-					updated = true
-				}
-			}
-		}
-		if updated {
-			widget.MarkModified(p)
-		}
-	})
+func (p *PageList) installDecrementUsesHandler(owner widget.Rebuildable) {
+	p.installPerformHandlers(constants.DecrementUsesItemID,
+		func() bool { return canAdjustUses(p.table, -1) },
+		func() { adjustUses(owner, p.table, -1) })
 }
 
 func (p *PageList) installIncrementSkillHandler(owner widget.Rebuildable) {
