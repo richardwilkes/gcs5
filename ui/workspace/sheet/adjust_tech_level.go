@@ -31,6 +31,10 @@ func (a *adjustTechLevelList) Apply() {
 	for _, one := range a.List {
 		one.Apply()
 	}
+	a.Finish()
+}
+
+func (a *adjustTechLevelList) Finish() {
 	entity := a.List[0].Target.OwningEntity()
 	if entity != nil {
 		entity.Recalculate()
@@ -94,10 +98,6 @@ func adjustTechLevel(owner widget.Rebuildable, table *unison.Table, amount fxp.I
 				AfterData:  after,
 			})
 		}
-		entity := before.List[0].Target.OwningEntity()
-		if entity != nil {
-			entity.Recalculate()
-		}
-		widget.MarkModified(before.Owner)
+		before.Finish()
 	}
 }

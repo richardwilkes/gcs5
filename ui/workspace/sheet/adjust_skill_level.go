@@ -65,10 +65,6 @@ func adjustSkillLevel(owner widget.Rebuildable, table *unison.Table, increment b
 				AfterData:  after,
 			})
 		}
-		entity := before.List[0].Target.OwningEntity()
-		if entity != nil {
-			entity.Recalculate()
-		}
-		widget.MarkModified(before.Owner)
+		before.Finish()
 	}
 }

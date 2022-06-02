@@ -40,7 +40,7 @@ type PageList struct {
 // NewAdvantagesPageList creates the advantages page list.
 func NewAdvantagesPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
 	p := newPageList(owner, tbl.NewAdvantagesProvider(provider, true))
-	p.installToggleStateHandler()
+	p.installToggleDisabledHandler(owner)
 	p.installIncrementLevelHandler(owner)
 	p.installDecrementLevelHandler(owner)
 	return p
@@ -49,7 +49,7 @@ func NewAdvantagesPageList(owner widget.Rebuildable, provider gurps.ListProvider
 // NewCarriedEquipmentPageList creates the carried equipment page list.
 func NewCarriedEquipmentPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
 	p := newPageList(owner, tbl.NewEquipmentProvider(provider, true, true))
-	p.installToggleStateHandler()
+	p.installToggleEquippedHandler(owner)
 	p.installIncrementQuantityHandler(owner)
 	p.installDecrementQuantityHandler(owner)
 	p.installIncrementUsesHandler(owner)
@@ -251,38 +251,16 @@ func (p *PageList) installOpenPageReferenceHandlers() {
 		tbl.NewOpenEachPageRefFunc(p.table))
 }
 
-func (p *PageList) installToggleStateHandler() {
-	p.installPerformHandlers(constants.ToggleStateItemID, func() bool {
-		for _, row := range p.table.SelectedRows(false) {
-			if n, ok := row.(*tbl.Node); ok {
-				switch n.Data().(type) {
-				case *gurps.Advantage:
-					return true
-				case *gurps.Equipment:
-					return true
-				}
-			}
-		}
-		return false
-	}, func() {
-		var entity *gurps.Entity
-		for _, row := range p.table.SelectedRows(false) {
-			if n, ok := row.(*tbl.Node); ok {
-				switch item := n.Data().(type) {
-				case *gurps.Advantage:
-					item.Disabled = !item.Disabled
-					entity = item.Entity
-				case *gurps.Equipment:
-					item.Equipped = !item.Equipped
-					entity = item.Entity
-				}
-			}
-		}
-		if entity != nil {
-			entity.Recalculate()
-			widget.MarkModified(p)
-		}
-	})
+func (p *PageList) installToggleDisabledHandler(owner widget.Rebuildable) {
+	p.installPerformHandlers(constants.ToggleStateItemID,
+		func() bool { return canToggleDisabled(p.table) },
+		func() { toggleDisabled(owner, p.table) })
+}
+
+func (p *PageList) installToggleEquippedHandler(owner widget.Rebuildable) {
+	p.installPerformHandlers(constants.ToggleStateItemID,
+		func() bool { return canToggleEquipped(p.table) },
+		func() { toggleEquipped(owner, p.table) })
 }
 
 func (p *PageList) installIncrementPointsHandler(owner widget.Rebuildable) {

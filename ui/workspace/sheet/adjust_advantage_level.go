@@ -31,6 +31,10 @@ func (a *adjustAdvantageLevelList) Apply() {
 	for _, one := range a.List {
 		one.Apply()
 	}
+	a.Finish()
+}
+
+func (a *adjustAdvantageLevelList) Finish() {
 	entity := a.List[0].Target.OwningEntity()
 	if entity != nil {
 		entity.Recalculate()
@@ -101,10 +105,6 @@ func adjustAdvantageLevel(owner widget.Rebuildable, table *unison.Table, increme
 				AfterData:  after,
 			})
 		}
-		entity := before.List[0].Target.OwningEntity()
-		if entity != nil {
-			entity.Recalculate()
-		}
-		widget.MarkModified(before.Owner)
+		before.Finish()
 	}
 }

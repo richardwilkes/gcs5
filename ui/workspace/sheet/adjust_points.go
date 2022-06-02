@@ -31,6 +31,10 @@ func (a *adjustRawPointsList) Apply() {
 	for _, one := range a.List {
 		one.Apply()
 	}
+	a.Finish()
+}
+
+func (a *adjustRawPointsList) Finish() {
 	entity := a.List[0].Target.OwningEntity()
 	if entity != nil {
 		entity.Recalculate()
@@ -101,10 +105,6 @@ func adjustRawPoints(owner widget.Rebuildable, table *unison.Table, increment bo
 				AfterData:  after,
 			})
 		}
-		entity := before.List[0].Target.OwningEntity()
-		if entity != nil {
-			entity.Recalculate()
-		}
-		widget.MarkModified(before.Owner)
+		before.Finish()
 	}
 }

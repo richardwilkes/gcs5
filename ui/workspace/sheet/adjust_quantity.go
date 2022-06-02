@@ -31,6 +31,10 @@ func (a *adjustQuantityList) Apply() {
 	for _, one := range a.List {
 		one.Apply()
 	}
+	a.Finish()
+}
+
+func (a *adjustQuantityList) Finish() {
 	entity := a.List[0].Target.OwningEntity()
 	if entity != nil {
 		entity.Recalculate()
@@ -101,10 +105,6 @@ func adjustQuantity(owner widget.Rebuildable, table *unison.Table, increment boo
 				AfterData:  after,
 			})
 		}
-		entity := before.List[0].Target.OwningEntity()
-		if entity != nil {
-			entity.Recalculate()
-		}
-		widget.MarkModified(before.Owner)
+		before.Finish()
 	}
 }
