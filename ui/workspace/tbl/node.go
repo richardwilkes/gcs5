@@ -250,6 +250,25 @@ func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison
 		// approach.
 		if equipment, ok := n.data.(*gurps.Equipment); ok {
 			equipment.Equipped = c.Checked
+			if mgr := unison.UndoManagerFor(check); mgr != nil {
+				owner := widget.FindRebuildable(check)
+				mgr.Add(&unison.UndoEdit[*adjuster]{
+					ID:       unison.NextUndoID(),
+					EditName: i18n.Text("Toggle Equipped"),
+					UndoFunc: func(edit *unison.UndoEdit[*adjuster]) { edit.BeforeData.Apply() },
+					RedoFunc: func(edit *unison.UndoEdit[*adjuster]) { edit.AfterData.Apply() },
+					BeforeData: &adjuster{
+						Owner:    owner,
+						Target:   equipment,
+						Equipped: !equipment.Equipped,
+					},
+					AfterData: &adjuster{
+						Owner:    owner,
+						Target:   equipment,
+						Equipped: equipment.Equipped,
+					},
+				})
+			}
 			equipment.Entity.Recalculate()
 		}
 		if c.Checked {
@@ -265,6 +284,20 @@ func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison
 		return true
 	}
 	return check
+}
+
+type adjuster struct {
+	Owner    widget.Rebuildable
+	Target   *gurps.Equipment
+	Equipped bool
+}
+
+func (a *adjuster) Apply() {
+	a.Target.Equipped = a.Equipped
+	if a.Target.Entity != nil {
+		a.Target.Entity.Recalculate()
+	}
+	widget.MarkModified(a.Owner)
 }
 
 func (n *Node) createPageRefCell(text, highlight string, foreground unison.Ink) unison.Paneler {
