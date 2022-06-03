@@ -18,6 +18,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
+	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -93,6 +94,10 @@ func initSpellEditor(e *editor[*gurps.Spell, *gurps.SpellEditData], content *uni
 	addPageRefLabelAndField(content, &e.editorData.PageRef)
 	if !e.target.Container() {
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
+		content.AddChild(newMeleeWeaponsPanel(e.target.Entity, e.target,
+			gurps.ExtractWeaponsOfType(weapon.Melee, e.target.Weapons)))
+		content.AddChild(newRangedWeaponsPanel(e.target.Entity, e.target,
+			gurps.ExtractWeaponsOfType(weapon.Ranged, e.target.Weapons)))
 	}
 	return nil
 }

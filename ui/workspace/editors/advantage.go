@@ -16,6 +16,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/ancestry"
+	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -79,9 +80,16 @@ func initAdvantageEditor(e *editor[*gurps.Advantage, *gurps.AdvantageEditData], 
 		adjustPopupBlank(ancestryPopup, e.editorData.ContainerType != advantage.Race)
 	}
 	addPageRefLabelAndField(content, &e.editorData.PageRef)
-	if !e.target.Container() {
+	if e.target.Container() {
+		content.AddChild(newAdvantageModifiersPanel(e.target.Entity, e.target, e.target.Modifiers))
+	} else {
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
 		content.AddChild(newFeaturesPanel(e.target.Entity, e.target, &e.editorData.Features))
+		content.AddChild(newAdvantageModifiersPanel(e.target.Entity, e.target, e.target.Modifiers))
+		content.AddChild(newMeleeWeaponsPanel(e.target.Entity, e.target,
+			gurps.ExtractWeaponsOfType(weapon.Melee, e.target.Weapons)))
+		content.AddChild(newRangedWeaponsPanel(e.target.Entity, e.target,
+			gurps.ExtractWeaponsOfType(weapon.Ranged, e.target.Weapons)))
 	}
 	return func() {
 		if levelField != nil {

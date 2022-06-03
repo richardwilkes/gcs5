@@ -88,6 +88,17 @@ type Weapon struct {
 	Owner WeaponOwner
 }
 
+// ExtractWeaponsOfType filters the input list down to only those weapons of the given type.
+func ExtractWeaponsOfType(desiredType weapon.Type, list []*Weapon) []*Weapon {
+	var result []*Weapon
+	for _, w := range list {
+		if w.Type == desiredType {
+			result = append(result, w)
+		}
+	}
+	return result
+}
+
 // Clone creates a copy of this data.
 func (w *Weapon) Clone() *Weapon {
 	other := *w

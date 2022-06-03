@@ -17,6 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
+	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -83,6 +84,11 @@ func EditEquipment(owner widget.Rebuildable, equipment *gurps.Equipment, carried
 		adjustFieldBlank(usesField, e.editorData.MaxUses <= 0)
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
 		content.AddChild(newFeaturesPanel(e.target.Entity, e.target, &e.editorData.Features))
+		content.AddChild(newEquipmentModifiersPanel(e.target.Entity, e.target, e.target.Modifiers))
+		content.AddChild(newMeleeWeaponsPanel(e.target.Entity, e.target,
+			gurps.ExtractWeaponsOfType(weapon.Melee, e.target.Weapons)))
+		content.AddChild(newRangedWeaponsPanel(e.target.Entity, e.target,
+			gurps.ExtractWeaponsOfType(weapon.Ranged, e.target.Weapons)))
 		return func() {
 			if e.editorData.Uses > e.editorData.MaxUses {
 				usesField.SetText(strconv.Itoa(e.editorData.MaxUses))
