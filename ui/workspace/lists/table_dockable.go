@@ -140,7 +140,7 @@ func NewAdvantageModifierTableDockableFromFile(filePath string) (unison.Dockable
 func NewAdvantageModifierTableDockable(filePath string, modifiers []*gurps.AdvantageModifier) *TableDockable {
 	provider := &advantageModifierListProvider{modifiers: modifiers}
 	return NewTableDockable(filePath, library.AdvantageModifiersExt,
-		tbl.NewAdvantageModifiersProvider(provider),
+		tbl.NewAdvantageModifiersProvider(provider, false),
 		func(path string) error { return gurps.SaveAdvantageModifiers(provider.AdvantageModifierList(), path) },
 		constants.NewAdvantageModifierItemID, constants.NewAdvantageContainerModifierItemID)
 }
@@ -356,6 +356,7 @@ func NewTableDockable(filePath, extension string, provider tbl.TableProvider, sa
 	d.table.ColumnSizes = make([]unison.ColumnSize, len(headers))
 	for i := range d.table.ColumnSizes {
 		_, pref, _ := headers[i].AsPanel().Sizes(unison.Size{})
+		pref.Width += d.table.Padding.Left + d.table.Padding.Right
 		d.table.ColumnSizes[i].AutoMinimum = pref.Width
 		d.table.ColumnSizes[i].AutoMaximum = 800
 		d.table.ColumnSizes[i].Minimum = pref.Width
