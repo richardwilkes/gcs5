@@ -21,22 +21,38 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-var advantageModifierColMap = map[int]int{
-	0: gurps.AdvantageModifierDescriptionColumn,
-	1: gurps.AdvantageModifierCostColumn,
-	2: gurps.AdvantageModifierTagsColumn,
-	3: gurps.AdvantageModifierReferenceColumn,
-}
+var (
+	advantageModifierColMap = map[int]int{
+		0: gurps.AdvantageModifierDescriptionColumn,
+		1: gurps.AdvantageModifierCostColumn,
+		2: gurps.AdvantageModifierTagsColumn,
+		3: gurps.AdvantageModifierReferenceColumn,
+	}
+	advantageModifierInEditorColMap = map[int]int{
+		0: gurps.AdvantageModifierEnabledColumn,
+		1: gurps.AdvantageModifierDescriptionColumn,
+		2: gurps.AdvantageModifierCostColumn,
+		3: gurps.AdvantageModifierTagsColumn,
+		4: gurps.AdvantageModifierReferenceColumn,
+	}
+)
 
 type advModProvider struct {
+	colMap   map[int]int
 	provider gurps.AdvantageModifierListProvider
 }
 
 // NewAdvantageModifiersProvider creates a new table provider for advantage modifiers.
-func NewAdvantageModifiersProvider(provider gurps.AdvantageModifierListProvider) TableProvider {
-	return &advModProvider{
+func NewAdvantageModifiersProvider(provider gurps.AdvantageModifierListProvider, forEditor bool) TableProvider {
+	p := &advModProvider{
 		provider: provider,
 	}
+	if forEditor {
+		p.colMap = advantageModifierInEditorColMap
+	} else {
+		p.colMap = advantageModifierColMap
+	}
+	return p
 }
 
 func (p *advModProvider) Entity() *gurps.Entity {
@@ -45,8 +61,10 @@ func (p *advModProvider) Entity() *gurps.Entity {
 
 func (p *advModProvider) Headers() []unison.TableColumnHeader {
 	var headers []unison.TableColumnHeader
-	for i := 0; i < len(advantageModifierColMap); i++ {
-		switch advantageModifierColMap[i] {
+	for i := 0; i < len(p.colMap); i++ {
+		switch p.colMap[i] {
+		case gurps.AdvantageModifierEnabledColumn:
+			headers = append(headers, NewHeader(i18n.Text("Enabled"), "", false))
 		case gurps.AdvantageModifierDescriptionColumn:
 			headers = append(headers, NewHeader(i18n.Text("Advantage Modifier"), "", false))
 		case gurps.AdvantageModifierCostColumn:
@@ -56,7 +74,7 @@ func (p *advModProvider) Headers() []unison.TableColumnHeader {
 		case gurps.AdvantageModifierReferenceColumn:
 			headers = append(headers, NewPageRefHeader(false))
 		default:
-			jot.Fatalf(1, "invalid advantage modifier column: %d", advantageModifierColMap[i])
+			jot.Fatalf(1, "invalid advantage modifier column: %d", p.colMap[i])
 		}
 	}
 	return headers
@@ -66,7 +84,7 @@ func (p *advModProvider) RowData(table *unison.Table) []unison.TableRowData {
 	data := p.provider.AdvantageModifierList()
 	rows := make([]unison.TableRowData, 0, len(data))
 	for _, one := range data {
-		rows = append(rows, NewNode(table, nil, advantageModifierColMap, one, false))
+		rows = append(rows, NewNode(table, nil, p.colMap, one, false))
 	}
 	return rows
 }
@@ -75,7 +93,7 @@ func (p *advModProvider) SyncHeader(_ []unison.TableColumnHeader) {
 }
 
 func (p *advModProvider) HierarchyColumnIndex() int {
-	for k, v := range advantageModifierColMap {
+	for k, v := range p.colMap {
 		if v == gurps.AdvantageModifierDescriptionColumn {
 			return k
 		}

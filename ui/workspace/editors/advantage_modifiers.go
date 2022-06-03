@@ -12,8 +12,6 @@
 package editors
 
 import (
-	"fmt"
-
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -22,16 +20,12 @@ import (
 
 type advantageModifiersPanel struct {
 	unison.Panel
-	entity         *gurps.Entity
-	modifierParent fmt.Stringer
-	modifiers      []*gurps.AdvantageModifier
+	owner *gurps.Advantage
 }
 
-func newAdvantageModifiersPanel(entity *gurps.Entity, modifierParent fmt.Stringer, modifiers []*gurps.AdvantageModifier) *advantageModifiersPanel {
+func newAdvantageModifiersPanel(owner *gurps.Advantage) *advantageModifiersPanel {
 	p := &advantageModifiersPanel{
-		entity:         entity,
-		modifierParent: modifierParent,
-		modifiers:      modifiers,
+		owner: owner,
 	}
 	p.Self = p
 	p.SetLayout(&unison.FlexLayout{
@@ -58,4 +52,21 @@ func newAdvantageModifiersPanel(entity *gurps.Entity, modifierParent fmt.Stringe
 	addEditorNotYetImplementedBlock(p)
 
 	return p
+}
+
+func (p *advantageModifiersPanel) createTable() {
+	table := unison.NewTable()
+	p.AddChild(table)
+}
+
+func (p *advantageModifiersPanel) Entity() *gurps.Entity {
+	return p.owner.Entity
+}
+
+func (p *advantageModifiersPanel) AdvantageModifierList() []*gurps.AdvantageModifier {
+	return p.owner.Modifiers
+}
+
+func (p *advantageModifiersPanel) SetAdvantageModifierList(list []*gurps.AdvantageModifier) {
+	p.owner.Modifiers = list
 }

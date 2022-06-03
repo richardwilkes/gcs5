@@ -32,7 +32,8 @@ var _ Node = &AdvantageModifier{}
 
 // Columns that can be used with the advantage modifier method .CellData()
 const (
-	AdvantageModifierDescriptionColumn = iota
+	AdvantageModifierEnabledColumn = iota
+	AdvantageModifierDescriptionColumn
 	AdvantageModifierCostColumn
 	AdvantageModifierTagsColumn
 	AdvantageModifierReferenceColumn
