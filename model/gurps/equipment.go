@@ -288,6 +288,9 @@ func (e *Equipment) SetOwningEntity(entity *Entity) {
 			child.SetOwningEntity(entity)
 		}
 	}
+	for _, m := range e.Modifiers {
+		m.SetOwningEntity(entity)
+	}
 }
 
 // Description returns a description.

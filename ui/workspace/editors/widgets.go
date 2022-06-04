@@ -548,24 +548,3 @@ func addLeveledAmountPanel(parent *unison.Panel, amount *feature.LeveledAmount) 
 		}, fxp.Min, fxp.Max, true, false))
 	addCheckBox(parent, i18n.Text("per level"), &amount.PerLevel)
 }
-
-func addEditorNotYetImplementedBlock(parent unison.Paneler) {
-	label := unison.NewLabel()
-	label.Text = "Editor not yet implemented"
-	baseline := label.Font.Baseline()
-	label.Drawable = &unison.DrawableSVG{
-		SVG:  unison.TriangleExclamationSVG(),
-		Size: unison.NewSize(baseline, baseline),
-	}
-	label.HAlign = unison.MiddleAlignment
-	label.OnBackgroundInk = unison.OnWarningColor
-	label.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) {
-		gc.DrawRect(rect, unison.WarningColor.Paint(gc, rect, unison.Fill))
-		label.DefaultDraw(gc, rect)
-	}
-	label.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		HGrab:  true,
-	})
-	parent.AsPanel().AddChild(label)
-}

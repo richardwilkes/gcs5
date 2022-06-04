@@ -84,7 +84,7 @@ func EditEquipment(owner widget.Rebuildable, equipment *gurps.Equipment, carried
 		adjustFieldBlank(usesField, e.editorData.MaxUses <= 0)
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
 		content.AddChild(newFeaturesPanel(e.target.Entity, e.target, &e.editorData.Features))
-		content.AddChild(newEquipmentModifiersPanel(e.target.Entity, e.target, e.target.Modifiers))
+		content.AddChild(newEquipmentModifiersPanel(e.target.Entity, &e.editorData.Modifiers))
 		for _, wt := range weapon.AllType {
 			content.AddChild(newWeaponsPanel(e.target.Entity, wt, &e.editorData.Weapons))
 		}

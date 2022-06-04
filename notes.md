@@ -10,11 +10,12 @@
 
 #### GCS-specific work that needs to be done
 
-- Equipment Modifiers Detailed Editor
-- Ability to add a new weapon entry
-- Ability to remove a weapon entry
-- Ability to add a new trait modifier entry
-- Ability to remove a trait modifier entry
+- Ability to add a new weapon entry in detail editor
+- Ability to remove a weapon entry in detail editor
+- Ability to add a new trait modifier entry in detail editor
+- Ability to remove a trait modifier entry in detail editor
+- Ability to add a new equipment modifier entry in detail editor
+- Ability to remove a equipment modifier entry in detail editor
 - Settings editors
   - Attributes
   - Body Type

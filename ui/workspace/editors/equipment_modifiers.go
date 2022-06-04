@@ -12,50 +12,45 @@
 package editors
 
 import (
-	"fmt"
-
 	"github.com/richardwilkes/gcs/model/gurps"
-	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/unison"
 )
 
 type equipmentModifiersPanel struct {
 	unison.Panel
-	entity         *gurps.Entity
-	modifierParent fmt.Stringer
-	modifiers      []*gurps.EquipmentModifier
+	entity    *gurps.Entity
+	modifiers *[]*gurps.EquipmentModifier
 }
 
-func newEquipmentModifiersPanel(entity *gurps.Entity, modifierParent fmt.Stringer, modifiers []*gurps.EquipmentModifier) *equipmentModifiersPanel {
+func newEquipmentModifiersPanel(entity *gurps.Entity, modifiers *[]*gurps.EquipmentModifier) *equipmentModifiersPanel {
 	p := &equipmentModifiersPanel{
-		entity:         entity,
-		modifierParent: modifierParent,
-		modifiers:      modifiers,
+		entity:    entity,
+		modifiers: modifiers,
 	}
 	p.Self = p
-	p.SetLayout(&unison.FlexLayout{
-		Columns:  1,
-		HSpacing: unison.StdHSpacing,
-		VSpacing: unison.StdVSpacing,
-	})
+	p.SetLayout(&unison.FlexLayout{Columns: 1})
 	p.SetLayoutData(&unison.FlexLayoutData{
 		HSpan:  2,
 		HAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
-	p.SetBorder(unison.NewCompoundBorder(
-		&widget.TitledBorder{
-			Title: i18n.Text("Modifiers"),
-			Font:  unison.LabelFont,
-		},
-		unison.NewEmptyBorder(unison.NewUniformInsets(2))))
+	p.SetBorder(unison.NewLineBorder(theme.HeaderColor, 0, unison.NewUniformInsets(1), false))
 	p.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) {
 		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
 	}
-
-	// TODO: Implement
-	addEditorNotYetImplementedBlock(p)
-
+	newTable(p.AsPanel(), NewEquipmentModifiersProvider(p, true))
 	return p
+}
+
+func (p *equipmentModifiersPanel) Entity() *gurps.Entity {
+	return p.entity
+}
+
+func (p *equipmentModifiersPanel) EquipmentModifierList() []*gurps.EquipmentModifier {
+	return *p.modifiers
+}
+
+func (p *equipmentModifiersPanel) SetEquipmentModifierList(list []*gurps.EquipmentModifier) {
+	*p.modifiers = list
 }

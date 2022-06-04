@@ -219,7 +219,7 @@ func NewEquipmentModifierTableDockableFromFile(filePath string) (unison.Dockable
 func NewEquipmentModifierTableDockable(filePath string, modifiers []*gurps.EquipmentModifier) *TableDockable {
 	provider := &equipmentModifierListProvider{modifiers: modifiers}
 	return NewTableDockable(filePath, library.EquipmentModifiersExt,
-		editors.NewEquipmentModifiersProvider(provider),
+		editors.NewEquipmentModifiersProvider(provider, false),
 		func(path string) error { return gurps.SaveEquipmentModifiers(provider.EquipmentModifierList(), path) },
 		constants.NewEquipmentModifierItemID, constants.NewEquipmentContainerModifierItemID)
 }

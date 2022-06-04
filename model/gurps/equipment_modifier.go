@@ -25,6 +25,7 @@ import (
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/txt"
+	"github.com/richardwilkes/unison"
 	"golang.org/x/exp/slices"
 )
 
@@ -32,7 +33,8 @@ var _ Node = &EquipmentModifier{}
 
 // Columns that can be used with the equipment modifier method .CellData()
 const (
-	EquipmentModifierDescriptionColumn = iota
+	EquipmentModifierEnabledColumn = iota
+	EquipmentModifierDescriptionColumn
 	EquipmentModifierTechLevelColumn
 	EquipmentModifierCostColumn
 	EquipmentModifierWeightColumn
@@ -134,6 +136,10 @@ func (e *EquipmentModifier) UnmarshalJSON(data []byte) error {
 // CellData returns the cell data information for the given column.
 func (e *EquipmentModifier) CellData(column int, data *CellData) {
 	switch column {
+	case EquipmentModifierEnabledColumn:
+		data.Type = Toggle
+		data.Checked = !e.Disabled
+		data.Alignment = unison.MiddleAlignment
 	case EquipmentModifierDescriptionColumn:
 		data.Type = Text
 		data.Primary = e.Name

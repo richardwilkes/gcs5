@@ -20,24 +20,42 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-var equipmentModifierColMap = map[int]int{
-	0: gurps.EquipmentModifierDescriptionColumn,
-	1: gurps.EquipmentModifierTechLevelColumn,
-	2: gurps.EquipmentModifierCostColumn,
-	3: gurps.EquipmentModifierWeightColumn,
-	4: gurps.EquipmentModifierTagsColumn,
-	5: gurps.EquipmentModifierReferenceColumn,
-}
+var (
+	equipmentModifierColMap = map[int]int{
+		0: gurps.EquipmentModifierDescriptionColumn,
+		1: gurps.EquipmentModifierTechLevelColumn,
+		2: gurps.EquipmentModifierCostColumn,
+		3: gurps.EquipmentModifierWeightColumn,
+		4: gurps.EquipmentModifierTagsColumn,
+		5: gurps.EquipmentModifierReferenceColumn,
+	}
+	equipmentModifierInEditorColMap = map[int]int{
+		0: gurps.EquipmentModifierEnabledColumn,
+		1: gurps.EquipmentModifierDescriptionColumn,
+		2: gurps.EquipmentModifierTechLevelColumn,
+		3: gurps.EquipmentModifierCostColumn,
+		4: gurps.EquipmentModifierWeightColumn,
+		5: gurps.EquipmentModifierTagsColumn,
+		6: gurps.EquipmentModifierReferenceColumn,
+	}
+)
 
 type eqpModProvider struct {
+	colMap   map[int]int
 	provider gurps.EquipmentModifierListProvider
 }
 
 // NewEquipmentModifiersProvider creates a new table provider for equipment modifiers.
-func NewEquipmentModifiersProvider(provider gurps.EquipmentModifierListProvider) TableProvider {
-	return &eqpModProvider{
+func NewEquipmentModifiersProvider(provider gurps.EquipmentModifierListProvider, forEditor bool) TableProvider {
+	p := &eqpModProvider{
 		provider: provider,
 	}
+	if forEditor {
+		p.colMap = equipmentModifierInEditorColMap
+	} else {
+		p.colMap = equipmentModifierColMap
+	}
+	return p
 }
 
 func (p *eqpModProvider) Entity() *gurps.Entity {
@@ -46,8 +64,10 @@ func (p *eqpModProvider) Entity() *gurps.Entity {
 
 func (p *eqpModProvider) Headers() []unison.TableColumnHeader {
 	var headers []unison.TableColumnHeader
-	for i := 0; i < len(equipmentModifierColMap); i++ {
-		switch equipmentModifierColMap[i] {
+	for i := 0; i < len(p.colMap); i++ {
+		switch p.colMap[i] {
+		case gurps.EquipmentModifierEnabledColumn:
+			headers = append(headers, NewEnabledHeader(false))
 		case gurps.EquipmentModifierDescriptionColumn:
 			headers = append(headers, NewHeader(i18n.Text("Equipment Modifier"), "", false))
 		case gurps.EquipmentModifierTechLevelColumn:
@@ -61,7 +81,7 @@ func (p *eqpModProvider) Headers() []unison.TableColumnHeader {
 		case gurps.EquipmentModifierReferenceColumn:
 			headers = append(headers, NewPageRefHeader(false))
 		default:
-			jot.Fatalf(1, "invalid equipment modifier column: %d", equipmentModifierColMap[i])
+			jot.Fatalf(1, "invalid equipment modifier column: %d", p.colMap[i])
 		}
 	}
 	return headers
@@ -71,7 +91,7 @@ func (p *eqpModProvider) RowData(table *unison.Table) []unison.TableRowData {
 	data := p.provider.EquipmentModifierList()
 	rows := make([]unison.TableRowData, 0, len(data))
 	for _, one := range data {
-		rows = append(rows, NewNode(table, nil, equipmentModifierColMap, one, false))
+		rows = append(rows, NewNode(table, nil, p.colMap, one, false))
 	}
 	return rows
 }
@@ -80,7 +100,7 @@ func (p *eqpModProvider) SyncHeader(_ []unison.TableColumnHeader) {
 }
 
 func (p *eqpModProvider) HierarchyColumnIndex() int {
-	for k, v := range equipmentModifierColMap {
+	for k, v := range p.colMap {
 		if v == gurps.EquipmentModifierDescriptionColumn {
 			return k
 		}

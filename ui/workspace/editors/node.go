@@ -268,7 +268,9 @@ func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison
 					},
 				})
 			}
-			item.Entity.Recalculate()
+			if item.Entity != nil {
+				item.Entity.Recalculate()
+			}
 		case *gurps.TraitModifier:
 			item.Disabled = !c.Checked
 			if mgr := unison.UndoManagerFor(check); mgr != nil {
@@ -290,7 +292,9 @@ func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison
 					},
 				})
 			}
-			item.Entity.Recalculate()
+			if item.Entity != nil {
+				item.Entity.Recalculate()
+			}
 		case *gurps.EquipmentModifier:
 			item.Disabled = !c.Checked
 			if mgr := unison.UndoManagerFor(check); mgr != nil {
@@ -312,7 +316,9 @@ func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison
 					},
 				})
 			}
-			item.Entity.Recalculate()
+			if item.Entity != nil {
+				item.Entity.Recalculate()
+			}
 		}
 		if c.Checked {
 			check.Drawable = &unison.DrawableSVG{

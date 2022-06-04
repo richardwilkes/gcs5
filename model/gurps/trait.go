@@ -206,8 +206,8 @@ func (a *Trait) SetOwningEntity(entity *Entity) {
 			w.SetOwner(a)
 		}
 	}
-	for _, w := range a.Modifiers {
-		w.SetOwningEntity(entity)
+	for _, m := range a.Modifiers {
+		m.SetOwningEntity(entity)
 	}
 }
 
