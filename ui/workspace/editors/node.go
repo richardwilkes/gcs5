@@ -152,23 +152,23 @@ func (n *Node) Match(text string) bool {
 func (n *Node) CellFromCellData(c *gurps.CellData, width float32, foreground unison.Ink) unison.Paneler {
 	switch c.Type {
 	case gurps.Text:
-		return n.createLabelCell(c, width, foreground, c.Disabled)
+		return n.createLabelCell(c, width, foreground)
 	case gurps.Toggle:
 		return n.createToggleCell(c, foreground)
 	case gurps.PageRef:
-		return n.createPageRefCell(c.Primary, c.Secondary, foreground)
+		return n.createPageRefCell(c, foreground)
 	default:
 		return unison.NewPanel()
 	}
 }
 
-func (n *Node) createLabelCell(c *gurps.CellData, width float32, foreground unison.Ink, strikeThrough bool) unison.Paneler {
+func (n *Node) createLabelCell(c *gurps.CellData, width float32, foreground unison.Ink) unison.Paneler {
 	p := unison.NewPanel()
 	p.SetLayout(&unison.FlexLayout{
 		Columns: 1,
 		HAlign:  c.Alignment,
 	})
-	n.addLabelCell(c, p, width, c.Primary, n.primaryFieldFont(), foreground, strikeThrough)
+	n.addLabelCell(c, p, width, c.Primary, n.primaryFieldFont(), foreground, true)
 	if c.Secondary != "" {
 		n.addLabelCell(c, p, width, c.Secondary, n.secondaryFieldFont(), foreground, false)
 	}
@@ -204,10 +204,10 @@ func (n *Node) createLabelCell(c *gurps.CellData, width float32, foreground unis
 	return p
 }
 
-func (n *Node) addLabelCell(c *gurps.CellData, parent *unison.Panel, width float32, text string, f unison.Font, foreground unison.Ink, strikeThrough bool) {
+func (n *Node) addLabelCell(c *gurps.CellData, parent *unison.Panel, width float32, text string, f unison.Font, foreground unison.Ink, primary bool) {
 	decoration := &unison.TextDecoration{
 		Font:          f,
-		StrikeThrough: strikeThrough,
+		StrikeThrough: primary && c.Disabled,
 	}
 	var lines []*unison.Text
 	if width > 0 {
@@ -219,9 +219,10 @@ func (n *Node) addLabelCell(c *gurps.CellData, parent *unison.Panel, width float
 		label := unison.NewLabel()
 		label.Text = line.String()
 		label.Font = f
-		label.StrikeThrough = strikeThrough
+		label.StrikeThrough = primary && c.Disabled
 		label.HAlign = c.Alignment
 		label.OnBackgroundInk = foreground
+		label.SetEnabled(!c.Dim)
 		parent.AddChild(label)
 	}
 }
@@ -370,12 +371,13 @@ func (a *traitModifierAdjuster) Apply() {
 	widget.MarkModified(a.Owner)
 }
 
-func (n *Node) createPageRefCell(text, highlight string, foreground unison.Ink) unison.Paneler {
+func (n *Node) createPageRefCell(c *gurps.CellData, foreground unison.Ink) unison.Paneler {
 	label := unison.NewLabel()
 	label.Font = n.primaryFieldFont()
 	label.VAlign = unison.StartAlignment
 	label.OnBackgroundInk = foreground
-	parts := strings.FieldsFunc(text, func(ch rune) bool { return ch == ',' || ch == ';' || ch == ' ' })
+	label.SetEnabled(!c.Dim)
+	parts := strings.FieldsFunc(c.Primary, func(ch rune) bool { return ch == ',' || ch == ';' || ch == ' ' })
 	switch len(parts) {
 	case 0:
 	case 1:
@@ -408,9 +410,9 @@ func (n *Node) createPageRefCell(text, highlight string, foreground unison.Ink) 
 			return true
 		}
 		label.MouseDownCallback = func(where unison.Point, button, clickCount int, mod unison.Modifiers) bool {
-			list := settings.ExtractPageReferences(text)
+			list := settings.ExtractPageReferences(c.Primary)
 			if len(list) != 0 {
-				settings.OpenPageReference(label.Window(), list[0], highlight, nil)
+				settings.OpenPageReference(label.Window(), list[0], c.Secondary, nil)
 			}
 			return true
 		}

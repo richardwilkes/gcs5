@@ -20,6 +20,7 @@ const PageRefCellAlias = -10
 type CellData struct {
 	Type              CellType
 	Disabled          bool
+	Dim               bool
 	Checked           bool
 	Alignment         unison.Alignment
 	Primary           string

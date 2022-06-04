@@ -156,6 +156,7 @@ func (a *Trait) transferOldTypeFlagToTags(name string, flag bool) {
 
 // CellData returns the cell data information for the given column.
 func (a *Trait) CellData(column int, data *CellData) {
+	data.Dim = !a.Enabled()
 	switch column {
 	case TraitDescriptionColumn:
 		data.Type = Text
