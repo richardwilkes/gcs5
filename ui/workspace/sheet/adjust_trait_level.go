@@ -20,21 +20,21 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-type adjustAdvantageLevelListUndoEdit = *unison.UndoEdit[*adjustAdvantageLevelList]
+type adjustTraitLevelListUndoEdit = *unison.UndoEdit[*adjustTraitLevelList]
 
-type adjustAdvantageLevelList struct {
+type adjustTraitLevelList struct {
 	Owner widget.Rebuildable
-	List  []*advantageLevelAdjuster
+	List  []*traitLevelAdjuster
 }
 
-func (a *adjustAdvantageLevelList) Apply() {
+func (a *adjustTraitLevelList) Apply() {
 	for _, one := range a.List {
 		one.Apply()
 	}
 	a.Finish()
 }
 
-func (a *adjustAdvantageLevelList) Finish() {
+func (a *adjustTraitLevelList) Finish() {
 	entity := a.List[0].Target.OwningEntity()
 	if entity != nil {
 		entity.Recalculate()
@@ -42,26 +42,26 @@ func (a *adjustAdvantageLevelList) Finish() {
 	widget.MarkModified(a.Owner)
 }
 
-type advantageLevelAdjuster struct {
-	Target *gurps.Advantage
+type traitLevelAdjuster struct {
+	Target *gurps.Trait
 	Levels fxp.Int
 }
 
-func newAdvantageLevelAdjuster(target *gurps.Advantage) *advantageLevelAdjuster {
-	return &advantageLevelAdjuster{
+func newTraitLevelAdjuster(target *gurps.Trait) *traitLevelAdjuster {
+	return &traitLevelAdjuster{
 		Target: target,
 		Levels: target.Levels,
 	}
 }
 
-func (a *advantageLevelAdjuster) Apply() {
+func (a *traitLevelAdjuster) Apply() {
 	a.Target.Levels = a.Levels
 }
 
-func canAdjustAdvantageLevel(table *unison.Table, increment bool) bool {
+func canAdjustTraitLevel(table *unison.Table, increment bool) bool {
 	for _, row := range table.SelectedRows(false) {
-		if adv := editors.ExtractFromRowData[*gurps.Advantage](row); adv != nil && adv.IsLeveled() {
-			if increment || adv.Levels > 0 {
+		if t := editors.ExtractFromRowData[*gurps.Trait](row); t != nil && t.IsLeveled() {
+			if increment || t.Levels > 0 {
 				return true
 			}
 		}
@@ -69,22 +69,22 @@ func canAdjustAdvantageLevel(table *unison.Table, increment bool) bool {
 	return false
 }
 
-func adjustAdvantageLevel(owner widget.Rebuildable, table *unison.Table, increment bool) {
-	before := &adjustAdvantageLevelList{Owner: owner}
-	after := &adjustAdvantageLevelList{Owner: owner}
+func adjustTraitLevel(owner widget.Rebuildable, table *unison.Table, increment bool) {
+	before := &adjustTraitLevelList{Owner: owner}
+	after := &adjustTraitLevelList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if adv := editors.ExtractFromRowData[*gurps.Advantage](row); adv != nil && adv.IsLeveled() {
-			if increment || adv.Levels > 0 {
-				before.List = append(before.List, newAdvantageLevelAdjuster(adv))
-				original := adv.Levels
+		if t := editors.ExtractFromRowData[*gurps.Trait](row); t != nil && t.IsLeveled() {
+			if increment || t.Levels > 0 {
+				before.List = append(before.List, newTraitLevelAdjuster(t))
+				original := t.Levels
 				levels := original.Trunc()
 				if increment {
 					levels += fxp.One
 				} else if original == levels {
 					levels -= fxp.One
 				}
-				adv.Levels = levels.Max(0)
-				after.List = append(after.List, newAdvantageLevelAdjuster(adv))
+				t.Levels = levels.Max(0)
+				after.List = append(after.List, newTraitLevelAdjuster(t))
 			}
 		}
 	}
@@ -96,11 +96,11 @@ func adjustAdvantageLevel(owner widget.Rebuildable, table *unison.Table, increme
 			} else {
 				name = i18n.Text("Decrement Level")
 			}
-			mgr.Add(&unison.UndoEdit[*adjustAdvantageLevelList]{
+			mgr.Add(&unison.UndoEdit[*adjustTraitLevelList]{
 				ID:         unison.NextUndoID(),
 				EditName:   name,
-				UndoFunc:   func(edit adjustAdvantageLevelListUndoEdit) { edit.BeforeData.Apply() },
-				RedoFunc:   func(edit adjustAdvantageLevelListUndoEdit) { edit.AfterData.Apply() },
+				UndoFunc:   func(edit adjustTraitLevelListUndoEdit) { edit.BeforeData.Apply() },
+				RedoFunc:   func(edit adjustTraitLevelListUndoEdit) { edit.AfterData.Apply() },
 				BeforeData: before,
 				AfterData:  after,
 			})

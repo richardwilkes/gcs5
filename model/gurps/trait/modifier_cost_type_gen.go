@@ -11,7 +11,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package advantage
+package trait
 
 import (
 	"strings"
@@ -53,7 +53,7 @@ var (
 	}
 )
 
-// ModifierCostType describes how an AdvantageModifier's point cost is applied.
+// ModifierCostType describes how a TraitModifier's point cost is applied.
 type ModifierCostType byte
 
 // EnsureValid ensures this is of a known value.

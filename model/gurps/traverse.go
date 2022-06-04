@@ -11,11 +11,11 @@
 
 package gurps
 
-// TraverseAdvantages calls the function 'f' for each Advantage and its children in the input list. Return true from the
+// TraverseTraits calls the function 'f' for each Trait and its children in the input list. Return true from the
 // function to abort early.
-func TraverseAdvantages(f func(*Advantage) bool, onlyEnabled bool, in ...*Advantage) {
+func TraverseTraits(f func(*Trait) bool, onlyEnabled bool, in ...*Trait) {
 	type trackingInfo struct {
-		list  []*Advantage
+		list  []*Trait
 		index int
 	}
 	tracking := []*trackingInfo{
@@ -47,11 +47,11 @@ func TraverseAdvantages(f func(*Advantage) bool, onlyEnabled bool, in ...*Advant
 	}
 }
 
-// TraverseAdvantageModifiers calls the function 'f' for each AdvantageModifier and its children in the input list.
+// TraverseTraitModifiers calls the function 'f' for each TraitModifier and its children in the input list.
 // Return true from the function to abort early.
-func TraverseAdvantageModifiers(f func(*AdvantageModifier) bool, onlyEnabled bool, in ...*AdvantageModifier) {
+func TraverseTraitModifiers(f func(*TraitModifier) bool, onlyEnabled bool, in ...*TraitModifier) {
 	type trackingInfo struct {
-		list  []*AdvantageModifier
+		list  []*TraitModifier
 		index int
 	}
 	tracking := []*trackingInfo{

@@ -182,7 +182,7 @@ func (e *EquipmentModifier) String() string {
 	return e.Name
 }
 
-// SecondaryText returns the "secondary" text: the text display below an Advantage.
+// SecondaryText returns the "secondary" text: the text display below an Trait.
 func (e *EquipmentModifier) SecondaryText() string {
 	var buffer strings.Builder
 	settings := SheetSettingsFor(e.Entity)

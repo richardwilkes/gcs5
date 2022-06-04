@@ -20,14 +20,14 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-type advantageModifiersPanel struct {
+type traitModifiersPanel struct {
 	unison.Panel
 	entity    *gurps.Entity
-	modifiers *[]*gurps.AdvantageModifier
+	modifiers *[]*gurps.TraitModifier
 }
 
-func newAdvantageModifiersPanel(entity *gurps.Entity, modifiers *[]*gurps.AdvantageModifier) *advantageModifiersPanel {
-	p := &advantageModifiersPanel{
+func newTraitModifiersPanel(entity *gurps.Entity, modifiers *[]*gurps.TraitModifier) *traitModifiersPanel {
+	p := &traitModifiersPanel{
 		entity:    entity,
 		modifiers: modifiers,
 	}
@@ -46,8 +46,8 @@ func newAdvantageModifiersPanel(entity *gurps.Entity, modifiers *[]*gurps.Advant
 	return p
 }
 
-func (p *advantageModifiersPanel) createTable() {
-	provider := NewAdvantageModifiersProvider(p, true)
+func (p *traitModifiersPanel) createTable() {
+	provider := NewTraitModifiersProvider(p, true)
 	table := unison.NewTable()
 	table.DividerInk = theme.HeaderColor
 	table.Padding.Top = 0
@@ -105,14 +105,14 @@ func (p *advantageModifiersPanel) createTable() {
 	p.AddChild(table)
 }
 
-func (p *advantageModifiersPanel) Entity() *gurps.Entity {
+func (p *traitModifiersPanel) Entity() *gurps.Entity {
 	return p.entity
 }
 
-func (p *advantageModifiersPanel) AdvantageModifierList() []*gurps.AdvantageModifier {
+func (p *traitModifiersPanel) TraitModifierList() []*gurps.TraitModifier {
 	return *p.modifiers
 }
 
-func (p *advantageModifiersPanel) SetAdvantageModifierList(list []*gurps.AdvantageModifier) {
+func (p *traitModifiersPanel) SetTraitModifierList(list []*gurps.TraitModifier) {
 	*p.modifiers = list
 }

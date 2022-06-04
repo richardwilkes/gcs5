@@ -178,9 +178,9 @@ func (w *WeaponDamage) ResolvedDamage(tooltip *xio.ByteBuffer) string {
 	if w.Base != nil {
 		*base = *w.Base
 	}
-	adq, adqOK := w.Owner.Owner.(*Advantage)
-	if adqOK && adq.IsLeveled() {
-		multiplyDice(fxp.As[int](adq.Levels), base)
+	t, tOK := w.Owner.Owner.(*Trait)
+	if tOK && t.IsLeveled() {
+		multiplyDice(fxp.As[int](t.Levels), base)
 	}
 	intST := fxp.As[int](st)
 	switch w.StrengthType {
@@ -188,16 +188,16 @@ func (w *WeaponDamage) ResolvedDamage(tooltip *xio.ByteBuffer) string {
 		base = addDice(base, pc.ThrustFor(intST))
 	case weapon.LeveledThrust:
 		thrust := pc.ThrustFor(intST)
-		if adqOK && adq.IsLeveled() {
-			multiplyDice(fxp.As[int](adq.Levels), thrust)
+		if tOK && t.IsLeveled() {
+			multiplyDice(fxp.As[int](t.Levels), thrust)
 		}
 		base = addDice(base, thrust)
 	case weapon.Swing:
 		base = addDice(base, pc.SwingFor(intST))
 	case weapon.LeveledSwing:
 		thrust := pc.SwingFor(intST)
-		if adqOK && adq.IsLeveled() {
-			multiplyDice(fxp.As[int](adq.Levels), thrust)
+		if tOK && t.IsLeveled() {
+			multiplyDice(fxp.As[int](t.Levels), thrust)
 		}
 		base = addDice(base, thrust)
 	}
@@ -227,8 +227,8 @@ func (w *WeaponDamage) ResolvedDamage(tooltip *xio.ByteBuffer) string {
 	for _, f := range w.Owner.Owner.FeatureList() {
 		w.extractWeaponDamageBonus(f, bonusSet, base.Count, tooltip)
 	}
-	if adqOK {
-		for _, mod := range adq.Modifiers {
+	if tOK {
+		for _, mod := range t.Modifiers {
 			if !mod.Disabled {
 				for _, f := range mod.Features {
 					w.extractWeaponDamageBonus(f, bonusSet, base.Count, tooltip)

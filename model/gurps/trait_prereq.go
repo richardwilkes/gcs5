@@ -19,10 +19,10 @@ import (
 	"github.com/richardwilkes/toolbox/xio"
 )
 
-var _ Prereq = &AdvantagePrereq{}
+var _ Prereq = &TraitPrereq{}
 
-// AdvantagePrereq holds a prereq against an Advantage.
-type AdvantagePrereq struct {
+// TraitPrereq holds a prereq against a Trait.
+type TraitPrereq struct {
 	Parent        *PrereqList      `json:"-"`
 	Type          prereq.Type      `json:"type"`
 	Has           bool             `json:"has"`
@@ -31,10 +31,10 @@ type AdvantagePrereq struct {
 	NotesCriteria criteria.String  `json:"notes,omitempty"`
 }
 
-// NewAdvantagePrereq creates a new AdvantagePrereq.
-func NewAdvantagePrereq() *AdvantagePrereq {
-	return &AdvantagePrereq{
-		Type: prereq.Advantage,
+// NewTraitPrereq creates a new TraitPrereq.
+func NewTraitPrereq() *TraitPrereq {
+	return &TraitPrereq{
+		Type: prereq.Trait,
 		NameCriteria: criteria.String{
 			StringData: criteria.StringData{
 				Compare: criteria.Is,
@@ -55,58 +55,58 @@ func NewAdvantagePrereq() *AdvantagePrereq {
 }
 
 // PrereqType implements Prereq.
-func (a *AdvantagePrereq) PrereqType() prereq.Type {
+func (a *TraitPrereq) PrereqType() prereq.Type {
 	return a.Type
 }
 
 // ParentList implements Prereq.
-func (a *AdvantagePrereq) ParentList() *PrereqList {
+func (a *TraitPrereq) ParentList() *PrereqList {
 	return a.Parent
 }
 
 // Clone implements Prereq.
-func (a *AdvantagePrereq) Clone(parent *PrereqList) Prereq {
+func (a *TraitPrereq) Clone(parent *PrereqList) Prereq {
 	clone := *a
 	clone.Parent = parent
 	return &clone
 }
 
 // FillWithNameableKeys implements Prereq.
-func (a *AdvantagePrereq) FillWithNameableKeys(m map[string]string) {
+func (a *TraitPrereq) FillWithNameableKeys(m map[string]string) {
 	nameables.Extract(a.NameCriteria.Qualifier, m)
 	nameables.Extract(a.NotesCriteria.Qualifier, m)
 }
 
 // ApplyNameableKeys implements Prereq.
-func (a *AdvantagePrereq) ApplyNameableKeys(m map[string]string) {
+func (a *TraitPrereq) ApplyNameableKeys(m map[string]string) {
 	a.NameCriteria.Qualifier = nameables.Apply(a.NameCriteria.Qualifier, m)
 	a.NotesCriteria.Qualifier = nameables.Apply(a.NotesCriteria.Qualifier, m)
 }
 
 // Satisfied implements Prereq.
-func (a *AdvantagePrereq) Satisfied(entity *Entity, exclude any, tooltip *xio.ByteBuffer, prefix string) bool {
+func (a *TraitPrereq) Satisfied(entity *Entity, exclude any, tooltip *xio.ByteBuffer, prefix string) bool {
 	satisfied := false
-	TraverseAdvantages(func(adq *Advantage) bool {
-		if exclude == adq || !a.NameCriteria.Matches(adq.Name) {
+	TraverseTraits(func(t *Trait) bool {
+		if exclude == t || !a.NameCriteria.Matches(t.Name) {
 			return false
 		}
-		notes := adq.Notes()
-		if modNotes := adq.ModifierNotes(); modNotes != "" {
+		notes := t.Notes()
+		if modNotes := t.ModifierNotes(); modNotes != "" {
 			notes += "\n" + modNotes
 		}
 		if !a.NotesCriteria.Matches(notes) {
 			return false
 		}
-		satisfied = a.LevelCriteria.Matches(adq.Levels.Max(0))
+		satisfied = a.LevelCriteria.Matches(t.Levels.Max(0))
 		return satisfied
-	}, true, entity.Advantages...)
+	}, true, entity.Traits...)
 	if !a.Has {
 		satisfied = !satisfied
 	}
 	if !satisfied && tooltip != nil {
 		tooltip.WriteString(prefix)
 		tooltip.WriteString(HasText(a.Has))
-		tooltip.WriteString(i18n.Text(" an advantage whose name "))
+		tooltip.WriteString(i18n.Text(" a trait whose name "))
 		tooltip.WriteString(a.NameCriteria.String())
 		if a.NotesCriteria.Compare != criteria.Any {
 			tooltip.WriteString(i18n.Text(", notes "))

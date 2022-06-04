@@ -36,9 +36,9 @@ type PageList struct {
 	performMap    map[int]func()
 }
 
-// NewAdvantagesPageList creates the advantages page list.
-func NewAdvantagesPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
-	p := newPageList(owner, editors.NewAdvantagesProvider(provider, true))
+// NewTraitsPageList creates the traits page list.
+func NewTraitsPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
+	p := newPageList(owner, editors.NewTraitsProvider(provider, true))
 	p.installToggleDisabledHandler(owner)
 	p.installIncrementLevelHandler(owner)
 	p.installDecrementLevelHandler(owner)
@@ -251,14 +251,14 @@ func (p *PageList) installDecrementPointsHandler(owner widget.Rebuildable) {
 
 func (p *PageList) installIncrementLevelHandler(owner widget.Rebuildable) {
 	p.installPerformHandlers(constants.IncrementItemID,
-		func() bool { return canAdjustAdvantageLevel(p.table, true) },
-		func() { adjustAdvantageLevel(owner, p.table, true) })
+		func() bool { return canAdjustTraitLevel(p.table, true) },
+		func() { adjustTraitLevel(owner, p.table, true) })
 }
 
 func (p *PageList) installDecrementLevelHandler(owner widget.Rebuildable) {
 	p.installPerformHandlers(constants.DecrementItemID,
-		func() bool { return canAdjustAdvantageLevel(p.table, false) },
-		func() { adjustAdvantageLevel(owner, p.table, false) })
+		func() bool { return canAdjustTraitLevel(p.table, false) },
+		func() { adjustTraitLevel(owner, p.table, false) })
 }
 
 func (p *PageList) installIncrementQuantityHandler(owner widget.Rebuildable) {

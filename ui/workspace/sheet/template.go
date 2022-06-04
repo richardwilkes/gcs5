@@ -249,9 +249,9 @@ func (d *Template) createLists() {
 		rowPanel := unison.NewPanel()
 		for _, c := range col {
 			switch c {
-			case gurps.BlockLayoutAdvantagesKey:
-				d.Lists[advantagesListIndex] = NewAdvantagesPageList(d, d.template)
-				rowPanel.AddChild(d.Lists[advantagesListIndex])
+			case gurps.BlockLayoutTraitsKey:
+				d.Lists[traitsListIndex] = NewTraitsPageList(d, d.template)
+				rowPanel.AddChild(d.Lists[traitsListIndex])
 			case gurps.BlockLayoutSkillsKey:
 				d.Lists[skillsListIndex] = NewSkillsPageList(d, d.template)
 				rowPanel.AddChild(d.Lists[skillsListIndex])
@@ -324,8 +324,8 @@ func (d *Template) canPerformCmd(_ any, id int) (enabled, handled bool) {
 	case constants.SaveItemID:
 		return d.Modified(), true
 	case constants.SaveAsItemID,
-		constants.NewAdvantageItemID,
-		constants.NewAdvantageContainerItemID,
+		constants.NewTraitItemID,
+		constants.NewTraitContainerItemID,
 		constants.NewSkillItemID,
 		constants.NewSkillContainerItemID,
 		constants.NewTechniqueItemID,
@@ -338,7 +338,7 @@ func (d *Template) canPerformCmd(_ any, id int) (enabled, handled bool) {
 		constants.NewOtherEquipmentContainerItemID,
 		constants.NewNoteItemID,
 		constants.NewNoteContainerItemID,
-		constants.AddNaturalAttacksAdvantageItemID:
+		constants.AddNaturalAttacksItemID:
 		return true, true
 	default:
 		return false, false
@@ -351,10 +351,10 @@ func (d *Template) performCmd(_ any, id int) bool {
 		d.save(false)
 	case constants.SaveAsItemID:
 		d.save(true)
-	case constants.NewAdvantageItemID:
-		d.Lists[advantagesListIndex].CreateItem(d, editors.NoItemVariant)
-	case constants.NewAdvantageContainerItemID:
-		d.Lists[advantagesListIndex].CreateItem(d, editors.ContainerItemVariant)
+	case constants.NewTraitItemID:
+		d.Lists[traitsListIndex].CreateItem(d, editors.NoItemVariant)
+	case constants.NewTraitContainerItemID:
+		d.Lists[traitsListIndex].CreateItem(d, editors.ContainerItemVariant)
 	case constants.NewSkillItemID:
 		d.Lists[skillsListIndex].CreateItem(d, editors.NoItemVariant)
 	case constants.NewSkillContainerItemID:
@@ -379,13 +379,13 @@ func (d *Template) performCmd(_ any, id int) bool {
 		d.Lists[notesListIndex].CreateItem(d, editors.NoItemVariant)
 	case constants.NewNoteContainerItemID:
 		d.Lists[notesListIndex].CreateItem(d, editors.ContainerItemVariant)
-	case constants.AddNaturalAttacksAdvantageItemID:
-		editors.InsertItem[*gurps.Advantage](d, d.Lists[advantagesListIndex].table, gurps.NewNaturalAttacks(nil, nil),
-			func(target, parent *gurps.Advantage) { target.Parent = parent },
-			func(target *gurps.Advantage) []*gurps.Advantage { return target.Children },
-			func(target *gurps.Advantage, children []*gurps.Advantage) { target.Children = children },
-			d.template.AdvantageList, d.template.SetAdvantageList, d.Lists[advantagesListIndex].provider.RowData,
-			func(target *gurps.Advantage) uuid.UUID { return target.ID })
+	case constants.AddNaturalAttacksItemID:
+		editors.InsertItem[*gurps.Trait](d, d.Lists[traitsListIndex].table, gurps.NewNaturalAttacks(nil, nil),
+			func(target, parent *gurps.Trait) { target.Parent = parent },
+			func(target *gurps.Trait) []*gurps.Trait { return target.Children },
+			func(target *gurps.Trait, children []*gurps.Trait) { target.Children = children },
+			d.template.TraitList, d.template.SetTraitList, d.Lists[traitsListIndex].provider.RowData,
+			func(target *gurps.Trait) uuid.UUID { return target.ID })
 	default:
 		return false
 	}

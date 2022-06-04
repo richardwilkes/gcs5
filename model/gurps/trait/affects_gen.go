@@ -11,7 +11,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package advantage
+package trait
 
 import (
 	"strings"
@@ -56,7 +56,7 @@ var (
 	}
 )
 
-// Affects describes how an AdvantageModifier affects the point cost.
+// Affects describes how a TraitModifier affects the point cost.
 type Affects byte
 
 // EnsureValid ensures this is of a known value.

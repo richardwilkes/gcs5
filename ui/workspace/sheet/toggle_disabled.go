@@ -42,11 +42,11 @@ func (a *toggleDisabledList) Finish() {
 }
 
 type disabledAdjuster struct {
-	Target   *gurps.Advantage
+	Target   *gurps.Trait
 	Disabled bool
 }
 
-func newDisabledAdjuster(target *gurps.Advantage) *disabledAdjuster {
+func newDisabledAdjuster(target *gurps.Trait) *disabledAdjuster {
 	return &disabledAdjuster{
 		Target:   target,
 		Disabled: target.Disabled,
@@ -59,7 +59,7 @@ func (a *disabledAdjuster) Apply() {
 
 func canToggleDisabled(table *unison.Table) bool {
 	for _, row := range table.SelectedRows(false) {
-		if adv := editors.ExtractFromRowData[*gurps.Advantage](row); adv != nil {
+		if t := editors.ExtractFromRowData[*gurps.Trait](row); t != nil {
 			return true
 		}
 	}
@@ -70,10 +70,10 @@ func toggleDisabled(owner widget.Rebuildable, table *unison.Table) {
 	before := &toggleDisabledList{Owner: owner}
 	after := &toggleDisabledList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if adv := editors.ExtractFromRowData[*gurps.Advantage](row); adv != nil {
-			before.List = append(before.List, newDisabledAdjuster(adv))
-			adv.Disabled = !adv.Disabled
-			after.List = append(after.List, newDisabledAdjuster(adv))
+		if t := editors.ExtractFromRowData[*gurps.Trait](row); t != nil {
+			before.List = append(before.List, newDisabledAdjuster(t))
+			t.Disabled = !t.Disabled
+			after.List = append(after.List, newDisabledAdjuster(t))
 		}
 	}
 	if len(before.List) > 0 {

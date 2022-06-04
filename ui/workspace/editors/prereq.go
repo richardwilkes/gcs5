@@ -29,7 +29,7 @@ import (
 
 const noAndOr = ""
 
-var lastPrereqTypeUsed = prereq.Advantage
+var lastPrereqTypeUsed = prereq.Trait
 
 type prereqPanel struct {
 	unison.Panel
@@ -98,8 +98,8 @@ func (p *prereqPanel) addToList(parent *unison.Panel, depth, index int, child gu
 	switch one := child.(type) {
 	case *gurps.PrereqList:
 		panel = p.createPrereqListPanel(depth, one)
-	case *gurps.AdvantagePrereq:
-		panel = p.createAdvantagePrereqPanel(depth, one)
+	case *gurps.TraitPrereq:
+		panel = p.createTraitPrereqPanel(depth, one)
 	case *gurps.AttributePrereq:
 		panel = p.createAttributePrereqPanel(depth, one)
 	case *gurps.ContainedQuantityPrereq:
@@ -241,8 +241,8 @@ func (p *prereqPanel) createPrereqForType(prereqType prereq.Type, parentList *gu
 		one := gurps.NewPrereqList()
 		one.Parent = parentList
 		return one
-	case prereq.Advantage:
-		one := gurps.NewAdvantagePrereq()
+	case prereq.Trait:
+		one := gurps.NewTraitPrereq()
 		one.Parent = parentList
 		return one
 	case prereq.Attribute:
@@ -271,7 +271,7 @@ func (p *prereqPanel) createPrereqForType(prereqType prereq.Type, parentList *gu
 	}
 }
 
-func (p *prereqPanel) createAdvantagePrereqPanel(depth int, pr *gurps.AdvantagePrereq) *unison.Panel {
+func (p *prereqPanel) createTraitPrereqPanel(depth int, pr *gurps.TraitPrereq) *unison.Panel {
 	panel := unison.NewPanel()
 	p.createButtonsPanel(panel, depth, pr)
 	inFront := andOrText(pr) != noAndOr

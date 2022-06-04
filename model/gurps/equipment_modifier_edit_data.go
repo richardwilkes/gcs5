@@ -36,13 +36,13 @@ type EquipmentModifierEditData struct {
 }
 
 // CopyFrom implements node.EditorData.
-func (d *EquipmentModifierEditData) CopyFrom(adv *EquipmentModifier) {
-	d.copyFrom(&adv.EquipmentModifierEditData)
+func (d *EquipmentModifierEditData) CopyFrom(mod *EquipmentModifier) {
+	d.copyFrom(&mod.EquipmentModifierEditData)
 }
 
 // ApplyTo implements node.EditorData.
-func (d *EquipmentModifierEditData) ApplyTo(adv *EquipmentModifier) {
-	adv.EquipmentModifierEditData.copyFrom(d)
+func (d *EquipmentModifierEditData) ApplyTo(mod *EquipmentModifier) {
+	mod.EquipmentModifierEditData.copyFrom(d)
 }
 
 func (d *EquipmentModifierEditData) copyFrom(other *EquipmentModifierEditData) {

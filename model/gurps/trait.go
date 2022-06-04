@@ -17,10 +17,10 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/gcs/model/fxp"
-	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/nameables"
+	"github.com/richardwilkes/gcs/model/gurps/trait"
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
@@ -30,44 +30,44 @@ import (
 )
 
 var (
-	_ WeaponOwner = &Advantage{}
-	_ Node        = &Advantage{}
+	_ WeaponOwner = &Trait{}
+	_ Node        = &Trait{}
 )
 
-// Columns that can be used with the advantage method .CellData()
+// Columns that can be used with the trait method .CellData()
 const (
-	AdvantageDescriptionColumn = iota
-	AdvantagePointsColumn
-	AdvantageTagsColumn
-	AdvantageReferenceColumn
+	TraitDescriptionColumn = iota
+	TraitPointsColumn
+	TraitTagsColumn
+	TraitReferenceColumn
 )
 
 const (
-	advantageListTypeKey = "advantage_list"
-	advantageTypeKey     = "advantage"
+	traitListTypeKey = "advantage_list"
+	traitTypeKey     = "advantage"
 )
 
-// Advantage holds an advantage, disadvantage, quirk, or perk.
-type Advantage struct {
-	AdvantageData
+// Trait holds an advantage, disadvantage, quirk, or perk.
+type Trait struct {
+	TraitData
 	Entity            *Entity
-	Parent            *Advantage
+	Parent            *Trait
 	UnsatisfiedReason string
 }
 
-type advantageListData struct {
-	Type    string       `json:"type"`
-	Version int          `json:"version"`
-	Rows    []*Advantage `json:"rows"`
+type traitListData struct {
+	Type    string   `json:"type"`
+	Version int      `json:"version"`
+	Rows    []*Trait `json:"rows"`
 }
 
-// NewAdvantagesFromFile loads an Advantage list from a file.
-func NewAdvantagesFromFile(fileSystem fs.FS, filePath string) ([]*Advantage, error) {
-	var data advantageListData
+// NewTraitsFromFile loads an Trait list from a file.
+func NewTraitsFromFile(fileSystem fs.FS, filePath string) ([]*Trait, error) {
+	var data traitListData
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
 		return nil, errs.NewWithCause(gid.InvalidFileDataMsg, err)
 	}
-	if data.Type != advantageListTypeKey {
+	if data.Type != traitListTypeKey {
 		return nil, errs.New(gid.UnexpectedFileDataMsg)
 	}
 	if err := gid.CheckVersion(data.Version); err != nil {
@@ -76,20 +76,20 @@ func NewAdvantagesFromFile(fileSystem fs.FS, filePath string) ([]*Advantage, err
 	return data.Rows, nil
 }
 
-// SaveAdvantages writes the Advantage list to the file as JSON.
-func SaveAdvantages(advantages []*Advantage, filePath string) error {
-	return jio.SaveToFile(context.Background(), filePath, &advantageListData{
-		Type:    advantageListTypeKey,
+// SaveTraits writes the Trait list to the file as JSON.
+func SaveTraits(traits []*Trait, filePath string) error {
+	return jio.SaveToFile(context.Background(), filePath, &traitListData{
+		Type:    traitListTypeKey,
 		Version: gid.CurrentDataVersion,
-		Rows:    advantages,
+		Rows:    traits,
 	})
 }
 
-// NewAdvantage creates a new Advantage.
-func NewAdvantage(entity *Entity, parent *Advantage, container bool) *Advantage {
-	a := &Advantage{
-		AdvantageData: AdvantageData{
-			ContainerBase: newContainerBase[*Advantage](advantageTypeKey, container),
+// NewTrait creates a new Trait.
+func NewTrait(entity *Entity, parent *Trait, container bool) *Trait {
+	a := &Trait{
+		TraitData: TraitData{
+			ContainerBase: newContainerBase[*Trait](traitTypeKey, container),
 		},
 		Entity: entity,
 		Parent: parent,
@@ -99,16 +99,16 @@ func NewAdvantage(entity *Entity, parent *Advantage, container bool) *Advantage 
 }
 
 // MarshalJSON implements json.Marshaler.
-func (a *Advantage) MarshalJSON() ([]byte, error) {
+func (a *Trait) MarshalJSON() ([]byte, error) {
 	type calc struct {
 		Points fxp.Int `json:"points"`
 	}
 	a.ClearUnusedFieldsForType()
 	data := struct {
-		AdvantageData
+		TraitData
 		Calc calc `json:"calc"`
 	}{
-		AdvantageData: a.AdvantageData,
+		TraitData: a.TraitData,
 		Calc: calc{
 			Points: a.AdjustedPoints(),
 		},
@@ -117,9 +117,9 @@ func (a *Advantage) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (a *Advantage) UnmarshalJSON(data []byte) error {
+func (a *Trait) UnmarshalJSON(data []byte) error {
 	var localData struct {
-		AdvantageData
+		TraitData
 		// Old data fields
 		Categories   []string `json:"categories"`
 		Mental       bool     `json:"mental"`
@@ -132,7 +132,7 @@ func (a *Advantage) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	localData.ClearUnusedFieldsForType()
-	a.AdvantageData = localData.AdvantageData
+	a.TraitData = localData.TraitData
 	a.transferOldTypeFlagToTags(i18n.Text("Mental"), localData.Mental)
 	a.transferOldTypeFlagToTags(i18n.Text("Physical"), localData.Physical)
 	a.transferOldTypeFlagToTags(i18n.Text("Social"), localData.Social)
@@ -148,29 +148,29 @@ func (a *Advantage) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (a *Advantage) transferOldTypeFlagToTags(name string, flag bool) {
+func (a *Trait) transferOldTypeFlagToTags(name string, flag bool) {
 	if flag && !slices.Contains(a.Tags, name) {
 		a.Tags = append(a.Tags, name)
 	}
 }
 
 // CellData returns the cell data information for the given column.
-func (a *Advantage) CellData(column int, data *CellData) {
+func (a *Trait) CellData(column int, data *CellData) {
 	switch column {
-	case AdvantageDescriptionColumn:
+	case TraitDescriptionColumn:
 		data.Type = Text
 		data.Primary = a.String()
 		data.Secondary = a.SecondaryText()
 		data.Disabled = a.Disabled
 		data.UnsatisfiedReason = a.UnsatisfiedReason
-	case AdvantagePointsColumn:
+	case TraitPointsColumn:
 		data.Type = Text
 		data.Primary = a.AdjustedPoints().String()
 		data.Alignment = unison.EndAlignment
-	case AdvantageTagsColumn:
+	case TraitTagsColumn:
 		data.Type = Text
 		data.Primary = CombineTags(a.Tags)
-	case AdvantageReferenceColumn, PageRefCellAlias:
+	case TraitReferenceColumn, PageRefCellAlias:
 		data.Type = PageRef
 		data.Primary = a.PageRef
 		data.Secondary = a.Name
@@ -178,7 +178,7 @@ func (a *Advantage) CellData(column int, data *CellData) {
 }
 
 // Depth returns the number of parents this node has.
-func (a *Advantage) Depth() int {
+func (a *Trait) Depth() int {
 	count := 0
 	p := a.Parent
 	for p != nil {
@@ -189,12 +189,12 @@ func (a *Advantage) Depth() int {
 }
 
 // OwningEntity returns the owning Entity.
-func (a *Advantage) OwningEntity() *Entity {
+func (a *Trait) OwningEntity() *Entity {
 	return a.Entity
 }
 
 // SetOwningEntity sets the owning entity and configures any sub-components as needed.
-func (a *Advantage) SetOwningEntity(entity *Entity) {
+func (a *Trait) SetOwningEntity(entity *Entity) {
 	a.Entity = entity
 	if a.Container() {
 		for _, child := range a.Children {
@@ -211,17 +211,17 @@ func (a *Advantage) SetOwningEntity(entity *Entity) {
 }
 
 // Notes returns the local notes.
-func (a *Advantage) Notes() string {
+func (a *Trait) Notes() string {
 	return a.LocalNotes
 }
 
-// IsLeveled returns true if the Advantage is capable of having levels.
-func (a *Advantage) IsLeveled() bool {
+// IsLeveled returns true if the Trait is capable of having levels.
+func (a *Trait) IsLeveled() bool {
 	return !a.Container() && a.PointsPerLevel != 0
 }
 
 // AdjustedPoints returns the total points, taking levels and modifiers into account.
-func (a *Advantage) AdjustedPoints() fxp.Int {
+func (a *Trait) AdjustedPoints() fxp.Int {
 	if a.Disabled {
 		return 0
 	}
@@ -229,7 +229,7 @@ func (a *Advantage) AdjustedPoints() fxp.Int {
 		return AdjustedPoints(a.Entity, a.BasePoints, a.Levels, a.PointsPerLevel, a.CR, a.AllModifiers(), a.RoundCostDown)
 	}
 	var points fxp.Int
-	if a.ContainerType == advantage.AlternativeAbilities {
+	if a.ContainerType == trait.AlternativeAbilities {
 		values := make([]fxp.Int, len(a.Children))
 		for i, one := range a.Children {
 			values[i] = one.AdjustedPoints()
@@ -255,8 +255,8 @@ func (a *Advantage) AdjustedPoints() fxp.Int {
 }
 
 // AllModifiers returns the modifiers plus any inherited from parents.
-func (a *Advantage) AllModifiers() []*AdvantageModifier {
-	all := make([]*AdvantageModifier, len(a.Modifiers))
+func (a *Trait) AllModifiers() []*TraitModifier {
+	all := make([]*TraitModifier, len(a.Modifiers))
 	copy(all, a.Modifiers)
 	p := a.Parent
 	for p != nil {
@@ -266,8 +266,8 @@ func (a *Advantage) AllModifiers() []*AdvantageModifier {
 	return all
 }
 
-// Enabled returns true if this Advantage and all of its parents are enabled.
-func (a *Advantage) Enabled() bool {
+// Enabled returns true if this Trait and all of its parents are enabled.
+func (a *Trait) Enabled() bool {
 	if a.Disabled {
 		return false
 	}
@@ -282,12 +282,12 @@ func (a *Advantage) Enabled() bool {
 }
 
 // Description returns a description, which doesn't include any levels.
-func (a *Advantage) Description() string {
+func (a *Trait) Description() string {
 	return a.Name
 }
 
 // String implements fmt.Stringer.
-func (a *Advantage) String() string {
+func (a *Trait) String() string {
 	var buffer strings.Builder
 	buffer.WriteString(a.Name)
 	if a.IsLeveled() {
@@ -298,17 +298,17 @@ func (a *Advantage) String() string {
 }
 
 // FeatureList returns the list of Features.
-func (a *Advantage) FeatureList() feature.Features {
+func (a *Trait) FeatureList() feature.Features {
 	return a.Features
 }
 
 // TagList returns the list of tags.
-func (a *Advantage) TagList() []string {
+func (a *Trait) TagList() []string {
 	return a.Tags
 }
 
-// FillWithNameableKeys adds any nameable keys found in this Advantage to the provided map.
-func (a *Advantage) FillWithNameableKeys(m map[string]string) {
+// FillWithNameableKeys adds any nameable keys found in this Trait to the provided map.
+func (a *Trait) FillWithNameableKeys(m map[string]string) {
 	nameables.Extract(a.Name, m)
 	nameables.Extract(a.LocalNotes, m)
 	nameables.Extract(a.VTTNotes, m)
@@ -326,8 +326,8 @@ func (a *Advantage) FillWithNameableKeys(m map[string]string) {
 	}
 }
 
-// ApplyNameableKeys replaces any nameable keys found in this Advantage with the corresponding values in the provided map.
-func (a *Advantage) ApplyNameableKeys(m map[string]string) {
+// ApplyNameableKeys replaces any nameable keys found in this Trait with the corresponding values in the provided map.
+func (a *Trait) ApplyNameableKeys(m map[string]string) {
 	a.Name = nameables.Apply(a.Name, m)
 	a.LocalNotes = nameables.Apply(a.LocalNotes, m)
 	a.VTTNotes = nameables.Apply(a.VTTNotes, m)
@@ -346,7 +346,7 @@ func (a *Advantage) ApplyNameableKeys(m map[string]string) {
 }
 
 // ActiveModifierFor returns the first modifier that matches the name (case-insensitive).
-func (a *Advantage) ActiveModifierFor(name string) *AdvantageModifier {
+func (a *Trait) ActiveModifierFor(name string) *TraitModifier {
 	for _, one := range a.Modifiers {
 		if !one.Disabled && strings.EqualFold(one.Name, name) {
 			return one
@@ -356,9 +356,9 @@ func (a *Advantage) ActiveModifierFor(name string) *AdvantageModifier {
 }
 
 // ModifierNotes returns the notes due to modifiers.
-func (a *Advantage) ModifierNotes() string {
+func (a *Trait) ModifierNotes() string {
 	var buffer strings.Builder
-	if a.CR != advantage.None {
+	if a.CR != trait.None {
 		buffer.WriteString(a.CR.String())
 		if a.CRAdj != NoCRAdj {
 			buffer.WriteString(", ")
@@ -376,8 +376,8 @@ func (a *Advantage) ModifierNotes() string {
 	return buffer.String()
 }
 
-// SecondaryText returns the "secondary" text: the text display below an Advantage.
-func (a *Advantage) SecondaryText() string {
+// SecondaryText returns the "secondary" text: the text display below an Trait.
+func (a *Trait) SecondaryText() string {
 	var buffer strings.Builder
 	settings := SheetSettingsFor(a.Entity)
 	if a.UserDesc != "" && settings.UserDescriptionDisplay.Inline() {
@@ -431,16 +431,16 @@ func ExtractTags(tags string) []string {
 }
 
 // AdjustedPoints returns the total points, taking levels and modifiers into account. 'entity' may be nil.
-func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fxp.Int, cr advantage.SelfControlRoll, modifiers []*AdvantageModifier, roundCostDown bool) fxp.Int {
+func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fxp.Int, cr trait.SelfControlRoll, modifiers []*TraitModifier, roundCostDown bool) fxp.Int {
 	var baseEnh, levelEnh, baseLim, levelLim fxp.Int
 	multiplier := cr.Multiplier()
 	for _, one := range modifiers {
 		if !one.Container() && !one.Disabled {
 			modifier := one.CostModifier()
 			switch one.CostType {
-			case advantage.Percentage:
+			case trait.Percentage:
 				switch one.Affects {
-				case advantage.Total:
+				case trait.Total:
 					if modifier < 0 {
 						baseLim += modifier
 						levelLim += modifier
@@ -448,26 +448,26 @@ func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fxp.Int, 
 						baseEnh += modifier
 						levelEnh += modifier
 					}
-				case advantage.BaseOnly:
+				case trait.BaseOnly:
 					if modifier < 0 {
 						baseLim += modifier
 					} else {
 						baseEnh += modifier
 					}
-				case advantage.LevelsOnly:
+				case trait.LevelsOnly:
 					if modifier < 0 {
 						levelLim += modifier
 					} else {
 						levelEnh += modifier
 					}
 				}
-			case advantage.Points:
-				if one.Affects == advantage.LevelsOnly {
+			case trait.Points:
+				if one.Affects == trait.LevelsOnly {
 					pointsPerLevel += modifier
 				} else {
 					basePoints += modifier
 				}
-			case advantage.Multiplier:
+			case trait.Multiplier:
 				multiplier = multiplier.Mul(modifier)
 			}
 		}

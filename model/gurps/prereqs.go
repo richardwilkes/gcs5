@@ -39,8 +39,8 @@ func (p *Prereqs) UnmarshalJSON(data []byte) error {
 		switch typeData.Type {
 		case prereq.List:
 			pr = &PrereqList{}
-		case prereq.Advantage:
-			pr = &AdvantagePrereq{}
+		case prereq.Trait:
+			pr = &TraitPrereq{}
 		case prereq.Attribute:
 			pr = &AttributePrereq{}
 		case prereq.ContainedQuantity:

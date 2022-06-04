@@ -192,16 +192,16 @@ func (ex *legacyExporter) emitKey(key string) error {
 	case "BASIC_MOVE_POINTS":
 		ex.writeEncodedText(ex.entity.Attributes.Cost(gid.BasicMove).String())
 	case "ADVANTAGE_POINTS":
-		pts, _, _, _ := ex.entity.AdvantagePoints()
+		pts, _, _, _ := ex.entity.TraitPoints()
 		ex.writeEncodedText(pts.String())
 	case "DISADVANTAGE_POINTS":
-		_, pts, _, _ := ex.entity.AdvantagePoints()
+		_, pts, _, _ := ex.entity.TraitPoints()
 		ex.writeEncodedText(pts.String())
 	case "QUIRK_POINTS":
-		_, _, _, pts := ex.entity.AdvantagePoints()
+		_, _, _, pts := ex.entity.TraitPoints()
 		ex.writeEncodedText(pts.String())
 	case "RACE_POINTS":
-		_, _, pts, _ := ex.entity.AdvantagePoints()
+		_, _, pts, _ := ex.entity.TraitPoints()
 		ex.writeEncodedText(pts.String())
 	case "SKILL_POINTS":
 		ex.writeEncodedText(ex.entity.SkillPoints().String())
@@ -347,41 +347,41 @@ func (ex *legacyExporter) emitKey(key string) error {
 	case "HIT_LOCATION_LOOP_START":
 		ex.processHitLocationLoop(ex.extractUpToMarker("HIT_LOCATION_LOOP_END"))
 	case "ADVANTAGES_LOOP_COUNT":
-		ex.writeAdvantageLoopCount(ex.includeByAdvantageTags)
+		ex.writeTraitLoopCount(ex.includeByTraitTags)
 	case "ADVANTAGES_LOOP_START":
-		ex.processAdvantagesLoop(ex.extractUpToMarker("ADVANTAGES_LOOP_END"), ex.includeByAdvantageTags)
+		ex.processTraitLoop(ex.extractUpToMarker("ADVANTAGES_LOOP_END"), ex.includeByTraitTags)
 	case "ADVANTAGES_ALL_LOOP_COUNT":
-		ex.writeAdvantageLoopCount(ex.includeAdvantagesAndPerks)
+		ex.writeTraitLoopCount(ex.includeAdvantagesAndPerks)
 	case "ADVANTAGES_ALL_LOOP_START":
-		ex.processAdvantagesLoop(ex.extractUpToMarker("ADVANTAGES_ALL_LOOP_END"), ex.includeAdvantagesAndPerks)
+		ex.processTraitLoop(ex.extractUpToMarker("ADVANTAGES_ALL_LOOP_END"), ex.includeAdvantagesAndPerks)
 	case "ADVANTAGES_ONLY_LOOP_COUNT":
-		ex.writeAdvantageLoopCount(ex.includeAdvantages)
+		ex.writeTraitLoopCount(ex.includeAdvantages)
 	case "ADVANTAGES_ONLY_LOOP_START":
-		ex.processAdvantagesLoop(ex.extractUpToMarker("ADVANTAGES_ONLY_LOOP_END"), ex.includeAdvantages)
+		ex.processTraitLoop(ex.extractUpToMarker("ADVANTAGES_ONLY_LOOP_END"), ex.includeAdvantages)
 	case "DISADVANTAGES_LOOP_COUNT":
-		ex.writeAdvantageLoopCount(ex.includeDisadvantages)
+		ex.writeTraitLoopCount(ex.includeDisadvantages)
 	case "DISADVANTAGES_LOOP_START":
-		ex.processAdvantagesLoop(ex.extractUpToMarker("DISADVANTAGES_LOOP_END"), ex.includeDisadvantages)
+		ex.processTraitLoop(ex.extractUpToMarker("DISADVANTAGES_LOOP_END"), ex.includeDisadvantages)
 	case "DISADVANTAGES_ALL_LOOP_COUNT":
-		ex.writeAdvantageLoopCount(ex.includeDisadvantagesAndQuirks)
+		ex.writeTraitLoopCount(ex.includeDisadvantagesAndQuirks)
 	case "DISADVANTAGES_ALL_LOOP_START":
-		ex.processAdvantagesLoop(ex.extractUpToMarker("DISADVANTAGES_ALL_LOOP_END"), ex.includeDisadvantagesAndQuirks)
+		ex.processTraitLoop(ex.extractUpToMarker("DISADVANTAGES_ALL_LOOP_END"), ex.includeDisadvantagesAndQuirks)
 	case "QUIRKS_LOOP_COUNT":
-		ex.writeAdvantageLoopCount(ex.includeQuirks)
+		ex.writeTraitLoopCount(ex.includeQuirks)
 	case "QUIRKS_LOOP_START":
-		ex.processAdvantagesLoop(ex.extractUpToMarker("QUIRKS_LOOP_END"), ex.includeQuirks)
+		ex.processTraitLoop(ex.extractUpToMarker("QUIRKS_LOOP_END"), ex.includeQuirks)
 	case "PERKS_LOOP_COUNT":
-		ex.writeAdvantageLoopCount(ex.includePerks)
+		ex.writeTraitLoopCount(ex.includePerks)
 	case "PERKS_LOOP_START":
-		ex.processAdvantagesLoop(ex.extractUpToMarker("PERKS_LOOP_END"), ex.includePerks)
+		ex.processTraitLoop(ex.extractUpToMarker("PERKS_LOOP_END"), ex.includePerks)
 	case "LANGUAGES_LOOP_COUNT":
-		ex.writeAdvantageLoopCount(ex.includeLanguages)
+		ex.writeTraitLoopCount(ex.includeLanguages)
 	case "LANGUAGES_LOOP_START":
-		ex.processAdvantagesLoop(ex.extractUpToMarker("LANGUAGES_LOOP_END"), ex.includeLanguages)
+		ex.processTraitLoop(ex.extractUpToMarker("LANGUAGES_LOOP_END"), ex.includeLanguages)
 	case "CULTURAL_FAMILIARITIES_LOOP_COUNT":
-		ex.writeAdvantageLoopCount(ex.includeCulturalFamiliarities)
+		ex.writeTraitLoopCount(ex.includeCulturalFamiliarities)
 	case "CULTURAL_FAMILIARITIES_LOOP_START":
-		ex.processAdvantagesLoop(ex.extractUpToMarker("CULTURAL_FAMILIARITIES_LOOP_END"), ex.includeCulturalFamiliarities)
+		ex.processTraitLoop(ex.extractUpToMarker("CULTURAL_FAMILIARITIES_LOOP_END"), ex.includeCulturalFamiliarities)
 	case "SKILLS_LOOP_COUNT":
 		count := 0
 		gurps.TraverseSkills(func(_ *gurps.Skill) bool {
@@ -626,14 +626,14 @@ func (ex *legacyExporter) bestWeaponDefense(f func(weapon *gurps.Weapon) string)
 	return best
 }
 
-func (ex *legacyExporter) writeAdvantageLoopCount(f func(*gurps.Advantage) bool) {
+func (ex *legacyExporter) writeTraitLoopCount(f func(*gurps.Trait) bool) {
 	count := 0
-	gurps.TraverseAdvantages(func(adq *gurps.Advantage) bool {
-		if f(adq) {
+	gurps.TraverseTraits(func(t *gurps.Trait) bool {
+		if f(t) {
 			count++
 		}
 		return false
-	}, true, ex.entity.Advantages...)
+	}, true, ex.entity.Traits...)
 	ex.writeEncodedText(strconv.Itoa(count))
 }
 
@@ -654,40 +654,40 @@ func (ex *legacyExporter) includeByTags(tags []string) bool {
 	return true
 }
 
-func (ex *legacyExporter) includeByAdvantageTags(adq *gurps.Advantage) bool {
-	return ex.includeByTags(adq.Tags)
+func (ex *legacyExporter) includeByTraitTags(t *gurps.Trait) bool {
+	return ex.includeByTags(t.Tags)
 }
 
-func (ex *legacyExporter) includeAdvantages(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() > fxp.One && ex.includeByAdvantageTags(adq)
+func (ex *legacyExporter) includeAdvantages(t *gurps.Trait) bool {
+	return t.AdjustedPoints() > fxp.One && ex.includeByTraitTags(t)
 }
 
-func (ex *legacyExporter) includePerks(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() == fxp.One && ex.includeByAdvantageTags(adq)
+func (ex *legacyExporter) includePerks(t *gurps.Trait) bool {
+	return t.AdjustedPoints() == fxp.One && ex.includeByTraitTags(t)
 }
 
-func (ex *legacyExporter) includeAdvantagesAndPerks(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() > 0 && ex.includeByAdvantageTags(adq)
+func (ex *legacyExporter) includeAdvantagesAndPerks(t *gurps.Trait) bool {
+	return t.AdjustedPoints() > 0 && ex.includeByTraitTags(t)
 }
 
-func (ex *legacyExporter) includeDisadvantages(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() < -fxp.One && ex.includeByAdvantageTags(adq)
+func (ex *legacyExporter) includeDisadvantages(t *gurps.Trait) bool {
+	return t.AdjustedPoints() < -fxp.One && ex.includeByTraitTags(t)
 }
 
-func (ex *legacyExporter) includeQuirks(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() == -fxp.One && ex.includeByAdvantageTags(adq)
+func (ex *legacyExporter) includeQuirks(t *gurps.Trait) bool {
+	return t.AdjustedPoints() == -fxp.One && ex.includeByTraitTags(t)
 }
 
-func (ex *legacyExporter) includeDisadvantagesAndQuirks(adq *gurps.Advantage) bool {
-	return adq.AdjustedPoints() < 0 && ex.includeByAdvantageTags(adq)
+func (ex *legacyExporter) includeDisadvantagesAndQuirks(t *gurps.Trait) bool {
+	return t.AdjustedPoints() < 0 && ex.includeByTraitTags(t)
 }
 
-func (ex *legacyExporter) includeLanguages(adq *gurps.Advantage) bool {
-	return gurps.HasTag("Language", adq.Tags) && ex.includeByAdvantageTags(adq)
+func (ex *legacyExporter) includeLanguages(t *gurps.Trait) bool {
+	return gurps.HasTag("Language", t.Tags) && ex.includeByTraitTags(t)
 }
 
-func (ex *legacyExporter) includeCulturalFamiliarities(adq *gurps.Advantage) bool {
-	return strings.HasPrefix(strings.ToLower(adq.Name), "cultural familiarity (") && ex.includeByAdvantageTags(adq)
+func (ex *legacyExporter) includeCulturalFamiliarities(t *gurps.Trait) bool {
+	return strings.HasPrefix(strings.ToLower(t.Name), "cultural familiarity (") && ex.includeByTraitTags(t)
 }
 
 func (ex *legacyExporter) processEncumbranceLoop(buffer []byte) {
@@ -780,59 +780,59 @@ func (ex *legacyExporter) hitLocationEquipment(location *gurps.HitLocation) []st
 	return list
 }
 
-func (ex *legacyExporter) processAdvantagesLoop(buffer []byte, f func(*gurps.Advantage) bool) {
-	gurps.TraverseAdvantages(func(adq *gurps.Advantage) bool {
-		if f(adq) {
+func (ex *legacyExporter) processTraitLoop(buffer []byte, f func(*gurps.Trait) bool) {
+	gurps.TraverseTraits(func(t *gurps.Trait) bool {
+		if f(t) {
 			ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
 				switch key {
 				case idKey:
-					ex.writeEncodedText(adq.ID.String())
+					ex.writeEncodedText(t.ID.String())
 				case parentIDKey:
-					if adq.Parent != nil {
-						ex.writeEncodedText(adq.Parent.ID.String())
+					if t.Parent != nil {
+						ex.writeEncodedText(t.Parent.ID.String())
 					}
 				case typeKey:
-					if adq.Container() {
-						ex.writeEncodedText(strings.ToUpper(adq.ContainerType.Key()))
+					if t.Container() {
+						ex.writeEncodedText(strings.ToUpper(t.ContainerType.Key()))
 					} else {
 						ex.writeEncodedText("ITEM")
 					}
 				case pointsKey:
-					ex.writeEncodedText(adq.AdjustedPoints().String())
+					ex.writeEncodedText(t.AdjustedPoints().String())
 				case descriptionKey:
-					ex.writeEncodedText(adq.String())
-					ex.writeNote(adq.ModifierNotes())
-					ex.writeNote(adq.Notes())
+					ex.writeEncodedText(t.String())
+					ex.writeNote(t.ModifierNotes())
+					ex.writeNote(t.Notes())
 				case descriptionPrimaryKey:
-					ex.writeEncodedText(adq.String())
+					ex.writeEncodedText(t.String())
 				case "DESCRIPTION_USER":
-					ex.writeEncodedText(adq.UserDesc)
+					ex.writeEncodedText(t.UserDesc)
 				case "DESCRIPTION_USER_FORMATTED":
-					if adq.UserDesc != "" {
-						for _, one := range strings.Split(adq.UserDesc, "\n") {
+					if t.UserDesc != "" {
+						for _, one := range strings.Split(t.UserDesc, "\n") {
 							ex.out.WriteString("<p>")
 							ex.writeEncodedText(one)
 							ex.out.WriteString("</p>\n")
 						}
 					}
 				case refKey:
-					ex.writeEncodedText(adq.PageRef)
+					ex.writeEncodedText(t.PageRef)
 				case styleIndentWarningKey:
-					ex.handleStyleIndentWarning(adq.Depth(), adq.UnsatisfiedReason == "")
+					ex.handleStyleIndentWarning(t.Depth(), t.UnsatisfiedReason == "")
 				case satisfiedKey:
-					ex.handleSatisfied(adq.UnsatisfiedReason == "")
+					ex.handleSatisfied(t.UnsatisfiedReason == "")
 				default:
 					switch {
 					case strings.HasPrefix(key, "DESCRIPTION_MODIFIER_NOTES"):
-						ex.writeWithOptionalParens(key, adq.ModifierNotes())
+						ex.writeWithOptionalParens(key, t.ModifierNotes())
 					case strings.HasPrefix(key, "DESCRIPTION_NOTES"):
-						ex.writeWithOptionalParens(key, adq.Notes())
+						ex.writeWithOptionalParens(key, t.Notes())
 					case strings.HasPrefix(key, "MODIFIER_NOTES_FOR_"):
-						if mod := adq.ActiveModifierFor(key[len("MODIFIER_NOTES_FOR_"):]); mod != nil {
+						if mod := t.ActiveModifierFor(key[len("MODIFIER_NOTES_FOR_"):]); mod != nil {
 							ex.writeEncodedText(mod.LocalNotes)
 						}
 					case strings.HasPrefix(key, "DEPTHx"):
-						ex.handlePrefixDepth(key, adq.Depth())
+						ex.handlePrefixDepth(key, t.Depth())
 					default:
 						ex.unidentifiedKey(key)
 					}
@@ -841,7 +841,7 @@ func (ex *legacyExporter) processAdvantagesLoop(buffer []byte, f func(*gurps.Adv
 			})
 		}
 		return false
-	}, true, ex.entity.Advantages...)
+	}, true, ex.entity.Traits...)
 	ex.onlyTags = make(map[string]bool)
 	ex.excludedTags = make(map[string]bool)
 }

@@ -28,8 +28,8 @@ const (
 
 // Known file extensions.
 const (
-	AdvantagesExt         = ".adq"
-	AdvantageModifiersExt = ".adm"
+	TraitsExt             = ".adq"
+	TraitModifiersExt     = ".adm"
 	EquipmentExt          = ".eqp"
 	EquipmentModifiersExt = ".eqm"
 	SkillsExt             = ".skl"

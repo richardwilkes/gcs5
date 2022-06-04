@@ -15,19 +15,19 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-// AdvantageData holds the Advantage data that is written to disk.
-type AdvantageData struct {
-	ContainerBase[*Advantage]
-	AdvantageEditData
+// TraitData holds the Trait data that is written to disk.
+type TraitData struct {
+	ContainerBase[*Trait]
+	TraitEditData
 }
 
 // Kind returns the kind of data.
-func (d *AdvantageData) Kind() string {
-	return d.kind(i18n.Text("Advantage"))
+func (d *TraitData) Kind() string {
+	return d.kind(i18n.Text("Trait"))
 }
 
 // ClearUnusedFieldsForType zeroes out the fields that are not applicable to this type (container vs not-container).
-func (d *AdvantageData) ClearUnusedFieldsForType() {
+func (d *TraitData) ClearUnusedFieldsForType() {
 	d.clearUnusedFields()
 	if d.Container() {
 		d.BasePoints = 0

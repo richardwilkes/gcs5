@@ -22,9 +22,9 @@ import (
 func RegisterFileTypes() {
 	registerExportableGCSFileInfo(library.SheetExt, res.GCSSheetSVG, sheet.NewSheetFromFile)
 	registerGCSFileInfo(library.TemplatesExt, []string{library.TemplatesExt}, res.GCSTemplateSVG, sheet.NewTemplateFromFile)
-	groupWith := []string{library.AdvantagesExt, library.AdvantageModifiersExt, library.EquipmentExt, library.EquipmentModifiersExt, library.SkillsExt, library.SpellsExt, library.NotesExt}
-	registerGCSFileInfo(library.AdvantagesExt, groupWith, res.GCSAdvantagesSVG, NewAdvantageTableDockableFromFile)
-	registerGCSFileInfo(library.AdvantageModifiersExt, groupWith, res.GCSAdvantageModifiersSVG, NewAdvantageModifierTableDockableFromFile)
+	groupWith := []string{library.TraitsExt, library.TraitModifiersExt, library.EquipmentExt, library.EquipmentModifiersExt, library.SkillsExt, library.SpellsExt, library.NotesExt}
+	registerGCSFileInfo(library.TraitsExt, groupWith, res.GCSTraitsSVG, NewTraitTableDockableFromFile)
+	registerGCSFileInfo(library.TraitModifiersExt, groupWith, res.GCSTraitModifiersSVG, NewTraitModifierTableDockableFromFile)
 	registerGCSFileInfo(library.EquipmentExt, groupWith, res.GCSEquipmentSVG, NewEquipmentTableDockableFromFile)
 	registerGCSFileInfo(library.EquipmentModifiersExt, groupWith, res.GCSEquipmentModifiersSVG, NewEquipmentModifierTableDockableFromFile)
 	registerGCSFileInfo(library.SkillsExt, groupWith, res.GCSSkillsSVG, NewSkillTableDockableFromFile)

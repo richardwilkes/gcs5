@@ -22,7 +22,7 @@ import (
 // Possible values.
 const (
 	List Type = iota
-	Advantage
+	Trait
 	Attribute
 	ContainedQuantity
 	ContainedWeight
@@ -35,7 +35,7 @@ var (
 	// AllType holds all possible values.
 	AllType = []Type{
 		List,
-		Advantage,
+		Trait,
 		Attribute,
 		ContainedQuantity,
 		ContainedWeight,
@@ -52,7 +52,7 @@ var (
 		},
 		{
 			key:    "advantage_prereq",
-			string: i18n.Text("an advantage"),
+			string: i18n.Text("a trait"),
 		},
 		{
 			key:    "attribute_prereq",

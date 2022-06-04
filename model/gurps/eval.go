@@ -26,7 +26,8 @@ import (
 
 // InstallEvaluatorFunctions installs additional functions for the evaluator.
 func InstallEvaluatorFunctions(m map[string]eval.Function) {
-	m["advantage_level"] = evalAdvantageLevel
+	m["advantage_level"] = evalTraitLevel
+	m["trait_level"] = evalTraitLevel
 	m["dice"] = evalDice
 	m["roll"] = evalRoll
 	m["signed"] = evalSigned
@@ -67,22 +68,22 @@ func evalToString(e *eval.Evaluator, arguments string) (string, error) {
 	return fmt.Sprintf("%v", v), nil
 }
 
-func evalAdvantageLevel(e *eval.Evaluator, arguments string) (any, error) {
+func evalTraitLevel(e *eval.Evaluator, arguments string) (any, error) {
 	entity, ok := e.Resolver.(*Entity)
 	if !ok || entity.Type != datafile.PC {
 		return -fxp.One, nil
 	}
 	arguments = strings.Trim(arguments, `"`)
 	levels := -fxp.One
-	TraverseAdvantages(func(adq *Advantage) bool {
-		if strings.EqualFold(adq.Name, arguments) {
-			if adq.IsLeveled() {
-				levels = adq.Levels
+	TraverseTraits(func(t *Trait) bool {
+		if strings.EqualFold(t.Name, arguments) {
+			if t.IsLeveled() {
+				levels = t.Levels
 			}
 			return true
 		}
 		return false
-	}, true, entity.Advantages...)
+	}, true, entity.Traits...)
 	return levels, nil
 }
 

@@ -24,7 +24,7 @@ const (
 	BlockLayoutConditionalModifiersKey = "conditional_modifiers"
 	BlockLayoutMeleeKey                = "melee"
 	BlockLayoutRangedKey               = "ranged"
-	BlockLayoutAdvantagesKey           = "advantages"
+	BlockLayoutTraitsKey               = "advantages"
 	BlockLayoutSkillsKey               = "skills"
 	BlockLayoutSpellsKey               = "spells"
 	BlockLayoutEquipmentKey            = "equipment"
@@ -37,7 +37,7 @@ var allBlockLayoutKeys = []string{
 	BlockLayoutConditionalModifiersKey,
 	BlockLayoutMeleeKey,
 	BlockLayoutRangedKey,
-	BlockLayoutAdvantagesKey,
+	BlockLayoutTraitsKey,
 	BlockLayoutSkillsKey,
 	BlockLayoutSpellsKey,
 	BlockLayoutEquipmentKey,
@@ -188,7 +188,7 @@ func (b *BlockLayout) Reset() {
 		BlockLayoutReactionsKey + " " + BlockLayoutConditionalModifiersKey,
 		BlockLayoutMeleeKey,
 		BlockLayoutRangedKey,
-		BlockLayoutAdvantagesKey + " " + BlockLayoutSkillsKey,
+		BlockLayoutTraitsKey + " " + BlockLayoutSkillsKey,
 		BlockLayoutSpellsKey,
 		BlockLayoutEquipmentKey,
 		BlockLayoutOtherEquipmentKey,

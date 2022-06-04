@@ -19,7 +19,7 @@ import (
 )
 
 func registerItemMenuActions() {
-	registerAdvantagesMenuActions()
+	registerTraitsMenuActions()
 	registerSkillsMenuActions()
 	registerSpellsMenuActions()
 	registerEquipmentMenuActions()
@@ -34,7 +34,7 @@ func registerItemMenuActions() {
 
 func createItemMenu(f unison.MenuFactory) unison.Menu {
 	m := f.NewMenu(constants.ItemMenuID, i18n.Text("Item"), nil)
-	m.InsertMenu(-1, createAdvantagesMenu(f))
+	m.InsertMenu(-1, createTraitsMenu(f))
 	m.InsertMenu(-1, createSkillsMenu(f))
 	m.InsertMenu(-1, createSpellsMenu(f))
 	m.InsertMenu(-1, createEquipmentMenu(f))
@@ -50,23 +50,23 @@ func createItemMenu(f unison.MenuFactory) unison.Menu {
 	return m
 }
 
-func registerAdvantagesMenuActions() {
-	settings.RegisterKeyBinding("new.adq", NewAdvantage)
-	settings.RegisterKeyBinding("new.adq.container", NewAdvantageContainer)
-	settings.RegisterKeyBinding("new.adm", NewAdvantageModifier)
-	settings.RegisterKeyBinding("new.adm.container", NewAdvantageContainerModifier)
-	settings.RegisterKeyBinding("add.natural.attacks", AddNaturalAttacksAdvantage)
+func registerTraitsMenuActions() {
+	settings.RegisterKeyBinding("new.adq", NewTrait)
+	settings.RegisterKeyBinding("new.adq.container", NewTraitContainer)
+	settings.RegisterKeyBinding("new.adm", NewTraitModifier)
+	settings.RegisterKeyBinding("new.adm.container", NewTraitContainerModifier)
+	settings.RegisterKeyBinding("add.natural.attacks", AddNaturalAttacks)
 }
 
-func createAdvantagesMenu(f unison.MenuFactory) unison.Menu {
-	m := f.NewMenu(constants.AdvantagesMenuID, i18n.Text("Advantages"), nil)
-	m.InsertItem(-1, NewAdvantage.NewMenuItem(f))
-	m.InsertItem(-1, NewAdvantageContainer.NewMenuItem(f))
+func createTraitsMenu(f unison.MenuFactory) unison.Menu {
+	m := f.NewMenu(constants.TraitsMenuID, i18n.Text("Traits"), nil)
+	m.InsertItem(-1, NewTrait.NewMenuItem(f))
+	m.InsertItem(-1, NewTraitContainer.NewMenuItem(f))
 	m.InsertSeparator(-1, false)
-	m.InsertItem(-1, NewAdvantageModifier.NewMenuItem(f))
-	m.InsertItem(-1, NewAdvantageContainerModifier.NewMenuItem(f))
+	m.InsertItem(-1, NewTraitModifier.NewMenuItem(f))
+	m.InsertItem(-1, NewTraitContainerModifier.NewMenuItem(f))
 	m.InsertSeparator(-1, false)
-	m.InsertItem(-1, AddNaturalAttacksAdvantage.NewMenuItem(f))
+	m.InsertItem(-1, AddNaturalAttacks.NewMenuItem(f))
 	return m
 }
 
@@ -134,46 +134,46 @@ func createNotesMenu(f unison.MenuFactory) unison.Menu {
 	return m
 }
 
-// NewAdvantage creates a new advantage.
-var NewAdvantage = &unison.Action{
-	ID:              constants.NewAdvantageItemID,
-	Title:           i18n.Text("New Advantage"),
+// NewTrait creates a new trait.
+var NewTrait = &unison.Action{
+	ID:              constants.NewTraitItemID,
+	Title:           i18n.Text("New Trait"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
 	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
-// NewAdvantageContainer creates a new advantage container.
-var NewAdvantageContainer = &unison.Action{
-	ID:              constants.NewAdvantageContainerItemID,
-	Title:           i18n.Text("New Advantage Container"),
+// NewTraitContainer creates a new trait container.
+var NewTraitContainer = &unison.Action{
+	ID:              constants.NewTraitContainerItemID,
+	Title:           i18n.Text("New Trait Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
 	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
-// NewAdvantageModifier creates a new advantage modifier.
-var NewAdvantageModifier = &unison.Action{
-	ID:              constants.NewAdvantageModifierItemID,
-	Title:           i18n.Text("New Advantage Modifier"),
+// NewTraitModifier creates a new trait modifier.
+var NewTraitModifier = &unison.Action{
+	ID:              constants.NewTraitModifierItemID,
+	Title:           i18n.Text("New Trait Modifier"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.OptionModifier | unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
 	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
-// NewAdvantageContainerModifier creates a new advantage container modifier.
-var NewAdvantageContainerModifier = &unison.Action{
-	ID:              constants.NewAdvantageContainerModifierItemID,
-	Title:           i18n.Text("New Advantage Modifier Container"),
+// NewTraitContainerModifier creates a new trait container modifier.
+var NewTraitContainerModifier = &unison.Action{
+	ID:              constants.NewTraitContainerModifierItemID,
+	Title:           i18n.Text("New Trait Modifier Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
 	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
 
-// AddNaturalAttacksAdvantage creates the natural attacks advantage.
-var AddNaturalAttacksAdvantage = &unison.Action{
-	ID:              constants.AddNaturalAttacksAdvantageItemID,
-	Title:           i18n.Text("Add Natural Attacks Advantage"),
+// AddNaturalAttacks creates the natural attacks.
+var AddNaturalAttacks = &unison.Action{
+	ID:              constants.AddNaturalAttacksItemID,
+	Title:           i18n.Text("Add Natural Attacks"),
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
 	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }

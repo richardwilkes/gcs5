@@ -41,7 +41,7 @@ All rights reserved</string>
                 <string>com.trollworks.gcs.adm</string>
             </array>
             <key>CFBundleTypeName</key>
-            <string>GCS Advantage Modifiers Library</string>
+            <string>GCS Trait Modifiers Library</string>
             <key>LSHandlerRank</key>
             <string>Owner</string>
             <key>CFBundleTypeRole</key>
@@ -57,7 +57,7 @@ All rights reserved</string>
                 <string>com.trollworks.gcs.adq</string>
             </array>
             <key>CFBundleTypeName</key>
-            <string>GCS Advantages Library</string>
+            <string>GCS Traits Library</string>
             <key>LSHandlerRank</key>
             <string>Owner</string>
             <key>CFBundleTypeRole</key>

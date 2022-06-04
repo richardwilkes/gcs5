@@ -250,17 +250,17 @@ func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison
 			item.Equipped = c.Checked
 			if mgr := unison.UndoManagerFor(check); mgr != nil {
 				owner := widget.FindRebuildable(check)
-				mgr.Add(&unison.UndoEdit[*eqpAdjuster]{
+				mgr.Add(&unison.UndoEdit[*equipmentAdjuster]{
 					ID:       unison.NextUndoID(),
 					EditName: i18n.Text("Toggle Equipped"),
-					UndoFunc: func(edit *unison.UndoEdit[*eqpAdjuster]) { edit.BeforeData.Apply() },
-					RedoFunc: func(edit *unison.UndoEdit[*eqpAdjuster]) { edit.AfterData.Apply() },
-					BeforeData: &eqpAdjuster{
+					UndoFunc: func(edit *unison.UndoEdit[*equipmentAdjuster]) { edit.BeforeData.Apply() },
+					RedoFunc: func(edit *unison.UndoEdit[*equipmentAdjuster]) { edit.AfterData.Apply() },
+					BeforeData: &equipmentAdjuster{
 						Owner:    owner,
 						Target:   item,
 						Equipped: !item.Equipped,
 					},
-					AfterData: &eqpAdjuster{
+					AfterData: &equipmentAdjuster{
 						Owner:    owner,
 						Target:   item,
 						Equipped: item.Equipped,
@@ -268,21 +268,21 @@ func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison
 				})
 			}
 			item.Entity.Recalculate()
-		case *gurps.AdvantageModifier:
+		case *gurps.TraitModifier:
 			item.Disabled = !c.Checked
 			if mgr := unison.UndoManagerFor(check); mgr != nil {
 				owner := widget.FindRebuildable(check)
-				mgr.Add(&unison.UndoEdit[*advModAdjuster]{
+				mgr.Add(&unison.UndoEdit[*traitModifierAdjuster]{
 					ID:       unison.NextUndoID(),
-					EditName: i18n.Text("Toggle Advantage Modifier"),
-					UndoFunc: func(edit *unison.UndoEdit[*advModAdjuster]) { edit.BeforeData.Apply() },
-					RedoFunc: func(edit *unison.UndoEdit[*advModAdjuster]) { edit.AfterData.Apply() },
-					BeforeData: &advModAdjuster{
+					EditName: i18n.Text("Toggle Trait Modifier"),
+					UndoFunc: func(edit *unison.UndoEdit[*traitModifierAdjuster]) { edit.BeforeData.Apply() },
+					RedoFunc: func(edit *unison.UndoEdit[*traitModifierAdjuster]) { edit.AfterData.Apply() },
+					BeforeData: &traitModifierAdjuster{
 						Owner:    owner,
 						Target:   item,
 						Disabled: !item.Disabled,
 					},
-					AfterData: &advModAdjuster{
+					AfterData: &traitModifierAdjuster{
 						Owner:    owner,
 						Target:   item,
 						Disabled: item.Disabled,
@@ -294,17 +294,17 @@ func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison
 			item.Disabled = !c.Checked
 			if mgr := unison.UndoManagerFor(check); mgr != nil {
 				owner := widget.FindRebuildable(check)
-				mgr.Add(&unison.UndoEdit[*eqpModAdjuster]{
+				mgr.Add(&unison.UndoEdit[*equipmentModifierAdjuster]{
 					ID:       unison.NextUndoID(),
 					EditName: i18n.Text("Toggle Equipment Modifier"),
-					UndoFunc: func(edit *unison.UndoEdit[*eqpModAdjuster]) { edit.BeforeData.Apply() },
-					RedoFunc: func(edit *unison.UndoEdit[*eqpModAdjuster]) { edit.AfterData.Apply() },
-					BeforeData: &eqpModAdjuster{
+					UndoFunc: func(edit *unison.UndoEdit[*equipmentModifierAdjuster]) { edit.BeforeData.Apply() },
+					RedoFunc: func(edit *unison.UndoEdit[*equipmentModifierAdjuster]) { edit.AfterData.Apply() },
+					BeforeData: &equipmentModifierAdjuster{
 						Owner:    owner,
 						Target:   item,
 						Disabled: !item.Disabled,
 					},
-					AfterData: &eqpModAdjuster{
+					AfterData: &equipmentModifierAdjuster{
 						Owner:    owner,
 						Target:   item,
 						Disabled: item.Disabled,
@@ -328,13 +328,13 @@ func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison
 	return check
 }
 
-type eqpAdjuster struct {
+type equipmentAdjuster struct {
 	Owner    widget.Rebuildable
 	Target   *gurps.Equipment
 	Equipped bool
 }
 
-func (a *eqpAdjuster) Apply() {
+func (a *equipmentAdjuster) Apply() {
 	a.Target.Equipped = a.Equipped
 	if a.Target.Entity != nil {
 		a.Target.Entity.Recalculate()
@@ -342,13 +342,13 @@ func (a *eqpAdjuster) Apply() {
 	widget.MarkModified(a.Owner)
 }
 
-type eqpModAdjuster struct {
+type equipmentModifierAdjuster struct {
 	Owner    widget.Rebuildable
 	Target   *gurps.EquipmentModifier
 	Disabled bool
 }
 
-func (a *eqpModAdjuster) Apply() {
+func (a *equipmentModifierAdjuster) Apply() {
 	a.Target.Disabled = a.Disabled
 	if a.Target.Entity != nil {
 		a.Target.Entity.Recalculate()
@@ -356,13 +356,13 @@ func (a *eqpModAdjuster) Apply() {
 	widget.MarkModified(a.Owner)
 }
 
-type advModAdjuster struct {
+type traitModifierAdjuster struct {
 	Owner    widget.Rebuildable
-	Target   *gurps.AdvantageModifier
+	Target   *gurps.TraitModifier
 	Disabled bool
 }
 
-func (a *advModAdjuster) Apply() {
+func (a *traitModifierAdjuster) Apply() {
 	a.Target.Disabled = a.Disabled
 	if a.Target.Entity != nil {
 		a.Target.Entity.Recalculate()

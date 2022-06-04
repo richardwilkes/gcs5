@@ -14,19 +14,19 @@ package editors
 import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
-	"github.com/richardwilkes/gcs/model/gurps/advantage"
+	"github.com/richardwilkes/gcs/model/gurps/trait"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
 
-// EditAdvantageModifier displays the editor for an advantage modifier.
-func EditAdvantageModifier(owner widget.Rebuildable, modifier *gurps.AdvantageModifier) {
-	displayEditor[*gurps.AdvantageModifier, *gurps.AdvantageModifierEditData](owner, modifier, initAdvantageModifierEditor)
+// EditTraitModifier displays the editor for a trait modifier.
+func EditTraitModifier(owner widget.Rebuildable, modifier *gurps.TraitModifier) {
+	displayEditor[*gurps.TraitModifier, *gurps.TraitModifierEditData](owner, modifier, initTraitModifierEditor)
 }
 
-func initAdvantageModifierEditor(e *editor[*gurps.AdvantageModifier, *gurps.AdvantageModifierEditData], content *unison.Panel) func() {
+func initTraitModifierEditor(e *editor[*gurps.TraitModifier, *gurps.TraitModifierEditData], content *unison.Panel) func() {
 	if !e.target.Container() {
 		content.AddChild(unison.NewPanel())
 		addInvertedCheckBox(content, i18n.Text("Enabled"), &e.editorData.Disabled)
@@ -39,25 +39,25 @@ func initAdvantageModifierEditor(e *editor[*gurps.AdvantageModifier, *gurps.Adva
 		wrapper := addFlowWrapper(content, costLabel, 3)
 		addDecimalField(wrapper, costLabel, "", &e.editorData.Cost, -fxp.MaxBasePoints, fxp.MaxBasePoints)
 		costTypePopup := addCostTypePopup(wrapper, e)
-		affectsPopup := addPopup(wrapper, advantage.AllAffects, &e.editorData.Affects)
+		affectsPopup := addPopup(wrapper, trait.AllAffects, &e.editorData.Affects)
 		levels := addLabelAndDecimalField(content, i18n.Text("Level"), "", &e.editorData.Levels, 0, fxp.Thousand)
 		adjustFieldBlank(levels, !e.target.HasLevels())
 		total := widget.NewNonEditableField(func(field *widget.NonEditableField) {
 			enabled := true
 			switch costTypePopup.SelectedIndex() - 1 {
 			case -1:
-				field.Text = e.editorData.Cost.Mul(e.editorData.Levels).StringWithSign() + advantage.Percentage.String()
-			case int(advantage.Percentage):
-				field.Text = e.editorData.Cost.StringWithSign() + advantage.Percentage.String()
-			case int(advantage.Points):
+				field.Text = e.editorData.Cost.Mul(e.editorData.Levels).StringWithSign() + trait.Percentage.String()
+			case int(trait.Percentage):
+				field.Text = e.editorData.Cost.StringWithSign() + trait.Percentage.String()
+			case int(trait.Points):
 				field.Text = e.editorData.Cost.StringWithSign()
-			case int(advantage.Multiplier):
-				field.Text = advantage.Multiplier.String() + e.editorData.Cost.String()
-				affectsPopup.Select(advantage.Total)
+			case int(trait.Multiplier):
+				field.Text = trait.Multiplier.String() + e.editorData.Cost.String()
+				affectsPopup.Select(trait.Total)
 				enabled = false
 			default:
 				jot.Errorf("unhandled cost type popup index: %d", costTypePopup.SelectedIndex())
-				field.Text = e.editorData.Cost.StringWithSign() + advantage.Percentage.String()
+				field.Text = e.editorData.Cost.StringWithSign() + trait.Percentage.String()
 			}
 			affectsPopup.SetEnabled(enabled)
 			field.MarkForLayoutAndRedraw()
@@ -70,12 +70,12 @@ func initAdvantageModifierEditor(e *editor[*gurps.AdvantageModifier, *gurps.Adva
 		content.AddChild(total)
 		costTypePopup.SelectionCallback = func(index int, _ string) {
 			if index == 0 {
-				e.editorData.CostType = advantage.Percentage
+				e.editorData.CostType = trait.Percentage
 				if e.editorData.Levels < fxp.One {
 					levels.SetText("1")
 				}
 			} else {
-				e.editorData.CostType = advantage.AllModifierCostType[index-1]
+				e.editorData.CostType = trait.AllModifierCostType[index-1]
 				e.editorData.Levels = 0
 			}
 			adjustFieldBlank(levels, index != 0)
@@ -90,10 +90,10 @@ func initAdvantageModifierEditor(e *editor[*gurps.AdvantageModifier, *gurps.Adva
 	return nil
 }
 
-func addCostTypePopup(parent *unison.Panel, e *editor[*gurps.AdvantageModifier, *gurps.AdvantageModifierEditData]) *unison.PopupMenu[string] {
+func addCostTypePopup(parent *unison.Panel, e *editor[*gurps.TraitModifier, *gurps.TraitModifierEditData]) *unison.PopupMenu[string] {
 	popup := unison.NewPopupMenu[string]()
 	popup.AddItem(i18n.Text("% per level"))
-	for _, one := range advantage.AllModifierCostType {
+	for _, one := range trait.AllModifierCostType {
 		popup.AddItem(one.String())
 	}
 	if e.target.HasLevels() {

@@ -32,7 +32,7 @@ type sheetSettingsDockable struct {
 	Dockable
 	owner                              widget.EntityPanel
 	damageProgressionPopup             *unison.PopupMenu[attribute.DamageProgression]
-	showAdvantageModifier              *unison.CheckBox
+	showTraitModifier                  *unison.CheckBox
 	showEquipmentModifier              *unison.CheckBox
 	showSpellAdjustments               *unison.CheckBox
 	showTitleInsteadOfNameInPageFooter *unison.CheckBox
@@ -127,9 +127,9 @@ func (d *sheetSettingsDockable) createOptions(content *unison.Panel) {
 		HSpacing: unison.StdHSpacing,
 		VSpacing: unison.StdVSpacing,
 	})
-	d.showAdvantageModifier = d.addCheckBox(panel, i18n.Text("Show advantage modifier cost adjustments"),
-		s.ShowAdvantageModifierAdj, func() {
-			d.settings().ShowAdvantageModifierAdj = d.showAdvantageModifier.State == unison.OnCheckState
+	d.showTraitModifier = d.addCheckBox(panel, i18n.Text("Show trait modifier cost adjustments"),
+		s.ShowTraitModifierAdj, func() {
+			d.settings().ShowTraitModifierAdj = d.showTraitModifier.State == unison.OnCheckState
 			d.syncSheet(false)
 		})
 	d.showEquipmentModifier = d.addCheckBox(panel, i18n.Text("Show equipment modifier cost & weight adjustments"),
@@ -340,7 +340,7 @@ func (d *sheetSettingsDockable) reset() {
 func (d *sheetSettingsDockable) sync() {
 	s := d.settings()
 	d.damageProgressionPopup.Select(s.DamageProgression)
-	d.showAdvantageModifier.State = unison.CheckStateFromBool(s.ShowAdvantageModifierAdj)
+	d.showTraitModifier.State = unison.CheckStateFromBool(s.ShowTraitModifierAdj)
 	d.showEquipmentModifier.State = unison.CheckStateFromBool(s.ShowEquipmentModifierAdj)
 	d.showSpellAdjustments.State = unison.CheckStateFromBool(s.ShowSpellAdj)
 	d.showTitleInsteadOfNameInPageFooter.State = unison.CheckStateFromBool(s.UseTitleInFooter)

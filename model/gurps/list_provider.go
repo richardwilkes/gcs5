@@ -17,18 +17,18 @@ import (
 
 // ListProvider defines the methods needed to access list data.
 type ListProvider interface {
-	AdvantageListProvider
+	TraitListProvider
 	EquipmentListProvider
 	NoteListProvider
 	SkillListProvider
 	SpellListProvider
 }
 
-// AdvantageListProvider defines the method needed to access the advantage list data.
-type AdvantageListProvider interface {
+// TraitListProvider defines the method needed to access the trait list data.
+type TraitListProvider interface {
 	EntityProvider
-	AdvantageList() []*Advantage
-	SetAdvantageList(list []*Advantage)
+	TraitList() []*Trait
+	SetTraitList(list []*Trait)
 }
 
 // EquipmentListProvider defines the method needed to access the equipment list data.
@@ -61,11 +61,11 @@ type SpellListProvider interface {
 	SetSpellList(list []*Spell)
 }
 
-// AdvantageModifierListProvider defines the method needed to access the advantage modifier list data.
-type AdvantageModifierListProvider interface {
+// TraitModifierListProvider defines the method needed to access the trait modifier list data.
+type TraitModifierListProvider interface {
 	EntityProvider
-	AdvantageModifierList() []*AdvantageModifier
-	SetAdvantageModifierList(list []*AdvantageModifier)
+	TraitModifierList() []*TraitModifier
+	SetTraitModifierList(list []*TraitModifier)
 }
 
 // EquipmentModifierListProvider defines the method needed to access the equipment modifier list data.

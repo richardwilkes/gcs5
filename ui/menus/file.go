@@ -40,8 +40,8 @@ const outputTemplatesDirName = "Output Templates"
 func registerFileMenuActions() {
 	settings.RegisterKeyBinding("new.char.sheet", NewCharacterSheet)
 	settings.RegisterKeyBinding("new.char.template", NewCharacterTemplate)
-	settings.RegisterKeyBinding("new.adq.lib", NewAdvantagesLibrary)
-	settings.RegisterKeyBinding("new.adm.lib", NewAdvantageModifiersLibrary)
+	settings.RegisterKeyBinding("new.adq.lib", NewTraitsLibrary)
+	settings.RegisterKeyBinding("new.adm.lib", NewTraitModifiersLibrary)
 	settings.RegisterKeyBinding("new.eqp.lib", NewEquipmentLibrary)
 	settings.RegisterKeyBinding("new.eqp.lib", NewEquipmentModifiersLibrary)
 	settings.RegisterKeyBinding("new.not.lib", NewNotesLibrary)
@@ -60,8 +60,8 @@ func setupFileMenu(bar unison.Menu) {
 	newFileMenu := f.NewMenu(constants.NewFileMenuID, i18n.Text("New File…"), nil)
 	newFileMenu.InsertItem(-1, NewCharacterSheet.NewMenuItem(f))
 	newFileMenu.InsertItem(-1, NewCharacterTemplate.NewMenuItem(f))
-	newFileMenu.InsertItem(-1, NewAdvantagesLibrary.NewMenuItem(f))
-	newFileMenu.InsertItem(-1, NewAdvantageModifiersLibrary.NewMenuItem(f))
+	newFileMenu.InsertItem(-1, NewTraitsLibrary.NewMenuItem(f))
+	newFileMenu.InsertItem(-1, NewTraitModifiersLibrary.NewMenuItem(f))
 	newFileMenu.InsertItem(-1, NewEquipmentLibrary.NewMenuItem(f))
 	newFileMenu.InsertItem(-1, NewEquipmentModifiersLibrary.NewMenuItem(f))
 	newFileMenu.InsertItem(-1, NewNotesLibrary.NewMenuItem(f))
@@ -195,21 +195,21 @@ var NewCharacterTemplate = &unison.Action{
 	},
 }
 
-// NewAdvantagesLibrary creates a new advantages library.
-var NewAdvantagesLibrary = &unison.Action{
-	ID:    constants.NewAdvantagesLibraryItemID,
-	Title: i18n.Text("New Advantages Library"),
+// NewTraitsLibrary creates a new traits library.
+var NewTraitsLibrary = &unison.Action{
+	ID:    constants.NewTraitsLibraryItemID,
+	Title: i18n.Text("New Traits Library"),
 	ExecuteCallback: func(_ *unison.Action, _ any) {
-		workspace.DisplayNewDockable(nil, lists.NewAdvantageTableDockable("Advantages"+library.AdvantagesExt, nil))
+		workspace.DisplayNewDockable(nil, lists.NewTraitTableDockable("Traits"+library.TraitsExt, nil))
 	},
 }
 
-// NewAdvantageModifiersLibrary creates a new advantage modifiers library.
-var NewAdvantageModifiersLibrary = &unison.Action{
-	ID:    constants.NewAdvantageModifiersLibraryItemID,
-	Title: i18n.Text("New Advantage Modifiers Library"),
+// NewTraitModifiersLibrary creates a new trait modifiers library.
+var NewTraitModifiersLibrary = &unison.Action{
+	ID:    constants.NewTraitModifiersLibraryItemID,
+	Title: i18n.Text("New Trait Modifiers Library"),
 	ExecuteCallback: func(_ *unison.Action, _ any) {
-		workspace.DisplayNewDockable(nil, lists.NewAdvantageModifierTableDockable("Advantage Modifiers"+library.AdvantageModifiersExt, nil))
+		workspace.DisplayNewDockable(nil, lists.NewTraitModifierTableDockable("Trait Modifiers"+library.TraitModifiersExt, nil))
 	},
 }
 

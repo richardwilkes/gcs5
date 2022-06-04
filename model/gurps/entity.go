@@ -24,7 +24,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/crc"
 	"github.com/richardwilkes/gcs/model/fxp"
-	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/ancestry"
 	"github.com/richardwilkes/gcs/model/gurps/attribute"
 	"github.com/richardwilkes/gcs/model/gurps/datafile"
@@ -32,6 +31,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
+	"github.com/richardwilkes/gcs/model/gurps/trait"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/gcs/model/jio"
@@ -64,7 +64,7 @@ type EntityData struct {
 	Profile          *Profile       `json:"profile,omitempty"`
 	SheetSettings    *SheetSettings `json:"settings,omitempty"`
 	Attributes       *Attributes    `json:"attributes,omitempty"`
-	Advantages       []*Advantage   `json:"advantages,omitempty"`
+	Traits           []*Trait       `json:"advantages,omitempty"`
 	Skills           []*Skill       `json:"skills,omitempty"`
 	Spells           []*Spell       `json:"spells,omitempty"`
 	CarriedEquipment []*Equipment   `json:"equipment,omitempty"`
@@ -217,7 +217,7 @@ func (e *Entity) ensureAttachments() {
 	for _, attr := range e.Attributes.Set {
 		attr.Entity = e
 	}
-	for _, one := range e.Advantages {
+	for _, one := range e.Traits {
 		one.SetOwningEntity(e)
 	}
 	for _, one := range e.Skills {
@@ -239,7 +239,7 @@ func (e *Entity) ensureAttachments() {
 
 func (e *Entity) processFeatures() {
 	m := make(map[string][]feature.Feature)
-	TraverseAdvantages(func(a *Advantage) bool {
+	TraverseTraits(func(a *Trait) bool {
 		if !a.Container() {
 			for _, f := range a.Features {
 				processFeature(a, m, f, a.Levels.Max(0))
@@ -256,7 +256,7 @@ func (e *Entity) processFeatures() {
 			}
 		}
 		return false
-	}, true, e.Advantages...)
+	}, true, e.Traits...)
 	TraverseSkills(func(s *Skill) bool {
 		if !s.Container() {
 			for _, f := range s.Features {
@@ -317,7 +317,7 @@ func processFeature(parent fmt.Stringer, m map[string][]feature.Feature, f featu
 func (e *Entity) processPrereqs() {
 	const prefix = "\n● "
 	notMetPrefix := i18n.Text("Prerequisites have not been met:")
-	TraverseAdvantages(func(a *Advantage) bool {
+	TraverseTraits(func(a *Trait) bool {
 		a.UnsatisfiedReason = ""
 		if !a.Container() && a.Prereq != nil {
 			var tooltip xio.ByteBuffer
@@ -326,7 +326,7 @@ func (e *Entity) processPrereqs() {
 			}
 		}
 		return false
-	}, true, e.Advantages...)
+	}, true, e.Traits...)
 	TraverseSkills(func(s *Skill) bool {
 		s.UnsatisfiedReason = ""
 		if !s.Container() {
@@ -402,7 +402,7 @@ func (e *Entity) UpdateSpells() bool {
 // SpentPoints returns the number of spent points.
 func (e *Entity) SpentPoints() fxp.Int {
 	total := e.AttributePoints()
-	ad, disad, race, quirk := e.AdvantagePoints()
+	ad, disad, race, quirk := e.TraitPoints()
 	total += ad + disad + race + quirk
 	total += e.SkillPoints()
 	total += e.SpellPoints()
@@ -431,10 +431,10 @@ func (e *Entity) AttributePoints() fxp.Int {
 	return total
 }
 
-// AdvantagePoints returns the number of points spent on advantages.
-func (e *Entity) AdvantagePoints() (ad, disad, race, quirk fxp.Int) {
-	for _, one := range e.Advantages {
-		a, d, r, q := calculateSingleAdvantagePoints(one)
+// TraitPoints returns the number of points spent on traits.
+func (e *Entity) TraitPoints() (ad, disad, race, quirk fxp.Int) {
+	for _, one := range e.Traits {
+		a, d, r, q := calculateSingleTraitPoints(one)
 		ad += a
 		disad += d
 		race += r
@@ -443,23 +443,23 @@ func (e *Entity) AdvantagePoints() (ad, disad, race, quirk fxp.Int) {
 	return
 }
 
-func calculateSingleAdvantagePoints(adq *Advantage) (ad, disad, race, quirk fxp.Int) {
-	if adq.Container() {
-		switch adq.ContainerType {
-		case advantage.Group:
-			for _, child := range adq.Children {
-				a, d, r, q := calculateSingleAdvantagePoints(child)
+func calculateSingleTraitPoints(t *Trait) (ad, disad, race, quirk fxp.Int) {
+	if t.Container() {
+		switch t.ContainerType {
+		case trait.Group:
+			for _, child := range t.Children {
+				a, d, r, q := calculateSingleTraitPoints(child)
 				ad += a
 				disad += d
 				race += r
 				quirk += q
 			}
 			return
-		case advantage.Race:
-			return 0, 0, adq.AdjustedPoints(), 0
+		case trait.Race:
+			return 0, 0, t.AdjustedPoints(), 0
 		}
 	}
-	pts := adq.AdjustedPoints()
+	pts := t.AdjustedPoints()
 	switch {
 	case pts == -fxp.One:
 		quirk += pts
@@ -1020,14 +1020,14 @@ func (e *Entity) PreservesUserDesc() bool {
 // Ancestry returns the current Ancestry.
 func (e *Entity) Ancestry() *ancestry.Ancestry {
 	var anc *ancestry.Ancestry
-	TraverseAdvantages(func(adq *Advantage) bool {
-		if adq.Container() && adq.ContainerType == advantage.Race {
-			if anc = ancestry.Lookup(adq.Ancestry, SettingsProvider.Libraries()); anc != nil {
+	TraverseTraits(func(t *Trait) bool {
+		if t.Container() && t.ContainerType == trait.Race {
+			if anc = ancestry.Lookup(t.Ancestry, SettingsProvider.Libraries()); anc != nil {
 				return true
 			}
 		}
 		return false
-	}, true, e.Advantages...)
+	}, true, e.Traits...)
 	if anc == nil {
 		if anc = ancestry.Lookup(ancestry.Default, SettingsProvider.Libraries()); anc == nil {
 			jot.Fatal(1, "unable to load default ancestry (Human)")
@@ -1039,7 +1039,7 @@ func (e *Entity) Ancestry() *ancestry.Ancestry {
 // EquippedWeapons returns a sorted list of equipped weapons.
 func (e *Entity) EquippedWeapons(weaponType weapon.Type) []*Weapon {
 	m := make(map[uint32]*Weapon)
-	TraverseAdvantages(func(a *Advantage) bool {
+	TraverseTraits(func(a *Trait) bool {
 		if !a.Container() {
 			for _, w := range a.Weapons {
 				if w.Type == weaponType {
@@ -1048,7 +1048,7 @@ func (e *Entity) EquippedWeapons(weaponType weapon.Type) []*Weapon {
 			}
 		}
 		return false
-	}, true, e.Advantages...)
+	}, true, e.Traits...)
 	TraverseEquipment(func(eqp *Equipment) bool {
 		if eqp.Equipped {
 			for _, w := range eqp.Weapons {
@@ -1090,8 +1090,8 @@ func (e *Entity) EquippedWeapons(weaponType weapon.Type) []*Weapon {
 // Reactions returns the current set of reactions.
 func (e *Entity) Reactions() []*ConditionalModifier {
 	m := make(map[string]*ConditionalModifier)
-	TraverseAdvantages(func(a *Advantage) bool {
-		source := i18n.Text("from advantage ") + a.String()
+	TraverseTraits(func(a *Trait) bool {
+		source := i18n.Text("from trait ") + a.String()
 		if !a.Container() {
 			e.reactionsFromFeatureList(source, a.Features, m)
 		}
@@ -1100,7 +1100,7 @@ func (e *Entity) Reactions() []*ConditionalModifier {
 				e.reactionsFromFeatureList(source, mod.Features, m)
 			}
 		}
-		if a.CR != advantage.None && a.CRAdj == ReactionPenalty {
+		if a.CR != trait.None && a.CRAdj == ReactionPenalty {
 			amt := fxp.From(ReactionPenalty.Adjustment(a.CR))
 			situation := fmt.Sprintf(i18n.Text("from others when %s is triggered"), a.String())
 			if r, exists := m[situation]; exists {
@@ -1110,7 +1110,7 @@ func (e *Entity) Reactions() []*ConditionalModifier {
 			}
 		}
 		return false
-	}, true, e.Advantages...)
+	}, true, e.Traits...)
 	TraverseEquipment(func(eqp *Equipment) bool {
 		if eqp.Equipped && eqp.Quantity > 0 {
 			source := i18n.Text("from equipment ") + eqp.Name
@@ -1147,8 +1147,8 @@ func (e *Entity) reactionsFromFeatureList(source string, features feature.Featur
 // ConditionalModifiers returns the current set of conditional modifiers.
 func (e *Entity) ConditionalModifiers() []*ConditionalModifier {
 	m := make(map[string]*ConditionalModifier)
-	TraverseAdvantages(func(a *Advantage) bool {
-		source := i18n.Text("from advantage ") + a.String()
+	TraverseTraits(func(a *Trait) bool {
+		source := i18n.Text("from trait ") + a.String()
 		if !a.Container() {
 			e.conditionalModifiersFromFeatureList(source, a.Features, m)
 		}
@@ -1158,7 +1158,7 @@ func (e *Entity) ConditionalModifiers() []*ConditionalModifier {
 			}
 		}
 		return false
-	}, true, e.Advantages...)
+	}, true, e.Traits...)
 	TraverseEquipment(func(eqp *Equipment) bool {
 		if eqp.Equipped && eqp.Quantity > 0 {
 			source := i18n.Text("from equipment ") + eqp.Name
@@ -1192,14 +1192,14 @@ func (e *Entity) conditionalModifiersFromFeatureList(source string, features fea
 	}
 }
 
-// AdvantageList implements ListProvider
-func (e *Entity) AdvantageList() []*Advantage {
-	return e.Advantages
+// TraitList implements ListProvider
+func (e *Entity) TraitList() []*Trait {
+	return e.Traits
 }
 
-// SetAdvantageList implements ListProvider
-func (e *Entity) SetAdvantageList(list []*Advantage) {
-	e.Advantages = list
+// SetTraitList implements ListProvider
+func (e *Entity) SetTraitList(list []*Trait) {
+	e.Traits = list
 }
 
 // CarriedEquipmentList implements ListProvider

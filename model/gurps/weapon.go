@@ -298,8 +298,8 @@ func (w *Weapon) skillLevelBaseAdjustment(entity *Entity, tooltip *xio.ByteBuffe
 	for _, f := range w.Owner.FeatureList() {
 		adj += w.extractSkillBonus(f, tooltip)
 	}
-	if adq, ok := w.Owner.(*Advantage); ok {
-		for _, mod := range adq.Modifiers {
+	if t, ok := w.Owner.(*Trait); ok {
+		for _, mod := range t.Modifiers {
 			if !mod.Disabled {
 				for _, f := range mod.Features {
 					adj += w.extractSkillBonus(f, tooltip)

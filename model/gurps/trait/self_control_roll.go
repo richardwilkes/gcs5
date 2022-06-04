@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package advantage
+package trait
 
 import (
 	"github.com/richardwilkes/gcs/model/fxp"

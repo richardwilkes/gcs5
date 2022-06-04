@@ -11,7 +11,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package advantage
+package trait
 
 import (
 	"strings"
@@ -59,7 +59,7 @@ var (
 	}
 )
 
-// ContainerType holds the type of an advantage container.
+// ContainerType holds the type of a trait container.
 type ContainerType byte
 
 // EnsureValid ensures this is of a known value.

@@ -147,9 +147,9 @@ func main() {
 		},
 	})
 	processSourceTemplate(enumTmpl, &enumInfo{
-		Pkg:        "model/gurps/advantage",
+		Pkg:        "model/gurps/trait",
 		Name:       "affects",
-		Desc:       "describes how an AdvantageModifier affects the point cost",
+		Desc:       "describes how a TraitModifier affects the point cost",
 		StandAlone: true,
 		Values: []enumValue{
 			{
@@ -169,9 +169,9 @@ func main() {
 		},
 	})
 	processSourceTemplate(enumTmpl, &enumInfo{
-		Pkg:        "model/gurps/advantage",
+		Pkg:        "model/gurps/trait",
 		Name:       "container_type",
-		Desc:       "holds the type of an advantage container",
+		Desc:       "holds the type of a trait container",
 		StandAlone: true,
 		Values: []enumValue{
 			{
@@ -190,9 +190,9 @@ func main() {
 		},
 	})
 	processSourceTemplate(enumTmpl, &enumInfo{
-		Pkg:        "model/gurps/advantage",
+		Pkg:        "model/gurps/trait",
 		Name:       "modifier_cost_type",
-		Desc:       "describes how an AdvantageModifier's point cost is applied",
+		Desc:       "describes how a TraitModifier's point cost is applied",
 		StandAlone: true,
 		Values: []enumValue{
 			{
@@ -532,9 +532,9 @@ func main() {
 				String: "a list",
 			},
 			{
-				Name:   "Advantage",
+				Name:   "Trait",
 				Key:    "advantage_prereq",
-				String: "an advantage",
+				String: "a trait",
 			},
 			{
 				Name:   "Attribute",

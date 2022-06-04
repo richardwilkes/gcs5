@@ -71,76 +71,76 @@ type TableDockable struct {
 	needsSaveAsPrompt bool
 }
 
-type advantageListProvider struct {
-	advantages []*gurps.Advantage
+type traitListProvider struct {
+	traits []*gurps.Trait
 }
 
-func (p *advantageListProvider) Entity() *gurps.Entity {
+func (p *traitListProvider) Entity() *gurps.Entity {
 	return nil
 }
 
-func (p *advantageListProvider) AdvantageList() []*gurps.Advantage {
-	return p.advantages
+func (p *traitListProvider) TraitList() []*gurps.Trait {
+	return p.traits
 }
 
-func (p *advantageListProvider) SetAdvantageList(list []*gurps.Advantage) {
-	p.advantages = list
+func (p *traitListProvider) SetTraitList(list []*gurps.Trait) {
+	p.traits = list
 }
 
-// NewAdvantageTableDockableFromFile loads a list of advantages from a file and creates a new unison.Dockable for them.
-func NewAdvantageTableDockableFromFile(filePath string) (unison.Dockable, error) {
-	advantages, err := gurps.NewAdvantagesFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
+// NewTraitTableDockableFromFile loads a list of traits from a file and creates a new unison.Dockable for them.
+func NewTraitTableDockableFromFile(filePath string) (unison.Dockable, error) {
+	traits, err := gurps.NewTraitsFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err
 	}
-	d := NewAdvantageTableDockable(filePath, advantages)
+	d := NewTraitTableDockable(filePath, traits)
 	d.needsSaveAsPrompt = false
 	return d, nil
 }
 
-// NewAdvantageTableDockable creates a new unison.Dockable for advantage list files.
-func NewAdvantageTableDockable(filePath string, advantages []*gurps.Advantage) *TableDockable {
-	provider := &advantageListProvider{advantages: advantages}
-	return NewTableDockable(filePath, library.AdvantagesExt, editors.NewAdvantagesProvider(provider, false),
-		func(path string) error { return gurps.SaveAdvantages(provider.AdvantageList(), path) },
-		constants.NewAdvantageItemID, constants.NewAdvantageContainerItemID)
+// NewTraitTableDockable creates a new unison.Dockable for trait list files.
+func NewTraitTableDockable(filePath string, traits []*gurps.Trait) *TableDockable {
+	provider := &traitListProvider{traits: traits}
+	return NewTableDockable(filePath, library.TraitsExt, editors.NewTraitsProvider(provider, false),
+		func(path string) error { return gurps.SaveTraits(provider.TraitList(), path) },
+		constants.NewTraitItemID, constants.NewTraitContainerItemID)
 }
 
-type advantageModifierListProvider struct {
-	modifiers []*gurps.AdvantageModifier
+type traitModifierListProvider struct {
+	modifiers []*gurps.TraitModifier
 }
 
-func (p *advantageModifierListProvider) Entity() *gurps.Entity {
+func (p *traitModifierListProvider) Entity() *gurps.Entity {
 	return nil
 }
 
-func (p *advantageModifierListProvider) AdvantageModifierList() []*gurps.AdvantageModifier {
+func (p *traitModifierListProvider) TraitModifierList() []*gurps.TraitModifier {
 	return p.modifiers
 }
 
-func (p *advantageModifierListProvider) SetAdvantageModifierList(list []*gurps.AdvantageModifier) {
+func (p *traitModifierListProvider) SetTraitModifierList(list []*gurps.TraitModifier) {
 	p.modifiers = list
 }
 
-// NewAdvantageModifierTableDockableFromFile loads a list of advantage modifiers from a file and creates a new
+// NewTraitModifierTableDockableFromFile loads a list of trait modifiers from a file and creates a new
 // unison.Dockable for them.
-func NewAdvantageModifierTableDockableFromFile(filePath string) (unison.Dockable, error) {
-	modifiers, err := gurps.NewAdvantageModifiersFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
+func NewTraitModifierTableDockableFromFile(filePath string) (unison.Dockable, error) {
+	modifiers, err := gurps.NewTraitModifiersFromFile(os.DirFS(filepath.Dir(filePath)), filepath.Base(filePath))
 	if err != nil {
 		return nil, err
 	}
-	d := NewAdvantageModifierTableDockable(filePath, modifiers)
+	d := NewTraitModifierTableDockable(filePath, modifiers)
 	d.needsSaveAsPrompt = false
 	return d, nil
 }
 
-// NewAdvantageModifierTableDockable creates a new unison.Dockable for advantage modifier list files.
-func NewAdvantageModifierTableDockable(filePath string, modifiers []*gurps.AdvantageModifier) *TableDockable {
-	provider := &advantageModifierListProvider{modifiers: modifiers}
-	return NewTableDockable(filePath, library.AdvantageModifiersExt,
-		editors.NewAdvantageModifiersProvider(provider, false),
-		func(path string) error { return gurps.SaveAdvantageModifiers(provider.AdvantageModifierList(), path) },
-		constants.NewAdvantageModifierItemID, constants.NewAdvantageContainerModifierItemID)
+// NewTraitModifierTableDockable creates a new unison.Dockable for trait modifier list files.
+func NewTraitModifierTableDockable(filePath string, modifiers []*gurps.TraitModifier) *TableDockable {
+	provider := &traitModifierListProvider{modifiers: modifiers}
+	return NewTableDockable(filePath, library.TraitModifiersExt,
+		editors.NewTraitModifiersProvider(provider, false),
+		func(path string) error { return gurps.SaveTraitModifiers(provider.TraitModifierList(), path) },
+		constants.NewTraitModifierItemID, constants.NewTraitContainerModifierItemID)
 }
 
 type equipmentListProvider struct {
@@ -670,8 +670,8 @@ func (d *TableDockable) performCmd(_ any, id int) bool {
 		d.save(false)
 	case constants.SaveAsItemID:
 		d.save(true)
-	case constants.NewAdvantageItemID,
-		constants.NewAdvantageModifierItemID,
+	case constants.NewTraitItemID,
+		constants.NewTraitModifierItemID,
 		constants.NewSkillItemID,
 		constants.NewSpellItemID,
 		constants.NewCarriedEquipmentItemID,
@@ -679,8 +679,8 @@ func (d *TableDockable) performCmd(_ any, id int) bool {
 		constants.NewEquipmentModifierItemID,
 		constants.NewNoteItemID:
 		d.provider.CreateItem(d, d.table, editors.NoItemVariant)
-	case constants.NewAdvantageContainerItemID,
-		constants.NewAdvantageContainerModifierItemID,
+	case constants.NewTraitContainerItemID,
+		constants.NewTraitContainerModifierItemID,
 		constants.NewSkillContainerItemID,
 		constants.NewSpellContainerItemID,
 		constants.NewCarriedEquipmentContainerItemID,

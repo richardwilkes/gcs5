@@ -15,39 +15,39 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/gcs/model/fxp"
-	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/feature"
+	"github.com/richardwilkes/gcs/model/gurps/trait"
 )
 
 // Adjustment returns the adjustment amount.
-func (enum SelfControlRollAdj) Adjustment(cr advantage.SelfControlRoll) int {
-	if cr == advantage.None {
+func (enum SelfControlRollAdj) Adjustment(cr trait.SelfControlRoll) int {
+	if cr == trait.None {
 		return 0
 	}
 	switch enum {
 	case NoCRAdj:
 		return 0
 	case ActionPenalty:
-		return cr.Index() - len(advantage.AllSelfControlRolls)
+		return cr.Index() - len(trait.AllSelfControlRolls)
 	case ReactionPenalty:
-		return cr.Index() - len(advantage.AllSelfControlRolls)
+		return cr.Index() - len(trait.AllSelfControlRolls)
 	case FrightCheckPenalty:
-		return cr.Index() - len(advantage.AllSelfControlRolls)
+		return cr.Index() - len(trait.AllSelfControlRolls)
 	case FrightCheckBonus:
-		return len(advantage.AllSelfControlRolls) - cr.Index()
+		return len(trait.AllSelfControlRolls) - cr.Index()
 	case MinorCostOfLivingIncrease:
-		return 5 * (len(advantage.AllSelfControlRolls) - cr.Index())
+		return 5 * (len(trait.AllSelfControlRolls) - cr.Index())
 	case MajorCostOfLivingIncrease:
-		return 10 * (1 << (len(advantage.AllSelfControlRolls) - (cr.Index() + 1)))
+		return 10 * (1 << (len(trait.AllSelfControlRolls) - (cr.Index() + 1)))
 	default:
 		return NoCRAdj.Adjustment(cr)
 	}
 }
 
 // Description returns a formatted description.
-func (enum SelfControlRollAdj) Description(cr advantage.SelfControlRoll) string {
+func (enum SelfControlRollAdj) Description(cr trait.SelfControlRoll) string {
 	switch {
-	case cr == advantage.None:
+	case cr == trait.None:
 		return ""
 	case enum == NoCRAdj:
 		return enum.AltString()
@@ -57,12 +57,12 @@ func (enum SelfControlRollAdj) Description(cr advantage.SelfControlRoll) string 
 }
 
 // Features returns the set of features to apply.
-func (enum SelfControlRollAdj) Features(cr advantage.SelfControlRoll) feature.Features {
+func (enum SelfControlRollAdj) Features(cr trait.SelfControlRoll) feature.Features {
 	if enum.EnsureValid() != MajorCostOfLivingIncrease {
 		return nil
 	}
 	f := feature.NewSkillBonus()
 	f.NameCriteria.Qualifier = "Merchant"
-	f.Amount = fxp.From(cr.Index() - len(advantage.AllSelfControlRolls))
+	f.Amount = fxp.From(cr.Index() - len(trait.AllSelfControlRolls))
 	return feature.Features{f}
 }

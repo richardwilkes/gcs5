@@ -14,20 +14,20 @@ package editors
 import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
-	"github.com/richardwilkes/gcs/model/gurps/advantage"
 	"github.com/richardwilkes/gcs/model/gurps/ancestry"
+	"github.com/richardwilkes/gcs/model/gurps/trait"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
 
-// EditAdvantage displays the editor for an advantage.
-func EditAdvantage(owner widget.Rebuildable, advantage *gurps.Advantage) {
-	displayEditor[*gurps.Advantage, *gurps.AdvantageEditData](owner, advantage, initAdvantageEditor)
+// EditTrait displays the editor for a trait.
+func EditTrait(owner widget.Rebuildable, t *gurps.Trait) {
+	displayEditor[*gurps.Trait, *gurps.TraitEditData](owner, t, initTraitEditor)
 }
 
-func initAdvantageEditor(e *editor[*gurps.Advantage, *gurps.AdvantageEditData], content *unison.Panel) func() {
+func initTraitEditor(e *editor[*gurps.Trait, *gurps.TraitEditData], content *unison.Panel) func() {
 	content.AddChild(unison.NewPanel())
 	addInvertedCheckBox(content, i18n.Text("Enabled"), &e.editorData.Disabled)
 	addNameLabelAndField(content, &e.editorData.Name)
@@ -60,15 +60,15 @@ func initAdvantageEditor(e *editor[*gurps.Advantage, *gurps.AdvantageEditData], 
 			fxp.MaxBasePoints)
 		adjustFieldBlank(levelField, e.editorData.PointsPerLevel == 0)
 	}
-	addLabelAndPopup(content, i18n.Text("Self-Control Roll"), "", advantage.AllSelfControlRolls, &e.editorData.CR)
+	addLabelAndPopup(content, i18n.Text("Self-Control Roll"), "", trait.AllSelfControlRolls, &e.editorData.CR)
 	crAdjPopup := addLabelAndPopup(content, i18n.Text("CR Adjustment"), i18n.Text("Self-Control Roll Adjustment"),
 		gurps.AllSelfControlRollAdj, &e.editorData.CRAdj)
-	if e.editorData.CR == advantage.None {
+	if e.editorData.CR == trait.None {
 		crAdjPopup.SetEnabled(false)
 	}
 	var ancestryPopup *unison.PopupMenu[string]
 	if e.target.Container() {
-		addLabelAndPopup(content, i18n.Text("Container Type"), "", advantage.AllContainerType,
+		addLabelAndPopup(content, i18n.Text("Container Type"), "", trait.AllContainerType,
 			&e.editorData.ContainerType)
 		var choices []string
 		for _, lib := range ancestry.AvailableAncestries(gurps.SettingsProvider.Libraries()) {
@@ -77,15 +77,15 @@ func initAdvantageEditor(e *editor[*gurps.Advantage, *gurps.AdvantageEditData], 
 			}
 		}
 		ancestryPopup = addLabelAndPopup(content, i18n.Text("Ancestry"), "", choices, &e.editorData.Ancestry)
-		adjustPopupBlank(ancestryPopup, e.editorData.ContainerType != advantage.Race)
+		adjustPopupBlank(ancestryPopup, e.editorData.ContainerType != trait.Race)
 	}
 	addPageRefLabelAndField(content, &e.editorData.PageRef)
 	if e.target.Container() {
-		content.AddChild(newAdvantageModifiersPanel(e.target.Entity, &e.editorData.Modifiers))
+		content.AddChild(newTraitModifiersPanel(e.target.Entity, &e.editorData.Modifiers))
 	} else {
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
 		content.AddChild(newFeaturesPanel(e.target.Entity, e.target, &e.editorData.Features))
-		content.AddChild(newAdvantageModifiersPanel(e.target.Entity, &e.editorData.Modifiers))
+		content.AddChild(newTraitModifiersPanel(e.target.Entity, &e.editorData.Modifiers))
 		content.AddChild(newMeleeWeaponsPanel(e.target.Entity, e.target,
 			gurps.ExtractWeaponsOfType(weapon.Melee, e.target.Weapons)))
 		content.AddChild(newRangedWeaponsPanel(e.target.Entity, e.target,
@@ -95,14 +95,14 @@ func initAdvantageEditor(e *editor[*gurps.Advantage, *gurps.AdvantageEditData], 
 		if levelField != nil {
 			adjustFieldBlank(levelField, e.editorData.PointsPerLevel == 0)
 		}
-		if e.editorData.CR == advantage.None {
+		if e.editorData.CR == trait.None {
 			crAdjPopup.SetEnabled(false)
 			crAdjPopup.Select(gurps.NoCRAdj)
 		} else {
 			crAdjPopup.SetEnabled(true)
 		}
 		if ancestryPopup != nil {
-			if e.editorData.ContainerType == advantage.Race {
+			if e.editorData.ContainerType == trait.Race {
 				if !ancestryPopup.Enabled() {
 					adjustPopupBlank(ancestryPopup, false)
 					if ancestryPopup.IndexOfItem(e.editorData.Ancestry) == -1 {

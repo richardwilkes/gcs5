@@ -62,7 +62,7 @@ func NewPointsPanel(entity *gurps.Entity) *PointsPanel {
 	p.AddChild(p.unspent)
 	p.AddChild(widget.NewPageLabel(i18n.Text("Unspent")))
 	p.addPointsField(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
-		_, _, race, _ := p.entity.AdvantagePoints()
+		_, _, race, _ := p.entity.TraitPoints()
 		if text := race.String(); text != f.Text {
 			f.Text = text
 			widget.MarkForLayoutWithinDockable(f)
@@ -75,21 +75,21 @@ func NewPointsPanel(entity *gurps.Entity) *PointsPanel {
 		}
 	}), i18n.Text("Attributes"), i18n.Text("Total points spent on attributes"))
 	p.addPointsField(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
-		ad, _, _, _ := p.entity.AdvantagePoints()
+		ad, _, _, _ := p.entity.TraitPoints()
 		if text := ad.String(); text != f.Text {
 			f.Text = text
 			widget.MarkForLayoutWithinDockable(f)
 		}
 	}), i18n.Text("Advantages"), i18n.Text("Total points spent on advantages"))
 	p.addPointsField(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
-		_, disad, _, _ := p.entity.AdvantagePoints()
+		_, disad, _, _ := p.entity.TraitPoints()
 		if text := disad.String(); text != f.Text {
 			f.Text = text
 			widget.MarkForLayoutWithinDockable(f)
 		}
 	}), i18n.Text("Disadvantages"), i18n.Text("Total points spent on disadvantages"))
 	p.addPointsField(widget.NewNonEditablePageFieldEnd(func(f *widget.NonEditablePageField) {
-		_, _, _, quirk := p.entity.AdvantagePoints()
+		_, _, _, quirk := p.entity.TraitPoints()
 		if text := quirk.String(); text != f.Text {
 			f.Text = text
 			widget.MarkForLayoutWithinDockable(f)

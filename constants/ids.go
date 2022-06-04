@@ -18,8 +18,8 @@ const (
 	NewFileMenuID = unison.UserBaseID + iota
 	NewSheetItemID
 	NewTemplateItemID
-	NewAdvantagesLibraryItemID
-	NewAdvantageModifiersLibraryItemID
+	NewTraitsLibraryItemID
+	NewTraitModifiersLibraryItemID
 	NewEquipmentLibraryItemID
 	NewEquipmentModifiersLibraryItemID
 	NewNotesLibraryItemID
@@ -48,12 +48,12 @@ const (
 	DecrementTechLevelItemID
 	SwapDefaultsItemID
 	ItemMenuID
-	AdvantagesMenuID
-	NewAdvantageItemID
-	NewAdvantageContainerItemID
-	NewAdvantageModifierItemID
-	NewAdvantageContainerModifierItemID
-	AddNaturalAttacksAdvantageItemID
+	TraitsMenuID
+	NewTraitItemID
+	NewTraitContainerItemID
+	NewTraitModifierItemID
+	NewTraitContainerModifierItemID
+	AddNaturalAttacksItemID
 	SkillsMenuID
 	NewSkillItemID
 	NewSkillContainerItemID

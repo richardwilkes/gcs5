@@ -15,19 +15,19 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-// AdvantageModifierData holds the AdvantageModifier data that is written to disk.
-type AdvantageModifierData struct {
-	ContainerBase[*AdvantageModifier]
-	AdvantageModifierEditData
+// TraitModifierData holds the TraitModifier data that is written to disk.
+type TraitModifierData struct {
+	ContainerBase[*TraitModifier]
+	TraitModifierEditData
 }
 
 // Kind returns the kind of data.
-func (d *AdvantageModifierData) Kind() string {
-	return d.kind(i18n.Text("Advantage Modifier"))
+func (d *TraitModifierData) Kind() string {
+	return d.kind(i18n.Text("Trait Modifier"))
 }
 
 // ClearUnusedFieldsForType zeroes out the fields that are not applicable to this type (container vs not-container).
-func (d *AdvantageModifierData) ClearUnusedFieldsForType() {
+func (d *TraitModifierData) ClearUnusedFieldsForType() {
 	d.clearUnusedFields()
 	if d.Container() {
 		d.CostType = 0

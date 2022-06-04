@@ -19,9 +19,9 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-// NewNaturalAttacks creates a new "Natural Attacks" advantage.
-func NewNaturalAttacks(entity *Entity, parent *Advantage) *Advantage {
-	a := NewAdvantage(entity, parent, false)
+// NewNaturalAttacks creates a new "Natural Attacks" trait.
+func NewNaturalAttacks(entity *Entity, parent *Trait) *Trait {
+	a := NewTrait(entity, parent, false)
 	a.Name = i18n.Text("Natural Attacks")
 	a.PageRef = "B271"
 	a.Weapons = []*Weapon{newBite(a), newPunch(a), newKick(a)}

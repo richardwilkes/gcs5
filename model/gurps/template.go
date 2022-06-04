@@ -30,14 +30,14 @@ var _ ListProvider = &Template{}
 
 // Template holds the GURPS Template data that is written to disk.
 type Template struct {
-	Type       string       `json:"type"`
-	Version    int          `json:"version"`
-	ID         uuid.UUID    `json:"id"`
-	Advantages []*Advantage `json:"advantages,omitempty"`
-	Skills     []*Skill     `json:"skills,omitempty"`
-	Spells     []*Spell     `json:"spells,omitempty"`
-	Equipment  []*Equipment `json:"equipment,omitempty"`
-	Notes      []*Note      `json:"notes,omitempty"`
+	Type      string       `json:"type"`
+	Version   int          `json:"version"`
+	ID        uuid.UUID    `json:"id"`
+	Traits    []*Trait     `json:"advantages,omitempty"`
+	Skills    []*Skill     `json:"skills,omitempty"`
+	Spells    []*Spell     `json:"spells,omitempty"`
+	Equipment []*Equipment `json:"equipment,omitempty"`
+	Notes     []*Note      `json:"notes,omitempty"`
 }
 
 // NewTemplateFromFile loads a Template from a file.
@@ -74,14 +74,14 @@ func (t *Template) Save(filePath string) error {
 	return jio.SaveToFile(context.Background(), filePath, t)
 }
 
-// AdvantageList implements ListProvider
-func (t *Template) AdvantageList() []*Advantage {
-	return t.Advantages
+// TraitList implements ListProvider
+func (t *Template) TraitList() []*Trait {
+	return t.Traits
 }
 
-// SetAdvantageList implements ListProvider
-func (t *Template) SetAdvantageList(list []*Advantage) {
-	t.Advantages = list
+// SetTraitList implements ListProvider
+func (t *Template) SetTraitList(list []*Trait) {
+	t.Traits = list
 }
 
 // CarriedEquipmentList implements ListProvider
