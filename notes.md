@@ -11,7 +11,6 @@
 #### GCS-specific work that needs to be done
 
 - Detail editors
-  - Modifiers section
   - Melee Weapons section
   - Ranged Weapons section
 - Settings editors

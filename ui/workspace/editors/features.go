@@ -156,6 +156,7 @@ func (p *featuresPanel) createAttributeBonusPanel(f *feature.AttributeBonus) *un
 		gurps.SizeFlag|gurps.DodgeFlag|gurps.ParryFlag|gurps.BlockFlag)
 	callback := attrChoicePopup.SelectionCallback
 	attrChoicePopup.SelectionCallback = func(index int, item *gurps.AttributeChoice) {
+		lastAttributeIDUsed = item.Key
 		callback(index, item)
 		adjustPopupBlank(popup, f.Attribute != gid.Strength)
 	}
