@@ -21,6 +21,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/rpgtools/dice"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -155,13 +156,13 @@ func addLabelAndListField(parent *unison.Panel, labelText, pluralForTooltip stri
 	parent.AddChild(field)
 }
 
-func addLabelAndStringField(parent *unison.Panel, labelText, tooltip string, fieldData *string) {
+func addLabelAndStringField(parent *unison.Panel, labelText, tooltip string, fieldData *string) *widget.StringField {
 	label := widget.NewFieldLeadingLabel(labelText)
 	if tooltip != "" {
 		label.Tooltip = unison.NewTooltipWithText(tooltip)
 	}
 	parent.AddChild(label)
-	addStringField(parent, labelText, tooltip, fieldData)
+	return addStringField(parent, labelText, tooltip, fieldData)
 }
 
 func addStringField(parent *unison.Panel, labelText, tooltip string, fieldData *string) *widget.StringField {
@@ -278,6 +279,31 @@ func addFlowWrapper(parent *unison.Panel, labelText string, count int) *unison.P
 	})
 	parent.AddChild(wrapper)
 	return wrapper
+}
+
+func addLabelAndNullableDice(parent *unison.Panel, labelText, tooltip string, fieldData **dice.Dice) *widget.StringField {
+	var data string
+	if *fieldData != nil {
+		data = (*fieldData).String()
+	}
+	label := widget.NewFieldLeadingLabel(labelText)
+	parent.AddChild(label)
+	field := widget.NewStringField(labelText, func() string { return data },
+		func(value string) {
+			data = value
+			if value == "" {
+				*fieldData = nil
+			} else {
+				*fieldData = dice.New(data)
+			}
+			widget.MarkModified(parent)
+		})
+	if tooltip != "" {
+		label.Tooltip = unison.NewTooltipWithText(tooltip)
+		field.Tooltip = unison.NewTooltipWithText(tooltip)
+	}
+	parent.AddChild(field)
+	return field
 }
 
 func addLabelAndPopup[T comparable](parent *unison.Panel, labelText, tooltip string, choices []T, fieldData *T) *unison.PopupMenu[T] {

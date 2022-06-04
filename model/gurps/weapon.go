@@ -99,6 +99,19 @@ func ExtractWeaponsOfType(desiredType weapon.Type, list []*Weapon) []*Weapon {
 	return result
 }
 
+// SeparateWeapons returns separate lists for melee and ranged weapons found in the input list.
+func SeparateWeapons(list []*Weapon) (melee, ranged []*Weapon) {
+	for _, w := range list {
+		switch w.Type {
+		case weapon.Melee:
+			melee = append(melee, w)
+		case weapon.Ranged:
+			ranged = append(ranged, w)
+		}
+	}
+	return melee, ranged
+}
+
 // Clone creates a copy of this data.
 func (w *Weapon) Clone() *Weapon {
 	other := *w
@@ -644,4 +657,14 @@ func (w *Weapon) OwningEntity() *Entity {
 
 // SetOwningEntity sets the owning entity and configures any sub-components as needed.
 func (w *Weapon) SetOwningEntity(_ *Entity) {
+}
+
+// CopyFrom implements node.EditorData.
+func (w *Weapon) CopyFrom(t *Weapon) {
+	*w = *t.Clone()
+}
+
+// ApplyTo implements node.EditorData.
+func (w *Weapon) ApplyTo(t *Weapon) {
+	*t = *w.Clone()
 }

@@ -86,10 +86,9 @@ func initTraitEditor(e *editor[*gurps.Trait, *gurps.TraitEditData], content *uni
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
 		content.AddChild(newFeaturesPanel(e.target.Entity, e.target, &e.editorData.Features))
 		content.AddChild(newTraitModifiersPanel(e.target.Entity, &e.editorData.Modifiers))
-		content.AddChild(newMeleeWeaponsPanel(e.target.Entity, e.target,
-			gurps.ExtractWeaponsOfType(weapon.Melee, e.target.Weapons)))
-		content.AddChild(newRangedWeaponsPanel(e.target.Entity, e.target,
-			gurps.ExtractWeaponsOfType(weapon.Ranged, e.target.Weapons)))
+		for _, wt := range weapon.AllType {
+			content.AddChild(newWeaponsPanel(e.target.Entity, wt, &e.editorData.Weapons))
+		}
 	}
 	return func() {
 		if levelField != nil {

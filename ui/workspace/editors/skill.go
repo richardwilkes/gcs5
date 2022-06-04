@@ -171,10 +171,9 @@ func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *uni
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
 		content.AddChild(newDefaultsPanel(e.target.Entity, &e.editorData.Defaults))
 		content.AddChild(newFeaturesPanel(e.target.Entity, e.target, &e.editorData.Features))
-		content.AddChild(newMeleeWeaponsPanel(e.target.Entity, e.target,
-			gurps.ExtractWeaponsOfType(weapon.Melee, e.target.Weapons)))
-		content.AddChild(newRangedWeaponsPanel(e.target.Entity, e.target,
-			gurps.ExtractWeaponsOfType(weapon.Ranged, e.target.Weapons)))
+		for _, wt := range weapon.AllType {
+			content.AddChild(newWeaponsPanel(e.target.Entity, wt, &e.editorData.Weapons))
+		}
 	}
 	return nil
 }

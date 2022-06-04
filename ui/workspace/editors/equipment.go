@@ -85,10 +85,9 @@ func EditEquipment(owner widget.Rebuildable, equipment *gurps.Equipment, carried
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
 		content.AddChild(newFeaturesPanel(e.target.Entity, e.target, &e.editorData.Features))
 		content.AddChild(newEquipmentModifiersPanel(e.target.Entity, e.target, e.target.Modifiers))
-		content.AddChild(newMeleeWeaponsPanel(e.target.Entity, e.target,
-			gurps.ExtractWeaponsOfType(weapon.Melee, e.target.Weapons)))
-		content.AddChild(newRangedWeaponsPanel(e.target.Entity, e.target,
-			gurps.ExtractWeaponsOfType(weapon.Ranged, e.target.Weapons)))
+		for _, wt := range weapon.AllType {
+			content.AddChild(newWeaponsPanel(e.target.Entity, wt, &e.editorData.Weapons))
+		}
 		return func() {
 			if e.editorData.Uses > e.editorData.MaxUses {
 				usesField.SetText(strconv.Itoa(e.editorData.MaxUses))

@@ -50,13 +50,15 @@ type weaponsProvider struct {
 	colMap     map[int]int
 	provider   gurps.WeaponListProvider
 	weaponType weapon.Type
+	forPage    bool
 }
 
 // NewWeaponsProvider creates a new table provider for weapons.
-func NewWeaponsProvider(provider gurps.WeaponListProvider, weaponType weapon.Type) TableProvider {
+func NewWeaponsProvider(provider gurps.WeaponListProvider, weaponType weapon.Type, forPage bool) TableProvider {
 	p := &weaponsProvider{
 		provider:   provider,
 		weaponType: weaponType,
+		forPage:    forPage,
 	}
 	if weaponType == weapon.Melee {
 		p.colMap = meleeWeaponColMap
@@ -75,33 +77,33 @@ func (p *weaponsProvider) Headers() []unison.TableColumnHeader {
 	for i := 0; i < len(p.colMap); i++ {
 		switch p.colMap[i] {
 		case gurps.WeaponDescriptionColumn:
-			headers = append(headers, NewHeader(p.weaponType.String(), "", true))
+			headers = append(headers, NewHeader(p.weaponType.String(), "", p.forPage))
 		case gurps.WeaponUsageColumn:
-			headers = append(headers, NewHeader(i18n.Text("Usage"), "", true))
+			headers = append(headers, NewHeader(i18n.Text("Usage"), "", p.forPage))
 		case gurps.WeaponSLColumn:
-			headers = append(headers, NewHeader(i18n.Text("SL"), i18n.Text("Skill Level"), true))
+			headers = append(headers, NewHeader(i18n.Text("SL"), i18n.Text("Skill Level"), p.forPage))
 		case gurps.WeaponParryColumn:
-			headers = append(headers, NewHeader(i18n.Text("Parry"), "", true))
+			headers = append(headers, NewHeader(i18n.Text("Parry"), "", p.forPage))
 		case gurps.WeaponBlockColumn:
-			headers = append(headers, NewHeader(i18n.Text("Block"), "", true))
+			headers = append(headers, NewHeader(i18n.Text("Block"), "", p.forPage))
 		case gurps.WeaponDamageColumn:
-			headers = append(headers, NewHeader(i18n.Text("Damage"), "", true))
+			headers = append(headers, NewHeader(i18n.Text("Damage"), "", p.forPage))
 		case gurps.WeaponReachColumn:
-			headers = append(headers, NewHeader(i18n.Text("Reach"), "", true))
+			headers = append(headers, NewHeader(i18n.Text("Reach"), "", p.forPage))
 		case gurps.WeaponSTColumn:
-			headers = append(headers, NewHeader(i18n.Text("ST"), i18n.Text("Minimum Strength"), true))
+			headers = append(headers, NewHeader(i18n.Text("ST"), i18n.Text("Minimum Strength"), p.forPage))
 		case gurps.WeaponAccColumn:
-			headers = append(headers, NewHeader(i18n.Text("Acc"), i18n.Text("Accuracy Bonus"), true))
+			headers = append(headers, NewHeader(i18n.Text("Acc"), i18n.Text("Accuracy Bonus"), p.forPage))
 		case gurps.WeaponRangeColumn:
-			headers = append(headers, NewHeader(i18n.Text("Range"), "", true))
+			headers = append(headers, NewHeader(i18n.Text("Range"), "", p.forPage))
 		case gurps.WeaponRoFColumn:
-			headers = append(headers, NewHeader(i18n.Text("RoF"), i18n.Text("Rate of Fire"), true))
+			headers = append(headers, NewHeader(i18n.Text("RoF"), i18n.Text("Rate of Fire"), p.forPage))
 		case gurps.WeaponShotsColumn:
-			headers = append(headers, NewHeader(i18n.Text("Shots"), "", true))
+			headers = append(headers, NewHeader(i18n.Text("Shots"), "", p.forPage))
 		case gurps.WeaponBulkColumn:
-			headers = append(headers, NewHeader(i18n.Text("Bulk"), "", true))
+			headers = append(headers, NewHeader(i18n.Text("Bulk"), "", p.forPage))
 		case gurps.WeaponRecoilColumn:
-			headers = append(headers, NewHeader(i18n.Text("Recoil"), "", true))
+			headers = append(headers, NewHeader(i18n.Text("Recoil"), "", p.forPage))
 		default:
 			jot.Fatalf(1, "invalid weapon column: %d", p.colMap[i])
 		}
@@ -113,7 +115,7 @@ func (p *weaponsProvider) RowData(table *unison.Table) []unison.TableRowData {
 	data := p.provider.EquippedWeapons(p.weaponType)
 	rows := make([]unison.TableRowData, 0, len(data))
 	for _, one := range data {
-		rows = append(rows, NewNode(table, nil, p.colMap, one, true))
+		rows = append(rows, NewNode(table, nil, p.colMap, one, p.forPage))
 	}
 	return rows
 }
@@ -134,7 +136,10 @@ func (p *weaponsProvider) ExcessWidthColumnIndex() int {
 	return 0
 }
 
-func (p *weaponsProvider) OpenEditor(_ widget.Rebuildable, _ *unison.Table) {
+func (p *weaponsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
+	if !p.forPage {
+		OpenEditor[*gurps.Weapon](table, func(item *gurps.Weapon) { EditWeapon(owner, item) })
+	}
 }
 
 func (p *weaponsProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table, _ ItemVariant) {

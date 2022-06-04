@@ -111,12 +111,12 @@ func NewReactionsPageList(entity *gurps.Entity) *PageList {
 
 // NewMeleeWeaponsPageList creates the melee weapons page list.
 func NewMeleeWeaponsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(nil, editors.NewWeaponsProvider(entity, weapon.Melee))
+	return newPageList(nil, editors.NewWeaponsProvider(entity, weapon.Melee, true))
 }
 
 // NewRangedWeaponsPageList creates the ranged weapons page list.
 func NewRangedWeaponsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(nil, editors.NewWeaponsProvider(entity, weapon.Ranged))
+	return newPageList(nil, editors.NewWeaponsProvider(entity, weapon.Ranged, true))
 }
 
 func newPageList(owner widget.Rebuildable, provider editors.TableProvider) *PageList {

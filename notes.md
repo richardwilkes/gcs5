@@ -10,9 +10,11 @@
 
 #### GCS-specific work that needs to be done
 
-- Detail editors
-  - Melee Weapons section
-  - Ranged Weapons section
+- Equipment Modifiers Detailed Editor
+- Ability to add a new weapon entry
+- Ability to remove a weapon entry
+- Ability to add a new trait modifier entry
+- Ability to remove a trait modifier entry
 - Settings editors
   - Attributes
   - Body Type

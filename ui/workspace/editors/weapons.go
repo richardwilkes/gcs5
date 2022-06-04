@@ -13,20 +13,25 @@ package editors
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/unison"
 )
 
-type traitModifiersPanel struct {
+type weaponsPanel struct {
 	unison.Panel
-	entity    *gurps.Entity
-	modifiers *[]*gurps.TraitModifier
+	entity     *gurps.Entity
+	weaponType weapon.Type
+	allWeapons *[]*gurps.Weapon
+	weapons    []*gurps.Weapon
 }
 
-func newTraitModifiersPanel(entity *gurps.Entity, modifiers *[]*gurps.TraitModifier) *traitModifiersPanel {
-	p := &traitModifiersPanel{
-		entity:    entity,
-		modifiers: modifiers,
+func newWeaponsPanel(entity *gurps.Entity, weaponType weapon.Type, weapons *[]*gurps.Weapon) *weaponsPanel {
+	p := &weaponsPanel{
+		entity:     entity,
+		weaponType: weaponType,
+		allWeapons: weapons,
+		weapons:    gurps.ExtractWeaponsOfType(weaponType, *weapons),
 	}
 	p.Self = p
 	p.SetLayout(&unison.FlexLayout{Columns: 1})
@@ -39,18 +44,14 @@ func newTraitModifiersPanel(entity *gurps.Entity, modifiers *[]*gurps.TraitModif
 	p.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) {
 		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
 	}
-	newTable(p.AsPanel(), NewTraitModifiersProvider(p, true))
+	newTable(p.AsPanel(), NewWeaponsProvider(p, p.weaponType, false))
 	return p
 }
 
-func (p *traitModifiersPanel) Entity() *gurps.Entity {
+func (p *weaponsPanel) Entity() *gurps.Entity {
 	return p.entity
 }
 
-func (p *traitModifiersPanel) TraitModifierList() []*gurps.TraitModifier {
-	return *p.modifiers
-}
-
-func (p *traitModifiersPanel) SetTraitModifierList(list []*gurps.TraitModifier) {
-	*p.modifiers = list
+func (p *weaponsPanel) EquippedWeapons(_ weapon.Type) []*gurps.Weapon {
+	return p.weapons
 }
