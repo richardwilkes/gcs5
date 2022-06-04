@@ -9,13 +9,12 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package tbl
+package editors
 
 import (
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -95,7 +94,7 @@ func (p *eqpModProvider) ExcessWidthColumnIndex() int {
 
 func (p *eqpModProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
 	OpenEditor[*gurps.EquipmentModifier](table, func(item *gurps.EquipmentModifier) {
-		editors.EditEquipmentModifier(owner, item)
+		EditEquipmentModifier(owner, item)
 	})
 }
 
@@ -107,5 +106,5 @@ func (p *eqpModProvider) CreateItem(owner widget.Rebuildable, table *unison.Tabl
 		func(target *gurps.EquipmentModifier, children []*gurps.EquipmentModifier) { target.Children = children },
 		p.provider.EquipmentModifierList, p.provider.SetEquipmentModifierList, p.RowData,
 		func(target *gurps.EquipmentModifier) uuid.UUID { return target.ID })
-	editors.EditEquipmentModifier(owner, item)
+	EditEquipmentModifier(owner, item)
 }

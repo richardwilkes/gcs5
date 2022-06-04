@@ -14,7 +14,7 @@ package sheet
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/tbl"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -23,7 +23,7 @@ type adjustSkillLevelListUndoEdit = *unison.UndoEdit[*adjustRawPointsList]
 
 func canAdjustSkillLevel(table *unison.Table, increment bool) bool {
 	for _, row := range table.SelectedRows(false) {
-		if provider := tbl.ExtractFromRowData[gurps.SkillAdjustmentProvider](row); provider != nil && !provider.Container() {
+		if provider := editors.ExtractFromRowData[gurps.SkillAdjustmentProvider](row); provider != nil && !provider.Container() {
 			if increment || provider.RawPoints() > 0 {
 				return true
 			}
@@ -36,7 +36,7 @@ func adjustSkillLevel(owner widget.Rebuildable, table *unison.Table, increment b
 	before := &adjustRawPointsList{Owner: owner}
 	after := &adjustRawPointsList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if provider := tbl.ExtractFromRowData[gurps.SkillAdjustmentProvider](row); provider != nil {
+		if provider := editors.ExtractFromRowData[gurps.SkillAdjustmentProvider](row); provider != nil {
 			if increment || provider.RawPoints() > 0 {
 				before.List = append(before.List, newRawPointsAdjuster(provider))
 				if increment {

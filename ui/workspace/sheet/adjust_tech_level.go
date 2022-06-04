@@ -15,7 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/tbl"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -60,7 +60,7 @@ func (a *techLevelAdjuster) Apply() {
 
 func canAdjustTechLevel(table *unison.Table, amount fxp.Int) bool {
 	for _, row := range table.SelectedRows(false) {
-		if provider := tbl.ExtractFromRowData[gurps.TechLevelProvider](row); provider != nil {
+		if provider := editors.ExtractFromRowData[gurps.TechLevelProvider](row); provider != nil {
 			if _, changed := gurps.AdjustTechLevel(provider.TL(), amount); changed {
 				return true
 			}
@@ -73,7 +73,7 @@ func adjustTechLevel(owner widget.Rebuildable, table *unison.Table, amount fxp.I
 	before := &adjustTechLevelList{Owner: owner}
 	after := &adjustTechLevelList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if provider := tbl.ExtractFromRowData[gurps.TechLevelProvider](row); provider != nil {
+		if provider := editors.ExtractFromRowData[gurps.TechLevelProvider](row); provider != nil {
 			if tl, changed := gurps.AdjustTechLevel(provider.TL(), amount); changed {
 				before.List = append(before.List, newTechLevelAdjuster(provider))
 				provider.SetTL(tl)

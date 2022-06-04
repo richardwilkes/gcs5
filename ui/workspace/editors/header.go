@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package tbl
+package editors
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
@@ -79,6 +79,13 @@ func NewPageRefHeader(forPage bool) unison.TableColumnHeader {
 func NewEquippedHeader(forPage bool) unison.TableColumnHeader {
 	return NewSVGHeader(res.CheckmarkSVG,
 		i18n.Text(`Whether this piece of equipment is equipped or just carried. Items that are not equipped do not apply any features they may normally contribute to the character.`),
+		forPage)
+}
+
+// NewEnabledHeader creates a new enabled header.
+func NewEnabledHeader(forPage bool) unison.TableColumnHeader {
+	return NewSVGHeader(res.CheckmarkSVG,
+		i18n.Text(`Whether this item is enabled. Items that are not enabled do not apply any features they may normally contribute to the character.`),
 		forPage)
 }
 

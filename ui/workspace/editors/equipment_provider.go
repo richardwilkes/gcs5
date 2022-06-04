@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package tbl
+package editors
 
 import (
 	"fmt"
@@ -17,7 +17,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -190,7 +189,7 @@ func (p *equipmentProvider) descriptionText() string {
 }
 
 func (p *equipmentProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
-	OpenEditor[*gurps.Equipment](table, func(item *gurps.Equipment) { editors.EditEquipment(owner, item, p.carried) })
+	OpenEditor[*gurps.Equipment](table, func(item *gurps.Equipment) { EditEquipment(owner, item, p.carried) })
 }
 
 func (p *equipmentProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
@@ -207,5 +206,5 @@ func (p *equipmentProvider) CreateItem(owner widget.Rebuildable, table *unison.T
 		func(target *gurps.Equipment, children []*gurps.Equipment) { target.Children = children },
 		topListFunc, setTopListFunc, p.RowData,
 		func(target *gurps.Equipment) uuid.UUID { return target.ID })
-	editors.EditEquipment(owner, item, p.carried)
+	EditEquipment(owner, item, p.carried)
 }

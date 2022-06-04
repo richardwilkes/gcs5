@@ -14,7 +14,7 @@ package sheet
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/tbl"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -59,7 +59,7 @@ func (a *equippedAdjuster) Apply() {
 
 func canToggleEquipped(table *unison.Table) bool {
 	for _, row := range table.SelectedRows(false) {
-		if eqp := tbl.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
+		if eqp := editors.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
 			return true
 		}
 	}
@@ -70,7 +70,7 @@ func toggleEquipped(owner widget.Rebuildable, table *unison.Table) {
 	before := &toggleEquippedList{Owner: owner}
 	after := &toggleEquippedList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if eqp := tbl.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
+		if eqp := editors.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
 			before.List = append(before.List, newEquippedAdjuster(eqp))
 			eqp.Equipped = !eqp.Equipped
 			after.List = append(after.List, newEquippedAdjuster(eqp))

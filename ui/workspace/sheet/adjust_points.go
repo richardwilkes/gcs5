@@ -15,7 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/tbl"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -60,7 +60,7 @@ func (a *rawPointsAdjuster) Apply() {
 
 func canAdjustRawPoints(table *unison.Table, increment bool) bool {
 	for _, row := range table.SelectedRows(false) {
-		if provider := tbl.ExtractFromRowData[gurps.RawPointsAdjuster](row); provider != nil && !provider.Container() {
+		if provider := editors.ExtractFromRowData[gurps.RawPointsAdjuster](row); provider != nil && !provider.Container() {
 			if increment || provider.RawPoints() > 0 {
 				return true
 			}
@@ -73,7 +73,7 @@ func adjustRawPoints(owner widget.Rebuildable, table *unison.Table, increment bo
 	before := &adjustRawPointsList{Owner: owner}
 	after := &adjustRawPointsList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if provider := tbl.ExtractFromRowData[gurps.RawPointsAdjuster](row); provider != nil {
+		if provider := editors.ExtractFromRowData[gurps.RawPointsAdjuster](row); provider != nil {
 			if increment || provider.RawPoints() > 0 {
 				before.List = append(before.List, newRawPointsAdjuster(provider))
 				rawPts := provider.RawPoints()

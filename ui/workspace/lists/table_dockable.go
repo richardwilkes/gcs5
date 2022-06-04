@@ -21,7 +21,6 @@ import (
 
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/crc"
-	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
 	"github.com/richardwilkes/gcs/model/jio"
@@ -30,10 +29,9 @@ import (
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
-	"github.com/richardwilkes/gcs/ui/workspace/tbl"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/unison"
 )
@@ -53,7 +51,7 @@ type TableDockable struct {
 	path              string
 	extension         string
 	undoMgr           *unison.UndoManager
-	provider          tbl.TableProvider
+	provider          editors.TableProvider
 	saver             func(path string) error
 	canCreateIDs      map[int]bool
 	hierarchyButton   *unison.Button
@@ -103,7 +101,7 @@ func NewAdvantageTableDockableFromFile(filePath string) (unison.Dockable, error)
 // NewAdvantageTableDockable creates a new unison.Dockable for advantage list files.
 func NewAdvantageTableDockable(filePath string, advantages []*gurps.Advantage) *TableDockable {
 	provider := &advantageListProvider{advantages: advantages}
-	return NewTableDockable(filePath, library.AdvantagesExt, tbl.NewAdvantagesProvider(provider, false),
+	return NewTableDockable(filePath, library.AdvantagesExt, editors.NewAdvantagesProvider(provider, false),
 		func(path string) error { return gurps.SaveAdvantages(provider.AdvantageList(), path) },
 		constants.NewAdvantageItemID, constants.NewAdvantageContainerItemID)
 }
@@ -140,7 +138,7 @@ func NewAdvantageModifierTableDockableFromFile(filePath string) (unison.Dockable
 func NewAdvantageModifierTableDockable(filePath string, modifiers []*gurps.AdvantageModifier) *TableDockable {
 	provider := &advantageModifierListProvider{modifiers: modifiers}
 	return NewTableDockable(filePath, library.AdvantageModifiersExt,
-		tbl.NewAdvantageModifiersProvider(provider, false),
+		editors.NewAdvantageModifiersProvider(provider, false),
 		func(path string) error { return gurps.SaveAdvantageModifiers(provider.AdvantageModifierList(), path) },
 		constants.NewAdvantageModifierItemID, constants.NewAdvantageContainerModifierItemID)
 }
@@ -184,7 +182,7 @@ func NewEquipmentTableDockableFromFile(filePath string) (unison.Dockable, error)
 // NewEquipmentTableDockable creates a new unison.Dockable for equipment list files.
 func NewEquipmentTableDockable(filePath string, equipment []*gurps.Equipment) *TableDockable {
 	provider := &equipmentListProvider{other: equipment}
-	return NewTableDockable(filePath, library.EquipmentExt, tbl.NewEquipmentProvider(provider, false, false),
+	return NewTableDockable(filePath, library.EquipmentExt, editors.NewEquipmentProvider(provider, false, false),
 		func(path string) error { return gurps.SaveEquipment(provider.OtherEquipmentList(), path) },
 		constants.NewCarriedEquipmentItemID, constants.NewCarriedEquipmentContainerItemID)
 }
@@ -221,7 +219,7 @@ func NewEquipmentModifierTableDockableFromFile(filePath string) (unison.Dockable
 func NewEquipmentModifierTableDockable(filePath string, modifiers []*gurps.EquipmentModifier) *TableDockable {
 	provider := &equipmentModifierListProvider{modifiers: modifiers}
 	return NewTableDockable(filePath, library.EquipmentModifiersExt,
-		tbl.NewEquipmentModifiersProvider(provider),
+		editors.NewEquipmentModifiersProvider(provider),
 		func(path string) error { return gurps.SaveEquipmentModifiers(provider.EquipmentModifierList(), path) },
 		constants.NewEquipmentModifierItemID, constants.NewEquipmentContainerModifierItemID)
 }
@@ -256,7 +254,7 @@ func NewSkillTableDockableFromFile(filePath string) (unison.Dockable, error) {
 // NewSkillTableDockable creates a new unison.Dockable for skill list files.
 func NewSkillTableDockable(filePath string, skills []*gurps.Skill) *TableDockable {
 	provider := &skillListProvider{skills: skills}
-	return NewTableDockable(filePath, library.SkillsExt, tbl.NewSkillsProvider(provider, false),
+	return NewTableDockable(filePath, library.SkillsExt, editors.NewSkillsProvider(provider, false),
 		func(path string) error { return gurps.SaveSkills(provider.SkillList(), path) },
 		constants.NewSkillItemID, constants.NewSkillContainerItemID, constants.NewTechniqueItemID)
 }
@@ -291,7 +289,7 @@ func NewSpellTableDockableFromFile(filePath string) (unison.Dockable, error) {
 // NewSpellTableDockable creates a new unison.Dockable for spell list files.
 func NewSpellTableDockable(filePath string, spells []*gurps.Spell) *TableDockable {
 	provider := &spellListProvider{spells: spells}
-	return NewTableDockable(filePath, library.SpellsExt, tbl.NewSpellsProvider(provider, false),
+	return NewTableDockable(filePath, library.SpellsExt, editors.NewSpellsProvider(provider, false),
 		func(path string) error { return gurps.SaveSpells(provider.SpellList(), path) },
 		constants.NewSpellItemID, constants.NewSpellContainerItemID, constants.NewRitualMagicSpellItemID)
 }
@@ -326,13 +324,13 @@ func NewNoteTableDockableFromFile(filePath string) (unison.Dockable, error) {
 // NewNoteTableDockable creates a new unison.Dockable for note list files.
 func NewNoteTableDockable(filePath string, notes []*gurps.Note) *TableDockable {
 	provider := &noteListProvider{notes: notes}
-	return NewTableDockable(filePath, library.NotesExt, tbl.NewNotesProvider(provider, false),
+	return NewTableDockable(filePath, library.NotesExt, editors.NewNotesProvider(provider, false),
 		func(path string) error { return gurps.SaveNotes(provider.NoteList(), path) },
 		constants.NewNoteItemID, constants.NewNoteContainerItemID)
 }
 
 // NewTableDockable creates a new TableDockable for list data files.
-func NewTableDockable(filePath, extension string, provider tbl.TableProvider, saver func(path string) error, canCreateIDs ...int) *TableDockable {
+func NewTableDockable(filePath, extension string, provider editors.TableProvider, saver func(path string) error, canCreateIDs ...int) *TableDockable {
 	d := &TableDockable{
 		path:              filePath,
 		extension:         extension,
@@ -353,39 +351,13 @@ func NewTableDockable(filePath, extension string, provider tbl.TableProvider, sa
 	}
 
 	headers := provider.Headers()
-	d.table.ColumnSizes = make([]unison.ColumnSize, len(headers))
-	for i := range d.table.ColumnSizes {
-		_, pref, _ := headers[i].AsPanel().Sizes(unison.Size{})
-		pref.Width += d.table.Padding.Left + d.table.Padding.Right
-		d.table.ColumnSizes[i].AutoMinimum = pref.Width
-		d.table.ColumnSizes[i].AutoMaximum = 800
-		d.table.ColumnSizes[i].Minimum = pref.Width
-		d.table.ColumnSizes[i].Maximum = 10000
-	}
+	widget.TableSetupColumnSizes(d.table, headers)
 	d.table.HierarchyColumnIndex = provider.HierarchyColumnIndex()
 	d.table.SetTopLevelRows(provider.RowData(d.table))
 	d.table.SizeColumnsToFit(true)
-	mouseDownCallback := d.table.MouseDownCallback
-	d.table.MouseDownCallback = func(where unison.Point, button, clickCount int, mod unison.Modifiers) bool {
-		d.table.RequestFocus()
-		return mouseDownCallback(where, button, clickCount, mod)
-	}
-	d.table.SelectionDoubleClickCallback = func() {
-		if enabled, _ := d.table.CanPerformCmd(nil, constants.OpenEditorItemID); enabled {
-			d.table.PerformCmd(nil, constants.OpenEditorItemID)
-		}
-	}
+	widget.TableInstallStdCallbacks(d.table)
 
-	d.tableHeader = unison.NewTableHeader(d.table, headers...)
-	d.tableHeader.Less = func(s1, s2 string) bool {
-		if n1, err := fxp.FromString(s1); err == nil {
-			var n2 fxp.Int
-			if n2, err = fxp.FromString(s2); err == nil {
-				return n1 < n2
-			}
-		}
-		return txt.NaturalLess(s1, s2, true)
-	}
+	d.tableHeader = widget.TableCreateHeader(d.table, headers)
 	d.scroll.SetColumnHeader(d.tableHeader)
 	d.scroll.SetContent(d.table, unison.FillBehavior, unison.FillBehavior)
 	d.scroll.SetLayoutData(&unison.FlexLayoutData{
@@ -616,7 +588,7 @@ func (d *TableDockable) searchModified() {
 }
 
 func (d *TableDockable) search(text string, row unison.TableRowData) {
-	if matcher, ok := row.(tbl.Matcher); ok {
+	if matcher, ok := row.(editors.Matcher); ok {
 		if matcher.Match(text) {
 			d.searchResult = append(d.searchResult, row)
 		}
@@ -673,7 +645,7 @@ func (d *TableDockable) canPerformCmd(_ any, id int) (enabled, handled bool) {
 		return d.table.HasSelection(), true
 	case constants.OpenOnePageReferenceItemID,
 		constants.OpenEachPageReferenceItemID:
-		return tbl.CanOpenPageRef(d.table), true
+		return editors.CanOpenPageRef(d.table), true
 	case constants.SaveItemID:
 		return d.Modified(), true
 	case constants.SaveAsItemID:
@@ -691,9 +663,9 @@ func (d *TableDockable) performCmd(_ any, id int) bool {
 	case constants.OpenEditorItemID:
 		d.provider.OpenEditor(d, d.table)
 	case constants.OpenOnePageReferenceItemID:
-		tbl.OpenPageRef(d.table)
+		editors.OpenPageRef(d.table)
 	case constants.OpenEachPageReferenceItemID:
-		tbl.OpenEachPageRef(d.table)
+		editors.OpenEachPageRef(d.table)
 	case constants.SaveItemID:
 		d.save(false)
 	case constants.SaveAsItemID:
@@ -706,7 +678,7 @@ func (d *TableDockable) performCmd(_ any, id int) bool {
 		constants.NewOtherEquipmentItemID,
 		constants.NewEquipmentModifierItemID,
 		constants.NewNoteItemID:
-		d.provider.CreateItem(d, d.table, tbl.NoItemVariant)
+		d.provider.CreateItem(d, d.table, editors.NoItemVariant)
 	case constants.NewAdvantageContainerItemID,
 		constants.NewAdvantageContainerModifierItemID,
 		constants.NewSkillContainerItemID,
@@ -715,10 +687,10 @@ func (d *TableDockable) performCmd(_ any, id int) bool {
 		constants.NewOtherEquipmentContainerItemID,
 		constants.NewEquipmentContainerModifierItemID,
 		constants.NewNoteContainerItemID:
-		d.provider.CreateItem(d, d.table, tbl.ContainerItemVariant)
+		d.provider.CreateItem(d, d.table, editors.ContainerItemVariant)
 	case constants.NewTechniqueItemID,
 		constants.NewRitualMagicSpellItemID:
-		d.provider.CreateItem(d, d.table, tbl.AlternateItemVariant)
+		d.provider.CreateItem(d, d.table, editors.AlternateItemVariant)
 	default:
 		return false
 	}
@@ -730,7 +702,7 @@ func (d *TableDockable) crc64() uint64 {
 	rows := d.provider.RowData(d.table)
 	data := make([]any, 0, len(rows))
 	for _, row := range rows {
-		if n, ok := row.(*tbl.Node); ok {
+		if n, ok := row.(*editors.Node); ok {
 			data = append(data, n.Data())
 		}
 	}

@@ -14,7 +14,7 @@ package sheet
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/tbl"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -59,7 +59,7 @@ func (a *disabledAdjuster) Apply() {
 
 func canToggleDisabled(table *unison.Table) bool {
 	for _, row := range table.SelectedRows(false) {
-		if adv := tbl.ExtractFromRowData[*gurps.Advantage](row); adv != nil {
+		if adv := editors.ExtractFromRowData[*gurps.Advantage](row); adv != nil {
 			return true
 		}
 	}
@@ -70,7 +70,7 @@ func toggleDisabled(owner widget.Rebuildable, table *unison.Table) {
 	before := &toggleDisabledList{Owner: owner}
 	after := &toggleDisabledList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if adv := tbl.ExtractFromRowData[*gurps.Advantage](row); adv != nil {
+		if adv := editors.ExtractFromRowData[*gurps.Advantage](row); adv != nil {
 			before.List = append(before.List, newDisabledAdjuster(adv))
 			adv.Disabled = !adv.Disabled
 			after.List = append(after.List, newDisabledAdjuster(adv))

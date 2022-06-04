@@ -15,7 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/tbl"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -60,7 +60,7 @@ func (a *advantageLevelAdjuster) Apply() {
 
 func canAdjustAdvantageLevel(table *unison.Table, increment bool) bool {
 	for _, row := range table.SelectedRows(false) {
-		if adv := tbl.ExtractFromRowData[*gurps.Advantage](row); adv != nil && adv.IsLeveled() {
+		if adv := editors.ExtractFromRowData[*gurps.Advantage](row); adv != nil && adv.IsLeveled() {
 			if increment || adv.Levels > 0 {
 				return true
 			}
@@ -73,7 +73,7 @@ func adjustAdvantageLevel(owner widget.Rebuildable, table *unison.Table, increme
 	before := &adjustAdvantageLevelList{Owner: owner}
 	after := &adjustAdvantageLevelList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if adv := tbl.ExtractFromRowData[*gurps.Advantage](row); adv != nil && adv.IsLeveled() {
+		if adv := editors.ExtractFromRowData[*gurps.Advantage](row); adv != nil && adv.IsLeveled() {
 			if increment || adv.Levels > 0 {
 				before.List = append(before.List, newAdvantageLevelAdjuster(adv))
 				original := adv.Levels

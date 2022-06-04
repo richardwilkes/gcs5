@@ -9,13 +9,12 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package tbl
+package editors
 
 import (
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -104,7 +103,7 @@ func (p *advantagesProvider) ExcessWidthColumnIndex() int {
 }
 
 func (p *advantagesProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
-	OpenEditor[*gurps.Advantage](table, func(item *gurps.Advantage) { editors.EditAdvantage(owner, item) })
+	OpenEditor[*gurps.Advantage](table, func(item *gurps.Advantage) { EditAdvantage(owner, item) })
 }
 
 func (p *advantagesProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
@@ -115,5 +114,5 @@ func (p *advantagesProvider) CreateItem(owner widget.Rebuildable, table *unison.
 		func(target *gurps.Advantage, children []*gurps.Advantage) { target.Children = children },
 		p.provider.AdvantageList, p.provider.SetAdvantageList, p.RowData,
 		func(target *gurps.Advantage) uuid.UUID { return target.ID })
-	editors.EditAdvantage(owner, item)
+	EditAdvantage(owner, item)
 }

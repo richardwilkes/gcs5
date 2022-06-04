@@ -32,6 +32,7 @@ var (
 	_ widget.ModifiableRoot      = &editor[*gurps.Note, *gurps.NoteEditData]{}
 	_ unison.UndoManagerProvider = &editor[*gurps.Note, *gurps.NoteEditData]{}
 	_ widget.GroupedCloser       = &editor[*gurps.Note, *gurps.NoteEditData]{}
+	_ widget.Rebuildable         = &editor[*gurps.Note, *gurps.NoteEditData]{}
 )
 
 type editor[N gurps.Node, D gurps.EditorData[N]] struct {
@@ -145,6 +146,10 @@ func (e *editor[N, D]) Title() string {
 	return fmt.Sprintf(i18n.Text("%s Editor for %s"), e.target.Kind(), e.owner.String())
 }
 
+func (e *editor[N, D]) String() string {
+	return e.Title()
+}
+
 func (e *editor[N, D]) Tooltip() string {
 	return ""
 }
@@ -166,15 +171,22 @@ func (e *editor[N, D]) MarkModified() {
 	}
 }
 
+func (e *editor[N, D]) Rebuild(_ bool) {
+	e.MarkModified()
+}
+
 func (e *editor[N, D]) CloseWithGroup(other unison.Paneler) bool {
 	return e.owner != nil && e.owner == other
 }
 
 func (e *editor[N, D]) MayAttemptClose() bool {
-	return true
+	return workspace.MayAttemptCloseOfGroup(e)
 }
 
 func (e *editor[N, D]) AttemptClose() bool {
+	if !workspace.CloseGroup(e) {
+		return false
+	}
 	if e.promptForSave && !reflect.DeepEqual(e.beforeData, e.editorData) {
 		switch unison.YesNoCancelDialog(fmt.Sprintf(i18n.Text("Save changes made to\n%s?"), e.Title()), "") {
 		case unison.ModalResponseDiscard:
@@ -187,6 +199,7 @@ func (e *editor[N, D]) AttemptClose() bool {
 	if dc := unison.DockContainerFor(e); dc != nil {
 		dc.Close(e)
 	}
+	e.owner.AsPanel().RequestFocus()
 	return true
 }
 

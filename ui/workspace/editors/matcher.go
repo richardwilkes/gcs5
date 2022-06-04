@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package tbl
+package editors
 
 // Matcher defines the methods that rows that can participate in searching must implement.
 type Matcher interface {

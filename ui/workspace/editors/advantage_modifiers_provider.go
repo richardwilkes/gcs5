@@ -9,13 +9,12 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package tbl
+package editors
 
 import (
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -64,9 +63,9 @@ func (p *advModProvider) Headers() []unison.TableColumnHeader {
 	for i := 0; i < len(p.colMap); i++ {
 		switch p.colMap[i] {
 		case gurps.AdvantageModifierEnabledColumn:
-			headers = append(headers, NewHeader(i18n.Text("Enabled"), "", false))
+			headers = append(headers, NewEnabledHeader(false))
 		case gurps.AdvantageModifierDescriptionColumn:
-			headers = append(headers, NewHeader(i18n.Text("Advantage Modifier"), "", false))
+			headers = append(headers, NewHeader(i18n.Text("Trait Modifier"), "", false))
 		case gurps.AdvantageModifierCostColumn:
 			headers = append(headers, NewHeader(i18n.Text("Cost Modifier"), "", false))
 		case gurps.AdvantageModifierTagsColumn:
@@ -107,7 +106,7 @@ func (p *advModProvider) ExcessWidthColumnIndex() int {
 
 func (p *advModProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
 	OpenEditor[*gurps.AdvantageModifier](table, func(item *gurps.AdvantageModifier) {
-		editors.EditAdvantageModifier(owner, item)
+		EditAdvantageModifier(owner, item)
 	})
 }
 
@@ -119,5 +118,5 @@ func (p *advModProvider) CreateItem(owner widget.Rebuildable, table *unison.Tabl
 		func(target *gurps.AdvantageModifier, children []*gurps.AdvantageModifier) { target.Children = children },
 		p.provider.AdvantageModifierList, p.provider.SetAdvantageModifierList, p.RowData,
 		func(target *gurps.AdvantageModifier) uuid.UUID { return target.ID })
-	editors.EditAdvantageModifier(owner, item)
+	EditAdvantageModifier(owner, item)
 }

@@ -19,8 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/tbl"
-	"github.com/richardwilkes/toolbox/txt"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
@@ -32,14 +31,14 @@ type PageList struct {
 	unison.Panel
 	tableHeader   *unison.TableHeader
 	table         *unison.Table
-	provider      tbl.TableProvider
+	provider      editors.TableProvider
 	canPerformMap map[int]func() bool
 	performMap    map[int]func()
 }
 
 // NewAdvantagesPageList creates the advantages page list.
 func NewAdvantagesPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
-	p := newPageList(owner, tbl.NewAdvantagesProvider(provider, true))
+	p := newPageList(owner, editors.NewAdvantagesProvider(provider, true))
 	p.installToggleDisabledHandler(owner)
 	p.installIncrementLevelHandler(owner)
 	p.installDecrementLevelHandler(owner)
@@ -48,7 +47,7 @@ func NewAdvantagesPageList(owner widget.Rebuildable, provider gurps.ListProvider
 
 // NewCarriedEquipmentPageList creates the carried equipment page list.
 func NewCarriedEquipmentPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
-	p := newPageList(owner, tbl.NewEquipmentProvider(provider, true, true))
+	p := newPageList(owner, editors.NewEquipmentProvider(provider, true, true))
 	p.installToggleEquippedHandler(owner)
 	p.installIncrementQuantityHandler(owner)
 	p.installDecrementQuantityHandler(owner)
@@ -62,7 +61,7 @@ func NewCarriedEquipmentPageList(owner widget.Rebuildable, provider gurps.ListPr
 
 // NewOtherEquipmentPageList creates the other equipment page list.
 func NewOtherEquipmentPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
-	p := newPageList(owner, tbl.NewEquipmentProvider(provider, true, false))
+	p := newPageList(owner, editors.NewEquipmentProvider(provider, true, false))
 	p.installIncrementQuantityHandler(owner)
 	p.installDecrementQuantityHandler(owner)
 	p.installIncrementUsesHandler(owner)
@@ -75,7 +74,7 @@ func NewOtherEquipmentPageList(owner widget.Rebuildable, provider gurps.ListProv
 
 // NewSkillsPageList creates the skills page list.
 func NewSkillsPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
-	p := newPageList(owner, tbl.NewSkillsProvider(provider, true))
+	p := newPageList(owner, editors.NewSkillsProvider(provider, true))
 	p.installIncrementPointsHandler(owner)
 	p.installDecrementPointsHandler(owner)
 	p.installIncrementSkillHandler(owner)
@@ -87,7 +86,7 @@ func NewSkillsPageList(owner widget.Rebuildable, provider gurps.ListProvider) *P
 
 // NewSpellsPageList creates the spells page list.
 func NewSpellsPageList(owner widget.Rebuildable, provider gurps.SpellListProvider) *PageList {
-	p := newPageList(owner, tbl.NewSpellsProvider(provider, true))
+	p := newPageList(owner, editors.NewSpellsProvider(provider, true))
 	p.installIncrementPointsHandler(owner)
 	p.installDecrementPointsHandler(owner)
 	p.installIncrementSkillHandler(owner)
@@ -97,30 +96,30 @@ func NewSpellsPageList(owner widget.Rebuildable, provider gurps.SpellListProvide
 
 // NewNotesPageList creates the notes page list.
 func NewNotesPageList(owner widget.Rebuildable, provider gurps.ListProvider) *PageList {
-	return newPageList(owner, tbl.NewNotesProvider(provider, true))
+	return newPageList(owner, editors.NewNotesProvider(provider, true))
 }
 
 // NewConditionalModifiersPageList creates the conditional modifiers page list.
 func NewConditionalModifiersPageList(entity *gurps.Entity) *PageList {
-	return newPageList(nil, tbl.NewConditionalModifiersProvider(entity))
+	return newPageList(nil, editors.NewConditionalModifiersProvider(entity))
 }
 
 // NewReactionsPageList creates the reaction modifiers page list.
 func NewReactionsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(nil, tbl.NewReactionModifiersProvider(entity))
+	return newPageList(nil, editors.NewReactionModifiersProvider(entity))
 }
 
 // NewMeleeWeaponsPageList creates the melee weapons page list.
 func NewMeleeWeaponsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(nil, tbl.NewWeaponsProvider(entity, weapon.Melee))
+	return newPageList(nil, editors.NewWeaponsProvider(entity, weapon.Melee))
 }
 
 // NewRangedWeaponsPageList creates the ranged weapons page list.
 func NewRangedWeaponsPageList(entity *gurps.Entity) *PageList {
-	return newPageList(nil, tbl.NewWeaponsProvider(entity, weapon.Ranged))
+	return newPageList(nil, editors.NewWeaponsProvider(entity, weapon.Ranged))
 }
 
-func newPageList(owner widget.Rebuildable, provider tbl.TableProvider) *PageList {
+func newPageList(owner widget.Rebuildable, provider editors.TableProvider) *PageList {
 	p := &PageList{
 		table:         unison.NewTable(),
 		provider:      provider,
@@ -138,25 +137,14 @@ func newPageList(owner widget.Rebuildable, provider tbl.TableProvider) *PageList
 	p.table.HierarchyIndent = theme.PageFieldPrimaryFont.LineHeight()
 	p.table.PreventUserColumnResize = true
 	headers := provider.Headers()
-	p.table.ColumnSizes = make([]unison.ColumnSize, len(headers))
-	for i := range p.table.ColumnSizes {
-		_, pref, _ := headers[i].AsPanel().Sizes(unison.Size{})
-		pref.Width += p.table.Padding.Left + p.table.Padding.Right
-		p.table.ColumnSizes[i].AutoMinimum = pref.Width
-		p.table.ColumnSizes[i].AutoMaximum = 800
-		p.table.ColumnSizes[i].Minimum = pref.Width
-		p.table.ColumnSizes[i].Maximum = 10000
-	}
+	widget.TableSetupColumnSizes(p.table, headers)
 	p.table.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 		VGrab:  true,
 	})
-	p.table.MouseDownCallback = func(where unison.Point, button, clickCount int, mod unison.Modifiers) bool {
-		p.table.RequestFocus()
-		return p.table.DefaultMouseDown(where, button, clickCount, mod)
-	}
+	widget.TableInstallStdCallbacks(p.table)
 	p.table.FrameChangeCallback = func() {
 		p.table.SizeColumnsToFitWithExcessIn(p.provider.ExcessWidthColumnIndex())
 	}
@@ -173,25 +161,11 @@ func newPageList(owner widget.Rebuildable, provider tbl.TableProvider) *PageList
 		}
 		return false
 	}
-	p.table.SelectionDoubleClickCallback = func() {
-		if enabled, _ := p.table.CanPerformCmd(nil, constants.OpenEditorItemID); enabled {
-			p.table.PerformCmd(nil, constants.OpenEditorItemID)
-		}
-	}
-	p.tableHeader = unison.NewTableHeader(p.table, headers...)
+	p.tableHeader = widget.TableCreateHeader(p.table, headers)
 	p.tableHeader.BackgroundInk = theme.HeaderColor
 	p.tableHeader.DividerInk = theme.HeaderColor
 	p.tableHeader.HeaderBorder = unison.NewLineBorder(theme.HeaderColor, 0, unison.Insets{Bottom: 1}, false)
 	p.tableHeader.SetBorder(p.tableHeader.HeaderBorder)
-	p.tableHeader.Less = func(s1, s2 string) bool {
-		if n1, err := fxp.FromString(s1); err == nil {
-			var n2 fxp.Int
-			if n2, err = fxp.FromString(s2); err == nil {
-				return n1 < n2
-			}
-		}
-		return txt.NaturalLess(s1, s2, true)
-	}
 	p.tableHeader.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
@@ -245,10 +219,10 @@ func (p *PageList) installPerformHandlers(id int, can func() bool, do func()) {
 }
 
 func (p *PageList) installOpenPageReferenceHandlers() {
-	canOpenPageRefFunc := tbl.NewCanOpenPageRefFunc(p.table)
-	p.installPerformHandlers(constants.OpenOnePageReferenceItemID, canOpenPageRefFunc, tbl.NewOpenPageRefFunc(p.table))
+	canOpenPageRefFunc := editors.NewCanOpenPageRefFunc(p.table)
+	p.installPerformHandlers(constants.OpenOnePageReferenceItemID, canOpenPageRefFunc, editors.NewOpenPageRefFunc(p.table))
 	p.installPerformHandlers(constants.OpenEachPageReferenceItemID, canOpenPageRefFunc,
-		tbl.NewOpenEachPageRefFunc(p.table))
+		editors.NewOpenEachPageRefFunc(p.table))
 }
 
 func (p *PageList) installToggleDisabledHandler(owner widget.Rebuildable) {
@@ -343,14 +317,14 @@ func (p *PageList) installConvertToContainerHandler(owner widget.Rebuildable) {
 
 // SelectedNodes returns the set of selected nodes. If 'minimal' is true, then children of selected rows that may also
 // be selected are not returned, just the topmost row that is selected in any given hierarchy.
-func (p *PageList) SelectedNodes(minimal bool) []*tbl.Node {
+func (p *PageList) SelectedNodes(minimal bool) []*editors.Node {
 	if p == nil {
 		return nil
 	}
 	rows := p.table.SelectedRows(minimal)
-	selection := make([]*tbl.Node, 0, len(rows))
+	selection := make([]*editors.Node, 0, len(rows))
 	for _, row := range rows {
-		if n, ok := row.(*tbl.Node); ok {
+		if n, ok := row.(*editors.Node); ok {
 			selection = append(selection, n)
 		}
 	}
@@ -365,7 +339,7 @@ func (p *PageList) RecordSelection() map[uuid.UUID]bool {
 	rows := p.table.SelectedRows(false)
 	selection := make(map[uuid.UUID]bool, len(rows))
 	for _, row := range rows {
-		if n, ok := row.(*tbl.Node); ok {
+		if n, ok := row.(*editors.Node); ok {
 			selection[n.Data().UUID()] = true
 		}
 	}
@@ -398,7 +372,7 @@ func (p *PageList) Sync() {
 
 func (p *PageList) collectRowMappings(index int, indexes []int, selection map[uuid.UUID]bool, rows []unison.TableRowData) (updatedIndex int, updatedIndexes []int) {
 	for _, row := range rows {
-		if n, ok := row.(*tbl.Node); ok {
+		if n, ok := row.(*editors.Node); ok {
 			if selection[n.Data().UUID()] {
 				indexes = append(indexes, index)
 			}
@@ -412,6 +386,6 @@ func (p *PageList) collectRowMappings(index int, indexes []int, selection map[uu
 }
 
 // CreateItem calls CreateItem on the contained TableProvider.
-func (p *PageList) CreateItem(owner widget.Rebuildable, variant tbl.ItemVariant) {
+func (p *PageList) CreateItem(owner widget.Rebuildable, variant editors.ItemVariant) {
 	p.provider.CreateItem(owner, p.table, variant)
 }

@@ -40,7 +40,7 @@ func initAdvantageModifierEditor(e *editor[*gurps.AdvantageModifier, *gurps.Adva
 		addDecimalField(wrapper, costLabel, "", &e.editorData.Cost, -fxp.MaxBasePoints, fxp.MaxBasePoints)
 		costTypePopup := addCostTypePopup(wrapper, e)
 		affectsPopup := addPopup(wrapper, advantage.AllAffects, &e.editorData.Affects)
-		levels := addLabelAndDecimalField(content, i18n.Text("Level"), "", &e.editorData.Levels, fxp.One, fxp.Thousand)
+		levels := addLabelAndDecimalField(content, i18n.Text("Level"), "", &e.editorData.Levels, 0, fxp.Thousand)
 		adjustFieldBlank(levels, !e.target.HasLevels())
 		total := widget.NewNonEditableField(func(field *widget.NonEditableField) {
 			enabled := true

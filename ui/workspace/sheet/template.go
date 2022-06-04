@@ -25,7 +25,7 @@ import (
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace"
-	"github.com/richardwilkes/gcs/ui/workspace/tbl"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio/fs"
@@ -352,35 +352,35 @@ func (d *Template) performCmd(_ any, id int) bool {
 	case constants.SaveAsItemID:
 		d.save(true)
 	case constants.NewAdvantageItemID:
-		d.Lists[advantagesListIndex].CreateItem(d, tbl.NoItemVariant)
+		d.Lists[advantagesListIndex].CreateItem(d, editors.NoItemVariant)
 	case constants.NewAdvantageContainerItemID:
-		d.Lists[advantagesListIndex].CreateItem(d, tbl.ContainerItemVariant)
+		d.Lists[advantagesListIndex].CreateItem(d, editors.ContainerItemVariant)
 	case constants.NewSkillItemID:
-		d.Lists[skillsListIndex].CreateItem(d, tbl.NoItemVariant)
+		d.Lists[skillsListIndex].CreateItem(d, editors.NoItemVariant)
 	case constants.NewSkillContainerItemID:
-		d.Lists[skillsListIndex].CreateItem(d, tbl.ContainerItemVariant)
+		d.Lists[skillsListIndex].CreateItem(d, editors.ContainerItemVariant)
 	case constants.NewTechniqueItemID:
-		d.Lists[skillsListIndex].CreateItem(d, tbl.AlternateItemVariant)
+		d.Lists[skillsListIndex].CreateItem(d, editors.AlternateItemVariant)
 	case constants.NewSpellItemID:
-		d.Lists[spellsListIndex].CreateItem(d, tbl.NoItemVariant)
+		d.Lists[spellsListIndex].CreateItem(d, editors.NoItemVariant)
 	case constants.NewSpellContainerItemID:
-		d.Lists[spellsListIndex].CreateItem(d, tbl.ContainerItemVariant)
+		d.Lists[spellsListIndex].CreateItem(d, editors.ContainerItemVariant)
 	case constants.NewRitualMagicSpellItemID:
-		d.Lists[spellsListIndex].CreateItem(d, tbl.AlternateItemVariant)
+		d.Lists[spellsListIndex].CreateItem(d, editors.AlternateItemVariant)
 	case constants.NewCarriedEquipmentItemID:
-		d.Lists[carriedEquipmentListIndex].CreateItem(d, tbl.NoItemVariant)
+		d.Lists[carriedEquipmentListIndex].CreateItem(d, editors.NoItemVariant)
 	case constants.NewCarriedEquipmentContainerItemID:
-		d.Lists[carriedEquipmentListIndex].CreateItem(d, tbl.ContainerItemVariant)
+		d.Lists[carriedEquipmentListIndex].CreateItem(d, editors.ContainerItemVariant)
 	case constants.NewOtherEquipmentItemID:
-		d.Lists[otherEquipmentListIndex].CreateItem(d, tbl.NoItemVariant)
+		d.Lists[otherEquipmentListIndex].CreateItem(d, editors.NoItemVariant)
 	case constants.NewOtherEquipmentContainerItemID:
-		d.Lists[otherEquipmentListIndex].CreateItem(d, tbl.ContainerItemVariant)
+		d.Lists[otherEquipmentListIndex].CreateItem(d, editors.ContainerItemVariant)
 	case constants.NewNoteItemID:
-		d.Lists[notesListIndex].CreateItem(d, tbl.NoItemVariant)
+		d.Lists[notesListIndex].CreateItem(d, editors.NoItemVariant)
 	case constants.NewNoteContainerItemID:
-		d.Lists[notesListIndex].CreateItem(d, tbl.ContainerItemVariant)
+		d.Lists[notesListIndex].CreateItem(d, editors.ContainerItemVariant)
 	case constants.AddNaturalAttacksAdvantageItemID:
-		tbl.InsertItem[*gurps.Advantage](d, d.Lists[advantagesListIndex].table, gurps.NewNaturalAttacks(nil, nil),
+		editors.InsertItem[*gurps.Advantage](d, d.Lists[advantagesListIndex].table, gurps.NewNaturalAttacks(nil, nil),
 			func(target, parent *gurps.Advantage) { target.Parent = parent },
 			func(target *gurps.Advantage) []*gurps.Advantage { return target.Children },
 			func(target *gurps.Advantage, children []*gurps.Advantage) { target.Children = children },

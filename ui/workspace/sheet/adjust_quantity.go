@@ -15,7 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/tbl"
+	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -60,7 +60,7 @@ func (a *quantityAdjuster) Apply() {
 
 func canAdjustQuantity(table *unison.Table, increment bool) bool {
 	for _, row := range table.SelectedRows(false) {
-		if eqp := tbl.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
+		if eqp := editors.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
 			if increment || eqp.Quantity > 0 {
 				return true
 			}
@@ -73,7 +73,7 @@ func adjustQuantity(owner widget.Rebuildable, table *unison.Table, increment boo
 	before := &adjustQuantityList{Owner: owner}
 	after := &adjustQuantityList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if eqp := tbl.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
+		if eqp := editors.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
 			if increment || eqp.Quantity > 0 {
 				before.List = append(before.List, newQuantityAdjuster(eqp))
 				original := eqp.Quantity

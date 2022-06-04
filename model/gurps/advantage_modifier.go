@@ -25,6 +25,7 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
+	"github.com/richardwilkes/unison"
 	"golang.org/x/exp/slices"
 )
 
@@ -133,6 +134,10 @@ func (a *AdvantageModifier) UnmarshalJSON(data []byte) error {
 // CellData returns the cell data information for the given column.
 func (a *AdvantageModifier) CellData(column int, data *CellData) {
 	switch column {
+	case AdvantageModifierEnabledColumn:
+		data.Type = Toggle
+		data.Checked = !a.Disabled
+		data.Alignment = unison.MiddleAlignment
 	case AdvantageModifierDescriptionColumn:
 		data.Type = Text
 		data.Primary = a.Name

@@ -81,11 +81,11 @@ func initAdvantageEditor(e *editor[*gurps.Advantage, *gurps.AdvantageEditData], 
 	}
 	addPageRefLabelAndField(content, &e.editorData.PageRef)
 	if e.target.Container() {
-		content.AddChild(newAdvantageModifiersPanel(e.target))
+		content.AddChild(newAdvantageModifiersPanel(e.target.Entity, &e.editorData.Modifiers))
 	} else {
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
 		content.AddChild(newFeaturesPanel(e.target.Entity, e.target, &e.editorData.Features))
-		content.AddChild(newAdvantageModifiersPanel(e.target))
+		content.AddChild(newAdvantageModifiersPanel(e.target.Entity, &e.editorData.Modifiers))
 		content.AddChild(newMeleeWeaponsPanel(e.target.Entity, e.target,
 			gurps.ExtractWeaponsOfType(weapon.Melee, e.target.Weapons)))
 		content.AddChild(newRangedWeaponsPanel(e.target.Entity, e.target,
