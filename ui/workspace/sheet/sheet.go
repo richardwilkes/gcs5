@@ -176,10 +176,39 @@ func NewSheet(filePath string, entity *gurps.Entity) *Sheet {
 
 	s.applyScale()
 
-	s.CanPerformCmdCallback = s.canPerformCmd
-	s.PerformCmdCallback = s.performCmd
+	s.InstallCmdHandlers(constants.SaveItemID, func(_ any) bool { return s.Modified() }, func(_ any) { s.save(false) })
+	s.InstallCmdHandlers(constants.SaveAsItemID, unison.AlwaysEnabled, func(_ any) { s.save(true) })
+	s.installNewItemCmdHandlers(constants.NewTraitItemID, constants.NewTraitContainerItemID, traitsListIndex)
+	s.installNewItemCmdHandlers(constants.NewSkillItemID, constants.NewSkillContainerItemID, skillsListIndex)
+	s.installNewItemCmdHandlers(constants.NewTechniqueItemID, -1, skillsListIndex)
+	s.installNewItemCmdHandlers(constants.NewSpellItemID, constants.NewSpellContainerItemID, spellsListIndex)
+	s.installNewItemCmdHandlers(constants.NewRitualMagicSpellItemID, -1, spellsListIndex)
+	s.installNewItemCmdHandlers(constants.NewCarriedEquipmentItemID,
+		constants.NewCarriedEquipmentContainerItemID, carriedEquipmentListIndex)
+	s.installNewItemCmdHandlers(constants.NewOtherEquipmentItemID,
+		constants.NewOtherEquipmentContainerItemID, otherEquipmentListIndex)
+	s.installNewItemCmdHandlers(constants.NewNoteItemID, constants.NewNoteContainerItemID, notesListIndex)
+	s.InstallCmdHandlers(constants.AddNaturalAttacksItemID, unison.AlwaysEnabled, func(_ any) {
+		editors.InsertItem[*gurps.Trait](s, s.Lists[traitsListIndex].table, gurps.NewNaturalAttacks(s.entity, nil),
+			func(target, parent *gurps.Trait) { target.Parent = parent },
+			func(target *gurps.Trait) []*gurps.Trait { return target.Children },
+			func(target *gurps.Trait, children []*gurps.Trait) { target.Children = children },
+			s.entity.TraitList, s.entity.SetTraitList, s.Lists[traitsListIndex].provider.RowData,
+			func(target *gurps.Trait) uuid.UUID { return target.ID })
+	})
 
 	return s
+}
+
+func (s *Sheet) installNewItemCmdHandlers(itemID, containerID, listIndex int) {
+	variant := editors.NoItemVariant
+	if containerID == -1 {
+		variant = editors.AlternateItemVariant
+	} else {
+		s.InstallCmdHandlers(containerID, unison.AlwaysEnabled,
+			func(_ any) { s.Lists[listIndex].CreateItem(s, editors.ContainerItemVariant) })
+	}
+	s.InstallCmdHandlers(itemID, unison.AlwaysEnabled, func(_ any) { s.Lists[listIndex].CreateItem(s, variant) })
 }
 
 // DockableKind implements widget.DockableKind
@@ -503,79 +532,6 @@ func (s *Sheet) Rebuild(full bool) {
 	if dc := unison.DockContainerFor(s); dc != nil {
 		dc.UpdateTitle(s)
 	}
-}
-
-func (s *Sheet) canPerformCmd(_ any, id int) (enabled, handled bool) {
-	switch id {
-	case constants.SaveItemID:
-		return s.Modified(), true
-	case constants.SaveAsItemID,
-		constants.NewTraitItemID,
-		constants.NewTraitContainerItemID,
-		constants.NewSkillItemID,
-		constants.NewSkillContainerItemID,
-		constants.NewTechniqueItemID,
-		constants.NewSpellItemID,
-		constants.NewSpellContainerItemID,
-		constants.NewRitualMagicSpellItemID,
-		constants.NewCarriedEquipmentItemID,
-		constants.NewCarriedEquipmentContainerItemID,
-		constants.NewOtherEquipmentItemID,
-		constants.NewOtherEquipmentContainerItemID,
-		constants.NewNoteItemID,
-		constants.NewNoteContainerItemID,
-		constants.AddNaturalAttacksItemID:
-		return true, true
-	default:
-		return false, false
-	}
-}
-
-func (s *Sheet) performCmd(_ any, id int) bool {
-	switch id {
-	case constants.SaveItemID:
-		s.save(false)
-	case constants.SaveAsItemID:
-		s.save(true)
-	case constants.NewTraitItemID:
-		s.Lists[traitsListIndex].CreateItem(s, editors.NoItemVariant)
-	case constants.NewTraitContainerItemID:
-		s.Lists[traitsListIndex].CreateItem(s, editors.ContainerItemVariant)
-	case constants.NewSkillItemID:
-		s.Lists[skillsListIndex].CreateItem(s, editors.NoItemVariant)
-	case constants.NewSkillContainerItemID:
-		s.Lists[skillsListIndex].CreateItem(s, editors.ContainerItemVariant)
-	case constants.NewTechniqueItemID:
-		s.Lists[skillsListIndex].CreateItem(s, editors.AlternateItemVariant)
-	case constants.NewSpellItemID:
-		s.Lists[spellsListIndex].CreateItem(s, editors.NoItemVariant)
-	case constants.NewSpellContainerItemID:
-		s.Lists[spellsListIndex].CreateItem(s, editors.ContainerItemVariant)
-	case constants.NewRitualMagicSpellItemID:
-		s.Lists[spellsListIndex].CreateItem(s, editors.AlternateItemVariant)
-	case constants.NewCarriedEquipmentItemID:
-		s.Lists[carriedEquipmentListIndex].CreateItem(s, editors.NoItemVariant)
-	case constants.NewCarriedEquipmentContainerItemID:
-		s.Lists[carriedEquipmentListIndex].CreateItem(s, editors.ContainerItemVariant)
-	case constants.NewOtherEquipmentItemID:
-		s.Lists[otherEquipmentListIndex].CreateItem(s, editors.NoItemVariant)
-	case constants.NewOtherEquipmentContainerItemID:
-		s.Lists[otherEquipmentListIndex].CreateItem(s, editors.ContainerItemVariant)
-	case constants.NewNoteItemID:
-		s.Lists[notesListIndex].CreateItem(s, editors.NoItemVariant)
-	case constants.NewNoteContainerItemID:
-		s.Lists[notesListIndex].CreateItem(s, editors.ContainerItemVariant)
-	case constants.AddNaturalAttacksItemID:
-		editors.InsertItem[*gurps.Trait](s, s.Lists[traitsListIndex].table, gurps.NewNaturalAttacks(s.entity, nil),
-			func(target, parent *gurps.Trait) { target.Parent = parent },
-			func(target *gurps.Trait) []*gurps.Trait { return target.Children },
-			func(target *gurps.Trait, children []*gurps.Trait) { target.Children = children },
-			s.entity.TraitList, s.entity.SetTraitList, s.Lists[traitsListIndex].provider.RowData,
-			func(target *gurps.Trait) uuid.UUID { return target.ID })
-	default:
-		return false
-	}
-	return true
 }
 
 func drawBandedBackground(p unison.Paneler, gc *unison.Canvas, rect unison.Rect, start, step int) {

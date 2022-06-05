@@ -29,11 +29,9 @@ var _ widget.Syncer = &PageList{}
 // PageList holds a list for a sheet page.
 type PageList struct {
 	unison.Panel
-	tableHeader   *unison.TableHeader
-	table         *unison.Table
-	provider      editors.TableProvider
-	canPerformMap map[int]func() bool
-	performMap    map[int]func()
+	tableHeader *unison.TableHeader
+	table       *unison.Table
+	provider    editors.TableProvider
 }
 
 // NewTraitsPageList creates the traits page list.
@@ -121,10 +119,8 @@ func NewRangedWeaponsPageList(entity *gurps.Entity) *PageList {
 
 func newPageList(owner widget.Rebuildable, provider editors.TableProvider) *PageList {
 	p := &PageList{
-		table:         unison.NewTable(),
-		provider:      provider,
-		canPerformMap: make(map[int]func() bool),
-		performMap:    make(map[int]func()),
+		table:    unison.NewTable(),
+		provider: provider,
 	}
 	p.Self = p
 	p.SetLayout(&unison.FlexLayout{Columns: 1})
@@ -147,19 +143,6 @@ func newPageList(owner widget.Rebuildable, provider editors.TableProvider) *Page
 	widget.TableInstallStdCallbacks(p.table)
 	p.table.FrameChangeCallback = func() {
 		p.table.SizeColumnsToFitWithExcessIn(p.provider.ExcessWidthColumnIndex())
-	}
-	p.table.CanPerformCmdCallback = func(_ any, id int) (enabled, handled bool) {
-		if f, ok := p.canPerformMap[id]; ok {
-			return f(), true
-		}
-		return false, false
-	}
-	p.table.PerformCmdCallback = func(_ any, id int) bool {
-		if f, ok := p.performMap[id]; ok {
-			f()
-			return true
-		}
-		return false
 	}
 	p.tableHeader = widget.TableCreateHeader(p.table, headers)
 	p.tableHeader.BackgroundInk = theme.HeaderColor
@@ -197,9 +180,9 @@ func newPageList(owner widget.Rebuildable, provider editors.TableProvider) *Page
 	p.AddChild(p.tableHeader)
 	p.AddChild(p.table)
 	if owner != nil {
-		p.installPerformHandlers(constants.OpenEditorItemID,
-			func() bool { return p.table.HasSelection() },
-			func() { p.provider.OpenEditor(owner, p.table) })
+		p.InstallCmdHandlers(constants.OpenEditorItemID,
+			func(_ any) bool { return p.table.HasSelection() },
+			func(_ any) { p.provider.OpenEditor(owner, p.table) })
 	}
 	p.installOpenPageReferenceHandlers()
 	_, pref, _ := p.tableHeader.Sizes(geom.Size[float32]{})
@@ -213,106 +196,103 @@ func newPageList(owner widget.Rebuildable, provider editors.TableProvider) *Page
 	return p
 }
 
-func (p *PageList) installPerformHandlers(id int, can func() bool, do func()) {
-	p.canPerformMap[id] = can
-	p.performMap[id] = do
-}
-
 func (p *PageList) installOpenPageReferenceHandlers() {
-	canOpenPageRefFunc := editors.NewCanOpenPageRefFunc(p.table)
-	p.installPerformHandlers(constants.OpenOnePageReferenceItemID, canOpenPageRefFunc, editors.NewOpenPageRefFunc(p.table))
-	p.installPerformHandlers(constants.OpenEachPageReferenceItemID, canOpenPageRefFunc,
-		editors.NewOpenEachPageRefFunc(p.table))
+	p.InstallCmdHandlers(constants.OpenOnePageReferenceItemID,
+		func(_ any) bool { return editors.CanOpenPageRef(p.table) },
+		func(_ any) { editors.OpenPageRef(p.table) })
+	p.InstallCmdHandlers(constants.OpenEachPageReferenceItemID,
+		func(_ any) bool { return editors.CanOpenPageRef(p.table) },
+		func(_ any) { editors.OpenEachPageRef(p.table) })
 }
 
 func (p *PageList) installToggleDisabledHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.ToggleStateItemID,
-		func() bool { return canToggleDisabled(p.table) },
-		func() { toggleDisabled(owner, p.table) })
+	p.InstallCmdHandlers(constants.ToggleStateItemID,
+		func(_ any) bool { return canToggleDisabled(p.table) },
+		func(_ any) { toggleDisabled(owner, p.table) })
 }
 
 func (p *PageList) installToggleEquippedHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.ToggleStateItemID,
-		func() bool { return canToggleEquipped(p.table) },
-		func() { toggleEquipped(owner, p.table) })
+	p.InstallCmdHandlers(constants.ToggleStateItemID,
+		func(_ any) bool { return canToggleEquipped(p.table) },
+		func(_ any) { toggleEquipped(owner, p.table) })
 }
 
 func (p *PageList) installIncrementPointsHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.IncrementItemID,
-		func() bool { return canAdjustRawPoints(p.table, true) },
-		func() { adjustRawPoints(owner, p.table, true) })
+	p.InstallCmdHandlers(constants.IncrementItemID,
+		func(_ any) bool { return canAdjustRawPoints(p.table, true) },
+		func(_ any) { adjustRawPoints(owner, p.table, true) })
 }
 
 func (p *PageList) installDecrementPointsHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.DecrementItemID,
-		func() bool { return canAdjustRawPoints(p.table, false) },
-		func() { adjustRawPoints(owner, p.table, false) })
+	p.InstallCmdHandlers(constants.DecrementItemID,
+		func(_ any) bool { return canAdjustRawPoints(p.table, false) },
+		func(_ any) { adjustRawPoints(owner, p.table, false) })
 }
 
 func (p *PageList) installIncrementLevelHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.IncrementItemID,
-		func() bool { return canAdjustTraitLevel(p.table, true) },
-		func() { adjustTraitLevel(owner, p.table, true) })
+	p.InstallCmdHandlers(constants.IncrementItemID,
+		func(_ any) bool { return canAdjustTraitLevel(p.table, true) },
+		func(_ any) { adjustTraitLevel(owner, p.table, true) })
 }
 
 func (p *PageList) installDecrementLevelHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.DecrementItemID,
-		func() bool { return canAdjustTraitLevel(p.table, false) },
-		func() { adjustTraitLevel(owner, p.table, false) })
+	p.InstallCmdHandlers(constants.DecrementItemID,
+		func(_ any) bool { return canAdjustTraitLevel(p.table, false) },
+		func(_ any) { adjustTraitLevel(owner, p.table, false) })
 }
 
 func (p *PageList) installIncrementQuantityHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.IncrementItemID,
-		func() bool { return canAdjustQuantity(p.table, true) },
-		func() { adjustQuantity(owner, p.table, true) })
+	p.InstallCmdHandlers(constants.IncrementItemID,
+		func(_ any) bool { return canAdjustQuantity(p.table, true) },
+		func(_ any) { adjustQuantity(owner, p.table, true) })
 }
 
 func (p *PageList) installDecrementQuantityHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.DecrementItemID,
-		func() bool { return canAdjustQuantity(p.table, false) },
-		func() { adjustQuantity(owner, p.table, false) })
+	p.InstallCmdHandlers(constants.DecrementItemID,
+		func(_ any) bool { return canAdjustQuantity(p.table, false) },
+		func(_ any) { adjustQuantity(owner, p.table, false) })
 }
 
 func (p *PageList) installIncrementUsesHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.IncrementUsesItemID,
-		func() bool { return canAdjustUses(p.table, 1) },
-		func() { adjustUses(owner, p.table, 1) })
+	p.InstallCmdHandlers(constants.IncrementUsesItemID,
+		func(_ any) bool { return canAdjustUses(p.table, 1) },
+		func(_ any) { adjustUses(owner, p.table, 1) })
 }
 
 func (p *PageList) installDecrementUsesHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.DecrementUsesItemID,
-		func() bool { return canAdjustUses(p.table, -1) },
-		func() { adjustUses(owner, p.table, -1) })
+	p.InstallCmdHandlers(constants.DecrementUsesItemID,
+		func(_ any) bool { return canAdjustUses(p.table, -1) },
+		func(_ any) { adjustUses(owner, p.table, -1) })
 }
 
 func (p *PageList) installIncrementSkillHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.IncrementSkillLevelItemID,
-		func() bool { return canAdjustSkillLevel(p.table, true) },
-		func() { adjustSkillLevel(owner, p.table, true) })
+	p.InstallCmdHandlers(constants.IncrementSkillLevelItemID,
+		func(_ any) bool { return canAdjustSkillLevel(p.table, true) },
+		func(_ any) { adjustSkillLevel(owner, p.table, true) })
 }
 
 func (p *PageList) installDecrementSkillHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.DecrementSkillLevelItemID,
-		func() bool { return canAdjustSkillLevel(p.table, false) },
-		func() { adjustSkillLevel(owner, p.table, false) })
+	p.InstallCmdHandlers(constants.DecrementSkillLevelItemID,
+		func(_ any) bool { return canAdjustSkillLevel(p.table, false) },
+		func(_ any) { adjustSkillLevel(owner, p.table, false) })
 }
 
 func (p *PageList) installIncrementTechLevelHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.IncrementTechLevelItemID,
-		func() bool { return canAdjustTechLevel(p.table, fxp.One) },
-		func() { adjustTechLevel(owner, p.table, fxp.One) })
+	p.InstallCmdHandlers(constants.IncrementTechLevelItemID,
+		func(_ any) bool { return canAdjustTechLevel(p.table, fxp.One) },
+		func(_ any) { adjustTechLevel(owner, p.table, fxp.One) })
 }
 
 func (p *PageList) installDecrementTechLevelHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.DecrementTechLevelItemID,
-		func() bool { return canAdjustTechLevel(p.table, -fxp.One) },
-		func() { adjustTechLevel(owner, p.table, -fxp.One) })
+	p.InstallCmdHandlers(constants.DecrementTechLevelItemID,
+		func(_ any) bool { return canAdjustTechLevel(p.table, -fxp.One) },
+		func(_ any) { adjustTechLevel(owner, p.table, -fxp.One) })
 }
 
 func (p *PageList) installConvertToContainerHandler(owner widget.Rebuildable) {
-	p.installPerformHandlers(constants.ConvertToContainerItemID,
-		func() bool { return canConvertToContainer(p.table) },
-		func() { convertToContainer(owner, p.table) })
+	p.InstallCmdHandlers(constants.ConvertToContainerItemID,
+		func(_ any) bool { return canConvertToContainer(p.table) },
+		func(_ any) { convertToContainer(owner, p.table) })
 }
 
 // SelectedNodes returns the set of selected nodes. If 'minimal' is true, then children of selected rows that may also

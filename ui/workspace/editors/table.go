@@ -51,28 +51,14 @@ func newTable(parent *unison.Panel, provider TableProvider) {
 		HGrab:  true,
 	})
 	table.SetTopLevelRows(provider.RowData(table))
-	table.CanPerformCmdCallback = func(_ any, id int) (enabled, handled bool) {
-		switch id {
-		case constants.OpenEditorItemID:
-			return table.HasSelection(), true
-		case constants.OpenOnePageReferenceItemID, constants.OpenEachPageReferenceItemID:
-			return NewCanOpenPageRefFunc(table)(), true
-		}
-		return false, false
-	}
-	table.PerformCmdCallback = func(_ any, id int) bool {
-		switch id {
-		case constants.OpenEditorItemID:
-			provider.OpenEditor(widget.FindRebuildable(table), table)
-		case constants.OpenOnePageReferenceItemID:
-			NewOpenPageRefFunc(table)()
-		case constants.OpenEachPageReferenceItemID:
-			NewOpenEachPageRefFunc(table)()
-		default:
-			return false
-		}
-		return true
-	}
+	table.InstallCmdHandlers(constants.OpenEditorItemID, func(_ any) bool { return table.HasSelection() },
+		func(_ any) { provider.OpenEditor(widget.FindRebuildable(table), table) })
+	table.InstallCmdHandlers(constants.OpenOnePageReferenceItemID,
+		func(_ any) bool { return CanOpenPageRef(table) },
+		func(_ any) { OpenPageRef(table) })
+	table.InstallCmdHandlers(constants.OpenEachPageReferenceItemID,
+		func(_ any) bool { return CanOpenPageRef(table) },
+		func(_ any) { OpenEachPageRef(table) })
 	parent.AddChild(tableHeader)
 	parent.AddChild(table)
 }

@@ -69,7 +69,7 @@ func NewTemplateFromFile(filePath string) (unison.Dockable, error) {
 
 // NewTemplate creates a new unison.Dockable for GURPS template files.
 func NewTemplate(filePath string, template *gurps.Template) *Template {
-	t := &Template{
+	d := &Template{
 		path:              filePath,
 		undoMgr:           unison.NewUndoManager(200, func(err error) { jot.Error(err) }),
 		scroll:            unison.NewScrollPanel(),
@@ -78,31 +78,31 @@ func NewTemplate(filePath string, template *gurps.Template) *Template {
 		crc:               template.CRC64(),
 		needsSaveAsPrompt: true,
 	}
-	t.Self = t
-	t.SetLayout(&unison.FlexLayout{
+	d.Self = d
+	d.SetLayout(&unison.FlexLayout{
 		Columns: 1,
 		HAlign:  unison.FillAlignment,
 		VAlign:  unison.FillAlignment,
 	})
 
-	t.scroll.SetContent(t.createContent(), unison.UnmodifiedBehavior, unison.UnmodifiedBehavior)
-	t.scroll.SetLayoutData(&unison.FlexLayoutData{
+	d.scroll.SetContent(d.createContent(), unison.UnmodifiedBehavior, unison.UnmodifiedBehavior)
+	d.scroll.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 		VGrab:  true,
 	})
-	t.scroll.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) {
+	d.scroll.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) {
 		gc.DrawRect(rect, theme.PageVoidColor.Paint(gc, rect, unison.Fill))
 	}
 
 	scaleTitle := i18n.Text("Scale")
-	t.scaleField = widget.NewPercentageField(scaleTitle, func() int { return t.scale }, func(v int) {
-		t.scale = v
-		t.applyScale()
+	d.scaleField = widget.NewPercentageField(scaleTitle, func() int { return d.scale }, func(v int) {
+		d.scale = v
+		d.applyScale()
 	}, gsettings.InitialUIScaleMin, gsettings.InitialUIScaleMax, false, false)
-	t.scaleField.SetMarksModified(false)
-	t.scaleField.Tooltip = unison.NewTooltipWithText(scaleTitle)
+	d.scaleField.SetMarksModified(false)
+	d.scaleField.Tooltip = unison.NewTooltipWithText(scaleTitle)
 
 	toolbar := unison.NewPanel()
 	toolbar.SetBorder(unison.NewCompoundBorder(unison.NewLineBorder(unison.DividerColor, 0, unison.Insets{Bottom: 1},
@@ -111,21 +111,50 @@ func NewTemplate(filePath string, template *gurps.Template) *Template {
 		HAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
-	toolbar.AddChild(t.scaleField)
+	toolbar.AddChild(d.scaleField)
 	toolbar.SetLayout(&unison.FlexLayout{
 		Columns:  len(toolbar.Children()),
 		HSpacing: unison.StdHSpacing,
 	})
 
-	t.AddChild(toolbar)
-	t.AddChild(t.scroll)
+	d.AddChild(toolbar)
+	d.AddChild(d.scroll)
 
-	t.applyScale()
+	d.applyScale()
 
-	t.CanPerformCmdCallback = t.canPerformCmd
-	t.PerformCmdCallback = t.performCmd
+	d.InstallCmdHandlers(constants.SaveItemID, func(_ any) bool { return d.Modified() }, func(_ any) { d.save(false) })
+	d.InstallCmdHandlers(constants.SaveAsItemID, unison.AlwaysEnabled, func(_ any) { d.save(true) })
+	d.installNewItemCmdHandlers(constants.NewTraitItemID, constants.NewTraitContainerItemID, traitsListIndex)
+	d.installNewItemCmdHandlers(constants.NewSkillItemID, constants.NewSkillContainerItemID, skillsListIndex)
+	d.installNewItemCmdHandlers(constants.NewTechniqueItemID, -1, skillsListIndex)
+	d.installNewItemCmdHandlers(constants.NewSpellItemID, constants.NewSpellContainerItemID, spellsListIndex)
+	d.installNewItemCmdHandlers(constants.NewRitualMagicSpellItemID, -1, spellsListIndex)
+	d.installNewItemCmdHandlers(constants.NewCarriedEquipmentItemID,
+		constants.NewCarriedEquipmentContainerItemID, carriedEquipmentListIndex)
+	d.installNewItemCmdHandlers(constants.NewOtherEquipmentItemID,
+		constants.NewOtherEquipmentContainerItemID, otherEquipmentListIndex)
+	d.installNewItemCmdHandlers(constants.NewNoteItemID, constants.NewNoteContainerItemID, notesListIndex)
+	d.InstallCmdHandlers(constants.AddNaturalAttacksItemID, unison.AlwaysEnabled, func(_ any) {
+		editors.InsertItem[*gurps.Trait](d, d.Lists[traitsListIndex].table, gurps.NewNaturalAttacks(nil, nil),
+			func(target, parent *gurps.Trait) { target.Parent = parent },
+			func(target *gurps.Trait) []*gurps.Trait { return target.Children },
+			func(target *gurps.Trait, children []*gurps.Trait) { target.Children = children },
+			d.template.TraitList, d.template.SetTraitList, d.Lists[traitsListIndex].provider.RowData,
+			func(target *gurps.Trait) uuid.UUID { return target.ID })
+	})
 
-	return t
+	return d
+}
+
+func (d *Template) installNewItemCmdHandlers(itemID, containerID, listIndex int) {
+	variant := editors.NoItemVariant
+	if containerID == -1 {
+		variant = editors.AlternateItemVariant
+	} else {
+		d.InstallCmdHandlers(containerID, unison.AlwaysEnabled,
+			func(_ any) { d.Lists[listIndex].CreateItem(d, editors.ContainerItemVariant) })
+	}
+	d.InstallCmdHandlers(itemID, unison.AlwaysEnabled, func(_ any) { d.Lists[listIndex].CreateItem(d, variant) })
 }
 
 // DockableKind implements widget.DockableKind
@@ -317,77 +346,4 @@ func (d *Template) Rebuild(full bool) {
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.UpdateTitle(d)
 	}
-}
-
-func (d *Template) canPerformCmd(_ any, id int) (enabled, handled bool) {
-	switch id {
-	case constants.SaveItemID:
-		return d.Modified(), true
-	case constants.SaveAsItemID,
-		constants.NewTraitItemID,
-		constants.NewTraitContainerItemID,
-		constants.NewSkillItemID,
-		constants.NewSkillContainerItemID,
-		constants.NewTechniqueItemID,
-		constants.NewSpellItemID,
-		constants.NewSpellContainerItemID,
-		constants.NewRitualMagicSpellItemID,
-		constants.NewCarriedEquipmentItemID,
-		constants.NewCarriedEquipmentContainerItemID,
-		constants.NewOtherEquipmentItemID,
-		constants.NewOtherEquipmentContainerItemID,
-		constants.NewNoteItemID,
-		constants.NewNoteContainerItemID,
-		constants.AddNaturalAttacksItemID:
-		return true, true
-	default:
-		return false, false
-	}
-}
-
-func (d *Template) performCmd(_ any, id int) bool {
-	switch id {
-	case constants.SaveItemID:
-		d.save(false)
-	case constants.SaveAsItemID:
-		d.save(true)
-	case constants.NewTraitItemID:
-		d.Lists[traitsListIndex].CreateItem(d, editors.NoItemVariant)
-	case constants.NewTraitContainerItemID:
-		d.Lists[traitsListIndex].CreateItem(d, editors.ContainerItemVariant)
-	case constants.NewSkillItemID:
-		d.Lists[skillsListIndex].CreateItem(d, editors.NoItemVariant)
-	case constants.NewSkillContainerItemID:
-		d.Lists[skillsListIndex].CreateItem(d, editors.ContainerItemVariant)
-	case constants.NewTechniqueItemID:
-		d.Lists[skillsListIndex].CreateItem(d, editors.AlternateItemVariant)
-	case constants.NewSpellItemID:
-		d.Lists[spellsListIndex].CreateItem(d, editors.NoItemVariant)
-	case constants.NewSpellContainerItemID:
-		d.Lists[spellsListIndex].CreateItem(d, editors.ContainerItemVariant)
-	case constants.NewRitualMagicSpellItemID:
-		d.Lists[spellsListIndex].CreateItem(d, editors.AlternateItemVariant)
-	case constants.NewCarriedEquipmentItemID:
-		d.Lists[carriedEquipmentListIndex].CreateItem(d, editors.NoItemVariant)
-	case constants.NewCarriedEquipmentContainerItemID:
-		d.Lists[carriedEquipmentListIndex].CreateItem(d, editors.ContainerItemVariant)
-	case constants.NewOtherEquipmentItemID:
-		d.Lists[otherEquipmentListIndex].CreateItem(d, editors.NoItemVariant)
-	case constants.NewOtherEquipmentContainerItemID:
-		d.Lists[otherEquipmentListIndex].CreateItem(d, editors.ContainerItemVariant)
-	case constants.NewNoteItemID:
-		d.Lists[notesListIndex].CreateItem(d, editors.NoItemVariant)
-	case constants.NewNoteContainerItemID:
-		d.Lists[notesListIndex].CreateItem(d, editors.ContainerItemVariant)
-	case constants.AddNaturalAttacksItemID:
-		editors.InsertItem[*gurps.Trait](d, d.Lists[traitsListIndex].table, gurps.NewNaturalAttacks(nil, nil),
-			func(target, parent *gurps.Trait) { target.Parent = parent },
-			func(target *gurps.Trait) []*gurps.Trait { return target.Children },
-			func(target *gurps.Trait, children []*gurps.Trait) { target.Children = children },
-			d.template.TraitList, d.template.SetTraitList, d.Lists[traitsListIndex].provider.RowData,
-			func(target *gurps.Trait) uuid.UUID { return target.ID })
-	default:
-		return false
-	}
-	return true
 }

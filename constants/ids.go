@@ -49,28 +49,10 @@ const (
 	SwapDefaultsItemID
 	ItemMenuID
 	TraitsMenuID
-	NewTraitItemID
-	NewTraitContainerItemID
-	NewTraitModifierItemID
-	NewTraitContainerModifierItemID
 	AddNaturalAttacksItemID
 	SkillsMenuID
-	NewSkillItemID
-	NewSkillContainerItemID
-	NewTechniqueItemID
-	NewSpellItemID
-	NewSpellContainerItemID
-	NewRitualMagicSpellItemID
 	EquipmentMenuID
-	NewCarriedEquipmentItemID
-	NewCarriedEquipmentContainerItemID
-	NewOtherEquipmentItemID
-	NewOtherEquipmentContainerItemID
-	NewEquipmentModifierItemID
-	NewEquipmentContainerModifierItemID
 	NotesMenuID
-	NewNoteItemID
-	NewNoteContainerItemID
 	OpenEditorItemID
 	CopyToSheetItemID
 	CopyToTemplateItemID
@@ -97,6 +79,34 @@ const (
 	WebSiteItemID
 	MailingListItemID
 	ChangeLibraryLocationsItemID
+
+	FirstNonContainerMarker // Keep this block grouped together
+	NewCarriedEquipmentItemID
+	NewEquipmentModifierItemID
+	NewNoteItemID
+	NewOtherEquipmentItemID
+	NewSkillItemID
+	NewSpellItemID
+	NewTraitItemID
+	NewTraitModifierItemID
+	LastNonContainerMarker
+
+	FirstContainerMarker // Keep this block grouped together
+	NewCarriedEquipmentContainerItemID
+	NewEquipmentContainerModifierItemID
+	NewNoteContainerItemID
+	NewOtherEquipmentContainerItemID
+	NewSkillContainerItemID
+	NewSpellContainerItemID
+	NewTraitContainerItemID
+	NewTraitContainerModifierItemID
+	LastContainerMarker
+
+	FirstAlternateNonContainerMarker // Keep this block grouped together
+	NewRitualMagicSpellItemID
+	NewTechniqueItemID
+	LastAlternateNonContainerMarker
+
 	LibraryBaseItemID
 	RecentFieldBaseItemID  = LibraryBaseItemID + 1000
 	ExportToTextBaseItemID = RecentFieldBaseItemID + 1000

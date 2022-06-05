@@ -442,8 +442,34 @@ func NewTableDockable(filePath, extension string, provider editors.TableProvider
 
 	d.applyScale()
 
-	d.CanPerformCmdCallback = d.canPerformCmd
-	d.PerformCmdCallback = d.performCmd
+	d.InstallCmdHandlers(constants.OpenEditorItemID,
+		func(_ any) bool { return d.table.HasSelection() },
+		func(_ any) { d.provider.OpenEditor(d, d.table) })
+	d.InstallCmdHandlers(constants.OpenOnePageReferenceItemID,
+		func(_ any) bool { return editors.CanOpenPageRef(d.table) },
+		func(_ any) { editors.OpenPageRef(d.table) })
+	d.InstallCmdHandlers(constants.OpenEachPageReferenceItemID,
+		func(_ any) bool { return editors.CanOpenPageRef(d.table) },
+		func(_ any) { editors.OpenEachPageRef(d.table) })
+	d.InstallCmdHandlers(constants.SaveItemID,
+		func(_ any) bool { return d.Modified() },
+		func(_ any) { d.save(false) })
+	d.InstallCmdHandlers(constants.SaveAsItemID, unison.AlwaysEnabled, func(_ any) { d.save(true) })
+	for _, id := range canCreateIDs {
+		variant := editors.ItemVariant(-1)
+		switch {
+		case id > constants.FirstNonContainerMarker && id < constants.LastNonContainerMarker:
+			variant = editors.NoItemVariant
+		case id > constants.FirstContainerMarker && id < constants.LastContainerMarker:
+			variant = editors.ContainerItemVariant
+		case id > constants.FirstAlternateNonContainerMarker && id < constants.LastAlternateNonContainerMarker:
+			variant = editors.AlternateItemVariant
+		}
+		if variant != -1 {
+			d.InstallCmdHandlers(id, unison.AlwaysEnabled,
+				func(_ any) { d.provider.CreateItem(d, d.table, variant) })
+		}
+	}
 
 	d.crc = d.crc64()
 	return d
@@ -637,64 +663,6 @@ func (d *TableDockable) Rebuild(_ bool) {
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.UpdateTitle(d)
 	}
-}
-
-func (d *TableDockable) canPerformCmd(_ any, id int) (enabled, handled bool) {
-	switch id {
-	case constants.OpenEditorItemID:
-		return d.table.HasSelection(), true
-	case constants.OpenOnePageReferenceItemID,
-		constants.OpenEachPageReferenceItemID:
-		return editors.CanOpenPageRef(d.table), true
-	case constants.SaveItemID:
-		return d.Modified(), true
-	case constants.SaveAsItemID:
-		return true, true
-	default:
-		if d.canCreateIDs[id] {
-			return true, true
-		}
-		return false, false
-	}
-}
-
-func (d *TableDockable) performCmd(_ any, id int) bool {
-	switch id {
-	case constants.OpenEditorItemID:
-		d.provider.OpenEditor(d, d.table)
-	case constants.OpenOnePageReferenceItemID:
-		editors.OpenPageRef(d.table)
-	case constants.OpenEachPageReferenceItemID:
-		editors.OpenEachPageRef(d.table)
-	case constants.SaveItemID:
-		d.save(false)
-	case constants.SaveAsItemID:
-		d.save(true)
-	case constants.NewTraitItemID,
-		constants.NewTraitModifierItemID,
-		constants.NewSkillItemID,
-		constants.NewSpellItemID,
-		constants.NewCarriedEquipmentItemID,
-		constants.NewOtherEquipmentItemID,
-		constants.NewEquipmentModifierItemID,
-		constants.NewNoteItemID:
-		d.provider.CreateItem(d, d.table, editors.NoItemVariant)
-	case constants.NewTraitContainerItemID,
-		constants.NewTraitContainerModifierItemID,
-		constants.NewSkillContainerItemID,
-		constants.NewSpellContainerItemID,
-		constants.NewCarriedEquipmentContainerItemID,
-		constants.NewOtherEquipmentContainerItemID,
-		constants.NewEquipmentContainerModifierItemID,
-		constants.NewNoteContainerItemID:
-		d.provider.CreateItem(d, d.table, editors.ContainerItemVariant)
-	case constants.NewTechniqueItemID,
-		constants.NewRitualMagicSpellItemID:
-		d.provider.CreateItem(d, d.table, editors.AlternateItemVariant)
-	default:
-		return false
-	}
-	return true
 }
 
 func (d *TableDockable) crc64() uint64 {

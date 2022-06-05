@@ -38,11 +38,7 @@ func TableInstallStdCallbacks(table *unison.Table) {
 		table.RequestFocus()
 		return mouseDownCallback(where, button, clickCount, mod)
 	}
-	table.SelectionDoubleClickCallback = func() {
-		if enabled, _ := table.CanPerformCmd(nil, constants.OpenEditorItemID); enabled {
-			table.PerformCmd(nil, constants.OpenEditorItemID)
-		}
-	}
+	table.SelectionDoubleClickCallback = func() { table.PerformCmd(nil, constants.OpenEditorItemID) }
 }
 
 // TableCreateHeader creates the standard table header with a flexible sorting mechanism.
