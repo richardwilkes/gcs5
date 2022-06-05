@@ -59,7 +59,7 @@ func (d *EquipmentEditData) copyFrom(other *EquipmentEditData, isApply bool) {
 	if len(other.Modifiers) != 0 {
 		d.Modifiers = make([]*EquipmentModifier, 0, len(other.Modifiers))
 		for _, one := range other.Modifiers {
-			d.Modifiers = append(d.Modifiers, one.Clone())
+			d.Modifiers = append(d.Modifiers, one.Clone(nil))
 		}
 	}
 	d.Prereq = d.Prereq.CloneResolvingEmpty(false, isApply)

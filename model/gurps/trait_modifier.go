@@ -49,6 +49,7 @@ const (
 type TraitModifier struct {
 	TraitModifierData
 	Entity *Entity
+	Parent *TraitModifier
 }
 
 type traitModifierListData struct {
@@ -82,27 +83,29 @@ func SaveTraitModifiers(modifiers []*TraitModifier, filePath string) error {
 }
 
 // NewTraitModifier creates a TraitModifier.
-func NewTraitModifier(entity *Entity, _ *TraitModifier, container bool) *TraitModifier {
+func NewTraitModifier(entity *Entity, parent *TraitModifier, container bool) *TraitModifier {
 	a := &TraitModifier{
 		TraitModifierData: TraitModifierData{
 			ContainerBase: newContainerBase[*TraitModifier](traitModifierTypeKey, container),
 		},
 		Entity: entity,
+		Parent: parent,
 	}
 	a.Name = a.Kind()
 	return a
 }
 
 // Clone creates a copy of this data.
-func (a *TraitModifier) Clone() *TraitModifier {
+func (a *TraitModifier) Clone(newParent *TraitModifier) *TraitModifier {
 	other := *a
+	other.Parent = newParent
 	other.Tags = txt.CloneStringSlice(a.Tags)
 	other.Features = a.Features.Clone()
 	other.Children = nil
 	if len(a.Children) != 0 {
 		other.Children = make([]*TraitModifier, 0, len(a.Children))
 		for _, one := range a.Children {
-			other.Children = append(other.Children, one.Clone())
+			other.Children = append(other.Children, one.Clone(&other))
 		}
 	}
 	return &other
@@ -128,6 +131,11 @@ func (a *TraitModifier) UnmarshalJSON(data []byte) error {
 	a.TraitModifierData = localData.TraitModifierData
 	a.Tags = convertOldCategoriesToTags(a.Tags, localData.Categories)
 	slices.Sort(a.Tags)
+	if a.Container() {
+		for _, one := range a.Children {
+			one.Parent = a
+		}
+	}
 	return nil
 }
 
@@ -155,6 +163,17 @@ func (a *TraitModifier) CellData(column int, data *CellData) {
 		data.Primary = a.PageRef
 		data.Secondary = a.Name
 	}
+}
+
+// Depth returns the number of parents this node has.
+func (a *TraitModifier) Depth() int {
+	count := 0
+	p := a.Parent
+	for p != nil {
+		count++
+		p = p.Parent
+	}
+	return count
 }
 
 // OwningEntity returns the owning Entity.

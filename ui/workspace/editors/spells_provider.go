@@ -169,3 +169,10 @@ func (p *spellsProvider) CreateItem(owner widget.Rebuildable, table *unison.Tabl
 		func(target *gurps.Spell) uuid.UUID { return target.ID })
 	EditSpell(owner, item)
 }
+
+func (p *spellsProvider) DeleteSelection(table *unison.Table) {
+	deleteTableSelection(table, p.provider.SpellList(),
+		func(nodes []*gurps.Spell) { p.provider.SetSpellList(nodes) },
+		func(node *gurps.Spell) **gurps.Spell { return &node.Parent },
+		func(node *gurps.Spell) *[]*gurps.Spell { return &node.Children })
+}

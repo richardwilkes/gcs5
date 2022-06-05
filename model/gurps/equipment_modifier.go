@@ -51,6 +51,7 @@ const (
 type EquipmentModifier struct {
 	EquipmentModifierData
 	Entity *Entity
+	Parent *EquipmentModifier
 }
 
 type equipmentModifierListData struct {
@@ -84,27 +85,29 @@ func SaveEquipmentModifiers(modifiers []*EquipmentModifier, filePath string) err
 }
 
 // NewEquipmentModifier creates an EquipmentModifier.
-func NewEquipmentModifier(entity *Entity, _ *EquipmentModifier, container bool) *EquipmentModifier {
+func NewEquipmentModifier(entity *Entity, parent *EquipmentModifier, container bool) *EquipmentModifier {
 	a := &EquipmentModifier{
 		EquipmentModifierData: EquipmentModifierData{
 			ContainerBase: newContainerBase[*EquipmentModifier](equipmentModifierTypeKey, container),
 		},
 		Entity: entity,
+		Parent: parent,
 	}
 	a.Name = a.Kind()
 	return a
 }
 
 // Clone creates a copy of this data.
-func (e *EquipmentModifier) Clone() *EquipmentModifier {
+func (e *EquipmentModifier) Clone(newParent *EquipmentModifier) *EquipmentModifier {
 	other := *e
+	other.Parent = newParent
 	other.Tags = txt.CloneStringSlice(e.Tags)
 	other.Features = e.Features.Clone()
 	other.Children = nil
 	if len(e.Children) != 0 {
 		other.Children = make([]*EquipmentModifier, 0, len(e.Children))
 		for _, one := range e.Children {
-			other.Children = append(other.Children, one.Clone())
+			other.Children = append(other.Children, one.Clone(&other))
 		}
 	}
 	return &other
@@ -130,6 +133,11 @@ func (e *EquipmentModifier) UnmarshalJSON(data []byte) error {
 	e.EquipmentModifierData = localData.EquipmentModifierData
 	e.Tags = convertOldCategoriesToTags(e.Tags, localData.Categories)
 	slices.Sort(e.Tags)
+	if e.Container() {
+		for _, one := range e.Children {
+			one.Parent = e
+		}
+	}
 	return nil
 }
 
@@ -167,6 +175,17 @@ func (e *EquipmentModifier) CellData(column int, data *CellData) {
 		data.Primary = e.PageRef
 		data.Secondary = e.Name
 	}
+}
+
+// Depth returns the number of parents this node has.
+func (e *EquipmentModifier) Depth() int {
+	count := 0
+	p := e.Parent
+	for p != nil {
+		count++
+		p = p.Parent
+	}
+	return count
 }
 
 // OwningEntity returns the owning Entity.

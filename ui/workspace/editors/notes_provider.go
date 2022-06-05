@@ -96,3 +96,10 @@ func (p *notesProvider) CreateItem(owner widget.Rebuildable, table *unison.Table
 		func(target *gurps.Note) uuid.UUID { return target.ID })
 	EditNote(owner, item)
 }
+
+func (p *notesProvider) DeleteSelection(table *unison.Table) {
+	deleteTableSelection(table, p.provider.NoteList(),
+		func(nodes []*gurps.Note) { p.provider.SetNoteList(nodes) },
+		func(node *gurps.Note) **gurps.Note { return &node.Parent },
+		func(node *gurps.Note) *[]*gurps.Note { return &node.Children })
+}

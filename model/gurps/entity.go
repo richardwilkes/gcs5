@@ -1036,6 +1036,16 @@ func (e *Entity) Ancestry() *ancestry.Ancestry {
 	return anc
 }
 
+// Weapons implements WeaponListProvider.
+func (e *Entity) Weapons(weaponType weapon.Type) []*Weapon {
+	return e.EquippedWeapons(weaponType)
+}
+
+// SetWeapons implements WeaponListProvider.
+func (e *Entity) SetWeapons(_ weapon.Type, _ []*Weapon) {
+	// Not permitted
+}
+
 // EquippedWeapons returns a sorted list of equipped weapons.
 func (e *Entity) EquippedWeapons(weaponType weapon.Type) []*Weapon {
 	m := make(map[uint32]*Weapon)

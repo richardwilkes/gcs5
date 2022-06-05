@@ -26,6 +26,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
+	"github.com/richardwilkes/gcs/model/id"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -86,6 +87,7 @@ type WeaponData struct {
 type Weapon struct {
 	WeaponData
 	Owner WeaponOwner
+	id    uuid.UUID
 }
 
 // ExtractWeaponsOfType filters the input list down to only those weapons of the given type.
@@ -201,9 +203,14 @@ func (w *Weapon) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&data)
 }
 
-// UUID returns the UUID of this data.
+// UUID returns the UUID of this data. For weapons, this is only valid while the data is in memory.
+// TODO: Make the UUID persistent, like with most other data in GCS?
 func (w *Weapon) UUID() uuid.UUID {
-	return uuid.UUID{}
+	var zero uuid.UUID
+	if w.id == zero {
+		w.id = id.NewUUID()
+	}
+	return w.id
 }
 
 // Kind returns the kind of data.

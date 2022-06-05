@@ -24,6 +24,8 @@ type weaponsPanel struct {
 	weaponType weapon.Type
 	allWeapons *[]*gurps.Weapon
 	weapons    []*gurps.Weapon
+	provider   TableProvider
+	table      *unison.Table
 }
 
 func newWeaponsPanel(entity *gurps.Entity, weaponType weapon.Type, weapons *[]*gurps.Weapon) *weaponsPanel {
@@ -44,7 +46,8 @@ func newWeaponsPanel(entity *gurps.Entity, weaponType weapon.Type, weapons *[]*g
 	p.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) {
 		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
 	}
-	newTable(p.AsPanel(), NewWeaponsProvider(p, p.weaponType, false))
+	p.provider = NewWeaponsProvider(p, p.weaponType, false)
+	p.table = newTable(p.AsPanel(), p.provider)
 	return p
 }
 
@@ -52,6 +55,20 @@ func (p *weaponsPanel) Entity() *gurps.Entity {
 	return p.entity
 }
 
-func (p *weaponsPanel) EquippedWeapons(_ weapon.Type) []*gurps.Weapon {
-	return p.weapons
+func (p *weaponsPanel) Weapons(weaponType weapon.Type) []*gurps.Weapon {
+	return gurps.ExtractWeaponsOfType(weaponType, *p.allWeapons)
+}
+
+func (p *weaponsPanel) SetWeapons(weaponType weapon.Type, list []*gurps.Weapon) {
+	melee, ranged := gurps.SeparateWeapons(*p.allWeapons)
+	switch weaponType {
+	case weapon.Melee:
+		melee = list
+	case weapon.Ranged:
+		ranged = list
+	}
+	*p.allWeapons = append(append(make([]*gurps.Weapon, 0, len(melee)+len(ranged)), melee...), ranged...)
+	sel := RecordTableSelection(p.table)
+	p.table.SetTopLevelRows(p.provider.RowData(p.table))
+	ApplyTableSelection(p.table, sel)
 }

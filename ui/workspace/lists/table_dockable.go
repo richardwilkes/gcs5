@@ -455,6 +455,9 @@ func NewTableDockable(filePath, extension string, provider editors.TableProvider
 		func(_ any) bool { return d.Modified() },
 		func(_ any) { d.save(false) })
 	d.InstallCmdHandlers(constants.SaveAsItemID, unison.AlwaysEnabled, func(_ any) { d.save(true) })
+	d.InstallCmdHandlers(unison.DeleteItemID,
+		func(_ any) bool { return d.table.HasSelection() },
+		func(_ any) { d.provider.DeleteSelection(d.table) })
 	for _, id := range canCreateIDs {
 		variant := editors.ItemVariant(-1)
 		switch {
@@ -659,10 +662,14 @@ func (d *TableDockable) adjustForMatch() {
 
 // Rebuild implements widget.Rebuildable.
 func (d *TableDockable) Rebuild(_ bool) {
-	d.table.SyncToModel()
+	h, v := d.scroll.Position()
+	sel := editors.RecordTableSelection(d.table)
+	d.table.SetTopLevelRows(d.provider.RowData(d.table))
+	editors.ApplyTableSelection(d.table, sel)
 	if dc := unison.DockContainerFor(d); dc != nil {
 		dc.UpdateTitle(d)
 	}
+	d.scroll.SetPosition(h, v)
 }
 
 func (d *TableDockable) crc64() uint64 {

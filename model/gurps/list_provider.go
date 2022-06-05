@@ -90,5 +90,6 @@ type ReactionModifierListProvider interface {
 // WeaponListProvider defines the method needed to access the weapon list data.
 type WeaponListProvider interface {
 	EntityProvider
-	EquippedWeapons(weapon.Type) []*Weapon
+	Weapons(weaponType weapon.Type) []*Weapon
+	SetWeapons(weaponType weapon.Type, list []*Weapon)
 }

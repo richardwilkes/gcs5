@@ -208,3 +208,19 @@ func (p *equipmentProvider) CreateItem(owner widget.Rebuildable, table *unison.T
 		func(target *gurps.Equipment) uuid.UUID { return target.ID })
 	EditEquipment(owner, item, p.carried)
 }
+
+func (p *equipmentProvider) DeleteSelection(table *unison.Table) {
+	var list []*gurps.Equipment
+	var setList func([]*gurps.Equipment)
+	if p.carried {
+		list = p.provider.CarriedEquipmentList()
+		setList = p.provider.SetCarriedEquipmentList
+	} else {
+		list = p.provider.OtherEquipmentList()
+		setList = p.provider.SetOtherEquipmentList
+	}
+	deleteTableSelection(table, list,
+		func(nodes []*gurps.Equipment) { setList(nodes) },
+		func(node *gurps.Equipment) **gurps.Equipment { return &node.Parent },
+		func(node *gurps.Equipment) *[]*gurps.Equipment { return &node.Children })
+}

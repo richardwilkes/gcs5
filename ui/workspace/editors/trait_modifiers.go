@@ -21,6 +21,8 @@ type traitModifiersPanel struct {
 	unison.Panel
 	entity    *gurps.Entity
 	modifiers *[]*gurps.TraitModifier
+	provider  TableProvider
+	table     *unison.Table
 }
 
 func newTraitModifiersPanel(entity *gurps.Entity, modifiers *[]*gurps.TraitModifier) *traitModifiersPanel {
@@ -39,7 +41,8 @@ func newTraitModifiersPanel(entity *gurps.Entity, modifiers *[]*gurps.TraitModif
 	p.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) {
 		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
 	}
-	newTable(p.AsPanel(), NewTraitModifiersProvider(p, true))
+	p.provider = NewTraitModifiersProvider(p, true)
+	p.table = newTable(p.AsPanel(), p.provider)
 	return p
 }
 
@@ -53,4 +56,7 @@ func (p *traitModifiersPanel) TraitModifierList() []*gurps.TraitModifier {
 
 func (p *traitModifiersPanel) SetTraitModifierList(list []*gurps.TraitModifier) {
 	*p.modifiers = list
+	sel := RecordTableSelection(p.table)
+	p.table.SetTopLevelRows(p.provider.RowData(p.table))
+	ApplyTableSelection(p.table, sel)
 }

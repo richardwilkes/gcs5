@@ -84,3 +84,6 @@ func (p *reactionModProvider) OpenEditor(_ widget.Rebuildable, _ *unison.Table) 
 
 func (p *reactionModProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table, _ ItemVariant) {
 }
+
+func (p *reactionModProvider) DeleteSelection(_ *unison.Table) {
+}

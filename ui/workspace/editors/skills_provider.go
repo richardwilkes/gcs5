@@ -142,3 +142,10 @@ func (p *skillsProvider) CreateItem(owner widget.Rebuildable, table *unison.Tabl
 		func(target *gurps.Skill) uuid.UUID { return target.ID })
 	EditSkill(owner, item)
 }
+
+func (p *skillsProvider) DeleteSelection(table *unison.Table) {
+	deleteTableSelection(table, p.provider.SkillList(),
+		func(nodes []*gurps.Skill) { p.provider.SetSkillList(nodes) },
+		func(node *gurps.Skill) **gurps.Skill { return &node.Parent },
+		func(node *gurps.Skill) *[]*gurps.Skill { return &node.Children })
+}

@@ -18,6 +18,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -226,6 +227,39 @@ func DockContainerHoldsExtension(dc *unison.DockContainer, ext ...string) bool {
 	return false
 }
 
+// AssociatedUUIDKey is the key used with CloseUUID().
+const AssociatedUUIDKey = "associated_uuid"
+
+// CloseUUID attempts to close any Dockables associated with the given UUIDs. Returns false if a dockable refused to
+// close.
+func CloseUUID(ids map[uuid.UUID]bool) bool {
+	allow := true
+	for _, wnd := range unison.Windows() {
+		if ws := FromWindow(wnd); ws != nil {
+			ws.DocumentDock.RootDockLayout().ForEachDockContainer(func(dc *unison.DockContainer) bool {
+				for _, other := range dc.Dockables() {
+					if tc, ok := other.(unison.TabCloser); ok {
+						if otherValue, ok2 := other.AsPanel().ClientData()[AssociatedUUIDKey]; ok2 {
+							if otherID, ok3 := otherValue.(uuid.UUID); ok3 && ids[otherID] {
+								if !tc.MayAttemptClose() {
+									allow = false
+									return true
+								}
+								if !tc.AttemptClose() {
+									allow = false
+									return true
+								}
+							}
+						}
+					}
+				}
+				return false
+			})
+		}
+	}
+	return allow
+}
+
 // MayAttemptCloseOfGroup returns true if the grouped Dockables associated with the given dockable may be closed.
 func MayAttemptCloseOfGroup(d unison.Dockable) bool {
 	allow := true
@@ -239,7 +273,8 @@ func MayAttemptCloseOfGroup(d unison.Dockable) bool {
 	return allow
 }
 
-// CloseGroup attempts to close any grouped Dockables associated with the given Dockable.
+// CloseGroup attempts to close any grouped Dockables associated with the given Dockable. Returns false if a dockable
+// refused to close.
 func CloseGroup(d unison.Dockable) bool {
 	allow := true
 	traverseGroup(d, func(target widget.GroupedCloser) bool {

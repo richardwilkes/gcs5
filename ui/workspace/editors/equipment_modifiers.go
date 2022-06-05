@@ -21,6 +21,8 @@ type equipmentModifiersPanel struct {
 	unison.Panel
 	entity    *gurps.Entity
 	modifiers *[]*gurps.EquipmentModifier
+	provider  TableProvider
+	table     *unison.Table
 }
 
 func newEquipmentModifiersPanel(entity *gurps.Entity, modifiers *[]*gurps.EquipmentModifier) *equipmentModifiersPanel {
@@ -39,7 +41,8 @@ func newEquipmentModifiersPanel(entity *gurps.Entity, modifiers *[]*gurps.Equipm
 	p.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) {
 		gc.DrawRect(rect, unison.ContentColor.Paint(gc, rect, unison.Fill))
 	}
-	newTable(p.AsPanel(), NewEquipmentModifiersProvider(p, true))
+	p.provider = NewEquipmentModifiersProvider(p, true)
+	p.table = newTable(p.AsPanel(), p.provider)
 	return p
 }
 
@@ -53,4 +56,7 @@ func (p *equipmentModifiersPanel) EquipmentModifierList() []*gurps.EquipmentModi
 
 func (p *equipmentModifiersPanel) SetEquipmentModifierList(list []*gurps.EquipmentModifier) {
 	*p.modifiers = list
+	sel := RecordTableSelection(p.table)
+	p.table.SetTopLevelRows(p.provider.RowData(p.table))
+	ApplyTableSelection(p.table, sel)
 }

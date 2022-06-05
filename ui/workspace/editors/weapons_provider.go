@@ -112,7 +112,7 @@ func (p *weaponsProvider) Headers() []unison.TableColumnHeader {
 }
 
 func (p *weaponsProvider) RowData(table *unison.Table) []unison.TableRowData {
-	data := p.provider.EquippedWeapons(p.weaponType)
+	data := p.provider.Weapons(p.weaponType)
 	rows := make([]unison.TableRowData, 0, len(data))
 	for _, one := range data {
 		rows = append(rows, NewNode(table, nil, p.colMap, one, p.forPage))
@@ -143,4 +143,19 @@ func (p *weaponsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Tab
 }
 
 func (p *weaponsProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table, _ ItemVariant) {
+}
+
+func (p *weaponsProvider) DeleteSelection(table *unison.Table) {
+	if !p.forPage {
+		deleteTableSelection(table, p.provider.Weapons(p.weaponType),
+			func(nodes []*gurps.Weapon) { p.provider.SetWeapons(p.weaponType, nodes) },
+			func(node *gurps.Weapon) **gurps.Weapon {
+				var dummy *gurps.Weapon
+				return &dummy
+			},
+			func(node *gurps.Weapon) *[]*gurps.Weapon {
+				var dummy []*gurps.Weapon
+				return &dummy
+			})
+	}
 }

@@ -39,6 +39,13 @@ func TableInstallStdCallbacks(table *unison.Table) {
 		return mouseDownCallback(where, button, clickCount, mod)
 	}
 	table.SelectionDoubleClickCallback = func() { table.PerformCmd(nil, constants.OpenEditorItemID) }
+	table.KeyDownCallback = func(keyCode unison.KeyCode, mod unison.Modifiers, _ bool) bool {
+		if mod == 0 && (keyCode == unison.KeyBackspace || keyCode == unison.KeyDelete) {
+			table.PerformCmd(table, unison.DeleteItemID)
+			return true
+		}
+		return false
+	}
 }
 
 // TableCreateHeader creates the standard table header with a flexible sorting mechanism.

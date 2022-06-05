@@ -1,21 +1,12 @@
 ### Remaining work for a basic port to Go
 
-#### Unison-specific work that needs to be done
-
-- Printing support
-- Add keyboard navigation to the Table object
-- Drag & drop support in the Table object
-- Carefully comb over the interface and identify areas where things aren't working well on Windows and Linux, since I
-  spend nearly all of my development time on macOS and may have not noticed deficiencies there
-
 #### GCS-specific work that needs to be done
 
-- Ability to add a new weapon entry in detail editor
-- Ability to remove a weapon entry in detail editor
-- Ability to add a new trait modifier entry in detail editor
-- Ability to remove a trait modifier entry in detail editor
-- Ability to add a new equipment modifier entry in detail editor
-- Ability to remove a equipment modifier entry in detail editor
+- Add undo records for edit operations that don't already have them
+- Ability to add new entries in detail editors:
+  - Trait Modifiers
+  - Equipment Modifiers
+  - Weapons
 - Settings editors
   - Attributes
   - Body Type
@@ -39,9 +30,11 @@
   - Help
     - Check for GCS updates...
 - Printing support for sheets (requires support in unison first)
-- Make final decision on whether tables that have no content in the sheet should be hidden (complicates updates and
-  makes it harder for users to discover they exist)
-  - I'm currently thinking of just having a preference for making empty lists vanish when printing. That way they are
-    discoverable in the UI, but don't clutter up the printed sheet if you don't want them to.
-- When a sheet is scrolled, tooltips don't seem to be coming up in the correct spot for cells in the tables
-- Need to add undo capture around all of the edit operations. Currently many are missing outside of the detailed editors
+
+#### Unison-specific work that needs to be done
+
+- Printing support
+- Add keyboard navigation to the Table object
+- Drag & drop support in the Table object
+- Carefully comb over the interface and identify areas where things aren't working well on Windows and Linux, since I
+  spend nearly all of my development time on macOS and may have not noticed deficiencies there

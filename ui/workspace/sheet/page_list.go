@@ -183,6 +183,9 @@ func newPageList(owner widget.Rebuildable, provider editors.TableProvider) *Page
 		p.InstallCmdHandlers(constants.OpenEditorItemID,
 			func(_ any) bool { return p.table.HasSelection() },
 			func(_ any) { p.provider.OpenEditor(owner, p.table) })
+		p.InstallCmdHandlers(unison.DeleteItemID,
+			func(_ any) bool { return p.table.HasSelection() },
+			func(_ any) { p.provider.DeleteSelection(p.table) })
 	}
 	p.installOpenPageReferenceHandlers()
 	_, pref, _ := p.tableHeader.Sizes(geom.Size[float32]{})
@@ -316,24 +319,13 @@ func (p *PageList) RecordSelection() map[uuid.UUID]bool {
 	if p == nil {
 		return nil
 	}
-	rows := p.table.SelectedRows(false)
-	selection := make(map[uuid.UUID]bool, len(rows))
-	for _, row := range rows {
-		if n, ok := row.(*editors.Node); ok {
-			selection[n.Data().UUID()] = true
-		}
-	}
-	return selection
+	return editors.RecordTableSelection(p.table)
 }
 
 // ApplySelection locates the rows with the given UUIDs and selects them, replacing any existing selection.
 func (p *PageList) ApplySelection(selection map[uuid.UUID]bool) {
-	p.table.ClearSelection()
-	if len(selection) != 0 {
-		_, indexes := p.collectRowMappings(0, make([]int, 0, len(selection)), selection, p.table.TopLevelRows())
-		if len(indexes) != 0 {
-			p.table.SelectByIndex(indexes...)
-		}
+	if p != nil {
+		editors.ApplyTableSelection(p.table, selection)
 	}
 }
 
@@ -348,21 +340,6 @@ func (p *PageList) Sync() {
 	if parent := p.Parent(); parent != nil {
 		parent.NeedsLayout = true
 	}
-}
-
-func (p *PageList) collectRowMappings(index int, indexes []int, selection map[uuid.UUID]bool, rows []unison.TableRowData) (updatedIndex int, updatedIndexes []int) {
-	for _, row := range rows {
-		if n, ok := row.(*editors.Node); ok {
-			if selection[n.Data().UUID()] {
-				indexes = append(indexes, index)
-			}
-		}
-		index++
-		if row.IsOpen() {
-			index, indexes = p.collectRowMappings(index, indexes, selection, row.ChildRows())
-		}
-	}
-	return index, indexes
 }
 
 // CreateItem calls CreateItem on the contained TableProvider.

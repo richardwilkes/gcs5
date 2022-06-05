@@ -120,3 +120,10 @@ func (p *traitModifierProvider) CreateItem(owner widget.Rebuildable, table *unis
 		func(target *gurps.TraitModifier) uuid.UUID { return target.ID })
 	EditTraitModifier(owner, item)
 }
+
+func (p *traitModifierProvider) DeleteSelection(table *unison.Table) {
+	deleteTableSelection(table, p.provider.TraitModifierList(),
+		func(nodes []*gurps.TraitModifier) { p.provider.SetTraitModifierList(nodes) },
+		func(node *gurps.TraitModifier) **gurps.TraitModifier { return &node.Parent },
+		func(node *gurps.TraitModifier) *[]*gurps.TraitModifier { return &node.Children })
+}

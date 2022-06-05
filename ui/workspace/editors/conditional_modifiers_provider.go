@@ -84,3 +84,6 @@ func (p *condModProvider) OpenEditor(_ widget.Rebuildable, _ *unison.Table) {
 
 func (p *condModProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table, _ ItemVariant) {
 }
+
+func (p *condModProvider) DeleteSelection(_ *unison.Table) {
+}

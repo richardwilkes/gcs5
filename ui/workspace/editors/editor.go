@@ -89,6 +89,7 @@ func displayEditor[N gurps.Node, D gurps.EditorData[N]](owner widget.Rebuildable
 			VGrab:  true,
 		})
 		e.AddChild(scroller)
+		e.ClientData()[workspace.AssociatedUUIDKey] = target.UUID()
 		e.promptForSave = true
 		if dc != nil && dc.Group == editorGroup {
 			dc.Stack(e, -1)

@@ -128,3 +128,10 @@ func (p *eqpModProvider) CreateItem(owner widget.Rebuildable, table *unison.Tabl
 		func(target *gurps.EquipmentModifier) uuid.UUID { return target.ID })
 	EditEquipmentModifier(owner, item)
 }
+
+func (p *eqpModProvider) DeleteSelection(table *unison.Table) {
+	deleteTableSelection(table, p.provider.EquipmentModifierList(),
+		func(nodes []*gurps.EquipmentModifier) { p.provider.SetEquipmentModifierList(nodes) },
+		func(node *gurps.EquipmentModifier) **gurps.EquipmentModifier { return &node.Parent },
+		func(node *gurps.EquipmentModifier) *[]*gurps.EquipmentModifier { return &node.Children })
+}

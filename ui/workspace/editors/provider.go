@@ -37,4 +37,5 @@ type TableProvider interface {
 	ExcessWidthColumnIndex() int
 	OpenEditor(owner widget.Rebuildable, table *unison.Table)
 	CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant)
+	DeleteSelection(table *unison.Table)
 }

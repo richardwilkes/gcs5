@@ -496,10 +496,11 @@ func InsertItem[T comparable](owner widget.Rebuildable, table *unison.Table, ite
 	}
 	widget.MarkModified(table)
 	table.SetTopLevelRows(rowData(table))
+	table.ValidateScrollRoot()
+	table.RequestFocus()
 	index := FindRowIndexByID(table, id(item))
 	table.SelectByIndex(index)
 	table.ScrollRowCellIntoView(index, 0)
-	table.RequestFocus()
 	owner.Rebuild(true)
 }
 
