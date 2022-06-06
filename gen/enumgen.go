@@ -532,9 +532,10 @@ func main() {
 				String: "a list",
 			},
 			{
-				Name:   "Trait",
-				Key:    "advantage_prereq",
-				String: "a trait",
+				Name:    "Trait",
+				Key:     "trait_prereq",
+				OldKeys: []string{"advantage_prereq"},
+				String:  "a trait",
 			},
 			{
 				Name:   "Attribute",

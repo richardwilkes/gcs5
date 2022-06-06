@@ -64,7 +64,7 @@ type EntityData struct {
 	Profile          *Profile       `json:"profile,omitempty"`
 	SheetSettings    *SheetSettings `json:"settings,omitempty"`
 	Attributes       *Attributes    `json:"attributes,omitempty"`
-	Traits           []*Trait       `json:"advantages,omitempty"`
+	Traits           []*Trait       `json:"traits,alt=advantages,omitempty"`
 	Skills           []*Skill       `json:"skills,omitempty"`
 	Spells           []*Spell       `json:"spells,omitempty"`
 	CarriedEquipment []*Equipment   `json:"equipment,omitempty"`

@@ -41,7 +41,7 @@ type WeaponDamageBonus struct {
 	NameCriteria           criteria.String      `json:"name,omitempty"`
 	SpecializationCriteria criteria.String      `json:"specialization,omitempty"`
 	RelativeLevelCriteria  criteria.Numeric     `json:"level,omitempty"`
-	TagsCriteria           criteria.String      `json:"category,omitempty"` // TODO: use tags key instead
+	TagsCriteria           criteria.String      `json:"tags,alt=category,omitempty"`
 	LeveledAmount
 }
 

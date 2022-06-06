@@ -4,12 +4,12 @@ go 1.18
 
 require (
 	github.com/google/uuid v1.3.0
-	github.com/richardwilkes/json v0.0.0-20220202023945-ac9125b86187
+	github.com/richardwilkes/json v0.1.0
 	github.com/richardwilkes/pdf v0.0.0-20220514034211-8275a65f51fc
 	github.com/richardwilkes/rpgtools v1.4.2
 	github.com/richardwilkes/toolbox v1.71.1
 	github.com/richardwilkes/unison v0.19.0
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.7.2
 	golang.org/x/exp v0.0.0-20220602145555-4a0574d9293f
 	golang.org/x/text v0.3.7
 )

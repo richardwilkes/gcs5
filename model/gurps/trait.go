@@ -43,8 +43,8 @@ const (
 )
 
 const (
-	traitListTypeKey = "advantage_list"
-	traitTypeKey     = "advantage"
+	traitListTypeKey = "trait_list"
+	traitTypeKey     = "trait"
 )
 
 // Trait holds an advantage, disadvantage, quirk, or perk.
@@ -66,6 +66,9 @@ func NewTraitsFromFile(fileSystem fs.FS, filePath string) ([]*Trait, error) {
 	var data traitListData
 	if err := jio.LoadFromFS(context.Background(), fileSystem, filePath, &data); err != nil {
 		return nil, errs.NewWithCause(gid.InvalidFileDataMsg, err)
+	}
+	if data.Type == "advantage_list" {
+		data.Type = traitListTypeKey
 	}
 	if data.Type != traitListTypeKey {
 		return nil, errs.New(gid.UnexpectedFileDataMsg)
@@ -131,6 +134,15 @@ func (a *Trait) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &localData); err != nil {
 		return err
 	}
+
+	// Swap out old type keys
+	switch localData.Type {
+	case "advantage":
+		localData.Type = traitTypeKey
+	case "advantage_container":
+		localData.Type = traitTypeKey + ContainerKeyPostfix
+	}
+
 	localData.ClearUnusedFieldsForType()
 	a.TraitData = localData.TraitData
 	a.transferOldTypeFlagToTags(i18n.Text("Mental"), localData.Mental)

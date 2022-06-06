@@ -32,9 +32,9 @@ var _ Bonus = &SkillPointBonus{}
 type SkillPointBonus struct {
 	Type                   Type            `json:"type"`
 	Parent                 fmt.Stringer    `json:"-"`
-	NameCriteria           criteria.String `json:"name"`
-	SpecializationCriteria criteria.String `json:"specialization"`
-	TagsCriteria           criteria.String `json:"category"` // TODO: use tags key instead
+	NameCriteria           criteria.String `json:"name,omitempty"`
+	SpecializationCriteria criteria.String `json:"specialization,omitempty"`
+	TagsCriteria           criteria.String `json:"tags,alt=category,omitempty"`
 	LeveledAmount
 }
 

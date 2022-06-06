@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/txt"
 )
 
 // Possible values.
@@ -43,16 +44,18 @@ var (
 		Spell,
 	}
 	typeData = []struct {
-		key    string
-		string string
+		key     string
+		oldKeys []string
+		string  string
 	}{
 		{
 			key:    "prereq_list",
 			string: i18n.Text("a list"),
 		},
 		{
-			key:    "advantage_prereq",
-			string: i18n.Text("a trait"),
+			key:     "trait_prereq",
+			oldKeys: []string{"advantage_prereq"},
+			string:  i18n.Text("a trait"),
 		},
 		{
 			key:    "attribute_prereq",
@@ -101,7 +104,7 @@ func (enum Type) String() string {
 // ExtractType extracts the value from a string.
 func ExtractType(str string) Type {
 	for i, one := range typeData {
-		if strings.EqualFold(one.key, str) {
+		if strings.EqualFold(one.key, str) || txt.CaselessSliceContains(one.oldKeys, str) {
 			return Type(i)
 		}
 	}

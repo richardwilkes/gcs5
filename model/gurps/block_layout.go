@@ -24,7 +24,7 @@ const (
 	BlockLayoutConditionalModifiersKey = "conditional_modifiers"
 	BlockLayoutMeleeKey                = "melee"
 	BlockLayoutRangedKey               = "ranged"
-	BlockLayoutTraitsKey               = "advantages"
+	BlockLayoutTraitsKey               = "traits"
 	BlockLayoutSkillsKey               = "skills"
 	BlockLayoutSpellsKey               = "spells"
 	BlockLayoutEquipmentKey            = "equipment"
@@ -72,6 +72,7 @@ func NewBlockLayoutFromString(str string) (blockLayout *BlockLayout, inputWasVal
 				inputWasValid = false
 				break
 			}
+			part = mapOldLayoutKeys(part)
 			if remaining[part] {
 				delete(remaining, part)
 				parts = append(parts, part)
@@ -93,6 +94,13 @@ func NewBlockLayoutFromString(str string) (blockLayout *BlockLayout, inputWasVal
 	return &BlockLayout{Layout: layout}, inputWasValid
 }
 
+func mapOldLayoutKeys(key string) string {
+	if key == "advantages" {
+		return BlockLayoutTraitsKey
+	}
+	return key
+}
+
 // EnsureValidity checks the current settings for validity and if they aren't valid, makes them so.
 func (b *BlockLayout) EnsureValidity() {
 	var layout []string
@@ -100,6 +108,7 @@ func (b *BlockLayout) EnsureValidity() {
 	for _, line := range b.Layout {
 		var parts []string
 		for _, part := range strings.Split(strings.ToLower(txt.CollapseSpaces(line)), " ") {
+			part = mapOldLayoutKeys(part)
 			if remaining[part] {
 				delete(remaining, part)
 				parts = append(parts, part)
@@ -129,6 +138,7 @@ func (b *BlockLayout) ByRow() [][]string {
 	for _, line := range b.Layout {
 		var parts []string
 		for _, part := range strings.Split(strings.ToLower(txt.CollapseSpaces(line)), " ") {
+			part = mapOldLayoutKeys(part)
 			if remaining[part] {
 				delete(remaining, part)
 				parts = append(parts, part)
@@ -170,6 +180,8 @@ func (b *BlockLayout) UnmarshalJSON(data []byte) error {
 	}
 	if len(b.Layout) == 0 {
 		b.Reset()
+	} else {
+		b.EnsureValidity()
 	}
 	return nil
 }
@@ -211,14 +223,17 @@ func (b *BlockLayout) HTMLGridTemplate() string {
 	remaining := CreateFullKeySet()
 	for _, line := range b.Layout {
 		parts := strings.Split(strings.ToLower(txt.CollapseSpaces(line)), " ")
-		if parts[0] != "" && remaining[parts[0]] {
-			delete(remaining, parts[0])
-			if len(parts) > 1 && remaining[parts[1]] {
-				delete(remaining, parts[1])
-				appendToGridTemplate(&buffer, parts[0], parts[1])
-				continue
+		part := mapOldLayoutKeys(parts[0])
+		if part != "" && remaining[part] {
+			delete(remaining, part)
+			if len(parts) > 1 {
+				if part2 := mapOldLayoutKeys(parts[1]); remaining[part2] {
+					delete(remaining, part2)
+					appendToGridTemplate(&buffer, part, part2)
+					continue
+				}
 			}
-			appendToGridTemplate(&buffer, parts[0], parts[0])
+			appendToGridTemplate(&buffer, part, part)
 		}
 	}
 	for _, k := range allBlockLayoutKeys {

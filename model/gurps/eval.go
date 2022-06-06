@@ -26,7 +26,7 @@ import (
 
 // InstallEvaluatorFunctions installs additional functions for the evaluator.
 func InstallEvaluatorFunctions(m map[string]eval.Function) {
-	m["advantage_level"] = evalTraitLevel
+	m["advantage_level"] = evalTraitLevel // For older files
 	m["trait_level"] = evalTraitLevel
 	m["dice"] = evalDice
 	m["roll"] = evalRoll

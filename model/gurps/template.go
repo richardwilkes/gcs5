@@ -33,7 +33,7 @@ type Template struct {
 	Type      string       `json:"type"`
 	Version   int          `json:"version"`
 	ID        uuid.UUID    `json:"id"`
-	Traits    []*Trait     `json:"advantages,omitempty"`
+	Traits    []*Trait     `json:"traits,alt=advantages,omitempty"`
 	Skills    []*Skill     `json:"skills,omitempty"`
 	Spells    []*Spell     `json:"spells,omitempty"`
 	Equipment []*Equipment `json:"equipment,omitempty"`

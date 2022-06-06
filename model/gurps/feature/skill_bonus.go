@@ -36,7 +36,7 @@ type SkillBonus struct {
 	SelectionType          skill.SelectionType `json:"selection_type"`
 	NameCriteria           criteria.String     `json:"name,omitempty"`
 	SpecializationCriteria criteria.String     `json:"specialization,omitempty"`
-	TagsCriteria           criteria.String     `json:"category,omitempty"` // TODO: use tags key instead
+	TagsCriteria           criteria.String     `json:"tags,alt=category,omitempty"`
 	LeveledAmount
 }
 

@@ -39,7 +39,7 @@ type SpellBonus struct {
 	Type           Type            `json:"type"`
 	SpellMatchType spell.MatchType `json:"match"`
 	NameCriteria   criteria.String `json:"name,omitempty"`
-	TagsCriteria   criteria.String `json:"category,omitempty"` // TODO: use tags key instead
+	TagsCriteria   criteria.String `json:"tags,alt=category,omitempty"`
 	LeveledAmount
 }
 
