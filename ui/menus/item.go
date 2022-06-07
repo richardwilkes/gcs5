@@ -19,118 +19,63 @@ import (
 )
 
 func registerItemMenuActions() {
-	registerTraitsMenuActions()
-	registerSkillsMenuActions()
-	registerSpellsMenuActions()
-	registerEquipmentMenuActions()
-	registerNotesMenuActions()
-	settings.RegisterKeyBinding("open.editor", OpenEditor)
-	settings.RegisterKeyBinding("copy.to_sheet", CopyToSheet)
-	settings.RegisterKeyBinding("copy.to_template", CopyToTemplate)
-	settings.RegisterKeyBinding("apply_template", ApplyTemplate)
-	settings.RegisterKeyBinding("pageref.open.first", OpenOnePageReference)
-	settings.RegisterKeyBinding("pageref.open.all", OpenEachPageReference)
-}
-
-func createItemMenu(f unison.MenuFactory) unison.Menu {
-	m := f.NewMenu(constants.ItemMenuID, i18n.Text("Item"), nil)
-	m.InsertMenu(-1, createTraitsMenu(f))
-	m.InsertMenu(-1, createSkillsMenu(f))
-	m.InsertMenu(-1, createSpellsMenu(f))
-	m.InsertMenu(-1, createEquipmentMenu(f))
-	m.InsertMenu(-1, createNotesMenu(f))
-	m.InsertSeparator(-1, false)
-	m.InsertItem(-1, OpenEditor.NewMenuItem(f))
-	m.InsertItem(-1, CopyToSheet.NewMenuItem(f))
-	m.InsertItem(-1, CopyToTemplate.NewMenuItem(f))
-	m.InsertItem(-1, ApplyTemplate.NewMenuItem(f))
-	m.InsertSeparator(-1, false)
-	m.InsertItem(-1, OpenOnePageReference.NewMenuItem(f))
-	m.InsertItem(-1, OpenEachPageReference.NewMenuItem(f))
-	return m
-}
-
-func registerTraitsMenuActions() {
 	settings.RegisterKeyBinding("new.adq", NewTrait)
 	settings.RegisterKeyBinding("new.adq.container", NewTraitContainer)
 	settings.RegisterKeyBinding("new.adm", NewTraitModifier)
 	settings.RegisterKeyBinding("new.adm.container", NewTraitContainerModifier)
 	settings.RegisterKeyBinding("add.natural.attacks", AddNaturalAttacks)
-}
-
-func createTraitsMenu(f unison.MenuFactory) unison.Menu {
-	m := f.NewMenu(constants.TraitsMenuID, i18n.Text("Traits"), nil)
-	m.InsertItem(-1, NewTrait.NewMenuItem(f))
-	m.InsertItem(-1, NewTraitContainer.NewMenuItem(f))
-	m.InsertSeparator(-1, false)
-	m.InsertItem(-1, NewTraitModifier.NewMenuItem(f))
-	m.InsertItem(-1, NewTraitContainerModifier.NewMenuItem(f))
-	m.InsertSeparator(-1, false)
-	m.InsertItem(-1, AddNaturalAttacks.NewMenuItem(f))
-	return m
-}
-
-func registerSkillsMenuActions() {
 	settings.RegisterKeyBinding("new.skl", NewSkill)
 	settings.RegisterKeyBinding("new.skl.container", NewSkillContainer)
 	settings.RegisterKeyBinding("new.skl.technique", NewTechnique)
-}
-
-func createSkillsMenu(f unison.MenuFactory) unison.Menu {
-	m := f.NewMenu(constants.SkillsMenuID, i18n.Text("Skills"), nil)
-	m.InsertItem(-1, NewSkill.NewMenuItem(f))
-	m.InsertItem(-1, NewSkillContainer.NewMenuItem(f))
-	m.InsertSeparator(-1, false)
-	m.InsertItem(-1, NewTechnique.NewMenuItem(f))
-	return m
-}
-
-func registerSpellsMenuActions() {
 	settings.RegisterKeyBinding("new.spl", NewSpell)
 	settings.RegisterKeyBinding("new.spl.container", NewSpellContainer)
 	settings.RegisterKeyBinding("new.spl.ritual", NewRitualMagicSpell)
-}
-
-func createSpellsMenu(f unison.MenuFactory) unison.Menu {
-	m := f.NewMenu(constants.SkillsMenuID, i18n.Text("Spells"), nil)
-	m.InsertItem(-1, NewSpell.NewMenuItem(f))
-	m.InsertItem(-1, NewSpellContainer.NewMenuItem(f))
-	m.InsertSeparator(-1, false)
-	m.InsertItem(-1, NewRitualMagicSpell.NewMenuItem(f))
-	return m
-}
-
-func registerEquipmentMenuActions() {
 	settings.RegisterKeyBinding("new.eqp", NewCarriedEquipment)
 	settings.RegisterKeyBinding("new.eqp.container", NewCarriedEquipmentContainer)
 	settings.RegisterKeyBinding("new.eqp.other", NewOtherEquipment)
 	settings.RegisterKeyBinding("new.eqp.other.container", NewOtherEquipmentContainer)
 	settings.RegisterKeyBinding("new.eqm", NewEquipmentModifier)
 	settings.RegisterKeyBinding("new.eqm.container", NewEquipmentContainerModifier)
-}
-
-func createEquipmentMenu(f unison.MenuFactory) unison.Menu {
-	m := f.NewMenu(constants.EquipmentMenuID, i18n.Text("Equipment"), nil)
-	m.InsertItem(-1, NewCarriedEquipment.NewMenuItem(f))
-	m.InsertItem(-1, NewCarriedEquipmentContainer.NewMenuItem(f))
-	m.InsertSeparator(-1, false)
-	m.InsertItem(-1, NewOtherEquipment.NewMenuItem(f))
-	m.InsertItem(-1, NewOtherEquipmentContainer.NewMenuItem(f))
-	m.InsertSeparator(-1, false)
-	m.InsertItem(-1, NewEquipmentModifier.NewMenuItem(f))
-	m.InsertItem(-1, NewEquipmentContainerModifier.NewMenuItem(f))
-	return m
-}
-
-func registerNotesMenuActions() {
 	settings.RegisterKeyBinding("new.not", NewNote)
 	settings.RegisterKeyBinding("new.not.container", NewNoteContainer)
+	settings.RegisterKeyBinding("pageref.open.first", OpenOnePageReference)
+	settings.RegisterKeyBinding("pageref.open.all", OpenEachPageReference)
 }
 
-func createNotesMenu(f unison.MenuFactory) unison.Menu {
-	m := f.NewMenu(constants.NotesMenuID, i18n.Text("Notes"), nil)
+func createItemMenu(f unison.MenuFactory) unison.Menu {
+	m := f.NewMenu(constants.ItemMenuID, i18n.Text("Item"), nil)
+
+	m.InsertItem(-1, NewTrait.NewMenuItem(f))
+	m.InsertItem(-1, NewTraitContainer.NewMenuItem(f))
+	m.InsertItem(-1, NewTraitModifier.NewMenuItem(f))
+	m.InsertItem(-1, NewTraitContainerModifier.NewMenuItem(f))
+	m.InsertItem(-1, AddNaturalAttacks.NewMenuItem(f))
+
+	m.InsertSeparator(-1, false)
+	m.InsertItem(-1, NewSkill.NewMenuItem(f))
+	m.InsertItem(-1, NewSkillContainer.NewMenuItem(f))
+	m.InsertItem(-1, NewTechnique.NewMenuItem(f))
+
+	m.InsertSeparator(-1, false)
+	m.InsertItem(-1, NewSpell.NewMenuItem(f))
+	m.InsertItem(-1, NewSpellContainer.NewMenuItem(f))
+	m.InsertItem(-1, NewRitualMagicSpell.NewMenuItem(f))
+
+	m.InsertSeparator(-1, false)
+	m.InsertItem(-1, NewCarriedEquipment.NewMenuItem(f))
+	m.InsertItem(-1, NewCarriedEquipmentContainer.NewMenuItem(f))
+	m.InsertItem(-1, NewOtherEquipment.NewMenuItem(f))
+	m.InsertItem(-1, NewOtherEquipmentContainer.NewMenuItem(f))
+	m.InsertItem(-1, NewEquipmentModifier.NewMenuItem(f))
+	m.InsertItem(-1, NewEquipmentContainerModifier.NewMenuItem(f))
+
+	m.InsertSeparator(-1, false)
 	m.InsertItem(-1, NewNote.NewMenuItem(f))
 	m.InsertItem(-1, NewNoteContainer.NewMenuItem(f))
+
+	m.InsertSeparator(-1, false)
+	m.InsertItem(-1, OpenOnePageReference.NewMenuItem(f))
+	m.InsertItem(-1, OpenEachPageReference.NewMenuItem(f))
 	return m
 }
 
@@ -302,42 +247,6 @@ var NewNoteContainer = &unison.Action{
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
 	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// OpenEditor opens an editor for the selected item(s).
-var OpenEditor = &unison.Action{
-	ID:              constants.OpenEditorItemID,
-	Title:           i18n.Text("Open Detail Editor"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyI, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// CopyToSheet copies the selected items to the foremost character sheet.
-var CopyToSheet = &unison.Action{
-	ID:              constants.CopyToSheetItemID,
-	Title:           i18n.Text("Copy to Character Sheet"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyC, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
-}
-
-// CopyToTemplate copies the selected items to the foremost template.
-var CopyToTemplate = &unison.Action{
-	ID:              constants.CopyToTemplateItemID,
-	Title:           i18n.Text("Copy to Template"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyT, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
-}
-
-// ApplyTemplate applies the foremost template to the foremost character sheet.
-var ApplyTemplate = &unison.Action{
-	ID:              constants.ApplyTemplateItemID,
-	Title:           i18n.Text("Apply Template to Character Sheet"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyA, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
 }
 
 // OpenOnePageReference opens the first page reference for each selected item.

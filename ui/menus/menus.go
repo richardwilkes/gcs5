@@ -41,13 +41,10 @@ func Setup(wnd *unison.Window) {
 		}
 		setupFileMenu(bar)
 		setupEditMenu(bar)
-		i := bar.Item(unison.EditMenuID).Index() + 1
 		f := bar.Factory()
-		bar.InsertMenu(i, createItemMenu(f))
-		i++
-		bar.InsertMenu(i, f.NewMenu(constants.LibraryMenuID, i18n.Text("Library"), updateLibraryMenu))
-		i++
-		bar.InsertMenu(i, createSettingsMenu(f))
+		i := insertMenu(bar, bar.Item(unison.EditMenuID).Index()+1, createItemMenu(f))
+		i = insertMenu(bar, i, f.NewMenu(constants.LibraryMenuID, i18n.Text("Library"), updateLibraryMenu))
+		insertMenu(bar, i, createSettingsMenu(f))
 		setupHelpMenu(bar)
 	})
 }
@@ -59,4 +56,19 @@ func notEnabled(_ *unison.Action, _ any) bool {
 // TODO: Implement each call site
 func unimplemented(a *unison.Action, _ any) {
 	unison.ErrorDialogWithMessage("Unimplemented Action:", a.Title)
+}
+
+func insertSeparator(parent unison.Menu, atIndex int) int {
+	parent.InsertSeparator(atIndex, false)
+	return atIndex + 1
+}
+
+func insertItem(parent unison.Menu, atIndex int, item unison.MenuItem) int {
+	parent.InsertItem(atIndex, item)
+	return atIndex + 1
+}
+
+func insertMenu(parent unison.Menu, atIndex int, menu unison.Menu) int {
+	parent.InsertMenu(atIndex, menu)
+	return atIndex + 1
 }

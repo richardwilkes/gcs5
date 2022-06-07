@@ -57,34 +57,33 @@ func registerFileMenuActions() {
 func setupFileMenu(bar unison.Menu) {
 	f := bar.Factory()
 	m := bar.Menu(unison.FileMenuID)
-	newFileMenu := f.NewMenu(constants.NewFileMenuID, i18n.Text("New File…"), nil)
-	newFileMenu.InsertItem(-1, NewCharacterSheet.NewMenuItem(f))
-	newFileMenu.InsertItem(-1, NewCharacterTemplate.NewMenuItem(f))
-	newFileMenu.InsertItem(-1, NewTraitsLibrary.NewMenuItem(f))
-	newFileMenu.InsertItem(-1, NewTraitModifiersLibrary.NewMenuItem(f))
-	newFileMenu.InsertItem(-1, NewEquipmentLibrary.NewMenuItem(f))
-	newFileMenu.InsertItem(-1, NewEquipmentModifiersLibrary.NewMenuItem(f))
-	newFileMenu.InsertItem(-1, NewNotesLibrary.NewMenuItem(f))
-	newFileMenu.InsertItem(-1, NewSkillsLibrary.NewMenuItem(f))
-	newFileMenu.InsertItem(-1, NewSpellsLibrary.NewMenuItem(f))
-	m.InsertMenu(0, newFileMenu)
-	m.InsertItem(1, Open.NewMenuItem(f))
-	m.InsertMenu(2, f.NewMenu(constants.RecentFilesMenuID, i18n.Text("Recent Files"), recentFilesUpdater))
-	i := m.Item(unison.CloseItemID).Index()
+	i := insertItem(m, 0, NewCharacterSheet.NewMenuItem(f))
+	i = insertItem(m, i, NewCharacterTemplate.NewMenuItem(f))
+
+	i = insertSeparator(m, i)
+	i = insertItem(m, i, NewTraitsLibrary.NewMenuItem(f))
+	i = insertItem(m, i, NewTraitModifiersLibrary.NewMenuItem(f))
+	i = insertItem(m, i, NewSkillsLibrary.NewMenuItem(f))
+	i = insertItem(m, i, NewSpellsLibrary.NewMenuItem(f))
+	i = insertItem(m, i, NewEquipmentLibrary.NewMenuItem(f))
+	i = insertItem(m, i, NewEquipmentModifiersLibrary.NewMenuItem(f))
+	i = insertItem(m, i, NewNotesLibrary.NewMenuItem(f))
+
+	i = insertSeparator(m, i)
+	i = insertItem(m, i, Open.NewMenuItem(f))
+	insertMenu(m, i, f.NewMenu(constants.RecentFilesMenuID, i18n.Text("Recent Files"), recentFilesUpdater))
+
+	i = m.Item(unison.CloseItemID).Index()
 	m.RemoveItem(i)
-	m.InsertItem(i, CloseTab.NewMenuItem(f))
-	i++
-	m.InsertSeparator(i, false)
-	i++
-	m.InsertItem(i, Save.NewMenuItem(f))
-	i++
-	m.InsertItem(i, SaveAs.NewMenuItem(f))
-	i++
-	m.InsertMenu(i, f.NewMenu(constants.ExportToMenuID, i18n.Text("Export To…"), exportToUpdater))
-	i++
-	m.InsertSeparator(i, false)
-	i++
-	m.InsertItem(i, Print.NewMenuItem(f))
+	i = insertItem(m, i, CloseTab.NewMenuItem(f))
+
+	i = insertSeparator(m, i)
+	i = insertItem(m, i, Save.NewMenuItem(f))
+	i = insertItem(m, i, SaveAs.NewMenuItem(f))
+	i = insertMenu(m, i, f.NewMenu(constants.ExportToMenuID, i18n.Text("Export To…"), exportToUpdater))
+
+	i = insertSeparator(m, i)
+	insertItem(m, i, Print.NewMenuItem(f))
 }
 
 func recentFilesUpdater(menu unison.Menu) {
