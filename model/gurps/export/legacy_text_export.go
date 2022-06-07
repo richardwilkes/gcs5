@@ -325,7 +325,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 		ex.writeEncodedText("$" + ex.entity.WealthNotCarried().String())
 	case "NOTES":
 		needBlanks := false
-		gurps.TraverseNotes(func(n *gurps.Note) bool {
+		gurps.Traverse[*gurps.Note](func(n *gurps.Note) bool {
 			if needBlanks {
 				ex.out.WriteString("\n\n")
 			} else {
@@ -333,7 +333,7 @@ func (ex *legacyExporter) emitKey(key string) error {
 			}
 			ex.writeEncodedText(n.Text)
 			return false
-		}, ex.entity.Notes...)
+		}, false, false, ex.entity.Notes...)
 	case "RACE":
 		ex.writeEncodedText(ex.entity.Ancestry().Name)
 	case "BODY_TYPE":
@@ -384,19 +384,19 @@ func (ex *legacyExporter) emitKey(key string) error {
 		ex.processTraitLoop(ex.extractUpToMarker("CULTURAL_FAMILIARITIES_LOOP_END"), ex.includeCulturalFamiliarities)
 	case "SKILLS_LOOP_COUNT":
 		count := 0
-		gurps.TraverseSkills(func(_ *gurps.Skill) bool {
+		gurps.Traverse[*gurps.Skill](func(_ *gurps.Skill) bool {
 			count++
 			return false
-		}, ex.entity.Skills...)
+		}, true, false, ex.entity.Skills...)
 		ex.writeEncodedText(strconv.Itoa(count))
 	case "SKILLS_LOOP_START":
 		ex.processSkillsLoop(ex.extractUpToMarker("SKILLS_LOOP_END"))
 	case "SPELLS_LOOP_COUNT":
 		count := 0
-		gurps.TraverseSpells(func(_ *gurps.Spell) bool {
+		gurps.Traverse[*gurps.Spell](func(_ *gurps.Spell) bool {
 			count++
 			return false
-		}, ex.entity.Spells...)
+		}, false, false, ex.entity.Spells...)
 		ex.writeEncodedText(strconv.Itoa(count))
 	case "SPELLS_LOOP_START":
 		ex.processSpellsLoop(ex.extractUpToMarker("SPELLS_LOOP_END"))
@@ -414,32 +414,32 @@ func (ex *legacyExporter) emitKey(key string) error {
 		ex.processHierarchicalRangedLoop(ex.extractUpToMarker("HIERARCHICAL_RANGED_LOOP_END"))
 	case "EQUIPMENT_LOOP_COUNT":
 		count := 0
-		gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
+		gurps.Traverse[*gurps.Equipment](func(eqp *gurps.Equipment) bool {
 			if ex.includeByTags(eqp.Tags) {
 				count++
 			}
 			return false
-		}, ex.entity.CarriedEquipment...)
+		}, false, false, ex.entity.CarriedEquipment...)
 		ex.writeEncodedText(strconv.Itoa(count))
 	case "EQUIPMENT_LOOP_START":
 		ex.processEquipmentLoop(ex.extractUpToMarker("EQUIPMENT_LOOP_END"), true)
 	case "OTHER_EQUIPMENT_LOOP_COUNT":
 		count := 0
-		gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
+		gurps.Traverse[*gurps.Equipment](func(eqp *gurps.Equipment) bool {
 			if ex.includeByTags(eqp.Tags) {
 				count++
 			}
 			return false
-		}, ex.entity.OtherEquipment...)
+		}, false, false, ex.entity.OtherEquipment...)
 		ex.writeEncodedText(strconv.Itoa(count))
 	case "OTHER_EQUIPMENT_LOOP_START":
 		ex.processEquipmentLoop(ex.extractUpToMarker("EQUIPMENT_LOOP_END"), false)
 	case "NOTES_LOOP_COUNT":
 		count := 0
-		gurps.TraverseNotes(func(_ *gurps.Note) bool {
+		gurps.Traverse[*gurps.Note](func(_ *gurps.Note) bool {
 			count++
 			return false
-		}, ex.entity.Notes...)
+		}, false, false, ex.entity.Notes...)
 		ex.writeEncodedText(strconv.Itoa(count))
 	case "NOTES_LOOP_START":
 		ex.processNotesLoop(ex.extractUpToMarker("NOTES_LOOP_END"))
@@ -628,12 +628,12 @@ func (ex *legacyExporter) bestWeaponDefense(f func(weapon *gurps.Weapon) string)
 
 func (ex *legacyExporter) writeTraitLoopCount(f func(*gurps.Trait) bool) {
 	count := 0
-	gurps.TraverseTraits(func(t *gurps.Trait) bool {
+	gurps.Traverse[*gurps.Trait](func(t *gurps.Trait) bool {
 		if f(t) {
 			count++
 		}
 		return false
-	}, true, ex.entity.Traits...)
+	}, false, true, ex.entity.Traits...)
 	ex.writeEncodedText(strconv.Itoa(count))
 }
 
@@ -765,7 +765,7 @@ func (ex *legacyExporter) processHitLocationLoop(buffer []byte) {
 
 func (ex *legacyExporter) hitLocationEquipment(location *gurps.HitLocation) []string {
 	var list []string
-	gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
+	gurps.Traverse[*gurps.Equipment](func(eqp *gurps.Equipment) bool {
 		if eqp.Equipped {
 			for _, f := range eqp.Features {
 				if bonus, ok := f.(*feature.DRBonus); ok {
@@ -776,12 +776,12 @@ func (ex *legacyExporter) hitLocationEquipment(location *gurps.HitLocation) []st
 			}
 		}
 		return false
-	}, ex.entity.CarriedEquipment...)
+	}, false, false, ex.entity.CarriedEquipment...)
 	return list
 }
 
 func (ex *legacyExporter) processTraitLoop(buffer []byte, f func(*gurps.Trait) bool) {
-	gurps.TraverseTraits(func(t *gurps.Trait) bool {
+	gurps.Traverse[*gurps.Trait](func(t *gurps.Trait) bool {
 		if f(t) {
 			ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
 				switch key {
@@ -841,13 +841,13 @@ func (ex *legacyExporter) processTraitLoop(buffer []byte, f func(*gurps.Trait) b
 			})
 		}
 		return false
-	}, true, ex.entity.Traits...)
+	}, false, true, ex.entity.Traits...)
 	ex.onlyTags = make(map[string]bool)
 	ex.excludedTags = make(map[string]bool)
 }
 
 func (ex *legacyExporter) processSkillsLoop(buffer []byte) {
-	gurps.TraverseSkills(func(s *gurps.Skill) bool {
+	gurps.Traverse[*gurps.Skill](func(s *gurps.Skill) bool {
 		ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
 			switch key {
 			case idKey:
@@ -899,11 +899,11 @@ func (ex *legacyExporter) processSkillsLoop(buffer []byte) {
 			return index
 		})
 		return false
-	}, ex.entity.Skills...)
+	}, false, false, ex.entity.Skills...)
 }
 
 func (ex *legacyExporter) processSpellsLoop(buffer []byte) {
-	gurps.TraverseSpells(func(s *gurps.Spell) bool {
+	gurps.Traverse[*gurps.Spell](func(s *gurps.Spell) bool {
 		ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
 			switch key {
 			case idKey:
@@ -977,7 +977,7 @@ func (ex *legacyExporter) processSpellsLoop(buffer []byte) {
 			return index
 		})
 		return false
-	}, ex.entity.Spells...)
+	}, false, false, ex.entity.Spells...)
 }
 
 func (ex *legacyExporter) processEquipmentLoop(buffer []byte, carried bool) {
@@ -987,7 +987,7 @@ func (ex *legacyExporter) processEquipmentLoop(buffer []byte, carried bool) {
 	} else {
 		eqpList = ex.entity.OtherEquipment
 	}
-	gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
+	gurps.Traverse[*gurps.Equipment](func(eqp *gurps.Equipment) bool {
 		if ex.includeByTags(eqp.Tags) {
 			ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
 				switch key {
@@ -1093,13 +1093,13 @@ func (ex *legacyExporter) processEquipmentLoop(buffer []byte, carried bool) {
 			})
 		}
 		return false
-	}, eqpList...)
+	}, false, false, eqpList...)
 	ex.onlyTags = make(map[string]bool)
 	ex.excludedTags = make(map[string]bool)
 }
 
 func (ex *legacyExporter) processNotesLoop(buffer []byte) {
-	gurps.TraverseNotes(func(n *gurps.Note) bool {
+	gurps.Traverse[*gurps.Note](func(n *gurps.Note) bool {
 		ex.processBuffer(buffer, func(key string, _ []byte, index int) int {
 			switch key {
 			case idKey:
@@ -1139,7 +1139,7 @@ func (ex *legacyExporter) processNotesLoop(buffer []byte) {
 			return index
 		})
 		return false
-	}, ex.entity.Notes...)
+	}, false, false, ex.entity.Notes...)
 }
 
 func (ex *legacyExporter) processConditionalModifiersLoop(list []*gurps.ConditionalModifier, buffer []byte) {
@@ -1394,7 +1394,7 @@ func (ex *legacyExporter) ammoFor(weaponEqp *gurps.Equipment) fxp.Int {
 		return 0
 	}
 	var total fxp.Int
-	gurps.TraverseEquipment(func(eqp *gurps.Equipment) bool {
+	gurps.Traverse[*gurps.Equipment](func(eqp *gurps.Equipment) bool {
 		if eqp.Equipped && eqp.Quantity > 0 {
 			for _, cat := range eqp.Tags {
 				if strings.HasPrefix(strings.ToLower(cat), "ammotype:") {
@@ -1406,7 +1406,7 @@ func (ex *legacyExporter) ammoFor(weaponEqp *gurps.Equipment) fxp.Int {
 			}
 		}
 		return false
-	}, ex.entity.CarriedEquipment...)
+	}, false, false, ex.entity.CarriedEquipment...)
 	return total
 }
 

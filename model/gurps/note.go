@@ -143,3 +143,8 @@ func (n *Note) SetOwningEntity(entity *Entity) {
 		}
 	}
 }
+
+// Enabled returns true if this node is enabled.
+func (n *Note) Enabled() bool {
+	return true
+}

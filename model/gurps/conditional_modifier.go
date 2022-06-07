@@ -96,6 +96,16 @@ func (m *ConditionalModifier) Open() bool {
 func (m *ConditionalModifier) SetOpen(_ bool) {
 }
 
+// Enabled returns true if this node is enabled.
+func (m *ConditionalModifier) Enabled() bool {
+	return true
+}
+
+// HasChildren returns true if this node has children.
+func (m *ConditionalModifier) HasChildren() bool {
+	return false
+}
+
 // NodeChildren returns the children of this node, if any.
 func (m *ConditionalModifier) NodeChildren() []Node {
 	return nil

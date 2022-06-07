@@ -69,6 +69,11 @@ func (c *ContainerBase[T]) SetOpen(open bool) {
 	c.IsOpen = open && c.Container()
 }
 
+// HasChildren returns true if this node has children.
+func (c *ContainerBase[T]) HasChildren() bool {
+	return c.Container() && len(c.Children) > 0
+}
+
 // NodeChildren returns the children of this node, if any.
 func (c *ContainerBase[T]) NodeChildren() []Node {
 	if c.Container() {

@@ -11,242 +11,43 @@
 
 package gurps
 
-// TraverseTraits calls the function 'f' for each Trait and its children in the input list. Return true from the
-// function to abort early.
-func TraverseTraits(f func(*Trait) bool, onlyEnabled bool, in ...*Trait) {
-	type trackingInfo struct {
-		list  []*Trait
-		index int
-	}
-	tracking := []*trackingInfo{
-		{
-			list:  in,
-			index: 0,
-		},
-	}
-	for {
-		if len(tracking) == 0 {
-			return
-		}
-		current := tracking[len(tracking)-1]
-		if current.index >= len(current.list) {
-			tracking = tracking[:len(tracking)-1]
-		} else {
-			one := current.list[current.index]
-			current.index++
-			if onlyEnabled && !one.Enabled() {
-				continue
-			}
-			if f(one) {
-				return
-			}
-			if one.Container() && len(one.Children) != 0 {
-				tracking = append(tracking, &trackingInfo{list: one.Children})
-			}
-		}
-	}
+type traversalData[T Node] struct {
+	list  []T
+	index int
 }
 
-// TraverseTraitModifiers calls the function 'f' for each TraitModifier and its children in the input list.
-// Return true from the function to abort early.
-func TraverseTraitModifiers(f func(*TraitModifier) bool, onlyEnabled bool, in ...*TraitModifier) {
-	type trackingInfo struct {
-		list  []*TraitModifier
-		index int
-	}
-	tracking := []*trackingInfo{
+// Traverse calls the function 'f' for each node and its children in the input list, recursively. Return true from the
+// function to abort early. If excludeContainers is true, then nodes that are containers will not be passed to 'f',
+// although their children will still be processed as usual.
+func Traverse[T Node](f func(T) bool, excludeContainers, excludeChildrenOfDisabledNodes bool, in ...T) {
+	tracking := []*traversalData[T]{
 		{
 			list:  in,
 			index: 0,
 		},
 	}
-	for {
-		if len(tracking) == 0 {
-			return
-		}
+	for len(tracking) != 0 {
 		current := tracking[len(tracking)-1]
 		if current.index >= len(current.list) {
 			tracking = tracking[:len(tracking)-1]
-		} else {
-			one := current.list[current.index]
-			current.index++
-			if onlyEnabled && one.Disabled {
-				continue
-			}
-			if f(one) {
-				return
-			}
-			if one.Container() && len(one.Children) != 0 {
-				tracking = append(tracking, &trackingInfo{list: one.Children})
-			}
+			continue
 		}
-	}
-}
-
-// TraverseEquipment calls the function 'f' for each Equipment and its children in the input list. Return true from the
-// function to abort early.
-func TraverseEquipment(f func(*Equipment) bool, in ...*Equipment) {
-	type trackingInfo struct {
-		list  []*Equipment
-		index int
-	}
-	tracking := []*trackingInfo{
-		{
-			list:  in,
-			index: 0,
-		},
-	}
-	for {
-		if len(tracking) == 0 {
+		one := current.list[current.index]
+		current.index++
+		enabled := one.Enabled()
+		if enabled && (!excludeContainers || !one.Container()) && f(one) {
 			return
 		}
-		current := tracking[len(tracking)-1]
-		if current.index >= len(current.list) {
-			tracking = tracking[:len(tracking)-1]
-		} else {
-			one := current.list[current.index]
-			if f(one) {
-				return
+		if (enabled || !excludeChildrenOfDisabledNodes) && one.HasChildren() {
+			// TODO: Rework the code so that we can just call something like 'one.NodeChildren()' for the list without conversion
+			children := one.NodeChildren()
+			list := make([]T, 0, len(children))
+			for _, child := range children {
+				if c, ok := child.(T); ok {
+					list = append(list, c)
+				}
 			}
-			current.index++
-			if one.Container() && len(one.Children) != 0 {
-				tracking = append(tracking, &trackingInfo{list: one.Children})
-			}
-		}
-	}
-}
-
-// TraverseEquipmentModifiers calls the function 'f' for each EquipmentModifier and its children in the input list.
-// Return true from the function to abort early.
-func TraverseEquipmentModifiers(f func(*EquipmentModifier) bool, onlyEnabled bool, in ...*EquipmentModifier) {
-	type trackingInfo struct {
-		list  []*EquipmentModifier
-		index int
-	}
-	tracking := []*trackingInfo{
-		{
-			list:  in,
-			index: 0,
-		},
-	}
-	for {
-		if len(tracking) == 0 {
-			return
-		}
-		current := tracking[len(tracking)-1]
-		if current.index >= len(current.list) {
-			tracking = tracking[:len(tracking)-1]
-		} else {
-			one := current.list[current.index]
-			current.index++
-			if onlyEnabled && one.Disabled {
-				continue
-			}
-			if f(one) {
-				return
-			}
-			if one.Container() && len(one.Children) != 0 {
-				tracking = append(tracking, &trackingInfo{list: one.Children})
-			}
-		}
-	}
-}
-
-// TraverseSkills calls the function 'f' for each Skill and its children in the input list. Return true from the function
-// to abort early.
-func TraverseSkills(f func(*Skill) bool, in ...*Skill) {
-	type trackingInfo struct {
-		list  []*Skill
-		index int
-	}
-	tracking := []*trackingInfo{
-		{
-			list:  in,
-			index: 0,
-		},
-	}
-	for {
-		if len(tracking) == 0 {
-			return
-		}
-		current := tracking[len(tracking)-1]
-		if current.index >= len(current.list) {
-			tracking = tracking[:len(tracking)-1]
-		} else {
-			one := current.list[current.index]
-			if f(one) {
-				return
-			}
-			current.index++
-			if one.Container() && len(one.Children) != 0 {
-				tracking = append(tracking, &trackingInfo{list: one.Children})
-			}
-		}
-	}
-}
-
-// TraverseSpells calls the function 'f' for each Spell and its children in the input list. Return true from the function
-// to abort early.
-func TraverseSpells(f func(*Spell) bool, in ...*Spell) {
-	type trackingInfo struct {
-		list  []*Spell
-		index int
-	}
-	tracking := []*trackingInfo{
-		{
-			list:  in,
-			index: 0,
-		},
-	}
-	for {
-		if len(tracking) == 0 {
-			return
-		}
-		current := tracking[len(tracking)-1]
-		if current.index >= len(current.list) {
-			tracking = tracking[:len(tracking)-1]
-		} else {
-			one := current.list[current.index]
-			if f(one) {
-				return
-			}
-			current.index++
-			if one.Container() && len(one.Children) != 0 {
-				tracking = append(tracking, &trackingInfo{list: one.Children})
-			}
-		}
-	}
-}
-
-// TraverseNotes calls the function 'f' for each Note and its children in the input list. Return true from the function
-// to abort early.
-func TraverseNotes(f func(*Note) bool, in ...*Note) {
-	type trackingInfo struct {
-		list  []*Note
-		index int
-	}
-	tracking := []*trackingInfo{
-		{
-			list:  in,
-			index: 0,
-		},
-	}
-	for {
-		if len(tracking) == 0 {
-			return
-		}
-		current := tracking[len(tracking)-1]
-		if current.index >= len(current.list) {
-			tracking = tracking[:len(tracking)-1]
-		} else {
-			one := current.list[current.index]
-			if f(one) {
-				return
-			}
-			current.index++
-			if one.Container() && len(one.Children) != 0 {
-				tracking = append(tracking, &trackingInfo{list: one.Children})
-			}
+			tracking = append(tracking, &traversalData[T]{list: list})
 		}
 	}
 }

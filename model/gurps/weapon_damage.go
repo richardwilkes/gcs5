@@ -228,22 +228,20 @@ func (w *WeaponDamage) ResolvedDamage(tooltip *xio.ByteBuffer) string {
 		w.extractWeaponDamageBonus(f, bonusSet, base.Count, tooltip)
 	}
 	if tOK {
-		for _, mod := range t.Modifiers {
-			if !mod.Disabled {
-				for _, f := range mod.Features {
-					w.extractWeaponDamageBonus(f, bonusSet, base.Count, tooltip)
-				}
+		Traverse[*TraitModifier](func(mod *TraitModifier) bool {
+			for _, f := range mod.Features {
+				w.extractWeaponDamageBonus(f, bonusSet, base.Count, tooltip)
 			}
-		}
+			return false
+		}, true, false, t.Modifiers...)
 	}
 	if eqp, ok := w.Owner.Owner.(*Equipment); ok {
-		for _, mod := range eqp.Modifiers {
-			if !mod.Disabled {
-				for _, f := range mod.Features {
-					w.extractWeaponDamageBonus(f, bonusSet, base.Count, tooltip)
-				}
+		Traverse[*EquipmentModifier](func(mod *EquipmentModifier) bool {
+			for _, f := range mod.Features {
+				w.extractWeaponDamageBonus(f, bonusSet, base.Count, tooltip)
 			}
-		}
+			return false
+		}, true, false, eqp.Modifiers...)
 	}
 	adjustForPhoenixFlame := pc.SheetSettings.DamageProgression == attribute.PhoenixFlameD3 && base.Sides == 3
 	var percent fxp.Int

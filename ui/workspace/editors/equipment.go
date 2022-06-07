@@ -14,6 +14,7 @@ package editors
 import (
 	"strconv"
 
+	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
@@ -25,74 +26,80 @@ import (
 
 // EditEquipment displays the editor for equipment.
 func EditEquipment(owner widget.Rebuildable, equipment *gurps.Equipment, carried bool) {
-	displayEditor[*gurps.Equipment, *gurps.EquipmentEditData](owner, equipment, func(e *editor[*gurps.Equipment, *gurps.EquipmentEditData], content *unison.Panel) func() {
-		addNameLabelAndField(content, &e.editorData.Name)
-		addNotesLabelAndField(content, &e.editorData.LocalNotes)
-		addVTTNotesLabelAndField(content, &e.editorData.VTTNotes)
-		addLabelAndStringField(content, i18n.Text("Tech Level"), gurps.TechLevelInfo, &e.editorData.TechLevel)
-		addLabelAndStringField(content, i18n.Text("Legality Class"), gurps.LegalityClassInfo, &e.editorData.LegalityClass)
-		qtyLabel := i18n.Text("Quantity")
-		if carried {
-			wrapper := addFlowWrapper(content, qtyLabel, 2)
-			addDecimalField(wrapper, qtyLabel, "", &e.editorData.Quantity, 0, fxp.Max-1)
-			addCheckBox(wrapper, i18n.Text("Equipped"), &e.editorData.Equipped)
-		} else {
-			addLabelAndDecimalField(content, qtyLabel, "", &e.editorData.Quantity, 0, fxp.Max-1)
-		}
-		valueLabel := i18n.Text("Value")
-		wrapper := addFlowWrapper(content, valueLabel, 3)
-		addDecimalField(wrapper, valueLabel, "", &e.editorData.Value, 0, fxp.Max-1)
-		wrapper.AddChild(widget.NewFieldInteriorLeadingLabel(i18n.Text("Extended")))
-		wrapper.AddChild(widget.NewNonEditableField(func(field *widget.NonEditableField) {
-			var value fxp.Int
-			if e.editorData.Quantity > 0 {
-				value = gurps.ValueAdjustedForModifiers(e.editorData.Value, e.editorData.Modifiers)
-				if e.target.Container() {
-					for _, one := range e.target.Children {
-						value += one.ExtendedValue()
+	displayEditor[*gurps.Equipment, *gurps.EquipmentEditData](owner, equipment,
+		func(e *editor[*gurps.Equipment, *gurps.EquipmentEditData], content *unison.Panel) func() {
+			addNameLabelAndField(content, &e.editorData.Name)
+			addNotesLabelAndField(content, &e.editorData.LocalNotes)
+			addVTTNotesLabelAndField(content, &e.editorData.VTTNotes)
+			addLabelAndStringField(content, i18n.Text("Tech Level"), gurps.TechLevelInfo, &e.editorData.TechLevel)
+			addLabelAndStringField(content, i18n.Text("Legality Class"), gurps.LegalityClassInfo, &e.editorData.LegalityClass)
+			qtyLabel := i18n.Text("Quantity")
+			if carried {
+				wrapper := addFlowWrapper(content, qtyLabel, 2)
+				addDecimalField(wrapper, qtyLabel, "", &e.editorData.Quantity, 0, fxp.Max-1)
+				addCheckBox(wrapper, i18n.Text("Equipped"), &e.editorData.Equipped)
+			} else {
+				addLabelAndDecimalField(content, qtyLabel, "", &e.editorData.Quantity, 0, fxp.Max-1)
+			}
+			valueLabel := i18n.Text("Value")
+			wrapper := addFlowWrapper(content, valueLabel, 3)
+			addDecimalField(wrapper, valueLabel, "", &e.editorData.Value, 0, fxp.Max-1)
+			wrapper.AddChild(widget.NewFieldInteriorLeadingLabel(i18n.Text("Extended")))
+			wrapper.AddChild(widget.NewNonEditableField(func(field *widget.NonEditableField) {
+				var value fxp.Int
+				if e.editorData.Quantity > 0 {
+					value = gurps.ValueAdjustedForModifiers(e.editorData.Value, e.editorData.Modifiers)
+					if e.target.Container() {
+						for _, one := range e.target.Children {
+							value += one.ExtendedValue()
+						}
 					}
+					value = value.Mul(e.editorData.Quantity)
 				}
-				value = value.Mul(e.editorData.Quantity)
-			}
-			field.Text = value.Comma()
-			field.MarkForLayoutAndRedraw()
-		}))
-		weightLabel := i18n.Text("Weight")
-		wrapper = addFlowWrapper(content, weightLabel, 3)
-		addWeightField(wrapper, weightLabel, "", e.target.Entity, &e.editorData.Weight, false)
-		wrapper.AddChild(widget.NewFieldInteriorLeadingLabel(i18n.Text("Extended")))
-		wrapper.AddChild(widget.NewNonEditableField(func(field *widget.NonEditableField) {
-			var weight measure.Weight
-			defUnits := gurps.SheetSettingsFor(e.target.Entity).DefaultWeightUnits
-			if e.editorData.Quantity > 0 {
-				weight = gurps.ExtendedWeightAdjustedForModifiers(defUnits, e.editorData.Quantity, e.editorData.Weight,
-					e.editorData.Modifiers, e.editorData.Features, e.target.Children, false, false)
-			}
-			field.Text = defUnits.Format(weight)
-			field.MarkForLayoutAndRedraw()
-		}))
-		content.AddChild(unison.NewPanel())
-		addCheckBox(content, i18n.Text("Ignore weight for skills"), &e.editorData.WeightIgnoredForSkills)
-		usesLabel := i18n.Text("Uses")
-		wrapper = addFlowWrapper(content, usesLabel, 3)
-		usesField := addIntegerField(wrapper, usesLabel, "", &e.editorData.Uses, 0, 9999999)
-		maxUsesLabel := i18n.Text("Maximum Uses")
-		wrapper.AddChild(widget.NewFieldInteriorLeadingLabel(maxUsesLabel))
-		addIntegerField(wrapper, maxUsesLabel, "", &e.editorData.MaxUses, 0, 9999999)
-		addTagsLabelAndField(content, &e.editorData.Tags)
-		addPageRefLabelAndField(content, &e.editorData.PageRef)
-		adjustFieldBlank(usesField, e.editorData.MaxUses <= 0)
-		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
-		content.AddChild(newFeaturesPanel(e.target.Entity, e.target, &e.editorData.Features))
-		content.AddChild(newEquipmentModifiersPanel(e.target.Entity, &e.editorData.Modifiers))
-		for _, wt := range weapon.AllType {
-			content.AddChild(newWeaponsPanel(e.target.Entity, wt, &e.editorData.Weapons))
-		}
-		return func() {
-			if e.editorData.Uses > e.editorData.MaxUses {
-				usesField.SetText(strconv.Itoa(e.editorData.MaxUses))
-			}
+				field.Text = value.Comma()
+				field.MarkForLayoutAndRedraw()
+			}))
+			weightLabel := i18n.Text("Weight")
+			wrapper = addFlowWrapper(content, weightLabel, 3)
+			addWeightField(wrapper, weightLabel, "", e.target.Entity, &e.editorData.Weight, false)
+			wrapper.AddChild(widget.NewFieldInteriorLeadingLabel(i18n.Text("Extended")))
+			wrapper.AddChild(widget.NewNonEditableField(func(field *widget.NonEditableField) {
+				var weight measure.Weight
+				defUnits := gurps.SheetSettingsFor(e.target.Entity).DefaultWeightUnits
+				if e.editorData.Quantity > 0 {
+					weight = gurps.ExtendedWeightAdjustedForModifiers(defUnits, e.editorData.Quantity, e.editorData.Weight,
+						e.editorData.Modifiers, e.editorData.Features, e.target.Children, false, false)
+				}
+				field.Text = defUnits.Format(weight)
+				field.MarkForLayoutAndRedraw()
+			}))
+			content.AddChild(unison.NewPanel())
+			addCheckBox(content, i18n.Text("Ignore weight for skills"), &e.editorData.WeightIgnoredForSkills)
+			usesLabel := i18n.Text("Uses")
+			wrapper = addFlowWrapper(content, usesLabel, 3)
+			usesField := addIntegerField(wrapper, usesLabel, "", &e.editorData.Uses, 0, 9999999)
+			maxUsesLabel := i18n.Text("Maximum Uses")
+			wrapper.AddChild(widget.NewFieldInteriorLeadingLabel(maxUsesLabel))
+			addIntegerField(wrapper, maxUsesLabel, "", &e.editorData.MaxUses, 0, 9999999)
+			addTagsLabelAndField(content, &e.editorData.Tags)
+			addPageRefLabelAndField(content, &e.editorData.PageRef)
 			adjustFieldBlank(usesField, e.editorData.MaxUses <= 0)
-		}
-	})
+			content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
+			content.AddChild(newFeaturesPanel(e.target.Entity, e.target, &e.editorData.Features))
+			modifiersPanel := newEquipmentModifiersPanel(e.target.Entity, &e.editorData.Modifiers)
+			content.AddChild(modifiersPanel)
+			for _, wt := range weapon.AllType {
+				content.AddChild(newWeaponsPanel(e.target.Entity, wt, &e.editorData.Weapons))
+			}
+			e.InstallCmdHandlers(constants.NewEquipmentModifierItemID, unison.AlwaysEnabled,
+				func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, NoItemVariant) })
+			e.InstallCmdHandlers(constants.NewEquipmentContainerModifierItemID, unison.AlwaysEnabled,
+				func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, ContainerItemVariant) })
+			return func() {
+				if e.editorData.Uses > e.editorData.MaxUses {
+					usesField.SetText(strconv.Itoa(e.editorData.MaxUses))
+				}
+				adjustFieldBlank(usesField, e.editorData.MaxUses <= 0)
+			}
+		})
 }

@@ -356,7 +356,7 @@ type equipmentModifierAdjuster struct {
 }
 
 func (a *equipmentModifierAdjuster) Apply() {
-	a.Target.Disabled = a.Disabled
+	a.Target.Disabled = a.Disabled || a.Target.Container()
 	if a.Target.Entity != nil {
 		a.Target.Entity.Recalculate()
 	}
@@ -370,7 +370,7 @@ type traitModifierAdjuster struct {
 }
 
 func (a *traitModifierAdjuster) Apply() {
-	a.Target.Disabled = a.Disabled
+	a.Target.Disabled = a.Disabled || a.Target.Container()
 	if a.Target.Entity != nil {
 		a.Target.Entity.Recalculate()
 	}

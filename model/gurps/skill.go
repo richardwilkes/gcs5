@@ -690,3 +690,8 @@ func (s *Skill) SetTL(tl string) {
 		*s.TechLevel = tl
 	}
 }
+
+// Enabled returns true if this node is enabled.
+func (s *Skill) Enabled() bool {
+	return true
+}

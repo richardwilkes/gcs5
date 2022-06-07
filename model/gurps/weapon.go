@@ -319,22 +319,20 @@ func (w *Weapon) skillLevelBaseAdjustment(entity *Entity, tooltip *xio.ByteBuffe
 		adj += w.extractSkillBonus(f, tooltip)
 	}
 	if t, ok := w.Owner.(*Trait); ok {
-		for _, mod := range t.Modifiers {
-			if !mod.Disabled {
-				for _, f := range mod.Features {
-					adj += w.extractSkillBonus(f, tooltip)
-				}
+		Traverse[*TraitModifier](func(mod *TraitModifier) bool {
+			for _, f := range mod.Features {
+				adj += w.extractSkillBonus(f, tooltip)
 			}
-		}
+			return false
+		}, true, false, t.Modifiers...)
 	}
 	if eqp, ok := w.Owner.(*Equipment); ok {
-		for _, mod := range eqp.Modifiers {
-			if !mod.Disabled {
-				for _, f := range mod.Features {
-					adj += w.extractSkillBonus(f, tooltip)
-				}
+		Traverse[*EquipmentModifier](func(mod *EquipmentModifier) bool {
+			for _, f := range mod.Features {
+				adj += w.extractSkillBonus(f, tooltip)
 			}
-		}
+			return false
+		}, true, false, eqp.Modifiers...)
 	}
 	return adj
 }
@@ -610,6 +608,16 @@ func (w *Weapon) Open() bool {
 
 // SetOpen sets the current open state for this node.
 func (w *Weapon) SetOpen(_ bool) {
+}
+
+// Enabled returns true if this node is enabled.
+func (w *Weapon) Enabled() bool {
+	return true
+}
+
+// HasChildren returns true if this node has children.
+func (w *Weapon) HasChildren() bool {
+	return false
 }
 
 // NodeChildren returns the children of this node, if any.

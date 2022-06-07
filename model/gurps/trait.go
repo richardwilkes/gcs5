@@ -334,9 +334,10 @@ func (a *Trait) FillWithNameableKeys(m map[string]string) {
 	for _, one := range a.Weapons {
 		one.FillWithNameableKeys(m)
 	}
-	for _, one := range a.Modifiers {
-		one.FillWithNameableKeys(m)
-	}
+	Traverse[*TraitModifier](func(mod *TraitModifier) bool {
+		mod.FillWithNameableKeys(m)
+		return false
+	}, true, false, a.Modifiers...)
 }
 
 // ApplyNameableKeys replaces any nameable keys found in this Trait with the corresponding values in the provided map.
@@ -353,19 +354,23 @@ func (a *Trait) ApplyNameableKeys(m map[string]string) {
 	for _, one := range a.Weapons {
 		one.ApplyNameableKeys(m)
 	}
-	for _, one := range a.Modifiers {
-		one.ApplyNameableKeys(m)
-	}
+	Traverse[*TraitModifier](func(mod *TraitModifier) bool {
+		mod.ApplyNameableKeys(m)
+		return false
+	}, true, false, a.Modifiers...)
 }
 
 // ActiveModifierFor returns the first modifier that matches the name (case-insensitive).
 func (a *Trait) ActiveModifierFor(name string) *TraitModifier {
-	for _, one := range a.Modifiers {
-		if !one.Disabled && strings.EqualFold(one.Name, name) {
-			return one
+	var found *TraitModifier
+	Traverse[*TraitModifier](func(mod *TraitModifier) bool {
+		if strings.EqualFold(mod.Name, name) {
+			found = mod
+			return true
 		}
-	}
-	return nil
+		return false
+	}, true, false, a.Modifiers...)
+	return found
 }
 
 // ModifierNotes returns the notes due to modifiers.
@@ -378,14 +383,13 @@ func (a *Trait) ModifierNotes() string {
 			buffer.WriteString(a.CRAdj.Description(a.CR))
 		}
 	}
-	for _, one := range a.Modifiers {
-		if !one.Disabled {
-			if buffer.Len() != 0 {
-				buffer.WriteString("; ")
-			}
-			buffer.WriteString(one.FullDescription())
+	Traverse[*TraitModifier](func(mod *TraitModifier) bool {
+		if buffer.Len() != 0 {
+			buffer.WriteString("; ")
 		}
-	}
+		buffer.WriteString(mod.FullDescription())
+		return false
+	}, true, false, a.Modifiers...)
 	return buffer.String()
 }
 
@@ -447,44 +451,43 @@ func ExtractTags(tags string) []string {
 func AdjustedPoints(entity *Entity, basePoints, levels, pointsPerLevel fxp.Int, cr trait.SelfControlRoll, modifiers []*TraitModifier, roundCostDown bool) fxp.Int {
 	var baseEnh, levelEnh, baseLim, levelLim fxp.Int
 	multiplier := cr.Multiplier()
-	for _, one := range modifiers {
-		if !one.Container() && !one.Disabled {
-			modifier := one.CostModifier()
-			switch one.CostType {
-			case trait.Percentage:
-				switch one.Affects {
-				case trait.Total:
-					if modifier < 0 {
-						baseLim += modifier
-						levelLim += modifier
-					} else {
-						baseEnh += modifier
-						levelEnh += modifier
-					}
-				case trait.BaseOnly:
-					if modifier < 0 {
-						baseLim += modifier
-					} else {
-						baseEnh += modifier
-					}
-				case trait.LevelsOnly:
-					if modifier < 0 {
-						levelLim += modifier
-					} else {
-						levelEnh += modifier
-					}
-				}
-			case trait.Points:
-				if one.Affects == trait.LevelsOnly {
-					pointsPerLevel += modifier
+	Traverse[*TraitModifier](func(mod *TraitModifier) bool {
+		modifier := mod.CostModifier()
+		switch mod.CostType {
+		case trait.Percentage:
+			switch mod.Affects {
+			case trait.Total:
+				if modifier < 0 {
+					baseLim += modifier
+					levelLim += modifier
 				} else {
-					basePoints += modifier
+					baseEnh += modifier
+					levelEnh += modifier
 				}
-			case trait.Multiplier:
-				multiplier = multiplier.Mul(modifier)
+			case trait.BaseOnly:
+				if modifier < 0 {
+					baseLim += modifier
+				} else {
+					baseEnh += modifier
+				}
+			case trait.LevelsOnly:
+				if modifier < 0 {
+					levelLim += modifier
+				} else {
+					levelEnh += modifier
+				}
 			}
+		case trait.Points:
+			if mod.Affects == trait.LevelsOnly {
+				pointsPerLevel += modifier
+			} else {
+				basePoints += modifier
+			}
+		case trait.Multiplier:
+			multiplier = multiplier.Mul(modifier)
 		}
-	}
+		return false
+	}, true, false, modifiers...)
 	modifiedBasePoints := basePoints
 	leveledPoints := pointsPerLevel.Mul(levels)
 	if baseEnh != 0 || baseLim != 0 || levelEnh != 0 || levelLim != 0 {

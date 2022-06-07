@@ -272,7 +272,7 @@ var NewOtherEquipmentContainer = &unison.Action{
 var NewEquipmentModifier = &unison.Action{
 	ID:              constants.NewEquipmentModifierItemID,
 	Title:           i18n.Text("New Equipment Modifier"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.OSMenuCmdModifier()},
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyF, Modifiers: unison.OptionModifier | unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
 	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
@@ -281,7 +281,7 @@ var NewEquipmentModifier = &unison.Action{
 var NewEquipmentContainerModifier = &unison.Action{
 	ID:              constants.NewEquipmentContainerModifierItemID,
 	Title:           i18n.Text("New Equipment Modifier Container"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyF, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
 	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }

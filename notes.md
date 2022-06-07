@@ -4,8 +4,6 @@
 
 - Add undo records for edit operations that don't already have them
 - Ability to add new entries in detail editors:
-  - Trait Modifiers
-  - Equipment Modifiers
   - Weapons
 - Settings editors
   - Attributes

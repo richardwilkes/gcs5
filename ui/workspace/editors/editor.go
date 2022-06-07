@@ -24,7 +24,10 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-const editorGroup = "editors"
+const (
+	editorGroup    = "editors"
+	subEditorGroup = "sub_editors"
+)
 
 var (
 	_ unison.Dockable            = &editor[*gurps.Note, *gurps.NoteEditData]{}
@@ -91,14 +94,32 @@ func displayEditor[N gurps.Node, D gurps.EditorData[N]](owner widget.Rebuildable
 		e.AddChild(scroller)
 		e.ClientData()[workspace.AssociatedUUIDKey] = target.UUID()
 		e.promptForSave = true
-		if dc != nil && dc.Group == editorGroup {
+		scroller.Content().AsPanel().ValidateScrollRoot()
+		group := editorGroup
+		p := owner.AsPanel()
+		for p != nil {
+			if _, exists := p.ClientData()[workspace.AssociatedUUIDKey]; exists {
+				group = subEditorGroup
+				break
+			}
+			p = p.Parent()
+		}
+		if dc != nil && dc.Group == group {
 			dc.Stack(e, -1)
-		} else if dc = ws.DocumentDock.ContainerForGroup(editorGroup); dc != nil {
+		} else if dc = ws.DocumentDock.ContainerForGroup(group); dc != nil {
 			dc.Stack(e, -1)
 		} else {
-			ws.DocumentDock.DockTo(e, nil, unison.RightSide)
+			var targetLayoutNode unison.DockLayoutNode
+			side := unison.RightSide
+			if group == subEditorGroup {
+				if dc = ws.DocumentDock.ContainerForGroup(editorGroup); dc != nil {
+					targetLayoutNode = dc
+					side = unison.BottomSide
+				}
+			}
+			ws.DocumentDock.DockTo(e, targetLayoutNode, side)
 			if dc = unison.DockContainerFor(e); dc != nil && dc.Group == "" {
-				dc.Group = editorGroup
+				dc.Group = group
 			}
 		}
 	}
@@ -174,6 +195,8 @@ func (e *editor[N, D]) MarkModified() {
 
 func (e *editor[N, D]) Rebuild(_ bool) {
 	e.MarkModified()
+	e.MarkForLayoutRecursively()
+	e.MarkForRedraw()
 }
 
 func (e *editor[N, D]) CloseWithGroup(other unison.Paneler) bool {

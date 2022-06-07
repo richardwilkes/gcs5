@@ -75,7 +75,7 @@ func evalTraitLevel(e *eval.Evaluator, arguments string) (any, error) {
 	}
 	arguments = strings.Trim(arguments, `"`)
 	levels := -fxp.One
-	TraverseTraits(func(t *Trait) bool {
+	Traverse[*Trait](func(t *Trait) bool {
 		if strings.EqualFold(t.Name, arguments) {
 			if t.IsLeveled() {
 				levels = t.Levels
@@ -83,7 +83,7 @@ func evalTraitLevel(e *eval.Evaluator, arguments string) (any, error) {
 			return true
 		}
 		return false
-	}, true, entity.Traits...)
+	}, false, true, entity.Traits...)
 	return levels, nil
 }
 

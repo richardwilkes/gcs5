@@ -12,6 +12,7 @@
 package editors
 
 import (
+	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/ancestry"
@@ -80,16 +81,21 @@ func initTraitEditor(e *editor[*gurps.Trait, *gurps.TraitEditData], content *uni
 		adjustPopupBlank(ancestryPopup, e.editorData.ContainerType != trait.Race)
 	}
 	addPageRefLabelAndField(content, &e.editorData.PageRef)
+	modifiersPanel := newTraitModifiersPanel(e.target.Entity, &e.editorData.Modifiers)
 	if e.target.Container() {
-		content.AddChild(newTraitModifiersPanel(e.target.Entity, &e.editorData.Modifiers))
+		content.AddChild(modifiersPanel)
 	} else {
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
 		content.AddChild(newFeaturesPanel(e.target.Entity, e.target, &e.editorData.Features))
-		content.AddChild(newTraitModifiersPanel(e.target.Entity, &e.editorData.Modifiers))
+		content.AddChild(modifiersPanel)
 		for _, wt := range weapon.AllType {
 			content.AddChild(newWeaponsPanel(e.target.Entity, wt, &e.editorData.Weapons))
 		}
 	}
+	e.InstallCmdHandlers(constants.NewTraitModifierItemID, unison.AlwaysEnabled,
+		func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, NoItemVariant) })
+	e.InstallCmdHandlers(constants.NewTraitContainerModifierItemID, unison.AlwaysEnabled,
+		func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, ContainerItemVariant) })
 	return func() {
 		if levelField != nil {
 			adjustFieldBlank(levelField, e.editorData.PointsPerLevel == 0)

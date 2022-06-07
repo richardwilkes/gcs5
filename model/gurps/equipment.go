@@ -395,19 +395,18 @@ func ExtendedWeightAdjustedForModifiers(defUnits measure.WeightUnits, qty fxp.In
 				}
 			}
 		}
-		for _, one := range modifiers {
-			if !one.Disabled {
-				for _, f := range one.Features {
-					if cwr, ok := f.(*feature.ContainedWeightReduction); ok {
-						if cwr.IsPercentageReduction() {
-							percentage += cwr.PercentageReduction()
-						} else {
-							reduction += fxp.Int(cwr.FixedReduction(defUnits))
-						}
+		Traverse[*EquipmentModifier](func(mod *EquipmentModifier) bool {
+			for _, f := range mod.Features {
+				if cwr, ok := f.(*feature.ContainedWeightReduction); ok {
+					if cwr.IsPercentageReduction() {
+						percentage += cwr.PercentageReduction()
+					} else {
+						reduction += fxp.Int(cwr.FixedReduction(defUnits))
 					}
 				}
 			}
-		}
+			return false
+		}, true, false, modifiers...)
 		if percentage >= fxp.Hundred {
 			contained = 0
 		} else if percentage > 0 {
@@ -432,9 +431,10 @@ func (e *Equipment) FillWithNameableKeys(m map[string]string) {
 	for _, one := range e.Weapons {
 		one.FillWithNameableKeys(m)
 	}
-	for _, one := range e.Modifiers {
-		one.FillWithNameableKeys(m)
-	}
+	Traverse[*EquipmentModifier](func(mod *EquipmentModifier) bool {
+		mod.FillWithNameableKeys(m)
+		return false
+	}, true, false, e.Modifiers...)
 }
 
 // ApplyNameableKeys replaces any nameable keys found in this Trait with the corresponding values in the provided map.
@@ -451,9 +451,10 @@ func (e *Equipment) ApplyNameableKeys(m map[string]string) {
 	for _, one := range e.Weapons {
 		one.ApplyNameableKeys(m)
 	}
-	for _, one := range e.Modifiers {
-		one.ApplyNameableKeys(m)
-	}
+	Traverse[*EquipmentModifier](func(mod *EquipmentModifier) bool {
+		mod.ApplyNameableKeys(m)
+		return false
+	}, true, false, e.Modifiers...)
 }
 
 // DisplayLegalityClass returns a display version of the LegalityClass.
@@ -477,25 +478,27 @@ func (e *Equipment) DisplayLegalityClass() string {
 
 // ActiveModifierFor returns the first modifier that matches the name (case-insensitive).
 func (e *Equipment) ActiveModifierFor(name string) *EquipmentModifier {
-	for _, one := range e.Modifiers {
-		if !one.Disabled && strings.EqualFold(one.Name, name) {
-			return one
+	var found *EquipmentModifier
+	Traverse[*EquipmentModifier](func(mod *EquipmentModifier) bool {
+		if strings.EqualFold(mod.Name, name) {
+			found = mod
+			return true
 		}
-	}
-	return nil
+		return false
+	}, true, false, e.Modifiers...)
+	return found
 }
 
 // ModifierNotes returns the notes due to modifiers.
 func (e *Equipment) ModifierNotes() string {
 	var buffer strings.Builder
-	for _, one := range e.Modifiers {
-		if !one.Disabled {
-			if buffer.Len() != 0 {
-				buffer.WriteString("; ")
-			}
-			buffer.WriteString(one.FullDescription())
+	Traverse[*EquipmentModifier](func(mod *EquipmentModifier) bool {
+		if buffer.Len() != 0 {
+			buffer.WriteString("; ")
 		}
-	}
+		buffer.WriteString(mod.FullDescription())
+		return false
+	}, true, false, e.Modifiers...)
 	return buffer.String()
 }
 
@@ -507,4 +510,9 @@ func (e *Equipment) TL() string {
 // SetTL implements TechLevelProvider.
 func (e *Equipment) SetTL(tl string) {
 	e.TechLevel = tl
+}
+
+// Enabled returns true if this node is enabled.
+func (e *Equipment) Enabled() bool {
+	return true
 }

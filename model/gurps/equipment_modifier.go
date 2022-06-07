@@ -145,9 +145,11 @@ func (e *EquipmentModifier) UnmarshalJSON(data []byte) error {
 func (e *EquipmentModifier) CellData(column int, data *CellData) {
 	switch column {
 	case EquipmentModifierEnabledColumn:
-		data.Type = Toggle
-		data.Checked = !e.Disabled
-		data.Alignment = unison.MiddleAlignment
+		if !e.Container() {
+			data.Type = Toggle
+			data.Checked = e.Enabled()
+			data.Alignment = unison.MiddleAlignment
+		}
 	case EquipmentModifierDescriptionColumn:
 		data.Type = Text
 		data.Primary = e.Name
@@ -265,7 +267,7 @@ func (e *EquipmentModifier) WeightDescription() string {
 
 // FillWithNameableKeys adds any nameable keys found in this EquipmentModifier to the provided map.
 func (e *EquipmentModifier) FillWithNameableKeys(m map[string]string) {
-	if !e.Disabled {
+	if e.Enabled() {
 		nameables.Extract(e.Name, m)
 		nameables.Extract(e.LocalNotes, m)
 		nameables.Extract(e.VTTNotes, m)
@@ -277,7 +279,7 @@ func (e *EquipmentModifier) FillWithNameableKeys(m map[string]string) {
 
 // ApplyNameableKeys replaces any nameable keys found in this EquipmentModifier with the corresponding values in the provided map.
 func (e *EquipmentModifier) ApplyNameableKeys(m map[string]string) {
-	if !e.Disabled {
+	if e.Enabled() {
 		e.Name = nameables.Apply(e.Name, m)
 		e.LocalNotes = nameables.Apply(e.LocalNotes, m)
 		e.VTTNotes = nameables.Apply(e.VTTNotes, m)
@@ -287,6 +289,11 @@ func (e *EquipmentModifier) ApplyNameableKeys(m map[string]string) {
 	}
 }
 
+// Enabled returns true if this node is enabled.
+func (e *EquipmentModifier) Enabled() bool {
+	return !e.Disabled || e.Container()
+}
+
 // ValueAdjustedForModifiers returns the value after adjusting it for a set of modifiers.
 func ValueAdjustedForModifiers(value fxp.Int, modifiers []*EquipmentModifier) fxp.Int {
 	// Apply all equipment.OriginalCost
@@ -294,15 +301,16 @@ func ValueAdjustedForModifiers(value fxp.Int, modifiers []*EquipmentModifier) fx
 
 	// Apply all equipment.BaseCost
 	var cf fxp.Int
-	for _, one := range modifiers {
-		if !one.Disabled && one.CostType == equipment.BaseCost {
-			t := equipment.BaseCost.DetermineModifierCostValueTypeFromString(one.CostAmount)
-			cf += t.ExtractValue(one.CostAmount)
+	Traverse[*EquipmentModifier](func(mod *EquipmentModifier) bool {
+		if mod.CostType == equipment.BaseCost {
+			t := equipment.BaseCost.DetermineModifierCostValueTypeFromString(mod.CostAmount)
+			cf += t.ExtractValue(mod.CostAmount)
 			if t == equipment.Multiplier {
 				cf -= fxp.One
 			}
 		}
-	}
+		return false
+	}, true, false, modifiers...)
 	if cf != 0 {
 		cf = cf.Max(fxp.NegPointEight)
 		cost = cost.Mul(cf.Max(fxp.NegPointEight) + fxp.One)
@@ -320,10 +328,10 @@ func ValueAdjustedForModifiers(value fxp.Int, modifiers []*EquipmentModifier) fx
 func processNonCFStep(costType equipment.ModifierCostType, value fxp.Int, modifiers []*EquipmentModifier) fxp.Int {
 	var percentages, additions fxp.Int
 	cost := value
-	for _, one := range modifiers {
-		if !one.Disabled && one.CostType == costType {
-			t := costType.DetermineModifierCostValueTypeFromString(one.CostAmount)
-			amt := t.ExtractValue(one.CostAmount)
+	Traverse[*EquipmentModifier](func(mod *EquipmentModifier) bool {
+		if mod.CostType == costType {
+			t := costType.DetermineModifierCostValueTypeFromString(mod.CostAmount)
+			amt := t.ExtractValue(mod.CostAmount)
 			switch t {
 			case equipment.Addition:
 				additions += amt
@@ -333,7 +341,8 @@ func processNonCFStep(costType equipment.ModifierCostType, value fxp.Int, modifi
 				cost = cost.Mul(amt)
 			}
 		}
-	}
+		return false
+	}, true, false, modifiers...)
 	cost += additions
 	if percentages != 0 {
 		cost += value.Mul(percentages.Div(fxp.Hundred))
@@ -347,17 +356,18 @@ func WeightAdjustedForModifiers(weight measure.Weight, modifiers []*EquipmentMod
 	w := fxp.Int(weight)
 
 	// Apply all equipment.OriginalWeight
-	for _, one := range modifiers {
-		if !one.Disabled && one.WeightType == equipment.OriginalWeight {
-			t := equipment.OriginalWeight.DetermineModifierWeightValueTypeFromString(one.WeightAmount)
-			amt := t.ExtractFraction(one.WeightAmount).Value()
+	Traverse[*EquipmentModifier](func(mod *EquipmentModifier) bool {
+		if mod.WeightType == equipment.OriginalWeight {
+			t := equipment.OriginalWeight.DetermineModifierWeightValueTypeFromString(mod.WeightAmount)
+			amt := t.ExtractFraction(mod.WeightAmount).Value()
 			if t == equipment.WeightAddition {
-				w += measure.TrailingWeightUnitsFromString(one.WeightAmount, defUnits).ToPounds(amt)
+				w += measure.TrailingWeightUnitsFromString(mod.WeightAmount, defUnits).ToPounds(amt)
 			} else {
 				percentages += amt
 			}
 		}
-	}
+		return false
+	}, true, false, modifiers...)
 	if percentages != 0 {
 		w += fxp.Int(weight).Mul(percentages.Div(fxp.Hundred))
 	}
@@ -376,19 +386,20 @@ func WeightAdjustedForModifiers(weight measure.Weight, modifiers []*EquipmentMod
 
 func processMultiplyAddWeightStep(weightType equipment.ModifierWeightType, weight fxp.Int, defUnits measure.WeightUnits, modifiers []*EquipmentModifier) fxp.Int {
 	var sum fxp.Int
-	for _, one := range modifiers {
-		if !one.Disabled && one.WeightType == weightType {
-			t := weightType.DetermineModifierWeightValueTypeFromString(one.WeightAmount)
-			f := t.ExtractFraction(one.WeightAmount)
+	Traverse[*EquipmentModifier](func(mod *EquipmentModifier) bool {
+		if mod.WeightType == weightType {
+			t := weightType.DetermineModifierWeightValueTypeFromString(mod.WeightAmount)
+			f := t.ExtractFraction(mod.WeightAmount)
 			switch t {
 			case equipment.WeightAddition:
-				sum += measure.TrailingWeightUnitsFromString(one.WeightAmount, defUnits).ToPounds(f.Value())
+				sum += measure.TrailingWeightUnitsFromString(mod.WeightAmount, defUnits).ToPounds(f.Value())
 			case equipment.WeightPercentageMultiplier:
 				weight = weight.Mul(f.Numerator).Div(f.Denominator.Mul(fxp.Hundred))
 			case equipment.WeightMultiplier:
 				weight = weight.Mul(f.Numerator).Div(f.Denominator)
 			}
 		}
-	}
+		return false
+	}, true, false, modifiers...)
 	return weight + sum
 }

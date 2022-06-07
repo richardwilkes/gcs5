@@ -23,7 +23,9 @@ type Node interface {
 	SetOwningEntity(entity *Entity)
 	Kind() string
 	Container() bool
+	HasChildren() bool
 	NodeChildren() []Node
+	Enabled() bool
 	Open() bool
 	SetOpen(open bool)
 	CellData(column int, data *CellData)

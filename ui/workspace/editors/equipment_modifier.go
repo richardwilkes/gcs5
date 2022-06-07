@@ -23,7 +23,8 @@ const equipmentCostAndWeightPrototype = "-99.99 CF"
 
 // EditEquipmentModifier displays the editor for an equipment modifier.
 func EditEquipmentModifier(owner widget.Rebuildable, modifier *gurps.EquipmentModifier) {
-	displayEditor[*gurps.EquipmentModifier, *gurps.EquipmentModifierEditData](owner, modifier, initEquipmentModifierEditor)
+	displayEditor[*gurps.EquipmentModifier, *gurps.EquipmentModifierEditData](owner, modifier,
+		initEquipmentModifierEditor)
 }
 
 func initEquipmentModifierEditor(e *editor[*gurps.EquipmentModifier, *gurps.EquipmentModifierEditData], content *unison.Panel) func() {

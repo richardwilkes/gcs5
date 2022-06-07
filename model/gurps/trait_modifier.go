@@ -143,9 +143,11 @@ func (a *TraitModifier) UnmarshalJSON(data []byte) error {
 func (a *TraitModifier) CellData(column int, data *CellData) {
 	switch column {
 	case TraitModifierEnabledColumn:
-		data.Type = Toggle
-		data.Checked = !a.Disabled
-		data.Alignment = unison.MiddleAlignment
+		if !a.Container() {
+			data.Type = Toggle
+			data.Checked = a.Enabled()
+			data.Alignment = unison.MiddleAlignment
+		}
 	case TraitModifierDescriptionColumn:
 		data.Type = Text
 		data.Primary = a.Name
@@ -274,7 +276,7 @@ func (a *TraitModifier) CostDescription() string {
 
 // FillWithNameableKeys adds any nameable keys found in this TraitModifier to the provided map.
 func (a *TraitModifier) FillWithNameableKeys(m map[string]string) {
-	if !a.Disabled {
+	if !a.Container() && a.Enabled() {
 		nameables.Extract(a.Name, m)
 		nameables.Extract(a.LocalNotes, m)
 		nameables.Extract(a.VTTNotes, m)
@@ -286,7 +288,7 @@ func (a *TraitModifier) FillWithNameableKeys(m map[string]string) {
 
 // ApplyNameableKeys replaces any nameable keys found in this TraitModifier with the corresponding values in the provided map.
 func (a *TraitModifier) ApplyNameableKeys(m map[string]string) {
-	if !a.Disabled {
+	if !a.Container() && a.Enabled() {
 		a.Name = nameables.Apply(a.Name, m)
 		a.LocalNotes = nameables.Apply(a.LocalNotes, m)
 		a.VTTNotes = nameables.Apply(a.VTTNotes, m)
@@ -294,4 +296,9 @@ func (a *TraitModifier) ApplyNameableKeys(m map[string]string) {
 			one.ApplyNameableKeys(m)
 		}
 	}
+}
+
+// Enabled returns true if this node is enabled.
+func (a *TraitModifier) Enabled() bool {
+	return !a.Disabled || a.Container()
 }
