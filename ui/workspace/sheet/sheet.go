@@ -447,10 +447,11 @@ func (s *Sheet) createLists() {
 	for _, col := range s.entity.SheetSettings.BlockLayout.ByRow() {
 		rowPanel := unison.NewPanel()
 		rowPanel.SetLayout(&unison.FlexLayout{
-			Columns:  len(col),
-			HSpacing: 1,
-			HAlign:   unison.FillAlignment,
-			VAlign:   unison.FillAlignment,
+			Columns:      len(col),
+			HSpacing:     1,
+			HAlign:       unison.FillAlignment,
+			VAlign:       unison.FillAlignment,
+			EqualColumns: true,
 		})
 		rowPanel.SetLayoutData(&unison.FlexLayoutData{
 			HAlign: unison.FillAlignment,
