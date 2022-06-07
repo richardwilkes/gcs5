@@ -12,6 +12,7 @@
 package editors
 
 import (
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/ui/widget"
@@ -22,6 +23,15 @@ import (
 
 var (
 	meleeWeaponColMap = map[int]int{
+		0: gurps.WeaponUsageColumn,
+		1: gurps.WeaponSLColumn,
+		2: gurps.WeaponParryColumn,
+		3: gurps.WeaponBlockColumn,
+		4: gurps.WeaponDamageColumn,
+		5: gurps.WeaponReachColumn,
+		6: gurps.WeaponSTColumn,
+	}
+	meleeWeaponForPageColMap = map[int]int{
 		0: gurps.WeaponDescriptionColumn,
 		1: gurps.WeaponUsageColumn,
 		2: gurps.WeaponSLColumn,
@@ -32,6 +42,18 @@ var (
 		7: gurps.WeaponSTColumn,
 	}
 	rangedWeaponColMap = map[int]int{
+		0: gurps.WeaponUsageColumn,
+		1: gurps.WeaponSLColumn,
+		2: gurps.WeaponAccColumn,
+		3: gurps.WeaponDamageColumn,
+		4: gurps.WeaponRangeColumn,
+		5: gurps.WeaponRoFColumn,
+		6: gurps.WeaponShotsColumn,
+		7: gurps.WeaponBulkColumn,
+		8: gurps.WeaponRecoilColumn,
+		9: gurps.WeaponSTColumn,
+	}
+	rangedWeaponforPageColMap = map[int]int{
 		0:  gurps.WeaponDescriptionColumn,
 		1:  gurps.WeaponUsageColumn,
 		2:  gurps.WeaponSLColumn,
@@ -60,10 +82,17 @@ func NewWeaponsProvider(provider gurps.WeaponListProvider, weaponType weapon.Typ
 		weaponType: weaponType,
 		forPage:    forPage,
 	}
-	if weaponType == weapon.Melee {
+	switch {
+	case weaponType == weapon.Melee && forPage:
+		p.colMap = meleeWeaponForPageColMap
+	case weaponType == weapon.Melee:
 		p.colMap = meleeWeaponColMap
-	} else {
+	case weaponType == weapon.Ranged && forPage:
+		p.colMap = rangedWeaponforPageColMap
+	case weaponType == weapon.Ranged:
 		p.colMap = rangedWeaponColMap
+	default:
+		jot.Fatalf(1, "unknown weapon type: %d", weaponType)
 	}
 	return p
 }
@@ -142,7 +171,19 @@ func (p *weaponsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Tab
 	}
 }
 
-func (p *weaponsProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table, _ ItemVariant) {
+func (p *weaponsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, _ ItemVariant) {
+	if !p.forPage {
+		wpn := gurps.NewWeapon(p.provider.WeaponOwner(), p.weaponType)
+		InsertItem[*gurps.Weapon](owner, table, wpn,
+			func(target, parent *gurps.Weapon) {},
+			func(target *gurps.Weapon) []*gurps.Weapon { return nil },
+			func(target *gurps.Weapon, children []*gurps.Weapon) {},
+			func() []*gurps.Weapon { return p.provider.Weapons(p.weaponType) },
+			func(list []*gurps.Weapon) { p.provider.SetWeapons(p.weaponType, list) },
+			p.RowData,
+			func(target *gurps.Weapon) uuid.UUID { return target.UUID() })
+		EditWeapon(owner, wpn)
+	}
 }
 
 func (p *weaponsProvider) DeleteSelection(table *unison.Table) {

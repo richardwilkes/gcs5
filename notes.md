@@ -3,8 +3,6 @@
 #### GCS-specific work that needs to be done
 
 - Add undo records for edit operations that don't already have them
-- Ability to add new entries in detail editors:
-  - Weapons
 - Settings editors
   - Attributes
   - Body Type

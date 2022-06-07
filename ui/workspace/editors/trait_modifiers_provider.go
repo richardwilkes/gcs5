@@ -113,7 +113,7 @@ func (p *traitModifierProvider) OpenEditor(owner widget.Rebuildable, table *unis
 func (p *traitModifierProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
 	item := gurps.NewTraitModifier(p.Entity(), nil, variant == ContainerItemVariant)
 	InsertItem[*gurps.TraitModifier](owner, table, item,
-		func(target, parent *gurps.TraitModifier) {},
+		func(target, parent *gurps.TraitModifier) { target.Parent = parent },
 		func(target *gurps.TraitModifier) []*gurps.TraitModifier { return target.Children },
 		func(target *gurps.TraitModifier, children []*gurps.TraitModifier) { target.Children = children },
 		p.provider.TraitModifierList, p.provider.SetTraitModifierList, p.RowData,

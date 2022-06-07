@@ -1028,6 +1028,12 @@ func (e *Entity) Ancestry() *ancestry.Ancestry {
 	return anc
 }
 
+// WeaponOwner implements WeaponListProvider. In the case of an Entity, always returns nil, as entities rely on
+// sub-components for their weapons and don't allow them to be created directly.
+func (e *Entity) WeaponOwner() WeaponOwner {
+	return nil
+}
+
 // Weapons implements WeaponListProvider.
 func (e *Entity) Weapons(weaponType weapon.Type) []*Weapon {
 	return e.EquippedWeapons(weaponType)

@@ -30,127 +30,97 @@ func NewNaturalAttacks(entity *Entity, parent *Trait) *Trait {
 
 func newBite(owner WeaponOwner) *Weapon {
 	no := i18n.Text("No")
-	bite := &Weapon{
-		WeaponData: WeaponData{
-			Type:            weapon.Melee,
-			MinimumStrength: "",
-			Usage:           i18n.Text("Bite"),
-			Reach:           "C",
-			Parry:           no,
-			Block:           no,
-			Defaults: []*SkillDefault{
-				{
-					DefaultType: gid.Dexterity,
-				},
-				{
-					DefaultType: gid.Skill,
-					Name:        "Brawling",
-				},
-			},
+	bite := NewWeapon(owner, weapon.Melee)
+	bite.Usage = i18n.Text("Bite")
+	bite.Reach = "C"
+	bite.Parry = no
+	bite.Block = no
+	bite.Defaults = []*SkillDefault{
+		{
+			DefaultType: gid.Dexterity,
 		},
-		Owner: owner,
-	}
-	bite.Damage = &WeaponDamage{
-		WeaponDamageData: WeaponDamageData{
-			Type:         "cr",
-			StrengthType: weapon.Thrust,
-			Base: &dice.Dice{
-				Sides:      6,
-				Modifier:   -1,
-				Multiplier: 1,
-			},
-			ArmorDivisor:              fxp.One,
-			FragmentationArmorDivisor: fxp.One,
+		{
+			DefaultType: gid.Skill,
+			Name:        "Brawling",
 		},
-		Owner: bite,
 	}
+	bite.Damage.Type = "cr"
+	bite.Damage.StrengthType = weapon.Thrust
+	bite.Damage.Base = &dice.Dice{
+		Sides:      6,
+		Modifier:   -1,
+		Multiplier: 1,
+	}
+	bite.Damage.ArmorDivisor = fxp.One
+	bite.Damage.FragmentationArmorDivisor = fxp.One
+	bite.Damage.Owner = bite
 	return bite
 }
 
 func newPunch(owner WeaponOwner) *Weapon {
-	punch := &Weapon{
-		WeaponData: WeaponData{
-			Type:            weapon.Melee,
-			MinimumStrength: "",
-			Usage:           i18n.Text("Punch"),
-			Reach:           "C",
-			Parry:           "0",
-			Defaults: []*SkillDefault{
-				{
-					DefaultType: gid.Dexterity,
-				},
-				{
-					DefaultType: gid.Skill,
-					Name:        "Boxing",
-				},
-				{
-					DefaultType: gid.Skill,
-					Name:        "Brawling",
-				},
-				{
-					DefaultType: gid.Skill,
-					Name:        "Karate",
-				},
-			},
+	punch := NewWeapon(owner, weapon.Melee)
+	punch.Usage = i18n.Text("Punch")
+	punch.Reach = "C"
+	punch.Parry = "0"
+	punch.Defaults = []*SkillDefault{
+		{
+			DefaultType: gid.Dexterity,
 		},
-		Owner: owner,
-	}
-	punch.Damage = &WeaponDamage{
-		WeaponDamageData: WeaponDamageData{
-			Type:         "cr",
-			StrengthType: weapon.Thrust,
-			Base: &dice.Dice{
-				Sides:      6,
-				Modifier:   -1,
-				Multiplier: 1,
-			},
-			ArmorDivisor:              fxp.One,
-			FragmentationArmorDivisor: fxp.One,
+		{
+			DefaultType: gid.Skill,
+			Name:        "Boxing",
 		},
-		Owner: punch,
+		{
+			DefaultType: gid.Skill,
+			Name:        "Brawling",
+		},
+		{
+			DefaultType: gid.Skill,
+			Name:        "Karate",
+		},
 	}
+	punch.Damage.Type = "cr"
+	punch.Damage.StrengthType = weapon.Thrust
+	punch.Damage.Base = &dice.Dice{
+		Sides:      6,
+		Modifier:   -1,
+		Multiplier: 1,
+	}
+	punch.Damage.ArmorDivisor = fxp.One
+	punch.Damage.FragmentationArmorDivisor = fxp.One
+	punch.Damage.Owner = punch
 	return punch
 }
 
 func newKick(owner WeaponOwner) *Weapon {
-	punch := &Weapon{
-		WeaponData: WeaponData{
-			Type:            weapon.Melee,
-			MinimumStrength: "",
-			Usage:           i18n.Text("Kick"),
-			Reach:           "C,1",
-			Parry:           i18n.Text("No"),
-			Defaults: []*SkillDefault{
-				{
-					DefaultType: gid.Dexterity,
-					Modifier:    -fxp.Two,
-				},
-				{
-					DefaultType: gid.Skill,
-					Name:        "Brawling",
-					Modifier:    -fxp.Two,
-				},
-				{
-					DefaultType: gid.Skill,
-					Name:        "Kicking",
-				},
-				{
-					DefaultType: gid.Skill,
-					Name:        "Karate",
-					Modifier:    -fxp.Two,
-				},
-			},
+	kick := NewWeapon(owner, weapon.Melee)
+	kick.Usage = i18n.Text("Kick")
+	kick.Reach = "C,1"
+	kick.Parry = i18n.Text("No")
+	kick.Defaults = []*SkillDefault{
+		{
+			DefaultType: gid.Dexterity,
+			Modifier:    -fxp.Two,
 		},
-		Owner: owner,
-	}
-	punch.Damage = &WeaponDamage{
-		WeaponDamageData: WeaponDamageData{
-			Type:                      "cr",
-			StrengthType:              weapon.Thrust,
-			ArmorDivisor:              fxp.One,
-			FragmentationArmorDivisor: fxp.One,
+		{
+			DefaultType: gid.Skill,
+			Name:        "Brawling",
+			Modifier:    -fxp.Two,
 		},
-		Owner: punch,
+		{
+			DefaultType: gid.Skill,
+			Name:        "Kicking",
+		},
+		{
+			DefaultType: gid.Skill,
+			Name:        "Karate",
+			Modifier:    -fxp.Two,
+		},
 	}
-	return punch
+	kick.Damage.Type = "cr"
+	kick.Damage.StrengthType = weapon.Thrust
+	kick.Damage.ArmorDivisor = fxp.One
+	kick.Damage.FragmentationArmorDivisor = fxp.One
+	kick.Damage.Owner = kick
+	return kick
 }

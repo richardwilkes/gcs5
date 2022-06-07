@@ -121,7 +121,7 @@ func (p *eqpModProvider) OpenEditor(owner widget.Rebuildable, table *unison.Tabl
 func (p *eqpModProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
 	item := gurps.NewEquipmentModifier(p.Entity(), nil, variant == ContainerItemVariant)
 	InsertItem[*gurps.EquipmentModifier](owner, table, item,
-		func(target, parent *gurps.EquipmentModifier) {},
+		func(target, parent *gurps.EquipmentModifier) { target.Parent = parent },
 		func(target *gurps.EquipmentModifier) []*gurps.EquipmentModifier { return target.Children },
 		func(target *gurps.EquipmentModifier, children []*gurps.EquipmentModifier) { target.Children = children },
 		p.provider.EquipmentModifierList, p.provider.SetEquipmentModifierList, p.RowData,

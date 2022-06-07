@@ -89,7 +89,7 @@ func EditEquipment(owner widget.Rebuildable, equipment *gurps.Equipment, carried
 			modifiersPanel := newEquipmentModifiersPanel(e.target.Entity, &e.editorData.Modifiers)
 			content.AddChild(modifiersPanel)
 			for _, wt := range weapon.AllType {
-				content.AddChild(newWeaponsPanel(e.target.Entity, wt, &e.editorData.Weapons))
+				content.AddChild(newWeaponsPanel(e, e.target, wt, &e.editorData.Weapons))
 			}
 			e.InstallCmdHandlers(constants.NewEquipmentModifierItemID, unison.AlwaysEnabled,
 				func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, NoItemVariant) })

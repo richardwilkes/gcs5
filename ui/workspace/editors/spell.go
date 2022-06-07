@@ -95,7 +95,7 @@ func initSpellEditor(e *editor[*gurps.Spell, *gurps.SpellEditData], content *uni
 	if !e.target.Container() {
 		content.AddChild(newPrereqPanel(e.target.Entity, &e.editorData.Prereq))
 		for _, wt := range weapon.AllType {
-			content.AddChild(newWeaponsPanel(e.target.Entity, wt, &e.editorData.Weapons))
+			content.AddChild(newWeaponsPanel(e, e.target, wt, &e.editorData.Weapons))
 		}
 	}
 	return nil

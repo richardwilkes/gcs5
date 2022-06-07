@@ -12,28 +12,31 @@
 package editors
 
 import (
+	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/model/theme"
+	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/unison"
 )
 
 type weaponsPanel struct {
 	unison.Panel
-	entity     *gurps.Entity
-	weaponType weapon.Type
-	allWeapons *[]*gurps.Weapon
-	weapons    []*gurps.Weapon
-	provider   TableProvider
-	table      *unison.Table
+	entity      *gurps.Entity
+	weaponOwner gurps.WeaponOwner
+	weaponType  weapon.Type
+	allWeapons  *[]*gurps.Weapon
+	weapons     []*gurps.Weapon
+	provider    TableProvider
+	table       *unison.Table
 }
 
-func newWeaponsPanel(entity *gurps.Entity, weaponType weapon.Type, weapons *[]*gurps.Weapon) *weaponsPanel {
+func newWeaponsPanel(cmdRoot widget.Rebuildable, weaponOwner gurps.WeaponOwner, weaponType weapon.Type, weapons *[]*gurps.Weapon) *weaponsPanel {
 	p := &weaponsPanel{
-		entity:     entity,
-		weaponType: weaponType,
-		allWeapons: weapons,
-		weapons:    gurps.ExtractWeaponsOfType(weaponType, *weapons),
+		weaponOwner: weaponOwner,
+		weaponType:  weaponType,
+		allWeapons:  weapons,
+		weapons:     gurps.ExtractWeaponsOfType(weaponType, *weapons),
 	}
 	p.Self = p
 	p.SetLayout(&unison.FlexLayout{Columns: 1})
@@ -48,11 +51,26 @@ func newWeaponsPanel(entity *gurps.Entity, weaponType weapon.Type, weapons *[]*g
 	}
 	p.provider = NewWeaponsProvider(p, p.weaponType, false)
 	p.table = newTable(p.AsPanel(), p.provider)
+	var id int
+	switch weaponType {
+	case weapon.Melee:
+		id = constants.NewMeleeWeaponItemID
+	case weapon.Ranged:
+		id = constants.NewRangedWeaponItemID
+	default:
+		return p
+	}
+	cmdRoot.AsPanel().InstallCmdHandlers(id, unison.AlwaysEnabled,
+		func(_ any) { p.provider.CreateItem(cmdRoot, p.table, NoItemVariant) })
 	return p
 }
 
 func (p *weaponsPanel) Entity() *gurps.Entity {
 	return p.entity
+}
+
+func (p *weaponsPanel) WeaponOwner() gurps.WeaponOwner {
+	return p.weaponOwner
 }
 
 func (p *weaponsPanel) Weapons(weaponType weapon.Type) []*gurps.Weapon {

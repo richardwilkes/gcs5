@@ -15,8 +15,7 @@ import "github.com/richardwilkes/unison"
 
 // Menu, Item & Action IDs
 const (
-	NewFileMenuID = unison.UserBaseID + iota
-	NewSheetItemID
+	NewSheetItemID = unison.UserBaseID + iota
 	NewTemplateItemID
 	NewTraitsLibraryItemID
 	NewTraitModifiersLibraryItemID
@@ -36,7 +35,6 @@ const (
 	RedoItemID
 	DuplicateItemID
 	ConvertToContainerItemID
-	StateMenuID
 	ToggleStateItemID
 	IncrementItemID
 	DecrementItemID
@@ -48,11 +46,7 @@ const (
 	DecrementTechLevelItemID
 	SwapDefaultsItemID
 	ItemMenuID
-	TraitsMenuID
 	AddNaturalAttacksItemID
-	SkillsMenuID
-	EquipmentMenuID
-	NotesMenuID
 	OpenEditorItemID
 	CopyToSheetItemID
 	CopyToTemplateItemID
@@ -106,6 +100,9 @@ const (
 	NewRitualMagicSpellItemID
 	NewTechniqueItemID
 	LastAlternateNonContainerMarker
+
+	NewMeleeWeaponItemID
+	NewRangedWeaponItemID
 
 	LibraryBaseItemID
 	RecentFieldBaseItemID  = LibraryBaseItemID + 1000

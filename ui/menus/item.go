@@ -38,6 +38,8 @@ func registerItemMenuActions() {
 	settings.RegisterKeyBinding("new.eqm.container", NewEquipmentContainerModifier)
 	settings.RegisterKeyBinding("new.not", NewNote)
 	settings.RegisterKeyBinding("new.not.container", NewNoteContainer)
+	settings.RegisterKeyBinding("new.melee", NewMeleeWeapon)
+	settings.RegisterKeyBinding("new.ranged", NewRangedWeapon)
 	settings.RegisterKeyBinding("pageref.open.first", OpenOnePageReference)
 	settings.RegisterKeyBinding("pageref.open.all", OpenEachPageReference)
 }
@@ -72,6 +74,10 @@ func createItemMenu(f unison.MenuFactory) unison.Menu {
 	m.InsertSeparator(-1, false)
 	m.InsertItem(-1, NewNote.NewMenuItem(f))
 	m.InsertItem(-1, NewNoteContainer.NewMenuItem(f))
+
+	m.InsertSeparator(-1, false)
+	m.InsertItem(-1, NewMeleeWeapon.NewMenuItem(f))
+	m.InsertItem(-1, NewRangedWeapon.NewMenuItem(f))
 
 	m.InsertSeparator(-1, false)
 	m.InsertItem(-1, OpenOnePageReference.NewMenuItem(f))
@@ -245,6 +251,24 @@ var NewNoteContainer = &unison.Action{
 	ID:              constants.NewNoteContainerItemID,
 	Title:           i18n.Text("New Note Container"),
 	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+}
+
+// NewMeleeWeapon creates a new melee weapon.
+var NewMeleeWeapon = &unison.Action{
+	ID:              constants.NewMeleeWeaponItemID,
+	Title:           i18n.Text("New Melee Weapon"),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+}
+
+// NewRangedWeapon creates a new ranged weapon.
+var NewRangedWeapon = &unison.Action{
+	ID:              constants.NewRangedWeaponItemID,
+	Title:           i18n.Text("New Ranged Weapon"),
+	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyR, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
 	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }
