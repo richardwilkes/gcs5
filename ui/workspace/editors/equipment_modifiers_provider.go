@@ -14,6 +14,8 @@ package editors
 import (
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -60,6 +62,18 @@ func NewEquipmentModifiersProvider(provider gurps.EquipmentModifierListProvider,
 
 func (p *eqpModProvider) Entity() *gurps.Entity {
 	return p.provider.Entity()
+}
+
+func (p *eqpModProvider) DragKey() string {
+	return gid.EquipmentModifier
+}
+
+func (p *eqpModProvider) DragSVG() *unison.SVG {
+	return res.GCSEquipmentModifiersSVG
+}
+
+func (p *eqpModProvider) ItemNames() (singular, plural string) {
+	return i18n.Text("Equipment Modifier"), i18n.Text("Equipment Modifiers")
 }
 
 func (p *eqpModProvider) Headers() []unison.TableColumnHeader {

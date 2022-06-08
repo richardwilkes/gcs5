@@ -12,6 +12,8 @@
 package widget
 
 import (
+	"fmt"
+
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/toolbox/txt"
@@ -61,4 +63,93 @@ func TableCreateHeader(table *unison.Table, headers []unison.TableColumnHeader) 
 		return txt.NaturalLess(s1, s2, true)
 	}
 	return tableHeader
+}
+
+// TableDragData holds the data from a table row drag.
+type TableDragData struct {
+	Table *unison.Table
+	Rows  []unison.TableRowData
+}
+
+// InstallTableDragSupport installs drag support into a table.
+func InstallTableDragSupport(table *unison.Table, svg *unison.SVG, dragKey, singularName, pluralName string) {
+	orig := table.MouseDragCallback
+	table.MouseDragCallback = func(where unison.Point, button int, mod unison.Modifiers) bool {
+		if orig(where, button, mod) {
+			return true
+		}
+		if table.HasSelection() && table.IsDragGesture(where) {
+			data := &TableDragData{
+				Table: table,
+				Rows:  table.SelectedRows(true),
+			}
+			drawable := newDragDrawable(data, svg, singularName, pluralName)
+			size := drawable.LogicalSize()
+			table.StartDataDrag(&unison.DragData{
+				Data:     map[string]any{dragKey: data},
+				Drawable: drawable,
+				Ink:      table.OnBackgroundInk,
+				Offset:   unison.Point{X: 0, Y: -size.Height / 2},
+			})
+		}
+		return false
+	}
+}
+
+type dragDrawable struct {
+	label *unison.Label
+}
+
+func newDragDrawable(data *TableDragData, svg *unison.SVG, singularName, pluralName string) *dragDrawable {
+	label := unison.NewLabel()
+	label.DrawCallback = func(gc *unison.Canvas, rect unison.Rect) {
+		r := rect
+		r.Inset(unison.NewUniformInsets(1))
+		corner := r.Height / 2
+		gc.SaveWithOpacity(0.7)
+		gc.DrawRoundedRect(r, corner, corner, data.Table.SelectionInk.Paint(gc, r, unison.Fill))
+		gc.DrawRoundedRect(r, corner, corner, data.Table.OnSelectionInk.Paint(gc, r, unison.Stroke))
+		gc.Restore()
+		label.DefaultDraw(gc, rect)
+	}
+	label.OnBackgroundInk = data.Table.OnSelectionInk
+	label.SetBorder(unison.NewEmptyBorder(unison.Insets{
+		Top:    4,
+		Left:   label.Font.LineHeight(),
+		Bottom: 4,
+		Right:  label.Font.LineHeight(),
+	}))
+	if count := countRows(data.Rows); count == 1 {
+		label.Text = fmt.Sprintf("1 %s", singularName)
+	} else {
+		label.Text = fmt.Sprintf("%d %s", count, pluralName)
+	}
+	if svg != nil {
+		baseline := label.Font.Baseline()
+		label.Drawable = &unison.DrawableSVG{
+			SVG:  svg,
+			Size: unison.NewSize(baseline, baseline),
+		}
+	}
+	_, pref, _ := label.Sizes(unison.Size{})
+	label.SetFrameRect(unison.Rect{Size: pref})
+	return &dragDrawable{label: label}
+}
+
+func (d *dragDrawable) LogicalSize() unison.Size {
+	return d.label.FrameRect().Size
+}
+
+func (d *dragDrawable) DrawInRect(canvas *unison.Canvas, rect unison.Rect, _ *unison.SamplingOptions, _ *unison.Paint) {
+	d.label.Draw(canvas, rect)
+}
+
+func countRows(rows []unison.TableRowData) int {
+	count := len(rows)
+	for _, row := range rows {
+		if row.CanHaveChildRows() {
+			count += countRows(row.ChildRows())
+		}
+	}
+	return count
 }

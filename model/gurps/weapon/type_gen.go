@@ -35,14 +35,17 @@ var (
 	typeData = []struct {
 		key    string
 		string string
+		alt    string
 	}{
 		{
 			key:    "melee_weapon",
 			string: i18n.Text("Melee Weapon"),
+			alt:    i18n.Text("Melee Weapons"),
 		},
 		{
 			key:    "ranged_weapon",
 			string: i18n.Text("Ranged Weapon"),
+			alt:    i18n.Text("Ranged Weapons"),
 		},
 	}
 )
@@ -66,6 +69,11 @@ func (enum Type) Key() string {
 // String implements fmt.Stringer.
 func (enum Type) String() string {
 	return typeData[enum.EnsureValid()].string
+}
+
+// AltString returns the alternate string.
+func (enum Type) AltString() string {
+	return typeData[enum.EnsureValid()].alt
 }
 
 // ExtractType extracts the value from a string.

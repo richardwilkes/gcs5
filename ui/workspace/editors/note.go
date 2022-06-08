@@ -13,13 +13,14 @@ package editors
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/unison"
 )
 
 // EditNote displays the editor for a note.
 func EditNote(owner widget.Rebuildable, note *gurps.Note) {
-	displayEditor[*gurps.Note, *gurps.NoteEditData](owner, note, initNoteEditor)
+	displayEditor[*gurps.Note, *gurps.NoteEditData](owner, note, res.GCSNotesSVG, initNoteEditor)
 }
 
 func initNoteEditor(e *editor[*gurps.Note, *gurps.NoteEditData], content *unison.Panel) func() {

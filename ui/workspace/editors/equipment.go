@@ -19,6 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/measure"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -26,7 +27,7 @@ import (
 
 // EditEquipment displays the editor for equipment.
 func EditEquipment(owner widget.Rebuildable, equipment *gurps.Equipment, carried bool) {
-	displayEditor[*gurps.Equipment, *gurps.EquipmentEditData](owner, equipment,
+	displayEditor[*gurps.Equipment, *gurps.EquipmentEditData](owner, equipment, res.GCSEquipmentSVG,
 		func(e *editor[*gurps.Equipment, *gurps.EquipmentEditData], content *unison.Panel) func() {
 			addNameLabelAndField(content, &e.editorData.Name)
 			addNotesLabelAndField(content, &e.editorData.LocalNotes)

@@ -42,6 +42,7 @@ type editor[N gurps.Node, D gurps.EditorData[N]] struct {
 	unison.Panel
 	owner                widget.Rebuildable
 	target               N
+	svg                  *unison.SVG
 	undoMgr              *unison.UndoManager
 	applyButton          *unison.Button
 	cancelButton         *unison.Button
@@ -51,7 +52,7 @@ type editor[N gurps.Node, D gurps.EditorData[N]] struct {
 	promptForSave        bool
 }
 
-func displayEditor[N gurps.Node, D gurps.EditorData[N]](owner widget.Rebuildable, target N, initContent func(*editor[N, D], *unison.Panel) func()) {
+func displayEditor[N gurps.Node, D gurps.EditorData[N]](owner widget.Rebuildable, target N, svg *unison.SVG, initContent func(*editor[N, D], *unison.Panel) func()) {
 	lookFor := target.UUID()
 	ws, dc, found := workspace.Activate(func(d unison.Dockable) bool {
 		if e, ok := d.(*editor[N, D]); ok {
@@ -63,6 +64,7 @@ func displayEditor[N gurps.Node, D gurps.EditorData[N]](owner widget.Rebuildable
 		e := &editor[N, D]{
 			owner:  owner,
 			target: target,
+			svg:    svg,
 		}
 		e.Self = e
 
@@ -159,7 +161,7 @@ func (e *editor[N, D]) createToolbar() unison.Paneler {
 
 func (e *editor[N, D]) TitleIcon(suggestedSize unison.Size) unison.Drawable {
 	return &unison.DrawableSVG{
-		SVG:  res.GCSNotesSVG,
+		SVG:  e.svg,
 		Size: suggestedSize,
 	}
 }

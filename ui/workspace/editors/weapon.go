@@ -22,7 +22,7 @@ import (
 
 // EditWeapon displays the editor for a weapon.
 func EditWeapon(owner widget.Rebuildable, w *gurps.Weapon) {
-	displayEditor[*gurps.Weapon, *gurps.Weapon](owner, w, initWeaponEditor)
+	displayEditor[*gurps.Weapon, *gurps.Weapon](owner, w, w.Type.SVG(), initWeaponEditor)
 }
 
 func initWeaponEditor(e *editor[*gurps.Weapon, *gurps.Weapon], content *unison.Panel) func() {

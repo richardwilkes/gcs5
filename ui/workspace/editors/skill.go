@@ -19,6 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -26,7 +27,7 @@ import (
 
 // EditSkill displays the editor for an skill.
 func EditSkill(owner widget.Rebuildable, skill *gurps.Skill) {
-	displayEditor[*gurps.Skill, *gurps.SkillEditData](owner, skill, initSkillEditor)
+	displayEditor[*gurps.Skill, *gurps.SkillEditData](owner, skill, res.GCSSkillsSVG, initSkillEditor)
 }
 
 func initSkillEditor(e *editor[*gurps.Skill, *gurps.SkillEditData], content *unison.Panel) func() {

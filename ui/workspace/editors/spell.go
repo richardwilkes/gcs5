@@ -19,6 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/model/gurps/skill"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -26,7 +27,7 @@ import (
 
 // EditSpell displays the editor for an spell.
 func EditSpell(owner widget.Rebuildable, spell *gurps.Spell) {
-	displayEditor[*gurps.Spell, *gurps.SpellEditData](owner, spell, initSpellEditor)
+	displayEditor[*gurps.Spell, *gurps.SpellEditData](owner, spell, res.GCSSpellsSVG, initSpellEditor)
 }
 
 func initSpellEditor(e *editor[*gurps.Spell, *gurps.SpellEditData], content *unison.Panel) func() {

@@ -13,6 +13,7 @@ import (
 	"text/template"
 	"unicode"
 
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
 	"golang.org/x/text/cases"
@@ -738,10 +739,12 @@ func main() {
 			{
 				Name: "Melee",
 				Key:  "melee_weapon",
+				Alt:  i18n.Text("Melee Weapons"),
 			},
 			{
 				Name: "Ranged",
 				Key:  "ranged_weapon",
+				Alt:  i18n.Text("Ranged Weapons"),
 			},
 		},
 	})

@@ -188,6 +188,8 @@ func newPageList(owner widget.Rebuildable, provider editors.TableProvider) *Page
 			func(_ any) { p.provider.DeleteSelection(p.table) })
 	}
 	p.installOpenPageReferenceHandlers()
+	singular, plural := p.provider.ItemNames()
+	widget.InstallTableDragSupport(p.table, p.provider.DragSVG(), p.provider.DragKey(), singular, plural)
 	_, pref, _ := p.tableHeader.Sizes(geom.Size[float32]{})
 	p.SetLayoutData(&unison.FlexLayoutData{
 		MinSize: geom.NewSize(0, pref.Height*2),

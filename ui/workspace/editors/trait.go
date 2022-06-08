@@ -18,6 +18,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/ancestry"
 	"github.com/richardwilkes/gcs/model/gurps/trait"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -25,7 +26,7 @@ import (
 
 // EditTrait displays the editor for a trait.
 func EditTrait(owner widget.Rebuildable, t *gurps.Trait) {
-	displayEditor[*gurps.Trait, *gurps.TraitEditData](owner, t, initTraitEditor)
+	displayEditor[*gurps.Trait, *gurps.TraitEditData](owner, t, res.GCSTraitsSVG, initTraitEditor)
 }
 
 func initTraitEditor(e *editor[*gurps.Trait, *gurps.TraitEditData], content *unison.Panel) func() {

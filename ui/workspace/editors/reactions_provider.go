@@ -13,6 +13,7 @@ package editors
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -37,6 +38,18 @@ func NewReactionModifiersProvider(provider gurps.ReactionModifierListProvider) T
 
 func (p *reactionModProvider) Entity() *gurps.Entity {
 	return p.provider.Entity()
+}
+
+func (p *reactionModProvider) DragKey() string {
+	return gid.ReactionModifier
+}
+
+func (p *reactionModProvider) DragSVG() *unison.SVG {
+	return nil
+}
+
+func (p *reactionModProvider) ItemNames() (singular, plural string) {
+	return i18n.Text("Reaction Modifier"), i18n.Text("Reaction Modifiers")
 }
 
 func (p *reactionModProvider) Headers() []unison.TableColumnHeader {

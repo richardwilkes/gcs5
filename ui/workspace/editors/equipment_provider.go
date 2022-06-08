@@ -16,6 +16,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -88,6 +90,18 @@ func NewEquipmentProvider(provider gurps.EquipmentListProvider, forPage, carried
 
 func (p *equipmentProvider) Entity() *gurps.Entity {
 	return p.provider.Entity()
+}
+
+func (p *equipmentProvider) DragKey() string {
+	return gid.Equipment
+}
+
+func (p *equipmentProvider) DragSVG() *unison.SVG {
+	return res.GCSEquipmentSVG
+}
+
+func (p *equipmentProvider) ItemNames() (singular, plural string) {
+	return i18n.Text("Equipment Item"), i18n.Text("Equipment Items")
 }
 
 func (p *equipmentProvider) Headers() []unison.TableColumnHeader {

@@ -14,6 +14,8 @@ package editors
 import (
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -40,6 +42,18 @@ func NewNotesProvider(provider gurps.NoteListProvider, forPage bool) TableProvid
 
 func (p *notesProvider) Entity() *gurps.Entity {
 	return p.provider.Entity()
+}
+
+func (p *notesProvider) DragKey() string {
+	return gid.Note
+}
+
+func (p *notesProvider) DragSVG() *unison.SVG {
+	return res.GCSNotesSVG
+}
+
+func (p *notesProvider) ItemNames() (singular, plural string) {
+	return i18n.Text("Note"), i18n.Text("Notes")
 }
 
 func (p *notesProvider) Headers() []unison.TableColumnHeader {

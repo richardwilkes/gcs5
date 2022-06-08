@@ -30,6 +30,9 @@ const (
 // TableProvider defines the methods a table provider must contain.
 type TableProvider interface {
 	gurps.EntityProvider
+	DragKey() string
+	DragSVG() *unison.SVG
+	ItemNames() (singular, plural string)
 	Headers() []unison.TableColumnHeader
 	RowData(table *unison.Table) []unison.TableRowData
 	SyncHeader(headers []unison.TableColumnHeader)

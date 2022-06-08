@@ -14,6 +14,7 @@ package editors
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/equipment"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -24,7 +25,7 @@ const equipmentCostAndWeightPrototype = "-99.99 CF"
 // EditEquipmentModifier displays the editor for an equipment modifier.
 func EditEquipmentModifier(owner widget.Rebuildable, modifier *gurps.EquipmentModifier) {
 	displayEditor[*gurps.EquipmentModifier, *gurps.EquipmentModifierEditData](owner, modifier,
-		initEquipmentModifierEditor)
+		res.GCSEquipmentModifiersSVG, initEquipmentModifierEditor)
 }
 
 func initEquipmentModifierEditor(e *editor[*gurps.EquipmentModifier, *gurps.EquipmentModifierEditData], content *unison.Panel) func() {

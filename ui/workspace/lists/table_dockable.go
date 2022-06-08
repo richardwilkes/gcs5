@@ -356,6 +356,8 @@ func NewTableDockable(filePath, extension string, provider editors.TableProvider
 	d.table.SetTopLevelRows(provider.RowData(d.table))
 	d.table.SizeColumnsToFit(true)
 	widget.TableInstallStdCallbacks(d.table)
+	singular, plural := provider.ItemNames()
+	widget.InstallTableDragSupport(d.table, provider.DragSVG(), provider.DragKey(), singular, plural)
 
 	d.tableHeader = widget.TableCreateHeader(d.table, headers)
 	d.scroll.SetColumnHeader(d.tableHeader)

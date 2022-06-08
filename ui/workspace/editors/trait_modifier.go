@@ -15,6 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/trait"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -23,7 +24,7 @@ import (
 
 // EditTraitModifier displays the editor for a trait modifier.
 func EditTraitModifier(owner widget.Rebuildable, modifier *gurps.TraitModifier) {
-	displayEditor[*gurps.TraitModifier, *gurps.TraitModifierEditData](owner, modifier,
+	displayEditor[*gurps.TraitModifier, *gurps.TraitModifierEditData](owner, modifier, res.GCSTraitModifiersSVG,
 		initTraitModifierEditor)
 }
 

@@ -14,6 +14,8 @@ package editors
 import (
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/gurps/gid"
+	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -77,6 +79,18 @@ func NewSpellsProvider(provider gurps.SpellListProvider, forPage bool) TableProv
 
 func (p *spellsProvider) Entity() *gurps.Entity {
 	return p.provider.Entity()
+}
+
+func (p *spellsProvider) DragKey() string {
+	return gid.Spell
+}
+
+func (p *spellsProvider) DragSVG() *unison.SVG {
+	return res.GCSSpellsSVG
+}
+
+func (p *spellsProvider) ItemNames() (singular, plural string) {
+	return i18n.Text("Spell"), i18n.Text("Spells")
 }
 
 func (p *spellsProvider) Headers() []unison.TableColumnHeader {

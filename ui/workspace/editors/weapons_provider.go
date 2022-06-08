@@ -101,6 +101,18 @@ func (p *weaponsProvider) Entity() *gurps.Entity {
 	return p.provider.Entity()
 }
 
+func (p *weaponsProvider) DragKey() string {
+	return p.weaponType.Key()
+}
+
+func (p *weaponsProvider) DragSVG() *unison.SVG {
+	return p.weaponType.SVG()
+}
+
+func (p *weaponsProvider) ItemNames() (singular, plural string) {
+	return p.weaponType.String(), p.weaponType.AltString()
+}
+
 func (p *weaponsProvider) Headers() []unison.TableColumnHeader {
 	var headers []unison.TableColumnHeader
 	for i := 0; i < len(p.colMap); i++ {
