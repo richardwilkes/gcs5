@@ -179,7 +179,10 @@ func newPageList(owner widget.Rebuildable, provider editors.TableProvider) *Page
 	p.table.SetTopLevelRows(p.provider.RowData(p.table))
 	p.AddChild(p.tableHeader)
 	p.AddChild(p.table)
+	singular, plural := p.provider.ItemNames()
+	p.table.InstallDragSupport(p.provider.DragSVG(), p.provider.DragKey(), singular, plural)
 	if owner != nil {
+		p.table.InstallDropSupport(p.provider.DragKey(), widget.StdDropCallback)
 		p.InstallCmdHandlers(constants.OpenEditorItemID,
 			func(_ any) bool { return p.table.HasSelection() },
 			func(_ any) { p.provider.OpenEditor(owner, p.table) })
@@ -188,8 +191,6 @@ func newPageList(owner widget.Rebuildable, provider editors.TableProvider) *Page
 			func(_ any) { p.provider.DeleteSelection(p.table) })
 	}
 	p.installOpenPageReferenceHandlers()
-	singular, plural := p.provider.ItemNames()
-	widget.InstallTableDragSupport(p.table, p.provider.DragSVG(), p.provider.DragKey(), singular, plural)
 	_, pref, _ := p.tableHeader.Sizes(geom.Size[float32]{})
 	p.SetLayoutData(&unison.FlexLayoutData{
 		MinSize: geom.NewSize(0, pref.Height*2),

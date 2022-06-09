@@ -75,7 +75,8 @@ func newTable(parent *unison.Panel, provider TableProvider) *unison.Table {
 	parent.AddChild(tableHeader)
 	parent.AddChild(table)
 	singular, plural := provider.ItemNames()
-	widget.InstallTableDragSupport(table, provider.DragSVG(), provider.DragKey(), singular, plural)
+	table.InstallDragSupport(provider.DragSVG(), provider.DragKey(), singular, plural)
+	table.InstallDropSupport(provider.DragKey(), widget.StdDropCallback)
 	return table
 }
 

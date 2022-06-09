@@ -23,6 +23,7 @@ import (
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jotrotate"
+	"github.com/richardwilkes/unison"
 )
 
 func main() {
@@ -32,6 +33,7 @@ func main() {
 	cmdline.CopyrightStartYear = "1998"
 	cmdline.CopyrightHolder = "Richard A. Wilkes"
 	cmdline.AppIdentifier = "com.trollworks.gcs"
+	unison.AttachConsole()
 	cl := cmdline.New(true)
 	var textTmplPath string
 	var showCopyrightDateAndExit bool

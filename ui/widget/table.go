@@ -12,41 +12,26 @@
 package widget
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/toolbox/txt"
+	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/unison"
 )
 
-// TableDragData holds the data from a table row drag.
-type TableDragData struct {
-	Table *unison.Table
-	Rows  []unison.TableRowData
-}
-
-// InstallTableDragSupport installs drag support into a table.
-func InstallTableDragSupport(table *unison.Table, svg *unison.SVG, dragKey, singularName, pluralName string) {
-	orig := table.MouseDragCallback
-	table.MouseDragCallback = func(where unison.Point, button int, mod unison.Modifiers) bool {
-		if orig != nil && orig(where, button, mod) {
-			return true
-		}
-		if table.HasSelection() && table.IsDragGesture(where) {
-			data := &TableDragData{
-				Table: table,
-				Rows:  table.SelectedRows(true),
-			}
-			drawable := NewTableDragDrawable(data, svg, singularName, pluralName)
-			size := drawable.LogicalSize()
-			table.StartDataDrag(&unison.DragData{
-				Data:     map[string]any{dragKey: data},
-				Drawable: drawable,
-				Ink:      table.OnBackgroundInk,
-				Offset:   unison.Point{X: 0, Y: -size.Height / 2},
-			})
-		}
-		return false
+// StdDropCallback ... is just a placeholder for now while I work on the real implementation
+func StdDropCallback(drop *unison.TableDrop) {
+	// TODO: Do actual rearrangement... and don't forget undo
+	var name string
+	if drop.TargetParent != nil {
+		name = strings.SplitN(drop.TargetParent.CellDataForSort(xmath.Max(drop.Table.HierarchyColumnIndex, 0)), "\n", 2)[0]
+	} else {
+		name = "<nil>"
 	}
+	fmt.Printf("DROP index: %d, parent: %s\n", drop.TargetIndex, name)
 }
 
 // TableSetupColumnSizes sets the standard column sizing.
