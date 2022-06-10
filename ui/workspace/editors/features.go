@@ -76,7 +76,7 @@ func newFeaturesPanel(entity *gurps.Entity, featureParent fmt.Stringer, features
 		if created := p.createFeatureForType(lastFeatureTypeUsed); created != nil {
 			*features = slices.Insert(*features, 0, created)
 			p.insertFeaturePanel(1, created)
-			unison.DockContainerFor(p).MarkForLayoutRecursively()
+			unison.Ancestor[*unison.DockContainer](p).MarkForLayoutRecursively()
 			widget.MarkModified(p)
 		}
 	}
@@ -139,7 +139,7 @@ func (p *featuresPanel) createBasePanel(f feature.Feature) *unison.Panel {
 			*p.features = slices.Delete(*p.features, i, i+1)
 		}
 		panel.RemoveFromParent()
-		unison.DockContainerFor(p).MarkForLayoutRecursively()
+		unison.Ancestor[*unison.DockContainer](p).MarkForLayoutRecursively()
 		widget.MarkModified(p)
 	}
 	panel.AddChild(deleteButton)
@@ -268,7 +268,7 @@ func (p *featuresPanel) createSkillBonusPanel(f *feature.SkillBonus) *unison.Pan
 			panel.RemoveChildAtIndex(i + j)
 		}
 		p.createSecondarySkillPanels(panel, i, f)
-		unison.DockContainerFor(p).MarkForLayoutRecursively()
+		unison.Ancestor[*unison.DockContainer](p).MarkForLayoutRecursively()
 		widget.MarkModified(p)
 	}
 	criteriaPopup, criteriaField = addStringCriteriaPanel(wrapper, "", i18n.Text("Name Qualifier"), &f.NameCriteria, 1, false)
@@ -426,7 +426,7 @@ func (p *featuresPanel) createWeaponDamageBonusPanel(f *feature.WeaponDamageBonu
 			panel.RemoveChildAtIndex(i + j)
 		}
 		p.createSecondaryWeaponPanels(panel, i, f)
-		unison.DockContainerFor(p).MarkForLayoutRecursively()
+		unison.Ancestor[*unison.DockContainer](p).MarkForLayoutRecursively()
 		widget.MarkModified(p)
 	}
 	criteriaPopup, criteriaField = addStringCriteriaPanel(wrapper, "", i18n.Text("Name Qualifier"), &f.NameCriteria, 1, false)
@@ -595,7 +595,7 @@ func (p *featuresPanel) addTypeSwitcher(parent *unison.Panel, f feature.Feature)
 			i := slices.IndexFunc(list, func(one feature.Feature) bool { return one == f })
 			list[i] = newFeature
 			p.insertFeaturePanel(i+1, newFeature)
-			unison.DockContainerFor(p).MarkForLayoutRecursively()
+			unison.Ancestor[*unison.DockContainer](p).MarkForLayoutRecursively()
 			widget.MarkModified(p)
 		}
 	}

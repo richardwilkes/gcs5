@@ -100,6 +100,19 @@ func (p *equipmentProvider) DragSVG() *unison.SVG {
 	return res.GCSEquipmentSVG
 }
 
+func (p *equipmentProvider) DropShouldMoveData(drop *unison.TableDrop) bool {
+	// Within same table?
+	if drop.Table == drop.TableDragData.Table {
+		return true
+	}
+	// Within same dockable?
+	dockable := unison.Ancestor[unison.Dockable](drop.Table)
+	if dockable != nil && dockable == unison.Ancestor[unison.Dockable](drop.TableDragData.Table) {
+		return true
+	}
+	return false
+}
+
 func (p *equipmentProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Equipment Item"), i18n.Text("Equipment Items")
 }

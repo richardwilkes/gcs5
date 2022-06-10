@@ -206,7 +206,7 @@ func (d *Template) Modified() bool {
 
 // MarkModified implements widget.ModifiableRoot.
 func (d *Template) MarkModified() {
-	if dc := unison.DockContainerFor(d); dc != nil {
+	if dc := unison.Ancestor[*unison.DockContainer](d); dc != nil {
 		dc.UpdateTitle(d)
 	}
 }
@@ -232,7 +232,7 @@ func (d *Template) AttemptClose() bool {
 			return false
 		}
 	}
-	if dc := unison.DockContainerFor(d); dc != nil {
+	if dc := unison.Ancestor[*unison.DockContainer](d); dc != nil {
 		dc.Close(d)
 	}
 	return true
@@ -343,7 +343,7 @@ func (d *Template) Rebuild(full bool) {
 		d.createLists()
 	}
 	widget.DeepSync(d)
-	if dc := unison.DockContainerFor(d); dc != nil {
+	if dc := unison.Ancestor[*unison.DockContainer](d); dc != nil {
 		dc.UpdateTitle(d)
 	}
 }

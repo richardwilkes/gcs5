@@ -222,7 +222,7 @@ func OpenFile(wnd *unison.Window, filePath string) (dockable unison.Dockable, wa
 		return nil, false
 	}
 	if d := ws.LocateFileBackedDockable(filePath); d != nil {
-		dc := unison.DockContainerFor(d)
+		dc := unison.Ancestor[*unison.DockContainer](d)
 		dc.SetCurrentDockable(d)
 		dc.AcquireFocus()
 		return d, true

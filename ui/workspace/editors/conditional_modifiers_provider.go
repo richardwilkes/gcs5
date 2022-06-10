@@ -48,6 +48,10 @@ func (p *condModProvider) DragSVG() *unison.SVG {
 	return nil
 }
 
+func (p *condModProvider) DropShouldMoveData(_ *unison.TableDrop) bool {
+	return false
+}
+
 func (p *condModProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Conditional Modifier"), i18n.Text("Conditional Modifiers")
 }

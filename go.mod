@@ -27,3 +27,5 @@ require (
 	golang.org/x/sys v0.0.0-20220608164250-635b8c9b7f68 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/richardwilkes/unison => ../unison

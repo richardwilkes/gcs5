@@ -72,6 +72,10 @@ func (p *eqpModProvider) DragSVG() *unison.SVG {
 	return res.GCSEquipmentModifiersSVG
 }
 
+func (p *eqpModProvider) DropShouldMoveData(drop *unison.TableDrop) bool {
+	return drop.Table == drop.TableDragData.Table
+}
+
 func (p *eqpModProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Equipment Modifier"), i18n.Text("Equipment Modifiers")
 }

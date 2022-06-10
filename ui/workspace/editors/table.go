@@ -62,7 +62,7 @@ func newTable(parent *unison.Panel, provider TableProvider) *unison.Table {
 	})
 	table.SetTopLevelRows(provider.RowData(table))
 	table.InstallCmdHandlers(constants.OpenEditorItemID, func(_ any) bool { return table.HasSelection() },
-		func(_ any) { provider.OpenEditor(widget.FindRebuildable(table), table) })
+		func(_ any) { provider.OpenEditor(unison.AncestorOrSelf[widget.Rebuildable](table), table) })
 	table.InstallCmdHandlers(constants.OpenOnePageReferenceItemID,
 		func(_ any) bool { return CanOpenPageRef(table) },
 		func(_ any) { OpenPageRef(table) })
@@ -76,7 +76,17 @@ func newTable(parent *unison.Panel, provider TableProvider) *unison.Table {
 	parent.AddChild(table)
 	singular, plural := provider.ItemNames()
 	table.InstallDragSupport(provider.DragSVG(), provider.DragKey(), singular, plural)
-	table.InstallDropSupport(provider.DragKey(), widget.StdDropCallback)
+	table.InstallDropSupport(provider.DragKey(),
+		func(drop *unison.TableDrop) bool {
+			// TODO: shouldMoveDataCallback
+			return true
+		}, func(drop *unison.TableDrop) {
+			// TODO: copyCallback
+		}, func(drop *unison.TableDrop, row, newParent unison.TableRowData) {
+			// TODO: setRowParentCallback
+		}, func(drop *unison.TableDrop, row unison.TableRowData, children []unison.TableRowData) {
+			// TODO: setChildRowsCallback
+		})
 	return table
 }
 
@@ -124,7 +134,7 @@ func deleteTableSelection[T comparableNode](table *unison.Table, topLevelRows []
 		if needSet {
 			setTopLevelRows(topLevelRows)
 		}
-		if rebuilder := widget.FindRebuildable(table); rebuilder != nil {
+		if rebuilder := unison.AncestorOrSelf[widget.Rebuildable](table); rebuilder != nil {
 			rebuilder.Rebuild(true)
 		}
 	}

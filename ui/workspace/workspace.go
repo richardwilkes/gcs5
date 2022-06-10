@@ -125,7 +125,7 @@ func NewWorkspace(wnd *unison.Window) *Workspace {
 	}
 	wnd.SetContent(w.TopDock)
 	w.TopDock.DockTo(w.Navigator, nil, unison.LeftSide)
-	dc := unison.DockContainerFor(w.Navigator)
+	dc := unison.Ancestor[*unison.DockContainer](w.Navigator)
 	w.TopDock.DockTo(w.DocumentDock, dc, unison.RightSide)
 	dc.SetCurrentDockable(w.Navigator)
 	wnd.ClientData()[workspaceClientDataKey] = w
@@ -173,7 +173,7 @@ func (w *Workspace) willClose() {
 // CurrentlyFocusedDockContainer returns the currently focused DockContainer, if any.
 func (w *Workspace) CurrentlyFocusedDockContainer() *unison.DockContainer {
 	if focus := w.Window.Focus(); focus != nil {
-		if dc := unison.DockContainerFor(focus); dc != nil && dc.Dock == w.DocumentDock.Dock {
+		if dc := unison.Ancestor[*unison.DockContainer](focus); dc != nil && dc.Dock == w.DocumentDock.Dock {
 			return dc
 		}
 	}
@@ -316,7 +316,7 @@ func SaveDockable(d FileBackedDockable, saver func(path string) error, setUnmodi
 		return false
 	}
 	setUnmodified()
-	if dc := unison.DockContainerFor(d); dc != nil {
+	if dc := unison.Ancestor[*unison.DockContainer](d); dc != nil {
 		dc.UpdateTitle(d)
 	}
 	return true
@@ -339,7 +339,7 @@ func SaveDockableAs(d FileBackedDockable, extension string, saver func(path stri
 		}
 		setUnmodifiedAndNewPath(path)
 		settings.Global().AddRecentFile(path)
-		if dc := unison.DockContainerFor(d); dc != nil {
+		if dc := unison.Ancestor[*unison.DockContainer](d); dc != nil {
 			dc.UpdateTitle(d)
 		}
 		return true

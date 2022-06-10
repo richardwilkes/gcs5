@@ -358,7 +358,17 @@ func NewTableDockable(filePath, extension string, provider editors.TableProvider
 	widget.TableInstallStdCallbacks(d.table)
 	singular, plural := provider.ItemNames()
 	d.table.InstallDragSupport(provider.DragSVG(), provider.DragKey(), singular, plural)
-	d.table.InstallDropSupport(d.provider.DragKey(), widget.StdDropCallback)
+	d.table.InstallDropSupport(d.provider.DragKey(),
+		func(drop *unison.TableDrop) bool {
+			// TODO: shouldMoveDataCallback
+			return true
+		}, func(drop *unison.TableDrop) {
+			// TODO: copyCallback
+		}, func(drop *unison.TableDrop, row, newParent unison.TableRowData) {
+			// TODO: setRowParentCallback
+		}, func(drop *unison.TableDrop, row unison.TableRowData, children []unison.TableRowData) {
+			// TODO: setChildRowsCallback
+		})
 
 	d.tableHeader = widget.TableCreateHeader(d.table, headers)
 	d.scroll.SetColumnHeader(d.tableHeader)
@@ -532,7 +542,7 @@ func (d *TableDockable) Modified() bool {
 
 // MarkModified implements widget.ModifiableRoot.
 func (d *TableDockable) MarkModified() {
-	if dc := unison.DockContainerFor(d); dc != nil {
+	if dc := unison.Ancestor[*unison.DockContainer](d); dc != nil {
 		dc.UpdateTitle(d)
 	}
 }
@@ -558,7 +568,7 @@ func (d *TableDockable) AttemptClose() bool {
 			return false
 		}
 	}
-	if dc := unison.DockContainerFor(d); dc != nil {
+	if dc := unison.Ancestor[*unison.DockContainer](d); dc != nil {
 		dc.Close(d)
 	}
 	return true
@@ -669,7 +679,7 @@ func (d *TableDockable) Rebuild(_ bool) {
 	sel := editors.RecordTableSelection(d.table)
 	d.table.SetTopLevelRows(d.provider.RowData(d.table))
 	editors.ApplyTableSelection(d.table, sel)
-	if dc := unison.DockContainerFor(d); dc != nil {
+	if dc := unison.Ancestor[*unison.DockContainer](d); dc != nil {
 		dc.UpdateTitle(d)
 	}
 	d.scroll.SetPosition(h, v)

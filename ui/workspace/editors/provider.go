@@ -32,6 +32,7 @@ type TableProvider interface {
 	gurps.EntityProvider
 	DragKey() string
 	DragSVG() *unison.SVG
+	DropShouldMoveData(drop *unison.TableDrop) bool
 	ItemNames() (singular, plural string)
 	Headers() []unison.TableColumnHeader
 	RowData(table *unison.Table) []unison.TableRowData
@@ -41,4 +42,16 @@ type TableProvider interface {
 	OpenEditor(owner widget.Rebuildable, table *unison.Table)
 	CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant)
 	DeleteSelection(table *unison.Table)
+}
+
+// InstallTableDropSupport installs our standard drop support on a table.
+func InstallTableDropSupport(table *unison.Table, provider TableProvider) {
+	table.InstallDropSupport(provider.DragKey(), provider.DropShouldMoveData,
+		func(drop *unison.TableDrop) {
+			// TODO: copyCallback
+		}, func(drop *unison.TableDrop, row, newParent unison.TableRowData) {
+			// TODO: setRowParentCallback
+		}, func(drop *unison.TableDrop, row unison.TableRowData, children []unison.TableRowData) {
+			// TODO: setChildRowsCallback
+		})
 }

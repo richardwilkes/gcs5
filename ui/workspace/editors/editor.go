@@ -120,7 +120,7 @@ func displayEditor[N gurps.Node, D gurps.EditorData[N]](owner widget.Rebuildable
 				}
 			}
 			ws.DocumentDock.DockTo(e, targetLayoutNode, side)
-			if dc = unison.DockContainerFor(e); dc != nil && dc.Group == "" {
+			if dc = unison.Ancestor[*unison.DockContainer](e); dc != nil && dc.Group == "" {
 				dc.Group = group
 			}
 		}
@@ -186,7 +186,7 @@ func (e *editor[N, D]) Modified() bool {
 }
 
 func (e *editor[N, D]) MarkModified() {
-	if dc := unison.DockContainerFor(e); dc != nil {
+	if dc := unison.Ancestor[*unison.DockContainer](e); dc != nil {
 		dc.UpdateTitle(e)
 	}
 	widget.DeepSync(e)
@@ -222,7 +222,7 @@ func (e *editor[N, D]) AttemptClose() bool {
 			return false
 		}
 	}
-	if dc := unison.DockContainerFor(e); dc != nil {
+	if dc := unison.Ancestor[*unison.DockContainer](e); dc != nil {
 		dc.Close(e)
 	}
 	e.owner.AsPanel().RequestFocus()

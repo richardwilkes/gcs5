@@ -52,6 +52,10 @@ func (p *notesProvider) DragSVG() *unison.SVG {
 	return res.GCSNotesSVG
 }
 
+func (p *notesProvider) DropShouldMoveData(drop *unison.TableDrop) bool {
+	return drop.Table == drop.TableDragData.Table
+}
+
 func (p *notesProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Note"), i18n.Text("Notes")
 }

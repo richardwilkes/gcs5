@@ -109,6 +109,10 @@ func (p *weaponsProvider) DragSVG() *unison.SVG {
 	return p.weaponType.SVG()
 }
 
+func (p *weaponsProvider) DropShouldMoveData(drop *unison.TableDrop) bool {
+	return false
+}
+
 func (p *weaponsProvider) ItemNames() (singular, plural string) {
 	return p.weaponType.String(), p.weaponType.AltString()
 }

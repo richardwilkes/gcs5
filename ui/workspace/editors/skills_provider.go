@@ -79,6 +79,10 @@ func (p *skillsProvider) DragSVG() *unison.SVG {
 	return res.GCSSkillsSVG
 }
 
+func (p *skillsProvider) DropShouldMoveData(drop *unison.TableDrop) bool {
+	return drop.Table == drop.TableDragData.Table
+}
+
 func (p *skillsProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Skill"), i18n.Text("Skills")
 }

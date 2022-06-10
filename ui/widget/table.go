@@ -12,27 +12,11 @@
 package widget
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/unison"
 )
-
-// StdDropCallback ... is just a placeholder for now while I work on the real implementation
-func StdDropCallback(drop *unison.TableDrop) {
-	// TODO: Do actual rearrangement... and don't forget undo
-	var name string
-	if drop.TargetParent != nil {
-		name = strings.SplitN(drop.TargetParent.CellDataForSort(xmath.Max(drop.Table.HierarchyColumnIndex, 0)), "\n", 2)[0]
-	} else {
-		name = "<nil>"
-	}
-	fmt.Printf("DROP index: %d, parent: %s\n", drop.TargetIndex, name)
-}
 
 // TableSetupColumnSizes sets the standard column sizing.
 func TableSetupColumnSizes(table *unison.Table, headers []unison.TableColumnHeader) {

@@ -68,6 +68,10 @@ func (p *traitModifierProvider) DragSVG() *unison.SVG {
 	return res.GCSTraitModifiersSVG
 }
 
+func (p *traitModifierProvider) DropShouldMoveData(drop *unison.TableDrop) bool {
+	return drop.Table == drop.TableDragData.Table
+}
+
 func (p *traitModifierProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Trait Modifier"), i18n.Text("Trait Modifiers")
 }

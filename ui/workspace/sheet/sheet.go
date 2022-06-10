@@ -273,7 +273,7 @@ func (s *Sheet) MarkModified() {
 			//       It impinges on interactive typing. Looks like most of the time is spent in updating the tables.
 			//       Unfortunately, there isn't a fast way to determine that the content doesn't need to be refreshed.
 			widget.DeepSync(s)
-			if dc := unison.DockContainerFor(s); dc != nil {
+			if dc := unison.Ancestor[*unison.DockContainer](s); dc != nil {
 				dc.UpdateTitle(s)
 			}
 			s.awaitingUpdate = false
@@ -302,7 +302,7 @@ func (s *Sheet) AttemptClose() bool {
 			return false
 		}
 	}
-	if dc := unison.DockContainerFor(s); dc != nil {
+	if dc := unison.Ancestor[*unison.DockContainer](s); dc != nil {
 		dc.Close(s)
 	}
 	return true
@@ -530,7 +530,7 @@ func (s *Sheet) Rebuild(full bool) {
 		s.createLists()
 	}
 	widget.DeepSync(s)
-	if dc := unison.DockContainerFor(s); dc != nil {
+	if dc := unison.Ancestor[*unison.DockContainer](s); dc != nil {
 		dc.UpdateTitle(s)
 	}
 }

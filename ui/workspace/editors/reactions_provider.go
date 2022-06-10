@@ -48,6 +48,10 @@ func (p *reactionModProvider) DragSVG() *unison.SVG {
 	return nil
 }
 
+func (p *reactionModProvider) DropShouldMoveData(drop *unison.TableDrop) bool {
+	return false
+}
+
 func (p *reactionModProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Reaction Modifier"), i18n.Text("Reaction Modifiers")
 }

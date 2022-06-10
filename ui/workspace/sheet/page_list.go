@@ -182,7 +182,14 @@ func newPageList(owner widget.Rebuildable, provider editors.TableProvider) *Page
 	singular, plural := p.provider.ItemNames()
 	p.table.InstallDragSupport(p.provider.DragSVG(), p.provider.DragKey(), singular, plural)
 	if owner != nil {
-		p.table.InstallDropSupport(p.provider.DragKey(), widget.StdDropCallback)
+		p.table.InstallDropSupport(p.provider.DragKey(), p.provider.DropShouldMoveData,
+			func(drop *unison.TableDrop) {
+				// TODO: copyCallback
+			}, func(drop *unison.TableDrop, row, newParent unison.TableRowData) {
+				// TODO: setRowParentCallback
+			}, func(drop *unison.TableDrop, row unison.TableRowData, children []unison.TableRowData) {
+				// TODO: setChildRowsCallback
+			})
 		p.InstallCmdHandlers(constants.OpenEditorItemID,
 			func(_ any) bool { return p.table.HasSelection() },
 			func(_ any) { p.provider.OpenEditor(owner, p.table) })

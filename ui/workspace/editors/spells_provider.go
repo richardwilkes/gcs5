@@ -89,6 +89,10 @@ func (p *spellsProvider) DragSVG() *unison.SVG {
 	return res.GCSSpellsSVG
 }
 
+func (p *spellsProvider) DropShouldMoveData(drop *unison.TableDrop) bool {
+	return drop.Table == drop.TableDragData.Table
+}
+
 func (p *spellsProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Spell"), i18n.Text("Spells")
 }

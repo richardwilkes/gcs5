@@ -250,7 +250,7 @@ func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison
 		case *gurps.Equipment:
 			item.Equipped = c.Checked
 			if mgr := unison.UndoManagerFor(check); mgr != nil {
-				owner := widget.FindRebuildable(check)
+				owner := unison.AncestorOrSelf[widget.Rebuildable](check)
 				mgr.Add(&unison.UndoEdit[*equipmentAdjuster]{
 					ID:       unison.NextUndoID(),
 					EditName: i18n.Text("Toggle Equipped"),
@@ -274,7 +274,7 @@ func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison
 		case *gurps.TraitModifier:
 			item.Disabled = !c.Checked
 			if mgr := unison.UndoManagerFor(check); mgr != nil {
-				owner := widget.FindRebuildable(check)
+				owner := unison.AncestorOrSelf[widget.Rebuildable](check)
 				mgr.Add(&unison.UndoEdit[*traitModifierAdjuster]{
 					ID:       unison.NextUndoID(),
 					EditName: i18n.Text("Toggle Trait Modifier"),
@@ -298,7 +298,7 @@ func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison
 		case *gurps.EquipmentModifier:
 			item.Disabled = !c.Checked
 			if mgr := unison.UndoManagerFor(check); mgr != nil {
-				owner := widget.FindRebuildable(check)
+				owner := unison.AncestorOrSelf[widget.Rebuildable](check)
 				mgr.Add(&unison.UndoEdit[*equipmentModifierAdjuster]{
 					ID:       unison.NextUndoID(),
 					EditName: i18n.Text("Toggle Equipment Modifier"),
