@@ -94,9 +94,9 @@ func initTraitEditor(e *editor[*gurps.Trait, *gurps.TraitEditData], content *uni
 		}
 	}
 	e.InstallCmdHandlers(constants.NewTraitModifierItemID, unison.AlwaysEnabled,
-		func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, NoItemVariant) })
+		func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, widget.NoItemVariant) })
 	e.InstallCmdHandlers(constants.NewTraitContainerModifierItemID, unison.AlwaysEnabled,
-		func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, ContainerItemVariant) })
+		func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, widget.ContainerItemVariant) })
 	return func() {
 		if levelField != nil {
 			adjustFieldBlank(levelField, e.editorData.PointsPerLevel == 0)

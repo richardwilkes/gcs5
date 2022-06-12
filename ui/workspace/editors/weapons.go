@@ -27,8 +27,8 @@ type weaponsPanel struct {
 	weaponType  weapon.Type
 	allWeapons  *[]*gurps.Weapon
 	weapons     []*gurps.Weapon
-	provider    TableProvider
-	table       *unison.Table
+	provider    widget.TableProvider[*Node[*gurps.Weapon]]
+	table       *unison.Table[*Node[*gurps.Weapon]]
 }
 
 func newWeaponsPanel(cmdRoot widget.Rebuildable, weaponOwner gurps.WeaponOwner, weaponType weapon.Type, weapons *[]*gurps.Weapon) *weaponsPanel {
@@ -61,7 +61,7 @@ func newWeaponsPanel(cmdRoot widget.Rebuildable, weaponOwner gurps.WeaponOwner, 
 		return p
 	}
 	cmdRoot.AsPanel().InstallCmdHandlers(id, unison.AlwaysEnabled,
-		func(_ any) { p.provider.CreateItem(cmdRoot, p.table, NoItemVariant) })
+		func(_ any) { p.provider.CreateItem(cmdRoot, p.table, widget.NoItemVariant) })
 	return p
 }
 
@@ -87,6 +87,6 @@ func (p *weaponsPanel) SetWeapons(weaponType weapon.Type, list []*gurps.Weapon) 
 	}
 	*p.allWeapons = append(append(make([]*gurps.Weapon, 0, len(melee)+len(ranged)), melee...), ranged...)
 	sel := RecordTableSelection(p.table)
-	p.table.SetTopLevelRows(p.provider.RowData(p.table))
+	p.table.SyncToModel()
 	ApplyTableSelection(p.table, sel)
 }

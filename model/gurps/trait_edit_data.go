@@ -45,22 +45,22 @@ type TraitEditData struct {
 
 // CopyFrom implements node.EditorData.
 func (d *TraitEditData) CopyFrom(t *Trait) {
-	d.copyFrom(&t.TraitEditData, t.Container(), false)
+	d.copyFrom(t.Entity, &t.TraitEditData, t.Container(), false)
 }
 
 // ApplyTo implements node.EditorData.
 func (d *TraitEditData) ApplyTo(t *Trait) {
-	t.TraitEditData.copyFrom(d, t.Container(), true)
+	t.TraitEditData.copyFrom(t.Entity, d, t.Container(), true)
 }
 
-func (d *TraitEditData) copyFrom(other *TraitEditData, isContainer, isApply bool) {
+func (d *TraitEditData) copyFrom(entity *Entity, other *TraitEditData, isContainer, isApply bool) {
 	*d = *other
 	d.Tags = txt.CloneStringSlice(d.Tags)
 	d.Modifiers = nil
 	if len(other.Modifiers) != 0 {
 		d.Modifiers = make([]*TraitModifier, 0, len(other.Modifiers))
 		for _, one := range other.Modifiers {
-			d.Modifiers = append(d.Modifiers, one.Clone(nil))
+			d.Modifiers = append(d.Modifiers, one.Clone(entity, nil))
 		}
 	}
 	d.Prereq = d.Prereq.CloneResolvingEmpty(isContainer, isApply)
@@ -68,7 +68,7 @@ func (d *TraitEditData) copyFrom(other *TraitEditData, isContainer, isApply bool
 	if len(other.Weapons) != 0 {
 		d.Weapons = make([]*Weapon, 0, len(other.Weapons))
 		for _, one := range other.Weapons {
-			d.Weapons = append(d.Weapons, one.Clone())
+			d.Weapons = append(d.Weapons, one.Clone(entity, nil))
 		}
 	}
 	d.Features = other.Features.Clone()

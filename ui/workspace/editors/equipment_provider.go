@@ -63,6 +63,7 @@ var (
 )
 
 type equipmentProvider struct {
+	table    *unison.Table[*Node[*gurps.Equipment]]
 	colMap   map[int]int
 	provider gurps.EquipmentListProvider
 	forPage  bool
@@ -70,7 +71,7 @@ type equipmentProvider struct {
 }
 
 // NewEquipmentProvider creates a new table provider for equipment. 'carried' is only relevant if 'forPage' is true.
-func NewEquipmentProvider(provider gurps.EquipmentListProvider, forPage, carried bool) TableProvider {
+func NewEquipmentProvider(provider gurps.EquipmentListProvider, forPage, carried bool) widget.TableProvider[*Node[*gurps.Equipment]] {
 	p := &equipmentProvider{
 		provider: provider,
 		forPage:  forPage,
@@ -88,6 +89,32 @@ func NewEquipmentProvider(provider gurps.EquipmentListProvider, forPage, carried
 	return p
 }
 
+func (p *equipmentProvider) SetTable(table *unison.Table[*Node[*gurps.Equipment]]) {
+	p.table = table
+}
+
+func (p *equipmentProvider) RootRowCount() int {
+	return len(p.equipmentList())
+}
+
+func (p *equipmentProvider) RootRows() []*Node[*gurps.Equipment] {
+	data := p.equipmentList()
+	rows := make([]*Node[*gurps.Equipment], 0, len(data))
+	for _, one := range data {
+		rows = append(rows, NewNode[*gurps.Equipment](p.table, nil, p.colMap, one, p.forPage))
+	}
+	return rows
+}
+
+func (p *equipmentProvider) SetRootRows(rows []*Node[*gurps.Equipment]) {
+	list := ExtractNodeDataFromList(rows)
+	if p.carried {
+		p.provider.SetCarriedEquipmentList(list)
+	} else {
+		p.provider.SetOtherEquipmentList(list)
+	}
+}
+
 func (p *equipmentProvider) Entity() *gurps.Entity {
 	return p.provider.Entity()
 }
@@ -100,7 +127,7 @@ func (p *equipmentProvider) DragSVG() *unison.SVG {
 	return res.GCSEquipmentSVG
 }
 
-func (p *equipmentProvider) DropShouldMoveData(drop *unison.TableDrop) bool {
+func (p *equipmentProvider) DropShouldMoveData(drop *unison.TableDrop[*Node[*gurps.Equipment]]) bool {
 	// Within same table?
 	if drop.Table == drop.TableDragData.Table {
 		return true
@@ -113,40 +140,62 @@ func (p *equipmentProvider) DropShouldMoveData(drop *unison.TableDrop) bool {
 	return false
 }
 
+func (p *equipmentProvider) DropCopyRow(drop *unison.TableDrop[*Node[*gurps.Equipment]], row *Node[*gurps.Equipment]) *Node[*gurps.Equipment] {
+	eqp := ExtractFromRowData[*gurps.Equipment](row).Clone(p.provider.Entity(), nil)
+	return NewNode[*gurps.Equipment](drop.Table, nil, p.colMap, eqp, p.forPage)
+}
+
+func (p *equipmentProvider) DropSetRowChildren(_ *unison.TableDrop[*Node[*gurps.Equipment]], row *Node[*gurps.Equipment], children []*Node[*gurps.Equipment]) {
+	list := make([]*gurps.Equipment, 0, len(children))
+	for _, child := range children {
+		list = append(list, ExtractFromRowData[*gurps.Equipment](child))
+	}
+	if row == nil {
+		if p.carried {
+			p.provider.SetCarriedEquipmentList(list)
+		} else {
+			p.provider.SetOtherEquipmentList(list)
+		}
+	} else {
+		ExtractFromRowData[*gurps.Equipment](row).Children = list
+		row.children = nil
+	}
+}
+
 func (p *equipmentProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Equipment Item"), i18n.Text("Equipment Items")
 }
 
-func (p *equipmentProvider) Headers() []unison.TableColumnHeader {
-	var headers []unison.TableColumnHeader
+func (p *equipmentProvider) Headers() []unison.TableColumnHeader[*Node[*gurps.Equipment]] {
+	var headers []unison.TableColumnHeader[*Node[*gurps.Equipment]]
 	for i := 0; i < len(p.colMap); i++ {
 		switch p.colMap[i] {
 		case gurps.EquipmentEquippedColumn:
-			headers = append(headers, NewEquippedHeader(p.forPage))
+			headers = append(headers, NewEquippedHeader[*gurps.Equipment](p.forPage))
 		case gurps.EquipmentQuantityColumn:
-			headers = append(headers, NewHeader(i18n.Text("#"), i18n.Text("Quantity"), p.forPage))
+			headers = append(headers, NewHeader[*gurps.Equipment](i18n.Text("#"), i18n.Text("Quantity"), p.forPage))
 		case gurps.EquipmentDescriptionColumn:
-			headers = append(headers, NewHeader(p.descriptionText(), "", p.forPage))
+			headers = append(headers, NewHeader[*gurps.Equipment](p.descriptionText(), "", p.forPage))
 		case gurps.EquipmentUsesColumn:
-			headers = append(headers, NewHeader(i18n.Text("Uses"), i18n.Text("The number of uses remaining"), p.forPage))
+			headers = append(headers, NewHeader[*gurps.Equipment](i18n.Text("Uses"), i18n.Text("The number of uses remaining"), p.forPage))
 		case gurps.EquipmentMaxUsesColumn:
-			headers = append(headers, NewHeader(i18n.Text("Uses"), i18n.Text("The maximum number of uses"), p.forPage))
+			headers = append(headers, NewHeader[*gurps.Equipment](i18n.Text("Uses"), i18n.Text("The maximum number of uses"), p.forPage))
 		case gurps.EquipmentTLColumn:
-			headers = append(headers, NewHeader(i18n.Text("TL"), i18n.Text("Tech Level"), p.forPage))
+			headers = append(headers, NewHeader[*gurps.Equipment](i18n.Text("TL"), i18n.Text("Tech Level"), p.forPage))
 		case gurps.EquipmentLCColumn:
-			headers = append(headers, NewHeader(i18n.Text("LC"), i18n.Text("Legality Class"), p.forPage))
+			headers = append(headers, NewHeader[*gurps.Equipment](i18n.Text("LC"), i18n.Text("Legality Class"), p.forPage))
 		case gurps.EquipmentCostColumn:
-			headers = append(headers, NewMoneyHeader(p.forPage))
+			headers = append(headers, NewMoneyHeader[*gurps.Equipment](p.forPage))
 		case gurps.EquipmentExtendedCostColumn:
-			headers = append(headers, NewExtendedMoneyHeader(p.forPage))
+			headers = append(headers, NewExtendedMoneyHeader[*gurps.Equipment](p.forPage))
 		case gurps.EquipmentWeightColumn:
-			headers = append(headers, NewWeightHeader(p.forPage))
+			headers = append(headers, NewWeightHeader[*gurps.Equipment](p.forPage))
 		case gurps.EquipmentExtendedWeightColumn:
-			headers = append(headers, NewExtendedWeightHeader(p.forPage))
+			headers = append(headers, NewExtendedWeightHeader[*gurps.Equipment](p.forPage))
 		case gurps.EquipmentTagsColumn:
-			headers = append(headers, NewHeader(i18n.Text("Tags"), "", p.forPage))
+			headers = append(headers, NewHeader[*gurps.Equipment](i18n.Text("Tags"), "", p.forPage))
 		case gurps.EquipmentReferenceColumn:
-			headers = append(headers, NewPageRefHeader(p.forPage))
+			headers = append(headers, NewPageRefHeader[*gurps.Equipment](p.forPage))
 		default:
 			jot.Fatalf(1, "invalid equipment column: %d", p.colMap[i])
 		}
@@ -154,25 +203,11 @@ func (p *equipmentProvider) Headers() []unison.TableColumnHeader {
 	return headers
 }
 
-func (p *equipmentProvider) RowData(table *unison.Table) []unison.TableRowData {
-	var data []*gurps.Equipment
-	if p.carried {
-		data = p.provider.CarriedEquipmentList()
-	} else {
-		data = p.provider.OtherEquipmentList()
-	}
-	rows := make([]unison.TableRowData, 0, len(data))
-	for _, one := range data {
-		rows = append(rows, NewNode(table, nil, p.colMap, one, p.forPage))
-	}
-	return rows
-}
-
-func (p *equipmentProvider) SyncHeader(headers []unison.TableColumnHeader) {
+func (p *equipmentProvider) SyncHeader(headers []unison.TableColumnHeader[*Node[*gurps.Equipment]]) {
 	if p.forPage {
 		for i := 0; i < len(carriedEquipmentPageColMap); i++ {
 			if carriedEquipmentPageColMap[i] == gurps.EquipmentDescriptionColumn {
-				if header, ok2 := headers[i].(*PageTableColumnHeader); ok2 {
+				if header, ok2 := headers[i].(*PageTableColumnHeader[*gurps.Equipment]); ok2 {
 					header.Label.Text = p.descriptionText()
 				}
 				break
@@ -215,39 +250,43 @@ func (p *equipmentProvider) descriptionText() string {
 	return title
 }
 
-func (p *equipmentProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
+func (p *equipmentProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.Equipment]]) {
 	OpenEditor[*gurps.Equipment](table, func(item *gurps.Equipment) { EditEquipment(owner, item, p.carried) })
 }
 
-func (p *equipmentProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
+func (p *equipmentProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.Equipment]], variant widget.ItemVariant) {
 	topListFunc := p.provider.OtherEquipmentList
 	setTopListFunc := p.provider.SetOtherEquipmentList
 	if p.carried {
 		topListFunc = p.provider.CarriedEquipmentList
 		setTopListFunc = p.provider.SetCarriedEquipmentList
 	}
-	item := gurps.NewEquipment(p.Entity(), nil, variant == ContainerItemVariant)
+	item := gurps.NewEquipment(p.Entity(), nil, variant == widget.ContainerItemVariant)
 	InsertItem[*gurps.Equipment](owner, table, item,
-		func(target, parent *gurps.Equipment) { target.Parent = parent },
 		func(target *gurps.Equipment) []*gurps.Equipment { return target.Children },
 		func(target *gurps.Equipment, children []*gurps.Equipment) { target.Children = children },
-		topListFunc, setTopListFunc, p.RowData,
+		topListFunc, setTopListFunc,
+		func(_ *unison.Table[*Node[*gurps.Equipment]]) []*Node[*gurps.Equipment] { return p.RootRows() },
 		func(target *gurps.Equipment) uuid.UUID { return target.ID })
 	EditEquipment(owner, item, p.carried)
 }
 
-func (p *equipmentProvider) DeleteSelection(table *unison.Table) {
-	var list []*gurps.Equipment
+func (p *equipmentProvider) DeleteSelection(table *unison.Table[*Node[*gurps.Equipment]]) {
+	list := p.equipmentList()
 	var setList func([]*gurps.Equipment)
 	if p.carried {
-		list = p.provider.CarriedEquipmentList()
 		setList = p.provider.SetCarriedEquipmentList
 	} else {
-		list = p.provider.OtherEquipmentList()
 		setList = p.provider.SetOtherEquipmentList
 	}
 	deleteTableSelection(table, list,
 		func(nodes []*gurps.Equipment) { setList(nodes) },
-		func(node *gurps.Equipment) **gurps.Equipment { return &node.Parent },
 		func(node *gurps.Equipment) *[]*gurps.Equipment { return &node.Children })
+}
+
+func (p *equipmentProvider) equipmentList() []*gurps.Equipment {
+	if p.carried {
+		return p.provider.CarriedEquipmentList()
+	}
+	return p.provider.OtherEquipmentList()
 }

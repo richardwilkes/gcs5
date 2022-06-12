@@ -14,12 +14,43 @@ package widget
 import (
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/fxp"
+	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/unison"
 )
 
+// ItemVariant holds the type of item variant to create.
+type ItemVariant int
+
+// Possible values for ItemVariant.
+const (
+	NoItemVariant ItemVariant = iota
+	ContainerItemVariant
+	AlternateItemVariant
+)
+
+// TableProvider defines the methods a table provider must contain.
+type TableProvider[T unison.TableRowConstraint[T]] interface {
+	unison.TableModel[T]
+	gurps.EntityProvider
+	SetTable(table *unison.Table[T])
+	DragKey() string
+	DragSVG() *unison.SVG
+	DropShouldMoveData(drop *unison.TableDrop[T]) bool
+	DropCopyRow(drop *unison.TableDrop[T], row T) T
+	DropSetRowChildren(drop *unison.TableDrop[T], row T, children []T)
+	ItemNames() (singular, plural string)
+	Headers() []unison.TableColumnHeader[T]
+	SyncHeader(headers []unison.TableColumnHeader[T])
+	HierarchyColumnIndex() int
+	ExcessWidthColumnIndex() int
+	OpenEditor(owner Rebuildable, table *unison.Table[T])
+	CreateItem(owner Rebuildable, table *unison.Table[T], variant ItemVariant)
+	DeleteSelection(table *unison.Table[T])
+}
+
 // TableSetupColumnSizes sets the standard column sizing.
-func TableSetupColumnSizes(table *unison.Table, headers []unison.TableColumnHeader) {
+func TableSetupColumnSizes[T unison.TableRowConstraint[T]](table *unison.Table[T], headers []unison.TableColumnHeader[T]) {
 	table.ColumnSizes = make([]unison.ColumnSize, len(headers))
 	for i := range table.ColumnSizes {
 		_, pref, _ := headers[i].AsPanel().Sizes(unison.Size{})
@@ -32,7 +63,7 @@ func TableSetupColumnSizes(table *unison.Table, headers []unison.TableColumnHead
 }
 
 // TableInstallStdCallbacks installs the standard callbacks.
-func TableInstallStdCallbacks(table *unison.Table) {
+func TableInstallStdCallbacks[T unison.TableRowConstraint[T]](table *unison.Table[T]) {
 	mouseDownCallback := table.MouseDownCallback
 	table.MouseDownCallback = func(where unison.Point, button, clickCount int, mod unison.Modifiers) bool {
 		table.RequestFocus()
@@ -49,7 +80,7 @@ func TableInstallStdCallbacks(table *unison.Table) {
 }
 
 // TableCreateHeader creates the standard table header with a flexible sorting mechanism.
-func TableCreateHeader(table *unison.Table, headers []unison.TableColumnHeader) *unison.TableHeader {
+func TableCreateHeader[T unison.TableRowConstraint[T]](table *unison.Table[T], headers []unison.TableColumnHeader[T]) *unison.TableHeader[T] {
 	tableHeader := unison.NewTableHeader(table, headers...)
 	tableHeader.Less = func(s1, s2 string) bool {
 		if n1, err := fxp.FromString(s1); err == nil {
@@ -62,3 +93,32 @@ func TableCreateHeader(table *unison.Table, headers []unison.TableColumnHeader) 
 	}
 	return tableHeader
 }
+
+// InstallTableDropSupport installs our standard drop support on a table.
+func InstallTableDropSupport[T unison.TableRowConstraint[T]](table *unison.Table[T], provider TableProvider[T]) {
+	table.InstallDropSupport(provider.DragKey(), provider.DropShouldMoveData)
+
+	//func(drop *unison.TableDrop[T]) {
+	//	list := make([]T, 0, len(drop.TableDragData.Rows))
+	//	for _, row := range drop.TableDragData.Rows {
+	//		list = append(list, provider.DropCopyRow(drop, row))
+	//	}
+	//	drop.TableDragData.Rows = list
+	//}, provider.DropSetRowChildren,
+	//func(drop *unison.TableDrop[T], moved bool) {
+	//	MarkModified(drop.Table)
+	//	drop.Table.ValidateScrollRoot()
+	//	if rebuilder := unison.Ancestor[Rebuildable](drop.Table); rebuilder != nil {
+	//		rebuilder.Rebuild(true)
+	//	}
+	//	if moved && drop.Table != drop.TableDragData.Table {
+	//		MarkModified(drop.TableDragData.Table)
+	//		drop.TableDragData.Table.ValidateScrollRoot()
+	//		if rebuilder := unison.Ancestor[Rebuildable](drop.TableDragData.Table); rebuilder != nil {
+	//			rebuilder.Rebuild(true)
+	//		}
+	//	}
+	//})
+}
+
+// TODO: Handling of edits to the table that is being drug from isn't happening

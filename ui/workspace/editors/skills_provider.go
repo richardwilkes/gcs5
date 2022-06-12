@@ -44,13 +44,14 @@ var (
 )
 
 type skillsProvider struct {
+	table    *unison.Table[*Node[*gurps.Skill]]
 	colMap   map[int]int
 	provider gurps.SkillListProvider
 	forPage  bool
 }
 
 // NewSkillsProvider creates a new table provider for skills.
-func NewSkillsProvider(provider gurps.SkillListProvider, forPage bool) TableProvider {
+func NewSkillsProvider(provider gurps.SkillListProvider, forPage bool) widget.TableProvider[*Node[*gurps.Skill]] {
 	p := &skillsProvider{
 		provider: provider,
 		forPage:  forPage,
@@ -67,6 +68,27 @@ func NewSkillsProvider(provider gurps.SkillListProvider, forPage bool) TableProv
 	return p
 }
 
+func (p *skillsProvider) SetTable(table *unison.Table[*Node[*gurps.Skill]]) {
+	p.table = table
+}
+
+func (p *skillsProvider) RootRowCount() int {
+	return len(p.provider.SkillList())
+}
+
+func (p *skillsProvider) RootRows() []*Node[*gurps.Skill] {
+	data := p.provider.SkillList()
+	rows := make([]*Node[*gurps.Skill], 0, len(data))
+	for _, one := range data {
+		rows = append(rows, NewNode[*gurps.Skill](p.table, nil, p.colMap, one, p.forPage))
+	}
+	return rows
+}
+
+func (p *skillsProvider) SetRootRows(rows []*Node[*gurps.Skill]) {
+	p.provider.SetSkillList(ExtractNodeDataFromList(rows))
+}
+
 func (p *skillsProvider) Entity() *gurps.Entity {
 	return p.provider.Entity()
 }
@@ -79,32 +101,47 @@ func (p *skillsProvider) DragSVG() *unison.SVG {
 	return res.GCSSkillsSVG
 }
 
-func (p *skillsProvider) DropShouldMoveData(drop *unison.TableDrop) bool {
+func (p *skillsProvider) DropShouldMoveData(drop *unison.TableDrop[*Node[*gurps.Skill]]) bool {
 	return drop.Table == drop.TableDragData.Table
+}
+
+func (p *skillsProvider) DropCopyRow(drop *unison.TableDrop[*Node[*gurps.Skill]], row *Node[*gurps.Skill]) *Node[*gurps.Skill] {
+	skill := ExtractFromRowData[*gurps.Skill](row).Clone(p.provider.Entity(), nil)
+	return NewNode[*gurps.Skill](drop.Table, nil, p.colMap, skill, p.forPage)
+}
+
+func (p *skillsProvider) DropSetRowChildren(_ *unison.TableDrop[*Node[*gurps.Skill]], row *Node[*gurps.Skill], children []*Node[*gurps.Skill]) {
+	list := ExtractNodeDataFromList(children)
+	if row == nil {
+		p.provider.SetSkillList(list)
+	} else {
+		ExtractFromRowData[*gurps.Skill](row).Children = list
+		row.children = nil
+	}
 }
 
 func (p *skillsProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Skill"), i18n.Text("Skills")
 }
 
-func (p *skillsProvider) Headers() []unison.TableColumnHeader {
-	var headers []unison.TableColumnHeader
+func (p *skillsProvider) Headers() []unison.TableColumnHeader[*Node[*gurps.Skill]] {
+	var headers []unison.TableColumnHeader[*Node[*gurps.Skill]]
 	for i := 0; i < len(p.colMap); i++ {
 		switch p.colMap[i] {
 		case gurps.SkillDescriptionColumn:
-			headers = append(headers, NewHeader(i18n.Text("Skill / Technique"), "", p.forPage))
+			headers = append(headers, NewHeader[*gurps.Skill](i18n.Text("Skill / Technique"), "", p.forPage))
 		case gurps.SkillDifficultyColumn:
-			headers = append(headers, NewHeader(i18n.Text("Diff"), i18n.Text("Difficulty"), p.forPage))
+			headers = append(headers, NewHeader[*gurps.Skill](i18n.Text("Diff"), i18n.Text("Difficulty"), p.forPage))
 		case gurps.SkillTagsColumn:
-			headers = append(headers, NewHeader(i18n.Text("Tags"), "", p.forPage))
+			headers = append(headers, NewHeader[*gurps.Skill](i18n.Text("Tags"), "", p.forPage))
 		case gurps.SkillReferenceColumn:
-			headers = append(headers, NewPageRefHeader(p.forPage))
+			headers = append(headers, NewPageRefHeader[*gurps.Skill](p.forPage))
 		case gurps.SkillLevelColumn:
-			headers = append(headers, NewHeader(i18n.Text("SL"), i18n.Text("Skill Level"), p.forPage))
+			headers = append(headers, NewHeader[*gurps.Skill](i18n.Text("SL"), i18n.Text("Skill Level"), p.forPage))
 		case gurps.SkillRelativeLevelColumn:
-			headers = append(headers, NewHeader(i18n.Text("RSL"), i18n.Text("Relative Skill Level"), p.forPage))
+			headers = append(headers, NewHeader[*gurps.Skill](i18n.Text("RSL"), i18n.Text("Relative Skill Level"), p.forPage))
 		case gurps.SkillPointsColumn:
-			headers = append(headers, NewHeader(i18n.Text("Pts"), i18n.Text("Points"), p.forPage))
+			headers = append(headers, NewHeader[*gurps.Skill](i18n.Text("Pts"), i18n.Text("Points"), p.forPage))
 		default:
 			jot.Fatalf(1, "invalid skill column: %d", p.colMap[i])
 		}
@@ -112,16 +149,7 @@ func (p *skillsProvider) Headers() []unison.TableColumnHeader {
 	return headers
 }
 
-func (p *skillsProvider) RowData(table *unison.Table) []unison.TableRowData {
-	data := p.provider.SkillList()
-	rows := make([]unison.TableRowData, 0, len(data))
-	for _, one := range data {
-		rows = append(rows, NewNode(table, nil, p.colMap, one, p.forPage))
-	}
-	return rows
-}
-
-func (p *skillsProvider) SyncHeader(_ []unison.TableColumnHeader) {
+func (p *skillsProvider) SyncHeader(_ []unison.TableColumnHeader[*Node[*gurps.Skill]]) {
 }
 
 func (p *skillsProvider) HierarchyColumnIndex() int {
@@ -137,33 +165,33 @@ func (p *skillsProvider) ExcessWidthColumnIndex() int {
 	return p.HierarchyColumnIndex()
 }
 
-func (p *skillsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
+func (p *skillsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.Skill]]) {
 	OpenEditor[*gurps.Skill](table, func(item *gurps.Skill) { EditSkill(owner, item) })
 }
 
-func (p *skillsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
+func (p *skillsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.Skill]], variant widget.ItemVariant) {
 	var item *gurps.Skill
 	switch variant {
-	case NoItemVariant:
+	case widget.NoItemVariant:
 		item = gurps.NewSkill(p.Entity(), nil, false)
-	case ContainerItemVariant:
+	case widget.ContainerItemVariant:
 		item = gurps.NewSkill(p.Entity(), nil, true)
-	case AlternateItemVariant:
+	case widget.AlternateItemVariant:
 		item = gurps.NewTechnique(p.Entity(), nil, "")
 	default:
 		jot.Fatal(1, "unhandled variant")
 	}
-	InsertItem[*gurps.Skill](owner, table, item, func(target, parent *gurps.Skill) { target.Parent = parent },
+	InsertItem[*gurps.Skill](owner, table, item,
 		func(target *gurps.Skill) []*gurps.Skill { return target.Children },
 		func(target *gurps.Skill, children []*gurps.Skill) { target.Children = children },
-		p.provider.SkillList, p.provider.SetSkillList, p.RowData,
+		p.provider.SkillList, p.provider.SetSkillList,
+		func(_ *unison.Table[*Node[*gurps.Skill]]) []*Node[*gurps.Skill] { return p.RootRows() },
 		func(target *gurps.Skill) uuid.UUID { return target.ID })
 	EditSkill(owner, item)
 }
 
-func (p *skillsProvider) DeleteSelection(table *unison.Table) {
+func (p *skillsProvider) DeleteSelection(table *unison.Table[*Node[*gurps.Skill]]) {
 	deleteTableSelection(table, p.provider.SkillList(),
 		func(nodes []*gurps.Skill) { p.provider.SetSkillList(nodes) },
-		func(node *gurps.Skill) **gurps.Skill { return &node.Parent },
 		func(node *gurps.Skill) *[]*gurps.Skill { return &node.Children })
 }

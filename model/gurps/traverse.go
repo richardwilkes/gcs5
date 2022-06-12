@@ -11,7 +11,9 @@
 
 package gurps
 
-type traversalData[T Node] struct {
+import "golang.org/x/exp/slices"
+
+type traversalData[T Node[T]] struct {
 	list  []T
 	index int
 }
@@ -19,7 +21,7 @@ type traversalData[T Node] struct {
 // Traverse calls the function 'f' for each node and its children in the input list, recursively. Return true from the
 // function to abort early. If excludeContainers is true, then nodes that are containers will not be passed to 'f',
 // although their children will still be processed as usual.
-func Traverse[T Node](f func(T) bool, excludeContainers, excludeChildrenOfDisabledNodes bool, in ...T) {
+func Traverse[T Node[T]](f func(T) bool, excludeContainers, excludeChildrenOfDisabledNodes bool, in ...T) {
 	tracking := []*traversalData[T]{
 		{
 			list:  in,
@@ -39,15 +41,7 @@ func Traverse[T Node](f func(T) bool, excludeContainers, excludeChildrenOfDisabl
 			return
 		}
 		if (enabled || !excludeChildrenOfDisabledNodes) && one.HasChildren() {
-			// TODO: Rework the code so that we can just call something like 'one.NodeChildren()' for the list without conversion
-			children := one.NodeChildren()
-			list := make([]T, 0, len(children))
-			for _, child := range children {
-				if c, ok := child.(T); ok {
-					list = append(list, c)
-				}
-			}
-			tracking = append(tracking, &traversalData[T]{list: list})
+			tracking = append(tracking, &traversalData[T]{list: slices.Clone(one.NodeChildren())})
 		}
 	}
 }

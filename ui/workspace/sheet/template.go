@@ -52,7 +52,11 @@ type Template struct {
 	scale             int
 	content           *templateContent
 	scaleField        *widget.PercentageField
-	Lists             [listCount]*PageList
+	Traits            *PageList[*gurps.Trait]
+	Skills            *PageList[*gurps.Skill]
+	Spells            *PageList[*gurps.Spell]
+	Equipment         *PageList[*gurps.Equipment]
+	Notes             *PageList[*gurps.Note]
 	needsSaveAsPrompt bool
 }
 
@@ -124,37 +128,37 @@ func NewTemplate(filePath string, template *gurps.Template) *Template {
 
 	d.InstallCmdHandlers(constants.SaveItemID, func(_ any) bool { return d.Modified() }, func(_ any) { d.save(false) })
 	d.InstallCmdHandlers(constants.SaveAsItemID, unison.AlwaysEnabled, func(_ any) { d.save(true) })
-	d.installNewItemCmdHandlers(constants.NewTraitItemID, constants.NewTraitContainerItemID, traitsListIndex)
-	d.installNewItemCmdHandlers(constants.NewSkillItemID, constants.NewSkillContainerItemID, skillsListIndex)
-	d.installNewItemCmdHandlers(constants.NewTechniqueItemID, -1, skillsListIndex)
-	d.installNewItemCmdHandlers(constants.NewSpellItemID, constants.NewSpellContainerItemID, spellsListIndex)
-	d.installNewItemCmdHandlers(constants.NewRitualMagicSpellItemID, -1, spellsListIndex)
+	d.installNewItemCmdHandlers(constants.NewTraitItemID, constants.NewTraitContainerItemID, d.Traits)
+	d.installNewItemCmdHandlers(constants.NewSkillItemID, constants.NewSkillContainerItemID, d.Skills)
+	d.installNewItemCmdHandlers(constants.NewTechniqueItemID, -1, d.Skills)
+	d.installNewItemCmdHandlers(constants.NewSpellItemID, constants.NewSpellContainerItemID, d.Spells)
+	d.installNewItemCmdHandlers(constants.NewRitualMagicSpellItemID, -1, d.Spells)
 	d.installNewItemCmdHandlers(constants.NewCarriedEquipmentItemID,
-		constants.NewCarriedEquipmentContainerItemID, carriedEquipmentListIndex)
-	d.installNewItemCmdHandlers(constants.NewOtherEquipmentItemID,
-		constants.NewOtherEquipmentContainerItemID, otherEquipmentListIndex)
-	d.installNewItemCmdHandlers(constants.NewNoteItemID, constants.NewNoteContainerItemID, notesListIndex)
+		constants.NewCarriedEquipmentContainerItemID, d.Equipment)
+	d.installNewItemCmdHandlers(constants.NewNoteItemID, constants.NewNoteContainerItemID, d.Notes)
 	d.InstallCmdHandlers(constants.AddNaturalAttacksItemID, unison.AlwaysEnabled, func(_ any) {
-		editors.InsertItem[*gurps.Trait](d, d.Lists[traitsListIndex].table, gurps.NewNaturalAttacks(nil, nil),
-			func(target, parent *gurps.Trait) { target.Parent = parent },
+		editors.InsertItem[*gurps.Trait](d, d.Traits.table, gurps.NewNaturalAttacks(nil, nil),
 			func(target *gurps.Trait) []*gurps.Trait { return target.Children },
 			func(target *gurps.Trait, children []*gurps.Trait) { target.Children = children },
-			d.template.TraitList, d.template.SetTraitList, d.Lists[traitsListIndex].provider.RowData,
+			d.template.TraitList, d.template.SetTraitList,
+			func(_ *unison.Table[*editors.Node[*gurps.Trait]]) []*editors.Node[*gurps.Trait] {
+				return d.Traits.provider.RootRows()
+			},
 			func(target *gurps.Trait) uuid.UUID { return target.ID })
 	})
 
 	return d
 }
 
-func (d *Template) installNewItemCmdHandlers(itemID, containerID, listIndex int) {
-	variant := editors.NoItemVariant
+func (d *Template) installNewItemCmdHandlers(itemID, containerID int, creator itemCreator) {
+	variant := widget.NoItemVariant
 	if containerID == -1 {
-		variant = editors.AlternateItemVariant
+		variant = widget.AlternateItemVariant
 	} else {
 		d.InstallCmdHandlers(containerID, unison.AlwaysEnabled,
-			func(_ any) { d.Lists[listIndex].CreateItem(d, editors.ContainerItemVariant) })
+			func(_ any) { creator.CreateItem(d, widget.ContainerItemVariant) })
 	}
-	d.InstallCmdHandlers(itemID, unison.AlwaysEnabled, func(_ any) { d.Lists[listIndex].CreateItem(d, variant) })
+	d.InstallCmdHandlers(itemID, unison.AlwaysEnabled, func(_ any) { creator.CreateItem(d, variant) })
 }
 
 // DockableKind implements widget.DockableKind
@@ -262,14 +266,21 @@ func (d *Template) save(forceSaveAs bool) bool {
 
 func (d *Template) createLists() {
 	h, v := d.scroll.Position()
-	refocusOn := -1
+	var refocusOnKey string
+	var refocusOn unison.Paneler
 	if wnd := d.Window(); wnd != nil {
 		if focus := wnd.Focus(); focus != nil {
-			for i, one := range d.Lists {
-				if one.table.Self == focus.Self {
-					refocusOn = i
-					break
-				}
+			switch focus.Self {
+			case d.Traits:
+				refocusOnKey = gurps.BlockLayoutTraitsKey
+			case d.Skills:
+				refocusOnKey = gurps.BlockLayoutSkillsKey
+			case d.Spells:
+				refocusOnKey = gurps.BlockLayoutSpellsKey
+			case d.Equipment:
+				refocusOnKey = gurps.BlockLayoutEquipmentKey
+			case d.Notes:
+				refocusOnKey = gurps.BlockLayoutNotesKey
 			}
 		}
 	}
@@ -279,20 +290,35 @@ func (d *Template) createLists() {
 		for _, c := range col {
 			switch c {
 			case gurps.BlockLayoutTraitsKey:
-				d.Lists[traitsListIndex] = NewTraitsPageList(d, d.template)
-				rowPanel.AddChild(d.Lists[traitsListIndex])
+				d.Traits = NewTraitsPageList(d, d.template)
+				rowPanel.AddChild(d.Traits)
+				if c == refocusOnKey {
+					refocusOn = d.Traits.table
+				}
 			case gurps.BlockLayoutSkillsKey:
-				d.Lists[skillsListIndex] = NewSkillsPageList(d, d.template)
-				rowPanel.AddChild(d.Lists[skillsListIndex])
+				d.Skills = NewSkillsPageList(d, d.template)
+				rowPanel.AddChild(d.Skills)
+				if c == refocusOnKey {
+					refocusOn = d.Skills.table
+				}
 			case gurps.BlockLayoutSpellsKey:
-				d.Lists[spellsListIndex] = NewSpellsPageList(d, d.template)
-				rowPanel.AddChild(d.Lists[spellsListIndex])
+				d.Spells = NewSpellsPageList(d, d.template)
+				rowPanel.AddChild(d.Spells)
+				if c == refocusOnKey {
+					refocusOn = d.Spells.table
+				}
 			case gurps.BlockLayoutEquipmentKey:
-				d.Lists[carriedEquipmentListIndex] = NewCarriedEquipmentPageList(d, d.template)
-				rowPanel.AddChild(d.Lists[carriedEquipmentListIndex])
+				d.Equipment = NewCarriedEquipmentPageList(d, d.template)
+				rowPanel.AddChild(d.Equipment)
+				if c == refocusOnKey {
+					refocusOn = d.Equipment.table
+				}
 			case gurps.BlockLayoutNotesKey:
-				d.Lists[notesListIndex] = NewNotesPageList(d, d.template)
-				rowPanel.AddChild(d.Lists[notesListIndex])
+				d.Notes = NewNotesPageList(d, d.template)
+				rowPanel.AddChild(d.Notes)
+				if c == refocusOnKey {
+					refocusOn = d.Notes.table
+				}
 			}
 		}
 		if len(rowPanel.Children()) != 0 {
@@ -311,8 +337,8 @@ func (d *Template) createLists() {
 		}
 	}
 	d.content.ApplyPreferredSize()
-	if refocusOn != -1 {
-		d.Lists[refocusOn].table.RequestFocus()
+	if refocusOn != nil {
+		refocusOn.AsPanel().RequestFocus()
 	}
 	d.scroll.SetPosition(h, v)
 }
@@ -327,18 +353,17 @@ func (d *Template) SheetSettingsUpdated(entity *gurps.Entity, blockLayout bool) 
 // Rebuild implements widget.Rebuildable.
 func (d *Template) Rebuild(full bool) {
 	if full {
-		selMap := make([]map[uuid.UUID]bool, listCount)
-		for i, one := range d.Lists {
-			if one != nil {
-				selMap[i] = one.RecordSelection()
-			}
-		}
+		traitsSelMap := d.Traits.RecordSelection()
+		skillsSelMap := d.Skills.RecordSelection()
+		spellsSelMap := d.Spells.RecordSelection()
+		equipmentSelMap := d.Equipment.RecordSelection()
+		notesSelMap := d.Notes.RecordSelection()
 		defer func() {
-			for i, one := range d.Lists {
-				if one != nil {
-					one.ApplySelection(selMap[i])
-				}
-			}
+			d.Traits.ApplySelection(traitsSelMap)
+			d.Skills.ApplySelection(skillsSelMap)
+			d.Spells.ApplySelection(spellsSelMap)
+			d.Equipment.ApplySelection(equipmentSelMap)
+			d.Notes.ApplySelection(notesSelMap)
 		}()
 		d.createLists()
 	}

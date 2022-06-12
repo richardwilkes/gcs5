@@ -19,11 +19,9 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-type adjustSkillLevelListUndoEdit = *unison.UndoEdit[*adjustRawPointsList]
-
-func canAdjustSkillLevel(table *unison.Table, increment bool) bool {
+func canAdjustSkillLevel[T gurps.NodeConstraint[T]](table *unison.Table[*editors.Node[T]], increment bool) bool {
 	for _, row := range table.SelectedRows(false) {
-		if provider := editors.ExtractFromRowData[gurps.SkillAdjustmentProvider](row); provider != nil && !provider.Container() {
+		if provider, ok := row.Data().(gurps.SkillAdjustmentProvider[T]); ok && !provider.Container() {
 			if increment || provider.RawPoints() > 0 {
 				return true
 			}
@@ -32,19 +30,19 @@ func canAdjustSkillLevel(table *unison.Table, increment bool) bool {
 	return false
 }
 
-func adjustSkillLevel(owner widget.Rebuildable, table *unison.Table, increment bool) {
-	before := &adjustRawPointsList{Owner: owner}
-	after := &adjustRawPointsList{Owner: owner}
+func adjustSkillLevel[T gurps.NodeConstraint[T]](owner widget.Rebuildable, table *unison.Table[*editors.Node[T]], increment bool) {
+	before := &adjustRawPointsList[T]{Owner: owner}
+	after := &adjustRawPointsList[T]{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if provider := editors.ExtractFromRowData[gurps.SkillAdjustmentProvider](row); provider != nil {
+		if provider, ok := row.Data().(gurps.SkillAdjustmentProvider[T]); ok {
 			if increment || provider.RawPoints() > 0 {
-				before.List = append(before.List, newRawPointsAdjuster(provider))
+				before.List = append(before.List, newRawPointsAdjuster[T](provider))
 				if increment {
 					provider.IncrementSkillLevel()
 				} else {
 					provider.DecrementSkillLevel()
 				}
-				after.List = append(after.List, newRawPointsAdjuster(provider))
+				after.List = append(after.List, newRawPointsAdjuster[T](provider))
 			}
 		}
 	}
@@ -56,11 +54,11 @@ func adjustSkillLevel(owner widget.Rebuildable, table *unison.Table, increment b
 			} else {
 				name = i18n.Text("Decrease Skill Level")
 			}
-			mgr.Add(&unison.UndoEdit[*adjustRawPointsList]{
+			mgr.Add(&unison.UndoEdit[*adjustRawPointsList[T]]{
 				ID:         unison.NextUndoID(),
 				EditName:   name,
-				UndoFunc:   func(edit adjustSkillLevelListUndoEdit) { edit.BeforeData.Apply() },
-				RedoFunc:   func(edit adjustSkillLevelListUndoEdit) { edit.AfterData.Apply() },
+				UndoFunc:   func(edit *unison.UndoEdit[*adjustRawPointsList[T]]) { edit.BeforeData.Apply() },
+				RedoFunc:   func(edit *unison.UndoEdit[*adjustRawPointsList[T]]) { edit.AfterData.Apply() },
 				BeforeData: before,
 				AfterData:  after,
 			})

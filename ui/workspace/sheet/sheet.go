@@ -35,20 +35,6 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-const (
-	reactionsListIndex = iota
-	conditionalModifiersListIndex
-	meleeWeaponsListIndex
-	rangedWeaponsListIndex
-	traitsListIndex
-	skillsListIndex
-	spellsListIndex
-	carriedEquipmentListIndex
-	otherEquipmentListIndex
-	notesListIndex
-	listCount
-)
-
 var (
 	_ workspace.FileBackedDockable = &Sheet{}
 	_ unison.UndoManagerProvider   = &Sheet{}
@@ -58,32 +44,45 @@ var (
 	_ unison.TabCloser             = &Sheet{}
 )
 
+type itemCreator interface {
+	CreateItem(widget.Rebuildable, widget.ItemVariant)
+}
+
 // Sheet holds the view for a GURPS character sheet.
 type Sheet struct {
 	unison.Panel
-	path               string
-	undoMgr            *unison.UndoManager
-	scroll             *unison.ScrollPanel
-	entity             *gurps.Entity
-	crc                uint64
-	scale              int
-	scaleField         *widget.PercentageField
-	pages              *unison.Panel
-	PortraitPanel      *PortraitPanel
-	IdentityPanel      *IdentityPanel
-	MiscPanel          *MiscPanel
-	DescriptionPanel   *DescriptionPanel
-	PointsPanel        *PointsPanel
-	PrimaryAttrPanel   *PrimaryAttrPanel
-	SecondaryAttrPanel *SecondaryAttrPanel
-	PointPoolsPanel    *PointPoolsPanel
-	BodyPanel          *BodyPanel
-	EncumbrancePanel   *EncumbrancePanel
-	LiftingPanel       *LiftingPanel
-	DamagePanel        *DamagePanel
-	Lists              [listCount]*PageList
-	awaitingUpdate     bool
-	needsSaveAsPrompt  bool
+	path                 string
+	undoMgr              *unison.UndoManager
+	scroll               *unison.ScrollPanel
+	entity               *gurps.Entity
+	crc                  uint64
+	scale                int
+	scaleField           *widget.PercentageField
+	pages                *unison.Panel
+	PortraitPanel        *PortraitPanel
+	IdentityPanel        *IdentityPanel
+	MiscPanel            *MiscPanel
+	DescriptionPanel     *DescriptionPanel
+	PointsPanel          *PointsPanel
+	PrimaryAttrPanel     *PrimaryAttrPanel
+	SecondaryAttrPanel   *SecondaryAttrPanel
+	PointPoolsPanel      *PointPoolsPanel
+	BodyPanel            *BodyPanel
+	EncumbrancePanel     *EncumbrancePanel
+	LiftingPanel         *LiftingPanel
+	DamagePanel          *DamagePanel
+	Reactions            *PageList[*gurps.ConditionalModifier]
+	ConditionalModifiers *PageList[*gurps.ConditionalModifier]
+	MeleeWeapons         *PageList[*gurps.Weapon]
+	RangedWeapons        *PageList[*gurps.Weapon]
+	Traits               *PageList[*gurps.Trait]
+	Skills               *PageList[*gurps.Skill]
+	Spells               *PageList[*gurps.Spell]
+	CarriedEquipment     *PageList[*gurps.Equipment]
+	OtherEquipment       *PageList[*gurps.Equipment]
+	Notes                *PageList[*gurps.Note]
+	awaitingUpdate       bool
+	needsSaveAsPrompt    bool
 }
 
 // ActiveSheet returns the currently active sheet.
@@ -178,37 +177,39 @@ func NewSheet(filePath string, entity *gurps.Entity) *Sheet {
 
 	s.InstallCmdHandlers(constants.SaveItemID, func(_ any) bool { return s.Modified() }, func(_ any) { s.save(false) })
 	s.InstallCmdHandlers(constants.SaveAsItemID, unison.AlwaysEnabled, func(_ any) { s.save(true) })
-	s.installNewItemCmdHandlers(constants.NewTraitItemID, constants.NewTraitContainerItemID, traitsListIndex)
-	s.installNewItemCmdHandlers(constants.NewSkillItemID, constants.NewSkillContainerItemID, skillsListIndex)
-	s.installNewItemCmdHandlers(constants.NewTechniqueItemID, -1, skillsListIndex)
-	s.installNewItemCmdHandlers(constants.NewSpellItemID, constants.NewSpellContainerItemID, spellsListIndex)
-	s.installNewItemCmdHandlers(constants.NewRitualMagicSpellItemID, -1, spellsListIndex)
-	s.installNewItemCmdHandlers(constants.NewCarriedEquipmentItemID,
-		constants.NewCarriedEquipmentContainerItemID, carriedEquipmentListIndex)
-	s.installNewItemCmdHandlers(constants.NewOtherEquipmentItemID,
-		constants.NewOtherEquipmentContainerItemID, otherEquipmentListIndex)
-	s.installNewItemCmdHandlers(constants.NewNoteItemID, constants.NewNoteContainerItemID, notesListIndex)
+	s.installNewItemCmdHandlers(constants.NewTraitItemID, constants.NewTraitContainerItemID, s.Traits)
+	s.installNewItemCmdHandlers(constants.NewSkillItemID, constants.NewSkillContainerItemID, s.Skills)
+	s.installNewItemCmdHandlers(constants.NewTechniqueItemID, -1, s.Skills)
+	s.installNewItemCmdHandlers(constants.NewSpellItemID, constants.NewSpellContainerItemID, s.Spells)
+	s.installNewItemCmdHandlers(constants.NewRitualMagicSpellItemID, -1, s.Spells)
+	s.installNewItemCmdHandlers(constants.NewCarriedEquipmentItemID, constants.NewCarriedEquipmentContainerItemID,
+		s.CarriedEquipment)
+	s.installNewItemCmdHandlers(constants.NewOtherEquipmentItemID, constants.NewOtherEquipmentContainerItemID,
+		s.OtherEquipment)
+	s.installNewItemCmdHandlers(constants.NewNoteItemID, constants.NewNoteContainerItemID, s.Notes)
 	s.InstallCmdHandlers(constants.AddNaturalAttacksItemID, unison.AlwaysEnabled, func(_ any) {
-		editors.InsertItem[*gurps.Trait](s, s.Lists[traitsListIndex].table, gurps.NewNaturalAttacks(s.entity, nil),
-			func(target, parent *gurps.Trait) { target.Parent = parent },
+		editors.InsertItem[*gurps.Trait](s, s.Traits.table, gurps.NewNaturalAttacks(s.entity, nil),
 			func(target *gurps.Trait) []*gurps.Trait { return target.Children },
 			func(target *gurps.Trait, children []*gurps.Trait) { target.Children = children },
-			s.entity.TraitList, s.entity.SetTraitList, s.Lists[traitsListIndex].provider.RowData,
+			s.entity.TraitList, s.entity.SetTraitList,
+			func(_ *unison.Table[*editors.Node[*gurps.Trait]]) []*editors.Node[*gurps.Trait] {
+				return s.Traits.provider.RootRows()
+			},
 			func(target *gurps.Trait) uuid.UUID { return target.ID })
 	})
 
 	return s
 }
 
-func (s *Sheet) installNewItemCmdHandlers(itemID, containerID, listIndex int) {
-	variant := editors.NoItemVariant
+func (s *Sheet) installNewItemCmdHandlers(itemID, containerID int, creator itemCreator) {
+	variant := widget.NoItemVariant
 	if containerID == -1 {
-		variant = editors.AlternateItemVariant
+		variant = widget.AlternateItemVariant
 	} else {
 		s.InstallCmdHandlers(containerID, unison.AlwaysEnabled,
-			func(_ any) { s.Lists[listIndex].CreateItem(s, editors.ContainerItemVariant) })
+			func(_ any) { creator.CreateItem(s, widget.ContainerItemVariant) })
 	}
-	s.InstallCmdHandlers(itemID, unison.AlwaysEnabled, func(_ any) { s.Lists[listIndex].CreateItem(s, variant) })
+	s.InstallCmdHandlers(itemID, unison.AlwaysEnabled, func(_ any) { creator.CreateItem(s, variant) })
 }
 
 // DockableKind implements widget.DockableKind
@@ -429,14 +430,31 @@ func (s *Sheet) createLists() {
 		return
 	}
 	h, v := s.scroll.Position()
-	refocusOn := -1
+	var refocusOnKey string
+	var refocusOn unison.Paneler
 	if wnd := s.Window(); wnd != nil {
 		if focus := wnd.Focus(); focus != nil {
-			for i, one := range s.Lists {
-				if one.table.Self == focus.Self {
-					refocusOn = i
-					break
-				}
+			switch focus.Self {
+			case s.Reactions:
+				refocusOnKey = gurps.BlockLayoutReactionsKey
+			case s.ConditionalModifiers:
+				refocusOnKey = gurps.BlockLayoutConditionalModifiersKey
+			case s.MeleeWeapons:
+				refocusOnKey = gurps.BlockLayoutMeleeKey
+			case s.RangedWeapons:
+				refocusOnKey = gurps.BlockLayoutRangedKey
+			case s.Traits:
+				refocusOnKey = gurps.BlockLayoutTraitsKey
+			case s.Skills:
+				refocusOnKey = gurps.BlockLayoutSkillsKey
+			case s.Spells:
+				refocusOnKey = gurps.BlockLayoutSpellsKey
+			case s.CarriedEquipment:
+				refocusOnKey = gurps.BlockLayoutEquipmentKey
+			case s.OtherEquipment:
+				refocusOnKey = gurps.BlockLayoutOtherEquipmentKey
+			case s.Notes:
+				refocusOnKey = gurps.BlockLayoutNotesKey
 			}
 		}
 	}
@@ -461,42 +479,72 @@ func (s *Sheet) createLists() {
 		for _, c := range col {
 			switch c {
 			case gurps.BlockLayoutReactionsKey:
-				s.Lists[reactionsListIndex] = NewReactionsPageList(s.entity)
-				rowPanel.AddChild(s.Lists[reactionsListIndex])
+				s.Reactions = NewReactionsPageList(s.entity)
+				rowPanel.AddChild(s.Reactions)
+				if c == refocusOnKey {
+					refocusOn = s.Reactions.table
+				}
 			case gurps.BlockLayoutConditionalModifiersKey:
-				s.Lists[conditionalModifiersListIndex] = NewConditionalModifiersPageList(s.entity)
-				rowPanel.AddChild(s.Lists[conditionalModifiersListIndex])
+				s.ConditionalModifiers = NewConditionalModifiersPageList(s.entity)
+				rowPanel.AddChild(s.ConditionalModifiers)
+				if c == refocusOnKey {
+					refocusOn = s.ConditionalModifiers.table
+				}
 			case gurps.BlockLayoutMeleeKey:
-				s.Lists[meleeWeaponsListIndex] = NewMeleeWeaponsPageList(s.entity)
-				rowPanel.AddChild(s.Lists[meleeWeaponsListIndex])
+				s.MeleeWeapons = NewMeleeWeaponsPageList(s.entity)
+				rowPanel.AddChild(s.MeleeWeapons)
+				if c == refocusOnKey {
+					refocusOn = s.MeleeWeapons.table
+				}
 			case gurps.BlockLayoutRangedKey:
-				s.Lists[rangedWeaponsListIndex] = NewRangedWeaponsPageList(s.entity)
-				rowPanel.AddChild(s.Lists[rangedWeaponsListIndex])
+				s.RangedWeapons = NewRangedWeaponsPageList(s.entity)
+				rowPanel.AddChild(s.RangedWeapons)
+				if c == refocusOnKey {
+					refocusOn = s.RangedWeapons.table
+				}
 			case gurps.BlockLayoutTraitsKey:
-				s.Lists[traitsListIndex] = NewTraitsPageList(s, s.entity)
-				rowPanel.AddChild(s.Lists[traitsListIndex])
+				s.Traits = NewTraitsPageList(s, s.entity)
+				rowPanel.AddChild(s.Traits)
+				if c == refocusOnKey {
+					refocusOn = s.Traits.table
+				}
 			case gurps.BlockLayoutSkillsKey:
-				s.Lists[skillsListIndex] = NewSkillsPageList(s, s.entity)
-				rowPanel.AddChild(s.Lists[skillsListIndex])
+				s.Skills = NewSkillsPageList(s, s.entity)
+				rowPanel.AddChild(s.Skills)
+				if c == refocusOnKey {
+					refocusOn = s.Skills.table
+				}
 			case gurps.BlockLayoutSpellsKey:
-				s.Lists[spellsListIndex] = NewSpellsPageList(s, s.entity)
-				rowPanel.AddChild(s.Lists[spellsListIndex])
+				s.Spells = NewSpellsPageList(s, s.entity)
+				rowPanel.AddChild(s.Spells)
+				if c == refocusOnKey {
+					refocusOn = s.Spells.table
+				}
 			case gurps.BlockLayoutEquipmentKey:
-				s.Lists[carriedEquipmentListIndex] = NewCarriedEquipmentPageList(s, s.entity)
-				rowPanel.AddChild(s.Lists[carriedEquipmentListIndex])
+				s.CarriedEquipment = NewCarriedEquipmentPageList(s, s.entity)
+				rowPanel.AddChild(s.CarriedEquipment)
+				if c == refocusOnKey {
+					refocusOn = s.CarriedEquipment.table
+				}
 			case gurps.BlockLayoutOtherEquipmentKey:
-				s.Lists[otherEquipmentListIndex] = NewOtherEquipmentPageList(s, s.entity)
-				rowPanel.AddChild(s.Lists[otherEquipmentListIndex])
+				s.OtherEquipment = NewOtherEquipmentPageList(s, s.entity)
+				rowPanel.AddChild(s.OtherEquipment)
+				if c == refocusOnKey {
+					refocusOn = s.OtherEquipment.table
+				}
 			case gurps.BlockLayoutNotesKey:
-				s.Lists[notesListIndex] = NewNotesPageList(s, s.entity)
-				rowPanel.AddChild(s.Lists[notesListIndex])
+				s.Notes = NewNotesPageList(s, s.entity)
+				rowPanel.AddChild(s.Notes)
+				if c == refocusOnKey {
+					refocusOn = s.Notes.table
+				}
 			}
 		}
 		page.AddChild(rowPanel)
 	}
 	page.ApplyPreferredSize()
-	if refocusOn != -1 {
-		s.Lists[refocusOn].table.RequestFocus()
+	if refocusOn != nil {
+		refocusOn.AsPanel().RequestFocus()
 	}
 	s.scroll.SetPosition(h, v)
 }
@@ -510,22 +558,29 @@ func (s *Sheet) SheetSettingsUpdated(entity *gurps.Entity, blockLayout bool) {
 
 // Rebuild implements widget.Rebuildable.
 func (s *Sheet) Rebuild(full bool) {
-	// TODO: Need to retain previous focus... since in the "full" case, the tables are replaced with new ones, the focus
-	//       is lost if it was within one of the tables.
 	s.entity.Recalculate()
 	if full {
-		selMap := make([]map[uuid.UUID]bool, listCount)
-		for i, one := range s.Lists {
-			if one != nil {
-				selMap[i] = one.RecordSelection()
-			}
-		}
+		reactionsSelMap := s.Reactions.RecordSelection()
+		conditionalModifiersSelMap := s.ConditionalModifiers.RecordSelection()
+		meleeWeaponsSelMap := s.MeleeWeapons.RecordSelection()
+		rangedWeaponsSelMap := s.RangedWeapons.RecordSelection()
+		traitsSelMap := s.Traits.RecordSelection()
+		skillsSelMap := s.Skills.RecordSelection()
+		spellsSelMap := s.Spells.RecordSelection()
+		carriedEquipmentSelMap := s.CarriedEquipment.RecordSelection()
+		otherEquipmentSelMap := s.OtherEquipment.RecordSelection()
+		notesSelMap := s.Notes.RecordSelection()
 		defer func() {
-			for i, one := range s.Lists {
-				if one != nil {
-					one.ApplySelection(selMap[i])
-				}
-			}
+			s.Reactions.ApplySelection(reactionsSelMap)
+			s.ConditionalModifiers.ApplySelection(conditionalModifiersSelMap)
+			s.MeleeWeapons.ApplySelection(meleeWeaponsSelMap)
+			s.RangedWeapons.ApplySelection(rangedWeaponsSelMap)
+			s.Traits.ApplySelection(traitsSelMap)
+			s.Skills.ApplySelection(skillsSelMap)
+			s.Spells.ApplySelection(spellsSelMap)
+			s.CarriedEquipment.ApplySelection(carriedEquipmentSelMap)
+			s.OtherEquipment.ApplySelection(otherEquipmentSelMap)
+			s.Notes.ApplySelection(notesSelMap)
 		}()
 		s.createLists()
 	}

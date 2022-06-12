@@ -37,21 +37,21 @@ import (
 )
 
 var (
-	_ workspace.FileBackedDockable = &TableDockable{}
-	_ unison.UndoManagerProvider   = &TableDockable{}
-	_ widget.ModifiableRoot        = &TableDockable{}
-	_ widget.Rebuildable           = &TableDockable{}
-	_ widget.DockableKind          = &TableDockable{}
-	_ unison.TabCloser             = &TableDockable{}
+	_ workspace.FileBackedDockable = &TableDockable[*gurps.Trait]{}
+	_ unison.UndoManagerProvider   = &TableDockable[*gurps.Trait]{}
+	_ widget.ModifiableRoot        = &TableDockable[*gurps.Trait]{}
+	_ widget.Rebuildable           = &TableDockable[*gurps.Trait]{}
+	_ widget.DockableKind          = &TableDockable[*gurps.Trait]{}
+	_ unison.TabCloser             = &TableDockable[*gurps.Trait]{}
 )
 
 // TableDockable holds the view for a file that contains a (potentially hierarchical) list of data.
-type TableDockable struct {
+type TableDockable[T gurps.NodeConstraint[T]] struct {
 	unison.Panel
 	path              string
 	extension         string
 	undoMgr           *unison.UndoManager
-	provider          editors.TableProvider
+	provider          widget.TableProvider[*editors.Node[T]]
 	saver             func(path string) error
 	canCreateIDs      map[int]bool
 	hierarchyButton   *unison.Button
@@ -63,10 +63,10 @@ type TableDockable struct {
 	searchField       *unison.Field
 	matchesLabel      *unison.Label
 	scroll            *unison.ScrollPanel
-	tableHeader       *unison.TableHeader
-	table             *unison.Table
+	tableHeader       *unison.TableHeader[*editors.Node[T]]
+	table             *unison.Table[*editors.Node[T]]
 	crc               uint64
-	searchResult      []unison.TableRowData
+	searchResult      []*editors.Node[T]
 	searchIndex       int
 	needsSaveAsPrompt bool
 }
@@ -99,7 +99,7 @@ func NewTraitTableDockableFromFile(filePath string) (unison.Dockable, error) {
 }
 
 // NewTraitTableDockable creates a new unison.Dockable for trait list files.
-func NewTraitTableDockable(filePath string, traits []*gurps.Trait) *TableDockable {
+func NewTraitTableDockable(filePath string, traits []*gurps.Trait) *TableDockable[*gurps.Trait] {
 	provider := &traitListProvider{traits: traits}
 	return NewTableDockable(filePath, library.TraitsExt, editors.NewTraitsProvider(provider, false),
 		func(path string) error { return gurps.SaveTraits(provider.TraitList(), path) },
@@ -135,7 +135,7 @@ func NewTraitModifierTableDockableFromFile(filePath string) (unison.Dockable, er
 }
 
 // NewTraitModifierTableDockable creates a new unison.Dockable for trait modifier list files.
-func NewTraitModifierTableDockable(filePath string, modifiers []*gurps.TraitModifier) *TableDockable {
+func NewTraitModifierTableDockable(filePath string, modifiers []*gurps.TraitModifier) *TableDockable[*gurps.TraitModifier] {
 	provider := &traitModifierListProvider{modifiers: modifiers}
 	return NewTableDockable(filePath, library.TraitModifiersExt,
 		editors.NewTraitModifiersProvider(provider, false),
@@ -180,7 +180,7 @@ func NewEquipmentTableDockableFromFile(filePath string) (unison.Dockable, error)
 }
 
 // NewEquipmentTableDockable creates a new unison.Dockable for equipment list files.
-func NewEquipmentTableDockable(filePath string, equipment []*gurps.Equipment) *TableDockable {
+func NewEquipmentTableDockable(filePath string, equipment []*gurps.Equipment) *TableDockable[*gurps.Equipment] {
 	provider := &equipmentListProvider{other: equipment}
 	return NewTableDockable(filePath, library.EquipmentExt, editors.NewEquipmentProvider(provider, false, false),
 		func(path string) error { return gurps.SaveEquipment(provider.OtherEquipmentList(), path) },
@@ -216,7 +216,7 @@ func NewEquipmentModifierTableDockableFromFile(filePath string) (unison.Dockable
 }
 
 // NewEquipmentModifierTableDockable creates a new unison.Dockable for equipment modifier list files.
-func NewEquipmentModifierTableDockable(filePath string, modifiers []*gurps.EquipmentModifier) *TableDockable {
+func NewEquipmentModifierTableDockable(filePath string, modifiers []*gurps.EquipmentModifier) *TableDockable[*gurps.EquipmentModifier] {
 	provider := &equipmentModifierListProvider{modifiers: modifiers}
 	return NewTableDockable(filePath, library.EquipmentModifiersExt,
 		editors.NewEquipmentModifiersProvider(provider, false),
@@ -252,7 +252,7 @@ func NewSkillTableDockableFromFile(filePath string) (unison.Dockable, error) {
 }
 
 // NewSkillTableDockable creates a new unison.Dockable for skill list files.
-func NewSkillTableDockable(filePath string, skills []*gurps.Skill) *TableDockable {
+func NewSkillTableDockable(filePath string, skills []*gurps.Skill) *TableDockable[*gurps.Skill] {
 	provider := &skillListProvider{skills: skills}
 	return NewTableDockable(filePath, library.SkillsExt, editors.NewSkillsProvider(provider, false),
 		func(path string) error { return gurps.SaveSkills(provider.SkillList(), path) },
@@ -287,7 +287,7 @@ func NewSpellTableDockableFromFile(filePath string) (unison.Dockable, error) {
 }
 
 // NewSpellTableDockable creates a new unison.Dockable for spell list files.
-func NewSpellTableDockable(filePath string, spells []*gurps.Spell) *TableDockable {
+func NewSpellTableDockable(filePath string, spells []*gurps.Spell) *TableDockable[*gurps.Spell] {
 	provider := &spellListProvider{spells: spells}
 	return NewTableDockable(filePath, library.SpellsExt, editors.NewSpellsProvider(provider, false),
 		func(path string) error { return gurps.SaveSpells(provider.SpellList(), path) },
@@ -322,7 +322,7 @@ func NewNoteTableDockableFromFile(filePath string) (unison.Dockable, error) {
 }
 
 // NewNoteTableDockable creates a new unison.Dockable for note list files.
-func NewNoteTableDockable(filePath string, notes []*gurps.Note) *TableDockable {
+func NewNoteTableDockable(filePath string, notes []*gurps.Note) *TableDockable[*gurps.Note] {
 	provider := &noteListProvider{notes: notes}
 	return NewTableDockable(filePath, library.NotesExt, editors.NewNotesProvider(provider, false),
 		func(path string) error { return gurps.SaveNotes(provider.NoteList(), path) },
@@ -330,8 +330,8 @@ func NewNoteTableDockable(filePath string, notes []*gurps.Note) *TableDockable {
 }
 
 // NewTableDockable creates a new TableDockable for list data files.
-func NewTableDockable(filePath, extension string, provider editors.TableProvider, saver func(path string) error, canCreateIDs ...int) *TableDockable {
-	d := &TableDockable{
+func NewTableDockable[T gurps.NodeConstraint[T]](filePath, extension string, provider widget.TableProvider[*editors.Node[T]], saver func(path string) error, canCreateIDs ...int) *TableDockable[T] {
+	d := &TableDockable[T]{
 		path:              filePath,
 		extension:         extension,
 		undoMgr:           unison.NewUndoManager(200, func(err error) { jot.Error(err) }),
@@ -339,7 +339,7 @@ func NewTableDockable(filePath, extension string, provider editors.TableProvider
 		saver:             saver,
 		canCreateIDs:      make(map[int]bool),
 		scroll:            unison.NewScrollPanel(),
-		table:             unison.NewTable(),
+		table:             unison.NewTable[*editors.Node[T]](provider),
 		scale:             settings.Global().General.InitialListUIScale,
 		needsSaveAsPrompt: true,
 	}
@@ -350,26 +350,16 @@ func NewTableDockable(filePath, extension string, provider editors.TableProvider
 		d.canCreateIDs[id] = true
 	}
 
+	provider.SetTable(d.table)
 	headers := provider.Headers()
 	widget.TableSetupColumnSizes(d.table, headers)
 	d.table.HierarchyColumnIndex = provider.HierarchyColumnIndex()
-	d.table.SetTopLevelRows(provider.RowData(d.table))
+	d.table.SyncToModel()
 	d.table.SizeColumnsToFit(true)
 	widget.TableInstallStdCallbacks(d.table)
 	singular, plural := provider.ItemNames()
 	d.table.InstallDragSupport(provider.DragSVG(), provider.DragKey(), singular, plural)
-	d.table.InstallDropSupport(d.provider.DragKey(),
-		func(drop *unison.TableDrop) bool {
-			// TODO: shouldMoveDataCallback
-			return true
-		}, func(drop *unison.TableDrop) {
-			// TODO: copyCallback
-		}, func(drop *unison.TableDrop, row, newParent unison.TableRowData) {
-			// TODO: setRowParentCallback
-		}, func(drop *unison.TableDrop, row unison.TableRowData, children []unison.TableRowData) {
-			// TODO: setChildRowsCallback
-		})
-
+	widget.InstallTableDropSupport(d.table, d.provider)
 	d.tableHeader = widget.TableCreateHeader(d.table, headers)
 	d.scroll.SetColumnHeader(d.tableHeader)
 	d.scroll.SetContent(d.table, unison.FillBehavior, unison.FillBehavior)
@@ -472,14 +462,14 @@ func NewTableDockable(filePath, extension string, provider editors.TableProvider
 		func(_ any) bool { return d.table.HasSelection() },
 		func(_ any) { d.provider.DeleteSelection(d.table) })
 	for _, id := range canCreateIDs {
-		variant := editors.ItemVariant(-1)
+		variant := widget.ItemVariant(-1)
 		switch {
 		case id > constants.FirstNonContainerMarker && id < constants.LastNonContainerMarker:
-			variant = editors.NoItemVariant
+			variant = widget.NoItemVariant
 		case id > constants.FirstContainerMarker && id < constants.LastContainerMarker:
-			variant = editors.ContainerItemVariant
+			variant = widget.ContainerItemVariant
 		case id > constants.FirstAlternateNonContainerMarker && id < constants.LastAlternateNonContainerMarker:
-			variant = editors.AlternateItemVariant
+			variant = widget.AlternateItemVariant
 		}
 		if variant != -1 {
 			d.InstallCmdHandlers(id, unison.AlwaysEnabled,
@@ -492,16 +482,16 @@ func NewTableDockable(filePath, extension string, provider editors.TableProvider
 }
 
 // UndoManager implements undo.Provider
-func (d *TableDockable) UndoManager() *unison.UndoManager {
+func (d *TableDockable[T]) UndoManager() *unison.UndoManager {
 	return d.undoMgr
 }
 
 // DockableKind implements widget.DockableKind
-func (d *TableDockable) DockableKind() string {
+func (d *TableDockable[T]) DockableKind() string {
 	return widget.ListDockableKind
 }
 
-func (d *TableDockable) applyScale() {
+func (d *TableDockable[T]) applyScale() {
 	s := float32(d.scale) / 100
 	d.tableHeader.SetScale(s)
 	d.table.SetScale(s)
@@ -509,7 +499,7 @@ func (d *TableDockable) applyScale() {
 }
 
 // TitleIcon implements workspace.FileBackedDockable
-func (d *TableDockable) TitleIcon(suggestedSize unison.Size) unison.Drawable {
+func (d *TableDockable[T]) TitleIcon(suggestedSize unison.Size) unison.Drawable {
 	return &unison.DrawableSVG{
 		SVG:  library.FileInfoFor(d.path).SVG,
 		Size: suggestedSize,
@@ -517,43 +507,43 @@ func (d *TableDockable) TitleIcon(suggestedSize unison.Size) unison.Drawable {
 }
 
 // Title implements workspace.FileBackedDockable
-func (d *TableDockable) Title() string {
+func (d *TableDockable[T]) Title() string {
 	return fs.BaseName(d.path)
 }
 
-func (d *TableDockable) String() string {
+func (d *TableDockable[T]) String() string {
 	return d.Title()
 }
 
 // Tooltip implements workspace.FileBackedDockable
-func (d *TableDockable) Tooltip() string {
+func (d *TableDockable[T]) Tooltip() string {
 	return d.path
 }
 
 // BackingFilePath implements workspace.FileBackedDockable
-func (d *TableDockable) BackingFilePath() string {
+func (d *TableDockable[T]) BackingFilePath() string {
 	return d.path
 }
 
 // Modified implements workspace.FileBackedDockable
-func (d *TableDockable) Modified() bool {
+func (d *TableDockable[T]) Modified() bool {
 	return d.crc != d.crc64()
 }
 
 // MarkModified implements widget.ModifiableRoot.
-func (d *TableDockable) MarkModified() {
+func (d *TableDockable[T]) MarkModified() {
 	if dc := unison.Ancestor[*unison.DockContainer](d); dc != nil {
 		dc.UpdateTitle(d)
 	}
 }
 
 // MayAttemptClose implements unison.TabCloser
-func (d *TableDockable) MayAttemptClose() bool {
+func (d *TableDockable[T]) MayAttemptClose() bool {
 	return workspace.MayAttemptCloseOfGroup(d)
 }
 
 // AttemptClose implements unison.TabCloser
-func (d *TableDockable) AttemptClose() bool {
+func (d *TableDockable[T]) AttemptClose() bool {
 	if !workspace.CloseGroup(d) {
 		return false
 	}
@@ -574,7 +564,7 @@ func (d *TableDockable) AttemptClose() bool {
 	return true
 }
 
-func (d *TableDockable) save(forceSaveAs bool) bool {
+func (d *TableDockable[T]) save(forceSaveAs bool) bool {
 	success := false
 	if forceSaveAs || d.needsSaveAsPrompt {
 		success = workspace.SaveDockableAs(d, d.extension, d.saver, func(path string) {
@@ -590,11 +580,11 @@ func (d *TableDockable) save(forceSaveAs bool) bool {
 	return success
 }
 
-func (d *TableDockable) toggleHierarchy() {
+func (d *TableDockable[T]) toggleHierarchy() {
 	first := true
 	open := false
-	for _, row := range d.table.TopLevelRows() {
-		if row.CanHaveChildRows() {
+	for _, row := range d.table.RootRows() {
+		if row.CanHaveChildren() {
 			if first {
 				first = false
 				open = !row.IsOpen()
@@ -605,58 +595,56 @@ func (d *TableDockable) toggleHierarchy() {
 	d.table.SyncToModel()
 }
 
-func setRowOpen(row unison.TableRowData, open bool) {
+func setRowOpen[T gurps.NodeConstraint[T]](row *editors.Node[T], open bool) {
 	row.SetOpen(open)
-	for _, child := range row.ChildRows() {
-		if child.CanHaveChildRows() {
+	for _, child := range row.Children() {
+		if child.CanHaveChildren() {
 			setRowOpen(child, open)
 		}
 	}
 }
 
-func (d *TableDockable) sizeToFit() {
+func (d *TableDockable[T]) sizeToFit() {
 	d.table.SizeColumnsToFit(true)
 	d.table.MarkForRedraw()
 }
 
-func (d *TableDockable) searchModified() {
+func (d *TableDockable[T]) searchModified() {
 	d.searchIndex = 0
 	d.searchResult = nil
 	text := strings.ToLower(d.searchField.Text())
-	for _, row := range d.table.TopLevelRows() {
+	for _, row := range d.table.RootRows() {
 		d.search(text, row)
 	}
 	d.adjustForMatch()
 }
 
-func (d *TableDockable) search(text string, row unison.TableRowData) {
-	if matcher, ok := row.(editors.Matcher); ok {
-		if matcher.Match(text) {
-			d.searchResult = append(d.searchResult, row)
-		}
+func (d *TableDockable[T]) search(text string, row *editors.Node[T]) {
+	if row.Match(text) {
+		d.searchResult = append(d.searchResult, row)
 	}
-	if row.CanHaveChildRows() {
-		for _, child := range row.ChildRows() {
+	if row.CanHaveChildren() {
+		for _, child := range row.Children() {
 			d.search(text, child)
 		}
 	}
 }
 
-func (d *TableDockable) previousMatch() {
+func (d *TableDockable[T]) previousMatch() {
 	if d.searchIndex > 0 {
 		d.searchIndex--
 		d.adjustForMatch()
 	}
 }
 
-func (d *TableDockable) nextMatch() {
+func (d *TableDockable[T]) nextMatch() {
 	if d.searchIndex < len(d.searchResult)-1 {
 		d.searchIndex++
 		d.adjustForMatch()
 	}
 }
 
-func (d *TableDockable) adjustForMatch() {
+func (d *TableDockable[T]) adjustForMatch() {
 	d.backButton.SetEnabled(d.searchIndex != 0)
 	d.forwardButton.SetEnabled(len(d.searchResult) != 0 && d.searchIndex != len(d.searchResult)-1)
 	if len(d.searchResult) != 0 {
@@ -674,10 +662,10 @@ func (d *TableDockable) adjustForMatch() {
 }
 
 // Rebuild implements widget.Rebuildable.
-func (d *TableDockable) Rebuild(_ bool) {
+func (d *TableDockable[T]) Rebuild(_ bool) {
 	h, v := d.scroll.Position()
 	sel := editors.RecordTableSelection(d.table)
-	d.table.SetTopLevelRows(d.provider.RowData(d.table))
+	d.table.SyncToModel()
 	editors.ApplyTableSelection(d.table, sel)
 	if dc := unison.Ancestor[*unison.DockContainer](d); dc != nil {
 		dc.UpdateTitle(d)
@@ -685,14 +673,12 @@ func (d *TableDockable) Rebuild(_ bool) {
 	d.scroll.SetPosition(h, v)
 }
 
-func (d *TableDockable) crc64() uint64 {
+func (d *TableDockable[T]) crc64() uint64 {
 	var buffer bytes.Buffer
-	rows := d.provider.RowData(d.table)
+	rows := d.provider.RootRows()
 	data := make([]any, 0, len(rows))
 	for _, row := range rows {
-		if n, ok := row.(*editors.Node); ok {
-			data = append(data, n.Data())
-		}
+		data = append(data, row.Data())
 	}
 	if err := jio.Save(context.Background(), &buffer, data); err != nil {
 		return 0

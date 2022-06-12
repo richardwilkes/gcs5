@@ -24,14 +24,15 @@ import (
 const ContainerKeyPostfix = "_container"
 
 // ContainerBase holds the type and ID of the data.
-type ContainerBase[T Node] struct {
+type ContainerBase[T Node[T]] struct {
 	ID       uuid.UUID `json:"id"`
 	Type     string    `json:"type"`
 	IsOpen   bool      `json:"open,omitempty"`     // Container only
 	Children []T       `json:"children,omitempty"` // Container only
+	parent   T
 }
 
-func newContainerBase[T Node](typeKey string, isContainer bool) ContainerBase[T] {
+func newContainerBase[T Node[T]](typeKey string, isContainer bool) ContainerBase[T] {
 	if isContainer {
 		typeKey += ContainerKeyPostfix
 	}
@@ -69,21 +70,29 @@ func (c *ContainerBase[T]) SetOpen(open bool) {
 	c.IsOpen = open && c.Container()
 }
 
+// Parent returns the parent.
+func (c *ContainerBase[T]) Parent() T {
+	return c.parent
+}
+
+// SetParent sets the parent.
+func (c *ContainerBase[T]) SetParent(parent T) {
+	c.parent = parent
+}
+
 // HasChildren returns true if this node has children.
 func (c *ContainerBase[T]) HasChildren() bool {
 	return c.Container() && len(c.Children) > 0
 }
 
 // NodeChildren returns the children of this node, if any.
-func (c *ContainerBase[T]) NodeChildren() []Node {
-	if c.Container() {
-		children := make([]Node, len(c.Children))
-		for i, child := range c.Children {
-			children[i] = child
-		}
-		return children
-	}
-	return nil
+func (c *ContainerBase[T]) NodeChildren() []T {
+	return c.Children
+}
+
+// SetChildren sets the children of this node.
+func (c *ContainerBase[T]) SetChildren(children []T) {
+	c.Children = children
 }
 
 func (c *ContainerBase[T]) clearUnusedFields() {

@@ -44,22 +44,22 @@ type EquipmentEditData struct {
 
 // CopyFrom implements node.EditorData.
 func (d *EquipmentEditData) CopyFrom(e *Equipment) {
-	d.copyFrom(&e.EquipmentEditData, false)
+	d.copyFrom(e.Entity, &e.EquipmentEditData, false)
 }
 
 // ApplyTo implements node.EditorData.
 func (d *EquipmentEditData) ApplyTo(e *Equipment) {
-	e.EquipmentEditData.copyFrom(d, true)
+	e.EquipmentEditData.copyFrom(e.Entity, d, true)
 }
 
-func (d *EquipmentEditData) copyFrom(other *EquipmentEditData, isApply bool) {
+func (d *EquipmentEditData) copyFrom(entity *Entity, other *EquipmentEditData, isApply bool) {
 	*d = *other
 	d.Tags = txt.CloneStringSlice(d.Tags)
 	d.Modifiers = nil
 	if len(other.Modifiers) != 0 {
 		d.Modifiers = make([]*EquipmentModifier, 0, len(other.Modifiers))
 		for _, one := range other.Modifiers {
-			d.Modifiers = append(d.Modifiers, one.Clone(nil))
+			d.Modifiers = append(d.Modifiers, one.Clone(entity, nil))
 		}
 	}
 	d.Prereq = d.Prereq.CloneResolvingEmpty(false, isApply)
@@ -67,7 +67,7 @@ func (d *EquipmentEditData) copyFrom(other *EquipmentEditData, isApply bool) {
 	if len(other.Weapons) != 0 {
 		d.Weapons = make([]*Weapon, 0, len(other.Weapons))
 		for _, one := range other.Weapons {
-			d.Weapons = append(d.Weapons, one.Clone())
+			d.Weapons = append(d.Weapons, one.Clone(entity, nil))
 		}
 	}
 	d.Features = other.Features.Clone()

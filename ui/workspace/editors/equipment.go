@@ -93,9 +93,9 @@ func EditEquipment(owner widget.Rebuildable, equipment *gurps.Equipment, carried
 				content.AddChild(newWeaponsPanel(e, e.target, wt, &e.editorData.Weapons))
 			}
 			e.InstallCmdHandlers(constants.NewEquipmentModifierItemID, unison.AlwaysEnabled,
-				func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, NoItemVariant) })
+				func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, widget.NoItemVariant) })
 			e.InstallCmdHandlers(constants.NewEquipmentContainerModifierItemID, unison.AlwaysEnabled,
-				func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, ContainerItemVariant) })
+				func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, widget.ContainerItemVariant) })
 			return func() {
 				if e.editorData.Uses > e.editorData.MaxUses {
 					usesField.SetText(strconv.Itoa(e.editorData.MaxUses))

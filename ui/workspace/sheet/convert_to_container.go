@@ -49,7 +49,7 @@ func (c *containerConversion) Apply() {
 	c.Target.Type = c.Type
 }
 
-func canConvertToContainer(table *unison.Table) bool {
+func canConvertToContainer(table *unison.Table[*editors.Node[*gurps.Equipment]]) bool {
 	for _, row := range table.SelectedRows(false) {
 		if eqp := editors.ExtractFromRowData[*gurps.Equipment](row); eqp != nil && !eqp.Container() {
 			return true
@@ -58,7 +58,7 @@ func canConvertToContainer(table *unison.Table) bool {
 	return false
 }
 
-func convertToContainer(owner widget.Rebuildable, table *unison.Table) {
+func convertToContainer(owner widget.Rebuildable, table *unison.Table[*editors.Node[*gurps.Equipment]]) {
 	before := &containerConversionList{Owner: owner}
 	after := &containerConversionList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {

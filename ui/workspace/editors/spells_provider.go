@@ -54,13 +54,14 @@ var (
 )
 
 type spellsProvider struct {
+	table    *unison.Table[*Node[*gurps.Spell]]
 	colMap   map[int]int
 	provider gurps.SpellListProvider
 	forPage  bool
 }
 
 // NewSpellsProvider creates a new table provider for spells.
-func NewSpellsProvider(provider gurps.SpellListProvider, forPage bool) TableProvider {
+func NewSpellsProvider(provider gurps.SpellListProvider, forPage bool) widget.TableProvider[*Node[*gurps.Spell]] {
 	p := &spellsProvider{
 		provider: provider,
 		forPage:  forPage,
@@ -77,6 +78,27 @@ func NewSpellsProvider(provider gurps.SpellListProvider, forPage bool) TableProv
 	return p
 }
 
+func (p *spellsProvider) SetTable(table *unison.Table[*Node[*gurps.Spell]]) {
+	p.table = table
+}
+
+func (p *spellsProvider) RootRowCount() int {
+	return len(p.provider.SpellList())
+}
+
+func (p *spellsProvider) RootRows() []*Node[*gurps.Spell] {
+	data := p.provider.SpellList()
+	rows := make([]*Node[*gurps.Spell], 0, len(data))
+	for _, one := range data {
+		rows = append(rows, NewNode[*gurps.Spell](p.table, nil, p.colMap, one, p.forPage))
+	}
+	return rows
+}
+
+func (p *spellsProvider) SetRootRows(rows []*Node[*gurps.Spell]) {
+	p.provider.SetSpellList(ExtractNodeDataFromList(rows))
+}
+
 func (p *spellsProvider) Entity() *gurps.Entity {
 	return p.provider.Entity()
 }
@@ -89,49 +111,67 @@ func (p *spellsProvider) DragSVG() *unison.SVG {
 	return res.GCSSpellsSVG
 }
 
-func (p *spellsProvider) DropShouldMoveData(drop *unison.TableDrop) bool {
+func (p *spellsProvider) DropShouldMoveData(drop *unison.TableDrop[*Node[*gurps.Spell]]) bool {
 	return drop.Table == drop.TableDragData.Table
+}
+
+func (p *spellsProvider) DropCopyRow(drop *unison.TableDrop[*Node[*gurps.Spell]], row *Node[*gurps.Spell]) *Node[*gurps.Spell] {
+	spell := ExtractFromRowData[*gurps.Spell](row).Clone(p.provider.Entity(), nil)
+	return NewNode[*gurps.Spell](drop.Table, nil, p.colMap, spell, p.forPage)
+}
+
+func (p *spellsProvider) DropSetRowChildren(_ *unison.TableDrop[*Node[*gurps.Spell]], row *Node[*gurps.Spell], children []*Node[*gurps.Spell]) {
+	list := make([]*gurps.Spell, 0, len(children))
+	for _, child := range children {
+		list = append(list, ExtractFromRowData[*gurps.Spell](child))
+	}
+	if row == nil {
+		p.provider.SetSpellList(list)
+	} else {
+		ExtractFromRowData[*gurps.Spell](row).Children = list
+		row.children = nil
+	}
 }
 
 func (p *spellsProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Spell"), i18n.Text("Spells")
 }
 
-func (p *spellsProvider) Headers() []unison.TableColumnHeader {
-	var headers []unison.TableColumnHeader
+func (p *spellsProvider) Headers() []unison.TableColumnHeader[*Node[*gurps.Spell]] {
+	var headers []unison.TableColumnHeader[*Node[*gurps.Spell]]
 	for i := 0; i < len(p.colMap); i++ {
 		switch p.colMap[i] {
 		case gurps.SpellDescriptionColumn, gurps.SpellDescriptionForPageColumn:
-			headers = append(headers, NewHeader(i18n.Text("Spell"), "", p.forPage))
+			headers = append(headers, NewHeader[*gurps.Spell](i18n.Text("Spell"), "", p.forPage))
 		case gurps.SpellResistColumn:
-			headers = append(headers, NewHeader(i18n.Text("Resist"), i18n.Text("Resistance"), p.forPage))
+			headers = append(headers, NewHeader[*gurps.Spell](i18n.Text("Resist"), i18n.Text("Resistance"), p.forPage))
 		case gurps.SpellClassColumn:
-			headers = append(headers, NewHeader(i18n.Text("Class"), "", p.forPage))
+			headers = append(headers, NewHeader[*gurps.Spell](i18n.Text("Class"), "", p.forPage))
 		case gurps.SpellCollegeColumn:
-			headers = append(headers, NewHeader(i18n.Text("College"), "", p.forPage))
+			headers = append(headers, NewHeader[*gurps.Spell](i18n.Text("College"), "", p.forPage))
 		case gurps.SpellCastCostColumn:
-			headers = append(headers, NewHeader(i18n.Text("Cost"), i18n.Text("The mana cost to cast the spell"),
+			headers = append(headers, NewHeader[*gurps.Spell](i18n.Text("Cost"), i18n.Text("The mana cost to cast the spell"),
 				p.forPage))
 		case gurps.SpellMaintainCostColumn:
-			headers = append(headers, NewHeader(i18n.Text("Maintain"), i18n.Text("The mana cost to maintain the spell"),
+			headers = append(headers, NewHeader[*gurps.Spell](i18n.Text("Maintain"), i18n.Text("The mana cost to maintain the spell"),
 				p.forPage))
 		case gurps.SpellCastTimeColumn:
-			headers = append(headers, NewHeader(i18n.Text("Time"), i18n.Text("The time required to cast the spell"),
+			headers = append(headers, NewHeader[*gurps.Spell](i18n.Text("Time"), i18n.Text("The time required to cast the spell"),
 				p.forPage))
 		case gurps.SpellDurationColumn:
-			headers = append(headers, NewHeader(i18n.Text("Duration"), "", p.forPage))
+			headers = append(headers, NewHeader[*gurps.Spell](i18n.Text("Duration"), "", p.forPage))
 		case gurps.SpellDifficultyColumn:
-			headers = append(headers, NewHeader(i18n.Text("Diff"), i18n.Text("Difficulty"), p.forPage))
+			headers = append(headers, NewHeader[*gurps.Spell](i18n.Text("Diff"), i18n.Text("Difficulty"), p.forPage))
 		case gurps.SpellTagsColumn:
-			headers = append(headers, NewHeader(i18n.Text("Tags"), "", p.forPage))
+			headers = append(headers, NewHeader[*gurps.Spell](i18n.Text("Tags"), "", p.forPage))
 		case gurps.SpellReferenceColumn:
-			headers = append(headers, NewPageRefHeader(p.forPage))
+			headers = append(headers, NewPageRefHeader[*gurps.Spell](p.forPage))
 		case gurps.SpellLevelColumn:
-			headers = append(headers, NewHeader(i18n.Text("SL"), i18n.Text("Skill Level"), p.forPage))
+			headers = append(headers, NewHeader[*gurps.Spell](i18n.Text("SL"), i18n.Text("Skill Level"), p.forPage))
 		case gurps.SpellRelativeLevelColumn:
-			headers = append(headers, NewHeader(i18n.Text("RSL"), i18n.Text("Relative Skill Level"), p.forPage))
+			headers = append(headers, NewHeader[*gurps.Spell](i18n.Text("RSL"), i18n.Text("Relative Skill Level"), p.forPage))
 		case gurps.SpellPointsColumn:
-			headers = append(headers, NewHeader(i18n.Text("Pts"), i18n.Text("Points"), p.forPage))
+			headers = append(headers, NewHeader[*gurps.Spell](i18n.Text("Pts"), i18n.Text("Points"), p.forPage))
 		default:
 			jot.Fatalf(1, "invalid spell column: %d", p.colMap[i])
 		}
@@ -139,16 +179,7 @@ func (p *spellsProvider) Headers() []unison.TableColumnHeader {
 	return headers
 }
 
-func (p *spellsProvider) RowData(table *unison.Table) []unison.TableRowData {
-	data := p.provider.SpellList()
-	rows := make([]unison.TableRowData, 0, len(data))
-	for _, one := range data {
-		rows = append(rows, NewNode(table, nil, p.colMap, one, p.forPage))
-	}
-	return rows
-}
-
-func (p *spellsProvider) SyncHeader(_ []unison.TableColumnHeader) {
+func (p *spellsProvider) SyncHeader(_ []unison.TableColumnHeader[*Node[*gurps.Spell]]) {
 }
 
 func (p *spellsProvider) HierarchyColumnIndex() int {
@@ -164,33 +195,33 @@ func (p *spellsProvider) ExcessWidthColumnIndex() int {
 	return p.HierarchyColumnIndex()
 }
 
-func (p *spellsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
+func (p *spellsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.Spell]]) {
 	OpenEditor[*gurps.Spell](table, func(item *gurps.Spell) { EditSpell(owner, item) })
 }
 
-func (p *spellsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
+func (p *spellsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.Spell]], variant widget.ItemVariant) {
 	var item *gurps.Spell
 	switch variant {
-	case NoItemVariant:
+	case widget.NoItemVariant:
 		item = gurps.NewSpell(p.Entity(), nil, false)
-	case ContainerItemVariant:
+	case widget.ContainerItemVariant:
 		item = gurps.NewSpell(p.Entity(), nil, true)
-	case AlternateItemVariant:
+	case widget.AlternateItemVariant:
 		item = gurps.NewRitualMagicSpell(p.Entity(), nil, false)
 	default:
 		jot.Fatal(1, "unhandled variant")
 	}
-	InsertItem[*gurps.Spell](owner, table, item, func(target, parent *gurps.Spell) { target.Parent = parent },
+	InsertItem[*gurps.Spell](owner, table, item,
 		func(target *gurps.Spell) []*gurps.Spell { return target.Children },
 		func(target *gurps.Spell, children []*gurps.Spell) { target.Children = children },
-		p.provider.SpellList, p.provider.SetSpellList, p.RowData,
+		p.provider.SpellList, p.provider.SetSpellList,
+		func(_ *unison.Table[*Node[*gurps.Spell]]) []*Node[*gurps.Spell] { return p.RootRows() },
 		func(target *gurps.Spell) uuid.UUID { return target.ID })
 	EditSpell(owner, item)
 }
 
-func (p *spellsProvider) DeleteSelection(table *unison.Table) {
+func (p *spellsProvider) DeleteSelection(table *unison.Table[*Node[*gurps.Spell]]) {
 	deleteTableSelection(table, p.provider.SpellList(),
 		func(nodes []*gurps.Spell) { p.provider.SetSpellList(nodes) },
-		func(node *gurps.Spell) **gurps.Spell { return &node.Parent },
 		func(node *gurps.Spell) *[]*gurps.Spell { return &node.Children })
 }
