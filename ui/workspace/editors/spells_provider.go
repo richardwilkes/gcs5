@@ -111,26 +111,8 @@ func (p *spellsProvider) DragSVG() *unison.SVG {
 	return res.GCSSpellsSVG
 }
 
-func (p *spellsProvider) DropShouldMoveData(drop *unison.TableDrop[*Node[*gurps.Spell]]) bool {
-	return drop.Table == drop.TableDragData.Table
-}
-
-func (p *spellsProvider) DropCopyRow(drop *unison.TableDrop[*Node[*gurps.Spell]], row *Node[*gurps.Spell]) *Node[*gurps.Spell] {
-	spell := ExtractFromRowData[*gurps.Spell](row).Clone(p.provider.Entity(), nil)
-	return NewNode[*gurps.Spell](drop.Table, nil, p.colMap, spell, p.forPage)
-}
-
-func (p *spellsProvider) DropSetRowChildren(_ *unison.TableDrop[*Node[*gurps.Spell]], row *Node[*gurps.Spell], children []*Node[*gurps.Spell]) {
-	list := make([]*gurps.Spell, 0, len(children))
-	for _, child := range children {
-		list = append(list, ExtractFromRowData[*gurps.Spell](child))
-	}
-	if row == nil {
-		p.provider.SetSpellList(list)
-	} else {
-		ExtractFromRowData[*gurps.Spell](row).Children = list
-		row.children = nil
-	}
+func (p *spellsProvider) DropShouldMoveData(from, to *unison.Table[*Node[*gurps.Spell]]) bool {
+	return from == to
 }
 
 func (p *spellsProvider) ItemNames() (singular, plural string) {

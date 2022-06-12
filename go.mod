@@ -8,7 +8,7 @@ require (
 	github.com/richardwilkes/pdf v0.0.0-20220514034211-8275a65f51fc
 	github.com/richardwilkes/rpgtools v1.4.2
 	github.com/richardwilkes/toolbox v1.71.1
-	github.com/richardwilkes/unison v0.19.2-0.20220609235050-e28b2064689d
+	github.com/richardwilkes/unison v0.19.2-0.20220612191038-e590b6dc97f0
 	github.com/stretchr/testify v1.7.2
 	golang.org/x/exp v0.0.0-20220609121020-a51bd0440498
 	golang.org/x/text v0.3.7
@@ -27,5 +27,3 @@ require (
 	golang.org/x/sys v0.0.0-20220610221304-9f5ed59c137d // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/richardwilkes/unison => ../unison

@@ -74,26 +74,8 @@ func (p *notesProvider) DragSVG() *unison.SVG {
 	return res.GCSNotesSVG
 }
 
-func (p *notesProvider) DropShouldMoveData(drop *unison.TableDrop[*Node[*gurps.Note]]) bool {
-	return drop.Table == drop.TableDragData.Table
-}
-
-func (p *notesProvider) DropCopyRow(drop *unison.TableDrop[*Node[*gurps.Note]], row *Node[*gurps.Note]) *Node[*gurps.Note] {
-	note := ExtractFromRowData[*gurps.Note](row).Clone(p.provider.Entity(), nil)
-	return NewNode[*gurps.Note](drop.Table, nil, noteColMap, note, p.forPage)
-}
-
-func (p *notesProvider) DropSetRowChildren(_ *unison.TableDrop[*Node[*gurps.Note]], row *Node[*gurps.Note], children []*Node[*gurps.Note]) {
-	list := make([]*gurps.Note, 0, len(children))
-	for _, child := range children {
-		list = append(list, ExtractFromRowData[*gurps.Note](child))
-	}
-	if row == nil {
-		p.provider.SetNoteList(list)
-	} else {
-		ExtractFromRowData[*gurps.Note](row).Children = list
-		row.children = nil
-	}
+func (p *notesProvider) DropShouldMoveData(from, to *unison.Table[*Node[*gurps.Note]]) bool {
+	return from == to
 }
 
 func (p *notesProvider) ItemNames() (singular, plural string) {

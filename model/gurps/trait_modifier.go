@@ -93,15 +93,18 @@ func NewTraitModifier(entity *Entity, parent *TraitModifier, container bool) *Tr
 	return a
 }
 
-// Clone this TraitModifier, assigning a new id, entity and parent.
-func (a *TraitModifier) Clone(entity *Entity, parent *TraitModifier) *TraitModifier {
+// Clone implements Node.
+func (a *TraitModifier) Clone(entity *Entity, parent *TraitModifier, preserveID bool) *TraitModifier {
 	other := NewTraitModifier(entity, parent, a.Container())
+	if preserveID {
+		other.ID = a.ID
+	}
 	other.IsOpen = a.IsOpen
 	other.TraitModifierEditData.CopyFrom(a)
 	if a.HasChildren() {
 		other.Children = make([]*TraitModifier, 0, len(a.Children))
 		for _, child := range a.Children {
-			other.Children = append(other.Children, child.Clone(entity, other))
+			other.Children = append(other.Children, child.Clone(entity, other, preserveID))
 		}
 	}
 	return other

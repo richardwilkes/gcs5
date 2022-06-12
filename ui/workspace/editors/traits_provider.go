@@ -90,21 +90,8 @@ func (p *traitsProvider) DragSVG() *unison.SVG {
 	return res.GCSTraitsSVG
 }
 
-func (p *traitsProvider) DropShouldMoveData(drop *unison.TableDrop[*Node[*gurps.Trait]]) bool {
-	return drop.Table == drop.TableDragData.Table
-}
-
-func (p *traitsProvider) DropCopyRow(drop *unison.TableDrop[*Node[*gurps.Trait]], row *Node[*gurps.Trait]) *Node[*gurps.Trait] {
-	trait := ExtractFromRowData[*gurps.Trait](row).Clone(p.provider.Entity(), nil)
-	return NewNode[*gurps.Trait](drop.Table, nil, p.colMap, trait, p.forPage)
-}
-
-func (p *traitsProvider) DropSetRowChildren(_ *unison.TableDrop[*Node[*gurps.Trait]], row *Node[*gurps.Trait], children []*Node[*gurps.Trait]) {
-	if row == nil {
-		p.provider.SetTraitList(ExtractNodeDataFromList(children))
-	} else {
-		row.SetChildren(children)
-	}
+func (p *traitsProvider) DropShouldMoveData(from, to *unison.Table[*Node[*gurps.Trait]]) bool {
+	return from == to
 }
 
 func (p *traitsProvider) ItemNames() (singular, plural string) {

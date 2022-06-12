@@ -122,10 +122,14 @@ func NewWeapon(owner WeaponOwner, weaponType weapon.Type) *Weapon {
 	}
 }
 
-// Clone creates a copy of this data.
-func (w *Weapon) Clone(_ *Entity, _ *Weapon) *Weapon {
+// Clone implements Node.
+func (w *Weapon) Clone(_ *Entity, _ *Weapon, preserveID bool) *Weapon {
 	other := *w
-	other.id = uuid.New()
+	if preserveID {
+		other.id = w.id
+	} else {
+		other.id = uuid.New()
+	}
 	other.Damage = *other.Damage.Clone(&other)
 	if other.Defaults != nil {
 		other.Defaults = make([]*SkillDefault, 0, len(w.Defaults))
@@ -698,10 +702,10 @@ func (w *Weapon) SetOwningEntity(_ *Entity) {
 
 // CopyFrom implements node.EditorData.
 func (w *Weapon) CopyFrom(t *Weapon) {
-	*w = *t.Clone(t.Entity(), nil)
+	*w = *t.Clone(t.Entity(), nil, true)
 }
 
 // ApplyTo implements node.EditorData.
 func (w *Weapon) ApplyTo(t *Weapon) {
-	*t = *w.Clone(t.Entity(), nil)
+	*t = *w.Clone(t.Entity(), nil, true)
 }

@@ -69,18 +69,9 @@ func (p *reactionModProvider) DragSVG() *unison.SVG {
 	return nil
 }
 
-func (p *reactionModProvider) DropShouldMoveData(_ *unison.TableDrop[*Node[*gurps.ConditionalModifier]]) bool {
+func (p *reactionModProvider) DropShouldMoveData(_, _ *unison.Table[*Node[*gurps.ConditionalModifier]]) bool {
 	// Not used
 	return false
-}
-
-func (p *reactionModProvider) DropCopyRow(_ *unison.TableDrop[*Node[*gurps.ConditionalModifier]], _ *Node[*gurps.ConditionalModifier]) *Node[*gurps.ConditionalModifier] {
-	// Not used
-	return nil
-}
-
-func (p *reactionModProvider) DropSetRowChildren(_ *unison.TableDrop[*Node[*gurps.ConditionalModifier]], _ *Node[*gurps.ConditionalModifier], _ []*Node[*gurps.ConditionalModifier]) {
-	// Not used
 }
 
 func (p *reactionModProvider) ItemNames() (singular, plural string) {

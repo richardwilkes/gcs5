@@ -130,18 +130,9 @@ func (p *weaponsProvider) DragSVG() *unison.SVG {
 	return p.weaponType.SVG()
 }
 
-func (p *weaponsProvider) DropShouldMoveData(_ *unison.TableDrop[*Node[*gurps.Weapon]]) bool {
+func (p *weaponsProvider) DropShouldMoveData(_, _ *unison.Table[*Node[*gurps.Weapon]]) bool {
 	// Not used
 	return false
-}
-
-func (p *weaponsProvider) DropCopyRow(_ *unison.TableDrop[*Node[*gurps.Weapon]], _ *Node[*gurps.Weapon]) *Node[*gurps.Weapon] {
-	// Not used
-	return nil
-}
-
-func (p *weaponsProvider) DropSetRowChildren(_ *unison.TableDrop[*Node[*gurps.Weapon]], _ *Node[*gurps.Weapon], _ []*Node[*gurps.Weapon]) {
-	// Not used
 }
 
 func (p *weaponsProvider) ItemNames() (singular, plural string) {

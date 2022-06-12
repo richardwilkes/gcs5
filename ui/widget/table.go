@@ -36,9 +36,7 @@ type TableProvider[T unison.TableRowConstraint[T]] interface {
 	SetTable(table *unison.Table[T])
 	DragKey() string
 	DragSVG() *unison.SVG
-	DropShouldMoveData(drop *unison.TableDrop[T]) bool
-	DropCopyRow(drop *unison.TableDrop[T], row T) T
-	DropSetRowChildren(drop *unison.TableDrop[T], row T, children []T)
+	DropShouldMoveData(from, to *unison.Table[T]) bool
 	ItemNames() (singular, plural string)
 	Headers() []unison.TableColumnHeader[T]
 	SyncHeader(headers []unison.TableColumnHeader[T])
@@ -96,7 +94,8 @@ func TableCreateHeader[T unison.TableRowConstraint[T]](table *unison.Table[T], h
 
 // InstallTableDropSupport installs our standard drop support on a table.
 func InstallTableDropSupport[T unison.TableRowConstraint[T]](table *unison.Table[T], provider TableProvider[T]) {
-	table.InstallDropSupport(provider.DragKey(), provider.DropShouldMoveData)
+	// TODO: Revisit this for undo
+	unison.InstallDropSupport[T, any](table, provider.DragKey(), provider.DropShouldMoveData, nil, nil)
 	table.DragRemovedRowsCallback = func() { MarkModified(table) }
 	table.DropOccurredCallback = func() { MarkModified(table) }
 }

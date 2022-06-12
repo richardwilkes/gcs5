@@ -65,7 +65,7 @@ func (d *SpellEditData) copyFrom(entity *Entity, other *SpellEditData, isContain
 	if len(other.Weapons) != 0 {
 		d.Weapons = make([]*Weapon, 0, len(other.Weapons))
 		for _, one := range other.Weapons {
-			d.Weapons = append(d.Weapons, one.Clone(entity, nil))
+			d.Weapons = append(d.Weapons, one.Clone(entity, nil, true))
 		}
 	}
 }

@@ -86,8 +86,8 @@ func NewFileNode(lib *library.Library, filePath string, parent *NavigatorNode) *
 	}
 }
 
-// Clone implements unison.TableRowData. Not permitted at the moment.
-func (n *NavigatorNode) Clone(_ unison.Paneler, _ *NavigatorNode) *NavigatorNode {
+// CloneForTarget implements unison.TableRowData. Not permitted at the moment.
+func (n *NavigatorNode) CloneForTarget(_ unison.Paneler, _ *NavigatorNode) *NavigatorNode {
 	return nil
 }
 

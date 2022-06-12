@@ -127,39 +127,17 @@ func (p *equipmentProvider) DragSVG() *unison.SVG {
 	return res.GCSEquipmentSVG
 }
 
-func (p *equipmentProvider) DropShouldMoveData(drop *unison.TableDrop[*Node[*gurps.Equipment]]) bool {
+func (p *equipmentProvider) DropShouldMoveData(from, to *unison.Table[*Node[*gurps.Equipment]]) bool {
 	// Within same table?
-	if drop.Table == drop.TableDragData.Table {
+	if from == to {
 		return true
 	}
 	// Within same dockable?
-	dockable := unison.Ancestor[unison.Dockable](drop.Table)
-	if dockable != nil && dockable == unison.Ancestor[unison.Dockable](drop.TableDragData.Table) {
+	dockable := unison.Ancestor[unison.Dockable](from)
+	if dockable != nil && dockable == unison.Ancestor[unison.Dockable](to) {
 		return true
 	}
 	return false
-}
-
-func (p *equipmentProvider) DropCopyRow(drop *unison.TableDrop[*Node[*gurps.Equipment]], row *Node[*gurps.Equipment]) *Node[*gurps.Equipment] {
-	eqp := ExtractFromRowData[*gurps.Equipment](row).Clone(p.provider.Entity(), nil)
-	return NewNode[*gurps.Equipment](drop.Table, nil, p.colMap, eqp, p.forPage)
-}
-
-func (p *equipmentProvider) DropSetRowChildren(_ *unison.TableDrop[*Node[*gurps.Equipment]], row *Node[*gurps.Equipment], children []*Node[*gurps.Equipment]) {
-	list := make([]*gurps.Equipment, 0, len(children))
-	for _, child := range children {
-		list = append(list, ExtractFromRowData[*gurps.Equipment](child))
-	}
-	if row == nil {
-		if p.carried {
-			p.provider.SetCarriedEquipmentList(list)
-		} else {
-			p.provider.SetOtherEquipmentList(list)
-		}
-	} else {
-		ExtractFromRowData[*gurps.Equipment](row).Children = list
-		row.children = nil
-	}
 }
 
 func (p *equipmentProvider) ItemNames() (singular, plural string) {

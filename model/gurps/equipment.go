@@ -137,15 +137,18 @@ func NewEquipment(entity *Entity, parent *Equipment, container bool) *Equipment 
 	return &e
 }
 
-// Clone this Trait, assigning a new id, entity and parent.
-func (e *Equipment) Clone(entity *Entity, parent *Equipment) *Equipment {
+// Clone implements Node.
+func (e *Equipment) Clone(entity *Entity, parent *Equipment, preserveID bool) *Equipment {
 	other := NewEquipment(entity, parent, e.Container())
+	if preserveID {
+		other.ID = e.ID
+	}
 	other.IsOpen = e.IsOpen
 	other.EquipmentEditData.CopyFrom(e)
 	if e.HasChildren() {
 		other.Children = make([]*Equipment, 0, len(e.Children))
 		for _, child := range e.Children {
-			other.Children = append(other.Children, child.Clone(entity, other))
+			other.Children = append(other.Children, child.Clone(entity, other, preserveID))
 		}
 	}
 	return other

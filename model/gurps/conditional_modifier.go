@@ -81,13 +81,18 @@ func (m *ConditionalModifier) UUID() uuid.UUID {
 }
 
 // Clone implements Node.
-func (m *ConditionalModifier) Clone(_ *Entity, _ *ConditionalModifier) *ConditionalModifier {
-	return &ConditionalModifier{
-		ID:      uuid.New(),
+func (m *ConditionalModifier) Clone(_ *Entity, _ *ConditionalModifier, preserveID bool) *ConditionalModifier {
+	clone := &ConditionalModifier{
 		From:    m.From,
 		Amounts: slices.Clone(m.Amounts),
 		Sources: slices.Clone(m.Sources),
 	}
+	if preserveID {
+		clone.ID = m.ID
+	} else {
+		clone.ID = uuid.New()
+	}
+	return clone
 }
 
 // Kind returns the kind of data.

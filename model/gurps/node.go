@@ -25,7 +25,7 @@ type NodeConstraint[T Node[T]] interface {
 // Node defines the methods required of nodes in our tables.
 type Node[T any] interface {
 	UUID() uuid.UUID
-	Clone(newEntity *Entity, newParent T) T
+	Clone(newEntity *Entity, newParent T, preserveID bool) T
 	OwningEntity() *Entity
 	SetOwningEntity(entity *Entity)
 	Kind() string

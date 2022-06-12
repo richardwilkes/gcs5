@@ -90,26 +90,8 @@ func (p *traitModifierProvider) DragSVG() *unison.SVG {
 	return res.GCSTraitModifiersSVG
 }
 
-func (p *traitModifierProvider) DropShouldMoveData(drop *unison.TableDrop[*Node[*gurps.TraitModifier]]) bool {
-	return drop.Table == drop.TableDragData.Table
-}
-
-func (p *traitModifierProvider) DropCopyRow(drop *unison.TableDrop[*Node[*gurps.TraitModifier]], row *Node[*gurps.TraitModifier]) *Node[*gurps.TraitModifier] {
-	mod := ExtractFromRowData(row).Clone(p.provider.Entity(), nil)
-	return NewNode[*gurps.TraitModifier](drop.Table, nil, p.colMap, mod, false)
-}
-
-func (p *traitModifierProvider) DropSetRowChildren(_ *unison.TableDrop[*Node[*gurps.TraitModifier]], row *Node[*gurps.TraitModifier], children []*Node[*gurps.TraitModifier]) {
-	list := make([]*gurps.TraitModifier, 0, len(children))
-	for _, child := range children {
-		list = append(list, ExtractFromRowData[*gurps.TraitModifier](child))
-	}
-	if row == nil {
-		p.provider.SetTraitModifierList(list)
-	} else {
-		ExtractFromRowData[*gurps.TraitModifier](row).Children = list
-		row.children = nil
-	}
+func (p *traitModifierProvider) DropShouldMoveData(from, to *unison.Table[*Node[*gurps.TraitModifier]]) bool {
+	return from == to
 }
 
 func (p *traitModifierProvider) ItemNames() (singular, plural string) {

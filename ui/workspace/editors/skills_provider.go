@@ -101,23 +101,8 @@ func (p *skillsProvider) DragSVG() *unison.SVG {
 	return res.GCSSkillsSVG
 }
 
-func (p *skillsProvider) DropShouldMoveData(drop *unison.TableDrop[*Node[*gurps.Skill]]) bool {
-	return drop.Table == drop.TableDragData.Table
-}
-
-func (p *skillsProvider) DropCopyRow(drop *unison.TableDrop[*Node[*gurps.Skill]], row *Node[*gurps.Skill]) *Node[*gurps.Skill] {
-	skill := ExtractFromRowData[*gurps.Skill](row).Clone(p.provider.Entity(), nil)
-	return NewNode[*gurps.Skill](drop.Table, nil, p.colMap, skill, p.forPage)
-}
-
-func (p *skillsProvider) DropSetRowChildren(_ *unison.TableDrop[*Node[*gurps.Skill]], row *Node[*gurps.Skill], children []*Node[*gurps.Skill]) {
-	list := ExtractNodeDataFromList(children)
-	if row == nil {
-		p.provider.SetSkillList(list)
-	} else {
-		ExtractFromRowData[*gurps.Skill](row).Children = list
-		row.children = nil
-	}
+func (p *skillsProvider) DropShouldMoveData(from, to *unison.Table[*Node[*gurps.Skill]]) bool {
+	return from == to
 }
 
 func (p *skillsProvider) ItemNames() (singular, plural string) {

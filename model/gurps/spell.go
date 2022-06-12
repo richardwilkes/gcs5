@@ -133,15 +133,18 @@ func newSpell(entity *Entity, parent *Spell, typeKey string, container bool) *Sp
 	return &s
 }
 
-// Clone this Trait, assigning a new id, entity and parent.
-func (s *Spell) Clone(entity *Entity, parent *Spell) *Spell {
+// Clone implements Node.
+func (s *Spell) Clone(entity *Entity, parent *Spell, preserveID bool) *Spell {
 	other := NewSpell(entity, parent, s.Container())
+	if preserveID {
+		other.ID = s.ID
+	}
 	other.IsOpen = s.IsOpen
 	other.SpellEditData.CopyFrom(s)
 	if s.HasChildren() {
 		other.Children = make([]*Spell, 0, len(s.Children))
 		for _, child := range s.Children {
-			other.Children = append(other.Children, child.Clone(entity, other))
+			other.Children = append(other.Children, child.Clone(entity, other, preserveID))
 		}
 	}
 	return other

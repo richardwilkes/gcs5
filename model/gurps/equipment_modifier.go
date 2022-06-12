@@ -95,15 +95,18 @@ func NewEquipmentModifier(entity *Entity, parent *EquipmentModifier, container b
 	return a
 }
 
-// Clone this EquipmentModifier, assigning a new id, entity and parent.
-func (e *EquipmentModifier) Clone(entity *Entity, parent *EquipmentModifier) *EquipmentModifier {
+// Clone implements Node.
+func (e *EquipmentModifier) Clone(entity *Entity, parent *EquipmentModifier, preserveID bool) *EquipmentModifier {
 	other := NewEquipmentModifier(entity, parent, e.Container())
+	if preserveID {
+		other.ID = e.ID
+	}
 	other.IsOpen = e.IsOpen
 	other.EquipmentModifierEditData.CopyFrom(e)
 	if e.HasChildren() {
 		other.Children = make([]*EquipmentModifier, 0, len(e.Children))
 		for _, child := range e.Children {
-			other.Children = append(other.Children, child.Clone(entity, other))
+			other.Children = append(other.Children, child.Clone(entity, other, preserveID))
 		}
 	}
 	return other

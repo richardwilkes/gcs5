@@ -94,26 +94,8 @@ func (p *eqpModProvider) DragSVG() *unison.SVG {
 	return res.GCSEquipmentModifiersSVG
 }
 
-func (p *eqpModProvider) DropShouldMoveData(drop *unison.TableDrop[*Node[*gurps.EquipmentModifier]]) bool {
-	return drop.Table == drop.TableDragData.Table
-}
-
-func (p *eqpModProvider) DropCopyRow(drop *unison.TableDrop[*Node[*gurps.EquipmentModifier]], row *Node[*gurps.EquipmentModifier]) *Node[*gurps.EquipmentModifier] {
-	mod := ExtractFromRowData[*gurps.EquipmentModifier](row).Clone(p.provider.Entity(), nil)
-	return NewNode[*gurps.EquipmentModifier](drop.Table, nil, p.colMap, mod, false)
-}
-
-func (p *eqpModProvider) DropSetRowChildren(_ *unison.TableDrop[*Node[*gurps.EquipmentModifier]], row *Node[*gurps.EquipmentModifier], children []*Node[*gurps.EquipmentModifier]) {
-	list := make([]*gurps.EquipmentModifier, 0, len(children))
-	for _, child := range children {
-		list = append(list, ExtractFromRowData[*gurps.EquipmentModifier](child))
-	}
-	if row == nil {
-		p.provider.SetEquipmentModifierList(list)
-	} else {
-		ExtractFromRowData[*gurps.EquipmentModifier](row).Children = list
-		row.children = nil
-	}
+func (p *eqpModProvider) DropShouldMoveData(from, to *unison.Table[*Node[*gurps.EquipmentModifier]]) bool {
+	return from == to
 }
 
 func (p *eqpModProvider) ItemNames() (singular, plural string) {

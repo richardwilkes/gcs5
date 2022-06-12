@@ -54,7 +54,8 @@ func NewNode[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], parent *N
 	}
 }
 
-func (n *Node[T]) Clone(target unison.Paneler, newParent *Node[T]) *Node[T] {
+// CloneForTarget implements unison.TableRowData.
+func (n *Node[T]) CloneForTarget(target unison.Paneler, newParent *Node[T]) *Node[T] {
 	table, ok := target.(*unison.Table[*Node[T]])
 	if !ok {
 		jot.Fatal(1, "unable to convert to table")
@@ -64,34 +65,30 @@ func (n *Node[T]) Clone(target unison.Paneler, newParent *Node[T]) *Node[T] {
 		jot.Fatal(1, "unable to locate entity provider")
 	}
 	return NewNode[T](table, newParent, n.colMap, n.data.Clone(entityProvider.Entity(),
-		ExtractFromRowData[T](newParent)), n.forPage)
+		ExtractFromRowData[T](newParent), false), n.forPage)
 }
 
+// UUID implements unison.TableRowData.
 func (n *Node[T]) UUID() uuid.UUID {
 	return n.data.UUID()
 }
 
-// Parent returns the parent row, or nil if this is a root node.
+// Parent implements unison.TableRowData.
 func (n *Node[T]) Parent() *Node[T] {
 	return n.parent
 }
 
-// SetParent sets the parent of this node. May be nil for root nodes.
+// SetParent implements unison.TableRowData.
 func (n *Node[T]) SetParent(parent *Node[T]) {
 	ExtractFromRowData[T](n).SetParent(ExtractFromRowData[T](parent))
 }
 
-// CanHaveChildren returns true if this is a container.
+// CanHaveChildren implements unison.TableRowData.
 func (n *Node[T]) CanHaveChildren() bool {
 	return n.data.Container()
 }
 
-// Data returns the underlying data object.
-func (n *Node[T]) Data() gurps.Node[T] {
-	return n.data
-}
-
-// Children returns the children of this node.
+// Children implements unison.TableRowData.
 func (n *Node[T]) Children() []*Node[T] {
 	if n.data.Container() && n.children == nil {
 		children := n.data.NodeChildren()
@@ -103,7 +100,7 @@ func (n *Node[T]) Children() []*Node[T] {
 	return n.children
 }
 
-// SetChildren sets the children of this node.
+// SetChildren implements unison.TableRowData.
 func (n *Node[T]) SetChildren(children []*Node[T]) {
 	if n.data.Container() {
 		n.data.SetChildren(ExtractNodeDataFromList(children))
@@ -111,7 +108,17 @@ func (n *Node[T]) SetChildren(children []*Node[T]) {
 	}
 }
 
-// ColumnCell returns the cell for the given column index.
+// CellDataForSort implements unison.TableRowData.
+func (n *Node[T]) CellDataForSort(index int) string {
+	if column, exists := n.colMap[index]; exists {
+		var data gurps.CellData
+		n.data.CellData(column, &data)
+		return data.ForSort()
+	}
+	return ""
+}
+
+// ColumnCell implements unison.TableRowData.
 func (n *Node[T]) ColumnCell(row, col int, foreground, _ unison.Ink, _, _, _ bool) unison.Paneler {
 	var cellData gurps.CellData
 	if column, exists := n.colMap[col]; exists {
@@ -131,6 +138,24 @@ func (n *Node[T]) ColumnCell(row, col int, foreground, _ unison.Ink, _, _, _ boo
 	return cell
 }
 
+// IsOpen implements unison.TableRowData.
+func (n *Node[T]) IsOpen() bool {
+	return n.data.Container() && n.data.Open()
+}
+
+// SetOpen implements unison.TableRowData.
+func (n *Node[T]) SetOpen(open bool) {
+	if n.data.Container() && open != n.data.Open() {
+		n.data.SetOpen(open)
+		n.table.SyncToModel()
+	}
+}
+
+// Data returns the underlying data object.
+func (n *Node[T]) Data() gurps.Node[T] {
+	return n.data
+}
+
 func applyForegroundInkRecursively(panel *unison.Panel, foreground unison.Ink) {
 	if label, ok := panel.Self.(*unison.Label); ok {
 		if _, exists := label.ClientData()[excludeMarker]; !exists {
@@ -140,29 +165,6 @@ func applyForegroundInkRecursively(panel *unison.Panel, foreground unison.Ink) {
 	for _, child := range panel.Children() {
 		applyForegroundInkRecursively(child, foreground)
 	}
-}
-
-// IsOpen returns true if this node should display its children.
-func (n *Node[T]) IsOpen() bool {
-	return n.data.Container() && n.data.Open()
-}
-
-// SetOpen sets the current open state for this node.
-func (n *Node[T]) SetOpen(open bool) {
-	if n.data.Container() && open != n.data.Open() {
-		n.data.SetOpen(open)
-		n.table.SyncToModel()
-	}
-}
-
-// CellDataForSort returns the string that represents the data in the specified cell.
-func (n *Node[T]) CellDataForSort(index int) string {
-	if column, exists := n.colMap[index]; exists {
-		var data gurps.CellData
-		n.data.CellData(column, &data)
-		return data.ForSort()
-	}
-	return ""
 }
 
 // Match looks for the text in the node and return true if it is present. Note that calls to this method should always

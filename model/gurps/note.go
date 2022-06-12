@@ -83,15 +83,18 @@ func NewNote(entity *Entity, parent *Note, container bool) *Note {
 	return n
 }
 
-// Clone this Note, assigning a new id, entity and parent.
-func (n *Note) Clone(entity *Entity, parent *Note) *Note {
+// Clone implements Node.
+func (n *Note) Clone(entity *Entity, parent *Note, preserveID bool) *Note {
 	other := NewNote(entity, parent, n.Container())
+	if preserveID {
+		other.ID = n.ID
+	}
 	other.IsOpen = n.IsOpen
 	other.NoteEditData.CopyFrom(n)
 	if n.HasChildren() {
 		other.Children = make([]*Note, 0, len(n.Children))
 		for _, child := range n.Children {
-			other.Children = append(other.Children, child.Clone(entity, other))
+			other.Children = append(other.Children, child.Clone(entity, other, preserveID))
 		}
 	}
 	return other

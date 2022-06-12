@@ -100,15 +100,18 @@ func NewTrait(entity *Entity, parent *Trait, container bool) *Trait {
 	return a
 }
 
-// Clone this Trait, assigning a new id, entity and parent.
-func (a *Trait) Clone(entity *Entity, parent *Trait) *Trait {
+// Clone implements Node.
+func (a *Trait) Clone(entity *Entity, parent *Trait, preserveID bool) *Trait {
 	other := NewTrait(entity, parent, a.Container())
+	if preserveID {
+		other.ID = a.ID
+	}
 	other.IsOpen = a.IsOpen
 	other.TraitEditData.CopyFrom(a)
 	if a.HasChildren() {
 		other.Children = make([]*Trait, 0, len(a.Children))
 		for _, child := range a.Children {
-			other.Children = append(other.Children, child.Clone(entity, other))
+			other.Children = append(other.Children, child.Clone(entity, other, preserveID))
 		}
 	}
 	return other

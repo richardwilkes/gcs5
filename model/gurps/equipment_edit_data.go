@@ -59,7 +59,7 @@ func (d *EquipmentEditData) copyFrom(entity *Entity, other *EquipmentEditData, i
 	if len(other.Modifiers) != 0 {
 		d.Modifiers = make([]*EquipmentModifier, 0, len(other.Modifiers))
 		for _, one := range other.Modifiers {
-			d.Modifiers = append(d.Modifiers, one.Clone(entity, nil))
+			d.Modifiers = append(d.Modifiers, one.Clone(entity, nil, true))
 		}
 	}
 	d.Prereq = d.Prereq.CloneResolvingEmpty(false, isApply)
@@ -67,7 +67,7 @@ func (d *EquipmentEditData) copyFrom(entity *Entity, other *EquipmentEditData, i
 	if len(other.Weapons) != 0 {
 		d.Weapons = make([]*Weapon, 0, len(other.Weapons))
 		for _, one := range other.Weapons {
-			d.Weapons = append(d.Weapons, one.Clone(entity, nil))
+			d.Weapons = append(d.Weapons, one.Clone(entity, nil, true))
 		}
 	}
 	d.Features = other.Features.Clone()
