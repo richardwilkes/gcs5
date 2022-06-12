@@ -97,28 +97,6 @@ func TableCreateHeader[T unison.TableRowConstraint[T]](table *unison.Table[T], h
 // InstallTableDropSupport installs our standard drop support on a table.
 func InstallTableDropSupport[T unison.TableRowConstraint[T]](table *unison.Table[T], provider TableProvider[T]) {
 	table.InstallDropSupport(provider.DragKey(), provider.DropShouldMoveData)
-
-	//func(drop *unison.TableDrop[T]) {
-	//	list := make([]T, 0, len(drop.TableDragData.Rows))
-	//	for _, row := range drop.TableDragData.Rows {
-	//		list = append(list, provider.DropCopyRow(drop, row))
-	//	}
-	//	drop.TableDragData.Rows = list
-	//}, provider.DropSetRowChildren,
-	//func(drop *unison.TableDrop[T], moved bool) {
-	//	MarkModified(drop.Table)
-	//	drop.Table.ValidateScrollRoot()
-	//	if rebuilder := unison.Ancestor[Rebuildable](drop.Table); rebuilder != nil {
-	//		rebuilder.Rebuild(true)
-	//	}
-	//	if moved && drop.Table != drop.TableDragData.Table {
-	//		MarkModified(drop.TableDragData.Table)
-	//		drop.TableDragData.Table.ValidateScrollRoot()
-	//		if rebuilder := unison.Ancestor[Rebuildable](drop.TableDragData.Table); rebuilder != nil {
-	//			rebuilder.Rebuild(true)
-	//		}
-	//	}
-	//})
+	table.DragRemovedRowsCallback = func() { MarkModified(table) }
+	table.DropOccurredCallback = func() { MarkModified(table) }
 }
-
-// TODO: Handling of edits to the table that is being drug from isn't happening
