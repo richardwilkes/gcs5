@@ -12,9 +12,13 @@
 package widget
 
 import (
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/unison"
 )
@@ -45,6 +49,8 @@ type TableProvider[T unison.TableRowConstraint[T]] interface {
 	OpenEditor(owner Rebuildable, table *unison.Table[T])
 	CreateItem(owner Rebuildable, table *unison.Table[T], variant ItemVariant)
 	DeleteSelection(table *unison.Table[T])
+	Serialize() ([]byte, error)
+	Deserialize(data []byte) error
 }
 
 // TableSetupColumnSizes sets the standard column sizing.
@@ -92,10 +98,110 @@ func TableCreateHeader[T unison.TableRowConstraint[T]](table *unison.Table[T], h
 	return tableHeader
 }
 
+const tableProviderClientKey = "table-provider"
+
 // InstallTableDropSupport installs our standard drop support on a table.
 func InstallTableDropSupport[T unison.TableRowConstraint[T]](table *unison.Table[T], provider TableProvider[T]) {
-	// TODO: Revisit this for undo
-	unison.InstallDropSupport[T, any](table, provider.DragKey(), provider.DropShouldMoveData, nil, nil)
+	table.ClientData()[tableProviderClientKey] = provider
+	unison.InstallDropSupport[T, *tableDragUndoEditData[T]](table, provider.DragKey(), provider.DropShouldMoveData,
+		willDropCallback[T], didDropCallback[T])
 	table.DragRemovedRowsCallback = func() { MarkModified(table) }
 	table.DropOccurredCallback = func() { MarkModified(table) }
+}
+
+func willDropCallback[T unison.TableRowConstraint[T]](from, to *unison.Table[T], move bool) *unison.UndoEdit[*tableDragUndoEditData[T]] {
+	mgr := unison.UndoManagerFor(from)
+	if mgr == nil {
+		return nil
+	}
+	data := newTableDragUndoEditData(from, to, move)
+	if data == nil {
+		return nil
+	}
+	return &unison.UndoEdit[*tableDragUndoEditData[T]]{
+		ID:         unison.NextUndoID(),
+		EditName:   i18n.Text("Drag"),
+		UndoFunc:   func(e *unison.UndoEdit[*tableDragUndoEditData[T]]) { e.BeforeData.apply() },
+		RedoFunc:   func(e *unison.UndoEdit[*tableDragUndoEditData[T]]) { e.AfterData.apply() },
+		AbsorbFunc: func(e *unison.UndoEdit[*tableDragUndoEditData[T]], other unison.Undoable) bool { return false },
+		BeforeData: data,
+	}
+}
+
+func didDropCallback[T unison.TableRowConstraint[T]](undo *unison.UndoEdit[*tableDragUndoEditData[T]], from, to *unison.Table[T], move bool) {
+	if undo == nil {
+		return
+	}
+	mgr := unison.UndoManagerFor(from)
+	if mgr == nil {
+		return
+	}
+	undo.AfterData = newTableDragUndoEditData(from, to, move)
+	if undo.AfterData != nil {
+		mgr.Add(undo)
+	}
+}
+
+type tableDragUndoEditData[T unison.TableRowConstraint[T]] struct {
+	From       *unison.Table[T]
+	To         *unison.Table[T]
+	FromData   []byte
+	FromSelMap map[uuid.UUID]bool
+	ToData     []byte
+	ToSelMap   map[uuid.UUID]bool
+	Move       bool
+}
+
+func newTableDragUndoEditData[T unison.TableRowConstraint[T]](from, to *unison.Table[T], move bool) *tableDragUndoEditData[T] {
+	data, err := collectTableData(to)
+	if err != nil {
+		jot.Error(err)
+		return nil
+	}
+	undo := &tableDragUndoEditData[T]{
+		From:     from,
+		To:       to,
+		ToData:   data,
+		ToSelMap: to.CopySelectionMap(),
+		Move:     move,
+	}
+	if move && from != to {
+		if data, err = collectTableData(from); err != nil {
+			jot.Error(err)
+			return nil
+		}
+		undo.FromData = data
+		undo.FromSelMap = from.CopySelectionMap()
+	}
+	return undo
+}
+
+func (t *tableDragUndoEditData[T]) apply() {
+	applyTableData(t.To, t.ToData, t.ToSelMap)
+	if t.Move && t.From != t.To {
+		applyTableData(t.From, t.FromData, t.FromSelMap)
+	}
+}
+
+func collectTableData[T unison.TableRowConstraint[T]](table *unison.Table[T]) ([]byte, error) {
+	provider, ok := table.ClientData()[tableProviderClientKey].(TableProvider[T])
+	if !ok {
+		return nil, errs.New("unable to locate provider")
+	}
+	return provider.Serialize()
+}
+
+func applyTableData[T unison.TableRowConstraint[T]](table *unison.Table[T], data []byte, selMap map[uuid.UUID]bool) {
+	provider, ok := table.ClientData()[tableProviderClientKey].(TableProvider[T])
+	if !ok {
+		jot.Error(errs.New("unable to locate provider"))
+		return
+	}
+	if err := provider.Deserialize(data); err != nil {
+		jot.Error(err)
+		return
+	}
+	table.SyncToModel()
+	MarkModified(table)
+	table.SetSelectionMap(selMap)
 }

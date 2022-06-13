@@ -12,11 +12,16 @@
 package editors
 
 import (
+	"bytes"
+	"compress/gzip"
+
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -179,4 +184,29 @@ func (p *skillsProvider) DeleteSelection(table *unison.Table[*Node[*gurps.Skill]
 	deleteTableSelection(table, p.provider.SkillList(),
 		func(nodes []*gurps.Skill) { p.provider.SetSkillList(nodes) },
 		func(node *gurps.Skill) *[]*gurps.Skill { return &node.Children })
+}
+
+func (p *skillsProvider) Serialize() ([]byte, error) {
+	var buffer bytes.Buffer
+	gz := gzip.NewWriter(&buffer)
+	if err := json.NewEncoder(gz).Encode(p.provider.SkillList()); err != nil {
+		return nil, errs.Wrap(err)
+	}
+	if err := gz.Close(); err != nil {
+		return nil, errs.Wrap(err)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (p *skillsProvider) Deserialize(data []byte) error {
+	gz, err := gzip.NewReader(bytes.NewReader(data))
+	if err != nil {
+		return errs.Wrap(err)
+	}
+	var rows []*gurps.Skill
+	if err = json.NewDecoder(gz).Decode(&rows); err != nil {
+		return errs.Wrap(err)
+	}
+	p.provider.SetSkillList(rows)
+	return nil
 }

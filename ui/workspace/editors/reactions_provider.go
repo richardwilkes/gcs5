@@ -15,6 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -116,4 +117,12 @@ func (p *reactionModProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table[*
 }
 
 func (p *reactionModProvider) DeleteSelection(_ *unison.Table[*Node[*gurps.ConditionalModifier]]) {
+}
+
+func (p *reactionModProvider) Serialize() ([]byte, error) {
+	return nil, errs.New("not allowed")
+}
+
+func (p *reactionModProvider) Deserialize(_ []byte) error {
+	return errs.New("not allowed")
 }

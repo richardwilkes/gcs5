@@ -7,10 +7,10 @@ require (
 	github.com/richardwilkes/json v0.1.0
 	github.com/richardwilkes/pdf v0.0.0-20220514034211-8275a65f51fc
 	github.com/richardwilkes/rpgtools v1.4.2
-	github.com/richardwilkes/toolbox v1.71.1
-	github.com/richardwilkes/unison v0.19.2-0.20220612191038-e590b6dc97f0
+	github.com/richardwilkes/toolbox v1.71.2
+	github.com/richardwilkes/unison v0.20.1-0.20220613214218-0128decafe80
 	github.com/stretchr/testify v1.7.2
-	golang.org/x/exp v0.0.0-20220609121020-a51bd0440498
+	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d
 	golang.org/x/text v0.3.7
 )
 

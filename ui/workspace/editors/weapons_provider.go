@@ -16,6 +16,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -223,4 +224,12 @@ func (p *weaponsProvider) DeleteSelection(table *unison.Table[*Node[*gurps.Weapo
 				return &dummy
 			})
 	}
+}
+
+func (p *weaponsProvider) Serialize() ([]byte, error) {
+	return nil, errs.New("not allowed")
+}
+
+func (p *weaponsProvider) Deserialize(_ []byte) error {
+	return errs.New("not allowed")
 }
