@@ -31,6 +31,5 @@
 
 - Printing support
 - Add keyboard navigation to the Table object
-- Drag & drop support in the Table object
 - Carefully comb over the interface and identify areas where things aren't working well on Windows and Linux, since I
-  spend nearly all of my development time on macOS and may have not noticed deficiencies there
+  spend nearly all of my development time on macOS and may not have noticed deficiencies on the other platforms

@@ -788,8 +788,9 @@ func (ex *legacyExporter) processTraitLoop(buffer []byte, f func(*gurps.Trait) b
 				case idKey:
 					ex.writeEncodedText(t.ID.String())
 				case parentIDKey:
-					if t.Parent != nil {
-						ex.writeEncodedText(t.Parent.ID.String())
+					parent := t.Parent()
+					if parent != nil {
+						ex.writeEncodedText(parent.ID.String())
 					}
 				case typeKey:
 					if t.Container() {
@@ -853,8 +854,9 @@ func (ex *legacyExporter) processSkillsLoop(buffer []byte) {
 			case idKey:
 				ex.writeEncodedText(s.ID.String())
 			case parentIDKey:
-				if s.Parent != nil {
-					ex.writeEncodedText(s.Parent.ID.String())
+				parent := s.Parent()
+				if parent != nil {
+					ex.writeEncodedText(parent.ID.String())
 				}
 			case typeKey:
 				if s.Container() {
@@ -909,8 +911,9 @@ func (ex *legacyExporter) processSpellsLoop(buffer []byte) {
 			case idKey:
 				ex.writeEncodedText(s.ID.String())
 			case parentIDKey:
-				if s.Parent != nil {
-					ex.writeEncodedText(s.Parent.ID.String())
+				parent := s.Parent()
+				if parent != nil {
+					ex.writeEncodedText(parent.ID.String())
 				}
 			case typeKey:
 				if s.Container() {
@@ -994,8 +997,9 @@ func (ex *legacyExporter) processEquipmentLoop(buffer []byte, carried bool) {
 				case idKey:
 					ex.writeEncodedText(eqp.ID.String())
 				case parentIDKey:
-					if eqp.Parent != nil {
-						ex.writeEncodedText(eqp.Parent.ID.String())
+					parent := eqp.Parent()
+					if parent != nil {
+						ex.writeEncodedText(parent.ID.String())
 					}
 				case typeKey:
 					if eqp.Container() {
@@ -1066,8 +1070,9 @@ func (ex *legacyExporter) processEquipmentLoop(buffer []byte, carried bool) {
 				case "TAGS", "CATEGORIES":
 					ex.writeEncodedText(gurps.CombineTags(eqp.Tags))
 				case "LOCATION":
-					if eqp.Parent != nil {
-						ex.writeEncodedText(eqp.Parent.Name)
+					parent := eqp.Parent()
+					if parent != nil {
+						ex.writeEncodedText(parent.Name)
 					}
 				case "USES":
 					ex.writeEncodedText(strconv.Itoa(eqp.Uses))
@@ -1105,8 +1110,9 @@ func (ex *legacyExporter) processNotesLoop(buffer []byte) {
 			case idKey:
 				ex.writeEncodedText(n.ID.String())
 			case parentIDKey:
-				if n.Parent != nil {
-					ex.writeEncodedText(n.Parent.ID.String())
+				parent := n.Parent()
+				if parent != nil {
+					ex.writeEncodedText(parent.ID.String())
 				}
 			case typeKey:
 				if n.Container() {

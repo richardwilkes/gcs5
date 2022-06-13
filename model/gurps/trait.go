@@ -30,8 +30,8 @@ import (
 )
 
 var (
-	_ WeaponOwner = &Trait{}
-	_ Node        = &Trait{}
+	_ WeaponOwner  = &Trait{}
+	_ Node[*Trait] = &Trait{}
 )
 
 // Columns that can be used with the trait method .CellData()
@@ -51,7 +51,6 @@ const (
 type Trait struct {
 	TraitData
 	Entity            *Entity
-	Parent            *Trait
 	UnsatisfiedReason string
 }
 
@@ -95,10 +94,27 @@ func NewTrait(entity *Entity, parent *Trait, container bool) *Trait {
 			ContainerBase: newContainerBase[*Trait](traitTypeKey, container),
 		},
 		Entity: entity,
-		Parent: parent,
 	}
 	a.Name = a.Kind()
+	a.parent = parent
 	return a
+}
+
+// Clone implements Node.
+func (a *Trait) Clone(entity *Entity, parent *Trait, preserveID bool) *Trait {
+	other := NewTrait(entity, parent, a.Container())
+	if preserveID {
+		other.ID = a.ID
+	}
+	other.IsOpen = a.IsOpen
+	other.TraitEditData.CopyFrom(a)
+	if a.HasChildren() {
+		other.Children = make([]*Trait, 0, len(a.Children))
+		for _, child := range a.Children {
+			other.Children = append(other.Children, child.Clone(entity, other, preserveID))
+		}
+	}
+	return other
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -154,7 +170,7 @@ func (a *Trait) UnmarshalJSON(data []byte) error {
 	slices.Sort(a.Tags)
 	if a.Container() {
 		for _, one := range a.Children {
-			one.Parent = a
+			one.parent = a
 		}
 	}
 	return nil
@@ -193,10 +209,10 @@ func (a *Trait) CellData(column int, data *CellData) {
 // Depth returns the number of parents this node has.
 func (a *Trait) Depth() int {
 	count := 0
-	p := a.Parent
+	p := a.parent
 	for p != nil {
 		count++
-		p = p.Parent
+		p = p.parent
 	}
 	return count
 }
@@ -271,10 +287,10 @@ func (a *Trait) AdjustedPoints() fxp.Int {
 func (a *Trait) AllModifiers() []*TraitModifier {
 	all := make([]*TraitModifier, len(a.Modifiers))
 	copy(all, a.Modifiers)
-	p := a.Parent
+	p := a.parent
 	for p != nil {
 		all = append(all, p.Modifiers...)
-		p = p.Parent
+		p = p.parent
 	}
 	return all
 }
@@ -284,12 +300,12 @@ func (a *Trait) Enabled() bool {
 	if a.Disabled {
 		return false
 	}
-	p := a.Parent
+	p := a.parent
 	for p != nil {
 		if p.Disabled {
 			return false
 		}
-		p = p.Parent
+		p = p.parent
 	}
 	return true
 }

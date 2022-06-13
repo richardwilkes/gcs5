@@ -24,12 +24,11 @@ import (
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/unison"
 	"golang.org/x/exp/slices"
 )
 
-var _ Node = &TraitModifier{}
+var _ Node[*TraitModifier] = &TraitModifier{}
 
 // Columns that can be used with the trait modifier method .CellData()
 const (
@@ -49,7 +48,6 @@ const (
 type TraitModifier struct {
 	TraitModifierData
 	Entity *Entity
-	Parent *TraitModifier
 }
 
 type traitModifierListData struct {
@@ -89,26 +87,27 @@ func NewTraitModifier(entity *Entity, parent *TraitModifier, container bool) *Tr
 			ContainerBase: newContainerBase[*TraitModifier](traitModifierTypeKey, container),
 		},
 		Entity: entity,
-		Parent: parent,
 	}
 	a.Name = a.Kind()
+	a.parent = parent
 	return a
 }
 
-// Clone creates a copy of this data.
-func (a *TraitModifier) Clone(newParent *TraitModifier) *TraitModifier {
-	other := *a
-	other.Parent = newParent
-	other.Tags = txt.CloneStringSlice(a.Tags)
-	other.Features = a.Features.Clone()
-	other.Children = nil
-	if len(a.Children) != 0 {
+// Clone implements Node.
+func (a *TraitModifier) Clone(entity *Entity, parent *TraitModifier, preserveID bool) *TraitModifier {
+	other := NewTraitModifier(entity, parent, a.Container())
+	if preserveID {
+		other.ID = a.ID
+	}
+	other.IsOpen = a.IsOpen
+	other.TraitModifierEditData.CopyFrom(a)
+	if a.HasChildren() {
 		other.Children = make([]*TraitModifier, 0, len(a.Children))
-		for _, one := range a.Children {
-			other.Children = append(other.Children, one.Clone(&other))
+		for _, child := range a.Children {
+			other.Children = append(other.Children, child.Clone(entity, other, preserveID))
 		}
 	}
-	return &other
+	return other
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -133,7 +132,7 @@ func (a *TraitModifier) UnmarshalJSON(data []byte) error {
 	slices.Sort(a.Tags)
 	if a.Container() {
 		for _, one := range a.Children {
-			one.Parent = a
+			one.parent = a
 		}
 	}
 	return nil
@@ -170,10 +169,10 @@ func (a *TraitModifier) CellData(column int, data *CellData) {
 // Depth returns the number of parents this node has.
 func (a *TraitModifier) Depth() int {
 	count := 0
-	p := a.Parent
+	p := a.parent
 	for p != nil {
 		count++
-		p = p.Parent
+		p = p.parent
 	}
 	return count
 }

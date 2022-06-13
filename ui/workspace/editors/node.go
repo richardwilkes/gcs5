@@ -21,6 +21,7 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/workspace/settings"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 	"golang.org/x/exp/slices"
@@ -28,25 +29,22 @@ import (
 
 const excludeMarker = "exclude"
 
-var (
-	_ unison.TableRowData = &Node{}
-	_ Matcher             = &Node{}
-)
+var _ unison.TableRowData[*Node[*gurps.Trait]] = &Node[*gurps.Trait]{}
 
 // Node represents a row in a table.
-type Node struct {
-	table     *unison.Table
-	parent    unison.TableRowData
-	data      gurps.Node
-	children  []unison.TableRowData
+type Node[T gurps.NodeConstraint[T]] struct {
+	table     *unison.Table[*Node[T]]
+	parent    *Node[T]
+	data      gurps.Node[T]
+	children  []*Node[T]
 	cellCache []*CellCache
 	colMap    map[int]int
 	forPage   bool
 }
 
 // NewNode creates a new node for a table.
-func NewNode(table *unison.Table, parent unison.TableRowData, colMap map[int]int, data gurps.Node, forPage bool) *Node {
-	return &Node{
+func NewNode[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], parent *Node[T], colMap map[int]int, data gurps.Node[T], forPage bool) *Node[T] {
+	return &Node[T]{
 		table:     table,
 		parent:    parent,
 		data:      data,
@@ -56,35 +54,72 @@ func NewNode(table *unison.Table, parent unison.TableRowData, colMap map[int]int
 	}
 }
 
-// ParentRow returns the parent row, or nil if this is a root node.
-func (n *Node) ParentRow() unison.TableRowData {
+// CloneForTarget implements unison.TableRowData.
+func (n *Node[T]) CloneForTarget(target unison.Paneler, newParent *Node[T]) *Node[T] {
+	table, ok := target.(*unison.Table[*Node[T]])
+	if !ok {
+		jot.Fatal(1, "unable to convert to table")
+	}
+	entityProvider := unison.AncestorOrSelf[gurps.EntityProvider](target)
+	if entityProvider == nil {
+		jot.Fatal(1, "unable to locate entity provider")
+	}
+	return NewNode[T](table, newParent, n.colMap, n.data.Clone(entityProvider.Entity(),
+		ExtractFromRowData[T](newParent), false), n.forPage)
+}
+
+// UUID implements unison.TableRowData.
+func (n *Node[T]) UUID() uuid.UUID {
+	return n.data.UUID()
+}
+
+// Parent implements unison.TableRowData.
+func (n *Node[T]) Parent() *Node[T] {
 	return n.parent
 }
 
-// CanHaveChildRows returns true if this is a container.
-func (n *Node) CanHaveChildRows() bool {
+// SetParent implements unison.TableRowData.
+func (n *Node[T]) SetParent(parent *Node[T]) {
+	ExtractFromRowData[T](n).SetParent(ExtractFromRowData[T](parent))
+}
+
+// CanHaveChildren implements unison.TableRowData.
+func (n *Node[T]) CanHaveChildren() bool {
 	return n.data.Container()
 }
 
-// Data returns the underlying data object.
-func (n *Node) Data() gurps.Node {
-	return n.data
-}
-
-// ChildRows returns the children of this node.
-func (n *Node) ChildRows() []unison.TableRowData {
+// Children implements unison.TableRowData.
+func (n *Node[T]) Children() []*Node[T] {
 	if n.data.Container() && n.children == nil {
 		children := n.data.NodeChildren()
-		n.children = make([]unison.TableRowData, len(children))
+		n.children = make([]*Node[T], len(children))
 		for i, one := range children {
-			n.children[i] = NewNode(n.table, n, n.colMap, one, n.forPage)
+			n.children[i] = NewNode[T](n.table, n, n.colMap, one, n.forPage)
 		}
 	}
 	return n.children
 }
 
-// ColumnCell returns the cell for the given column index.
-func (n *Node) ColumnCell(row, col int, foreground, _ unison.Ink, _, _, _ bool) unison.Paneler {
+// SetChildren implements unison.TableRowData.
+func (n *Node[T]) SetChildren(children []*Node[T]) {
+	if n.data.Container() {
+		n.data.SetChildren(ExtractNodeDataFromList(children))
+		n.children = nil
+	}
+}
+
+// CellDataForSort implements unison.TableRowData.
+func (n *Node[T]) CellDataForSort(index int) string {
+	if column, exists := n.colMap[index]; exists {
+		var data gurps.CellData
+		n.data.CellData(column, &data)
+		return data.ForSort()
+	}
+	return ""
+}
+
+// ColumnCell implements unison.TableRowData.
+func (n *Node[T]) ColumnCell(row, col int, foreground, _ unison.Ink, _, _, _ bool) unison.Paneler {
 	var cellData gurps.CellData
 	if column, exists := n.colMap[col]; exists {
 		n.data.CellData(column, &cellData)
@@ -103,6 +138,24 @@ func (n *Node) ColumnCell(row, col int, foreground, _ unison.Ink, _, _, _ bool) 
 	return cell
 }
 
+// IsOpen implements unison.TableRowData.
+func (n *Node[T]) IsOpen() bool {
+	return n.data.Container() && n.data.Open()
+}
+
+// SetOpen implements unison.TableRowData.
+func (n *Node[T]) SetOpen(open bool) {
+	if n.data.Container() && open != n.data.Open() {
+		n.data.SetOpen(open)
+		n.table.SyncToModel()
+	}
+}
+
+// Data returns the underlying data object.
+func (n *Node[T]) Data() gurps.Node[T] {
+	return n.data
+}
+
 func applyForegroundInkRecursively(panel *unison.Panel, foreground unison.Ink) {
 	if label, ok := panel.Self.(*unison.Label); ok {
 		if _, exists := label.ClientData()[excludeMarker]; !exists {
@@ -114,31 +167,9 @@ func applyForegroundInkRecursively(panel *unison.Panel, foreground unison.Ink) {
 	}
 }
 
-// IsOpen returns true if this node should display its children.
-func (n *Node) IsOpen() bool {
-	return n.data.Container() && n.data.Open()
-}
-
-// SetOpen sets the current open state for this node.
-func (n *Node) SetOpen(open bool) {
-	if n.data.Container() && open != n.data.Open() {
-		n.data.SetOpen(open)
-		n.table.SyncToModel()
-	}
-}
-
-// CellDataForSort returns the string that represents the data in the specified cell.
-func (n *Node) CellDataForSort(index int) string {
-	if column, exists := n.colMap[index]; exists {
-		var data gurps.CellData
-		n.data.CellData(column, &data)
-		return data.ForSort()
-	}
-	return ""
-}
-
-// Match implements Matcher.
-func (n *Node) Match(text string) bool {
+// Match looks for the text in the node and return true if it is present. Note that calls to this method should always
+// pass in text that has already been run through strings.ToLower().
+func (n *Node[T]) Match(text string) bool {
 	count := len(n.colMap)
 	for i := 0; i < count; i++ {
 		if strings.Contains(strings.ToLower(n.CellDataForSort(i)), text) {
@@ -149,7 +180,7 @@ func (n *Node) Match(text string) bool {
 }
 
 // CellFromCellData creates a new panel for the given cell data.
-func (n *Node) CellFromCellData(c *gurps.CellData, width float32, foreground unison.Ink) unison.Paneler {
+func (n *Node[T]) CellFromCellData(c *gurps.CellData, width float32, foreground unison.Ink) unison.Paneler {
 	switch c.Type {
 	case gurps.Text:
 		return n.createLabelCell(c, width, foreground)
@@ -162,7 +193,7 @@ func (n *Node) CellFromCellData(c *gurps.CellData, width float32, foreground uni
 	}
 }
 
-func (n *Node) createLabelCell(c *gurps.CellData, width float32, foreground unison.Ink) unison.Paneler {
+func (n *Node[T]) createLabelCell(c *gurps.CellData, width float32, foreground unison.Ink) unison.Paneler {
 	p := unison.NewPanel()
 	p.SetLayout(&unison.FlexLayout{
 		Columns: 1,
@@ -204,7 +235,7 @@ func (n *Node) createLabelCell(c *gurps.CellData, width float32, foreground unis
 	return p
 }
 
-func (n *Node) addLabelCell(c *gurps.CellData, parent *unison.Panel, width float32, text string, f unison.Font, foreground unison.Ink, primary bool) {
+func (n *Node[T]) addLabelCell(c *gurps.CellData, parent *unison.Panel, width float32, text string, f unison.Font, foreground unison.Ink, primary bool) {
 	decoration := &unison.TextDecoration{
 		Font:          f,
 		StrikeThrough: primary && c.Disabled,
@@ -227,7 +258,7 @@ func (n *Node) addLabelCell(c *gurps.CellData, parent *unison.Panel, width float
 	}
 }
 
-func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison.Paneler {
+func (n *Node[T]) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison.Paneler {
 	check := unison.NewLabel()
 	check.Font = n.primaryFieldFont()
 	check.SetBorder(unison.NewEmptyBorder(unison.Insets{Top: 1}))
@@ -246,80 +277,7 @@ func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison
 	}
 	check.MouseDownCallback = func(where unison.Point, button, clickCount int, mod unison.Modifiers) bool {
 		c.Checked = !c.Checked
-		switch item := n.data.(type) {
-		case *gurps.Equipment:
-			item.Equipped = c.Checked
-			if mgr := unison.UndoManagerFor(check); mgr != nil {
-				owner := widget.FindRebuildable(check)
-				mgr.Add(&unison.UndoEdit[*equipmentAdjuster]{
-					ID:       unison.NextUndoID(),
-					EditName: i18n.Text("Toggle Equipped"),
-					UndoFunc: func(edit *unison.UndoEdit[*equipmentAdjuster]) { edit.BeforeData.Apply() },
-					RedoFunc: func(edit *unison.UndoEdit[*equipmentAdjuster]) { edit.AfterData.Apply() },
-					BeforeData: &equipmentAdjuster{
-						Owner:    owner,
-						Target:   item,
-						Equipped: !item.Equipped,
-					},
-					AfterData: &equipmentAdjuster{
-						Owner:    owner,
-						Target:   item,
-						Equipped: item.Equipped,
-					},
-				})
-			}
-			if item.Entity != nil {
-				item.Entity.Recalculate()
-			}
-		case *gurps.TraitModifier:
-			item.Disabled = !c.Checked
-			if mgr := unison.UndoManagerFor(check); mgr != nil {
-				owner := widget.FindRebuildable(check)
-				mgr.Add(&unison.UndoEdit[*traitModifierAdjuster]{
-					ID:       unison.NextUndoID(),
-					EditName: i18n.Text("Toggle Trait Modifier"),
-					UndoFunc: func(edit *unison.UndoEdit[*traitModifierAdjuster]) { edit.BeforeData.Apply() },
-					RedoFunc: func(edit *unison.UndoEdit[*traitModifierAdjuster]) { edit.AfterData.Apply() },
-					BeforeData: &traitModifierAdjuster{
-						Owner:    owner,
-						Target:   item,
-						Disabled: !item.Disabled,
-					},
-					AfterData: &traitModifierAdjuster{
-						Owner:    owner,
-						Target:   item,
-						Disabled: item.Disabled,
-					},
-				})
-			}
-			if item.Entity != nil {
-				item.Entity.Recalculate()
-			}
-		case *gurps.EquipmentModifier:
-			item.Disabled = !c.Checked
-			if mgr := unison.UndoManagerFor(check); mgr != nil {
-				owner := widget.FindRebuildable(check)
-				mgr.Add(&unison.UndoEdit[*equipmentModifierAdjuster]{
-					ID:       unison.NextUndoID(),
-					EditName: i18n.Text("Toggle Equipment Modifier"),
-					UndoFunc: func(edit *unison.UndoEdit[*equipmentModifierAdjuster]) { edit.BeforeData.Apply() },
-					RedoFunc: func(edit *unison.UndoEdit[*equipmentModifierAdjuster]) { edit.AfterData.Apply() },
-					BeforeData: &equipmentModifierAdjuster{
-						Owner:    owner,
-						Target:   item,
-						Disabled: !item.Disabled,
-					},
-					AfterData: &equipmentModifierAdjuster{
-						Owner:    owner,
-						Target:   item,
-						Disabled: item.Disabled,
-					},
-				})
-			}
-			if item.Entity != nil {
-				item.Entity.Recalculate()
-			}
-		}
+		handleCheck(n.data, check, c.Checked)
 		if c.Checked {
 			check.Drawable = &unison.DrawableSVG{
 				SVG:  res.CheckmarkSVG,
@@ -333,6 +291,83 @@ func (n *Node) createToggleCell(c *gurps.CellData, foreground unison.Ink) unison
 		return true
 	}
 	return check
+}
+
+func handleCheck(data interface{}, check unison.Paneler, checked bool) {
+	switch item := data.(type) {
+	case *gurps.Equipment:
+		item.Equipped = checked
+		if mgr := unison.UndoManagerFor(check); mgr != nil {
+			owner := unison.AncestorOrSelf[widget.Rebuildable](check)
+			mgr.Add(&unison.UndoEdit[*equipmentAdjuster]{
+				ID:       unison.NextUndoID(),
+				EditName: i18n.Text("Toggle Equipped"),
+				UndoFunc: func(edit *unison.UndoEdit[*equipmentAdjuster]) { edit.BeforeData.Apply() },
+				RedoFunc: func(edit *unison.UndoEdit[*equipmentAdjuster]) { edit.AfterData.Apply() },
+				BeforeData: &equipmentAdjuster{
+					Owner:    owner,
+					Target:   item,
+					Equipped: !item.Equipped,
+				},
+				AfterData: &equipmentAdjuster{
+					Owner:    owner,
+					Target:   item,
+					Equipped: item.Equipped,
+				},
+			})
+		}
+		if item.Entity != nil {
+			item.Entity.Recalculate()
+		}
+	case *gurps.TraitModifier:
+		item.Disabled = !checked
+		if mgr := unison.UndoManagerFor(check); mgr != nil {
+			owner := unison.AncestorOrSelf[widget.Rebuildable](check)
+			mgr.Add(&unison.UndoEdit[*traitModifierAdjuster]{
+				ID:       unison.NextUndoID(),
+				EditName: i18n.Text("Toggle Trait Modifier"),
+				UndoFunc: func(edit *unison.UndoEdit[*traitModifierAdjuster]) { edit.BeforeData.Apply() },
+				RedoFunc: func(edit *unison.UndoEdit[*traitModifierAdjuster]) { edit.AfterData.Apply() },
+				BeforeData: &traitModifierAdjuster{
+					Owner:    owner,
+					Target:   item,
+					Disabled: !item.Disabled,
+				},
+				AfterData: &traitModifierAdjuster{
+					Owner:    owner,
+					Target:   item,
+					Disabled: item.Disabled,
+				},
+			})
+		}
+		if item.Entity != nil {
+			item.Entity.Recalculate()
+		}
+	case *gurps.EquipmentModifier:
+		item.Disabled = !checked
+		if mgr := unison.UndoManagerFor(check); mgr != nil {
+			owner := unison.AncestorOrSelf[widget.Rebuildable](check)
+			mgr.Add(&unison.UndoEdit[*equipmentModifierAdjuster]{
+				ID:       unison.NextUndoID(),
+				EditName: i18n.Text("Toggle Equipment Modifier"),
+				UndoFunc: func(edit *unison.UndoEdit[*equipmentModifierAdjuster]) { edit.BeforeData.Apply() },
+				RedoFunc: func(edit *unison.UndoEdit[*equipmentModifierAdjuster]) { edit.AfterData.Apply() },
+				BeforeData: &equipmentModifierAdjuster{
+					Owner:    owner,
+					Target:   item,
+					Disabled: !item.Disabled,
+				},
+				AfterData: &equipmentModifierAdjuster{
+					Owner:    owner,
+					Target:   item,
+					Disabled: item.Disabled,
+				},
+			})
+		}
+		if item.Entity != nil {
+			item.Entity.Recalculate()
+		}
+	}
 }
 
 type equipmentAdjuster struct {
@@ -377,7 +412,7 @@ func (a *traitModifierAdjuster) Apply() {
 	widget.MarkModified(a.Owner)
 }
 
-func (n *Node) createPageRefCell(c *gurps.CellData, foreground unison.Ink) unison.Paneler {
+func (n *Node[T]) createPageRefCell(c *gurps.CellData, foreground unison.Ink) unison.Paneler {
 	label := unison.NewLabel()
 	label.Font = n.primaryFieldFont()
 	label.VAlign = unison.StartAlignment
@@ -426,14 +461,14 @@ func (n *Node) createPageRefCell(c *gurps.CellData, foreground unison.Ink) uniso
 	return label
 }
 
-func (n *Node) primaryFieldFont() unison.Font {
+func (n *Node[T]) primaryFieldFont() unison.Font {
 	if n.forPage {
 		return theme.PageFieldPrimaryFont
 	}
 	return unison.FieldFont
 }
 
-func (n *Node) secondaryFieldFont() unison.Font {
+func (n *Node[T]) secondaryFieldFont() unison.Font {
 	if n.forPage {
 		return theme.PageFieldSecondaryFont
 	}
@@ -441,21 +476,19 @@ func (n *Node) secondaryFieldFont() unison.Font {
 }
 
 // FindRowIndexByID returns the row index of the row with the given ID in the given table.
-func FindRowIndexByID(table *unison.Table, id uuid.UUID) int {
-	_, i := rowIndex(id, 0, table.TopLevelRows())
+func FindRowIndexByID[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], id uuid.UUID) int {
+	_, i := rowIndex(id, 0, table.RootRows())
 	return i
 }
 
-func rowIndex(id uuid.UUID, startIndex int, rows []unison.TableRowData) (updatedStartIndex, result int) {
+func rowIndex[T gurps.NodeConstraint[T]](id uuid.UUID, startIndex int, rows []*Node[T]) (updatedStartIndex, result int) {
 	for _, row := range rows {
-		if n, ok := row.(*Node); ok {
-			if id == n.Data().UUID() {
-				return 0, startIndex
-			}
+		if id == row.Data().UUID() {
+			return 0, startIndex
 		}
 		startIndex++
 		if row.IsOpen() {
-			if startIndex, result = rowIndex(id, startIndex, row.ChildRows()); result != -1 {
+			if startIndex, result = rowIndex(id, startIndex, row.Children()); result != -1 {
 				return 0, result
 			}
 		}
@@ -464,25 +497,25 @@ func rowIndex(id uuid.UUID, startIndex int, rows []unison.TableRowData) (updated
 }
 
 // InsertItem inserts an item into a table.
-func InsertItem[T comparable](owner widget.Rebuildable, table *unison.Table, item T, setParent func(target, parent T), childrenOf func(target T) []T, setChildren func(target T, children []T), topList func() []T, setTopList func([]T), rowData func(table *unison.Table) []unison.TableRowData, id func(T) uuid.UUID) {
+func InsertItem[T gurps.NodeConstraint[T]](owner widget.Rebuildable, table *unison.Table[*Node[T]], item T, childrenOf func(target T) []T, setChildren func(target T, children []T), topList func() []T, setTopList func([]T), rowData func(table *unison.Table[*Node[T]]) []*Node[T], id func(T) uuid.UUID) {
 	var target, zero T
 	i := table.FirstSelectedRowIndex()
 	if i != -1 {
 		row := table.RowFromIndex(i)
 		if target = ExtractFromRowData[T](row); target != zero {
-			if row.CanHaveChildRows() {
+			if row.CanHaveChildren() {
 				// Target is container, append to end of that container
-				setParent(item, target)
+				item.SetParent(target)
 				setChildren(target, append(childrenOf(target), item))
 			} else {
 				// Target isn't a container. If it has a parent, insert after the target within that parent.
-				if parent := ExtractFromRowData[T](row.ParentRow()); parent != zero {
-					setParent(item, parent)
+				if parent := ExtractFromRowData[T](row.Parent()); parent != zero {
+					item.SetParent(parent)
 					children := childrenOf(parent)
 					setChildren(parent, slices.Insert(children, slices.Index(children, target)+1, item))
 				} else {
 					// Otherwise, insert after the target within the top-level list.
-					setParent(item, zero)
+					item.SetParent(zero)
 					list := topList()
 					setTopList(slices.Insert(list, slices.Index(list, target)+1, item))
 				}
@@ -491,11 +524,11 @@ func InsertItem[T comparable](owner widget.Rebuildable, table *unison.Table, ite
 	}
 	if target == zero {
 		// There was no selection, so append to the end of the top-level list.
-		setParent(item, zero)
+		item.SetParent(zero)
 		setTopList(append(topList(), item))
 	}
 	widget.MarkModified(table)
-	table.SetTopLevelRows(rowData(table))
+	table.SetRootRows(rowData(table))
 	table.ValidateScrollRoot()
 	table.RequestFocus()
 	index := FindRowIndexByID(table, id(item))
@@ -505,10 +538,9 @@ func InsertItem[T comparable](owner widget.Rebuildable, table *unison.Table, ite
 }
 
 // ExtractFromRowData extracts a specific type of data from the row data.
-func ExtractFromRowData[T any](row unison.TableRowData) T {
-	if n, ok := row.(*Node); ok {
-		var target T
-		if target, ok = n.Data().(T); ok {
+func ExtractFromRowData[T gurps.NodeConstraint[T]](row *Node[T]) T {
+	if row != nil {
+		if target, ok := row.Data().(T); ok {
 			return target
 		}
 	}
@@ -516,8 +548,19 @@ func ExtractFromRowData[T any](row unison.TableRowData) T {
 	return zero
 }
 
+// ExtractNodeDataFromList returns the underlying node data.
+func ExtractNodeDataFromList[T gurps.NodeConstraint[T]](list []*Node[T]) []T {
+	dataList := make([]T, 0, len(list))
+	for _, child := range list {
+		if c, ok := child.data.(T); ok {
+			dataList = append(dataList, c)
+		}
+	}
+	return dataList
+}
+
 // OpenEditor opens an editor for each selected row in the table.
-func OpenEditor[T comparable](table *unison.Table, edit func(item T)) {
+func OpenEditor[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], edit func(item T)) {
 	var zero T
 	for _, row := range table.SelectedRows(false) {
 		if a := ExtractFromRowData[T](row); a != zero {

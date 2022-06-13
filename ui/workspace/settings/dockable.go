@@ -64,7 +64,7 @@ func (d *Dockable) Setup(ws *workspace.Workspace, dc *unison.DockContainer, addT
 		dc.Stack(d, -1)
 	} else {
 		ws.DocumentDock.DockTo(d, nil, unison.RightSide)
-		if dc = unison.DockContainerFor(d); dc != nil && dc.Group == "" {
+		if dc = unison.Ancestor[*unison.DockContainer](d); dc != nil && dc.Group == "" {
 			dc.Group = settingsGroup
 		}
 	}
@@ -100,7 +100,7 @@ func (d *Dockable) MayAttemptClose() bool {
 
 // AttemptClose implements unison.TabCloser
 func (d *Dockable) AttemptClose() bool {
-	if dc := unison.DockContainerFor(d); dc != nil {
+	if dc := unison.Ancestor[*unison.DockContainer](d); dc != nil {
 		dc.Close(d)
 	}
 	return true

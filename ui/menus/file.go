@@ -283,7 +283,7 @@ var CloseTab = &unison.Action{
 			if workspace.FromWindow(wnd) == nil {
 				return true // not the workspace, so allow regular window close
 			}
-			if dc := unison.FocusedDockContainerFor(wnd); dc != nil {
+			if dc := unison.Ancestor[*unison.DockContainer](wnd.Focus()); dc != nil {
 				if current := dc.CurrentDockable(); current != nil {
 					if _, ok := current.(unison.TabCloser); ok {
 						return true
@@ -298,7 +298,7 @@ var CloseTab = &unison.Action{
 			if workspace.FromWindow(wnd) == nil {
 				// not the workspace, so allow regular window close
 				wnd.AttemptClose()
-			} else if dc := unison.FocusedDockContainerFor(wnd); dc != nil {
+			} else if dc := unison.Ancestor[*unison.DockContainer](wnd.Focus()); dc != nil {
 				if current := dc.CurrentDockable(); current != nil {
 					if closer, ok := current.(unison.TabCloser); ok {
 						closer.AttemptClose()

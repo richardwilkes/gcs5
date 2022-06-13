@@ -20,21 +20,19 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-type adjustTechLevelListUndoEdit = *unison.UndoEdit[*adjustTechLevelList]
-
-type adjustTechLevelList struct {
+type adjustTechLevelList[T gurps.NodeConstraint[T]] struct {
 	Owner widget.Rebuildable
-	List  []*techLevelAdjuster
+	List  []*techLevelAdjuster[T]
 }
 
-func (a *adjustTechLevelList) Apply() {
+func (a *adjustTechLevelList[T]) Apply() {
 	for _, one := range a.List {
 		one.Apply()
 	}
 	a.Finish()
 }
 
-func (a *adjustTechLevelList) Finish() {
+func (a *adjustTechLevelList[T]) Finish() {
 	entity := a.List[0].Target.OwningEntity()
 	if entity != nil {
 		entity.Recalculate()
@@ -42,25 +40,25 @@ func (a *adjustTechLevelList) Finish() {
 	widget.MarkModified(a.Owner)
 }
 
-type techLevelAdjuster struct {
-	Target    gurps.TechLevelProvider
+type techLevelAdjuster[T gurps.NodeConstraint[T]] struct {
+	Target    gurps.TechLevelProvider[T]
 	TechLevel string
 }
 
-func newTechLevelAdjuster(target gurps.TechLevelProvider) *techLevelAdjuster {
-	return &techLevelAdjuster{
+func newTechLevelAdjuster[T gurps.NodeConstraint[T]](target gurps.TechLevelProvider[T]) *techLevelAdjuster[T] {
+	return &techLevelAdjuster[T]{
 		Target:    target,
 		TechLevel: target.TL(),
 	}
 }
 
-func (a *techLevelAdjuster) Apply() {
+func (a *techLevelAdjuster[T]) Apply() {
 	a.Target.SetTL(a.TechLevel)
 }
 
-func canAdjustTechLevel(table *unison.Table, amount fxp.Int) bool {
+func canAdjustTechLevel[T gurps.NodeConstraint[T]](table *unison.Table[*editors.Node[T]], amount fxp.Int) bool {
 	for _, row := range table.SelectedRows(false) {
-		if provider := editors.ExtractFromRowData[gurps.TechLevelProvider](row); provider != nil {
+		if provider, ok := row.Data().(gurps.TechLevelProvider[T]); ok {
 			if _, changed := gurps.AdjustTechLevel(provider.TL(), amount); changed {
 				return true
 			}
@@ -69,15 +67,15 @@ func canAdjustTechLevel(table *unison.Table, amount fxp.Int) bool {
 	return false
 }
 
-func adjustTechLevel(owner widget.Rebuildable, table *unison.Table, amount fxp.Int) {
-	before := &adjustTechLevelList{Owner: owner}
-	after := &adjustTechLevelList{Owner: owner}
+func adjustTechLevel[T gurps.NodeConstraint[T]](owner widget.Rebuildable, table *unison.Table[*editors.Node[T]], amount fxp.Int) {
+	before := &adjustTechLevelList[T]{Owner: owner}
+	after := &adjustTechLevelList[T]{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if provider := editors.ExtractFromRowData[gurps.TechLevelProvider](row); provider != nil {
+		if provider, ok := row.Data().(gurps.TechLevelProvider[T]); ok {
 			if tl, changed := gurps.AdjustTechLevel(provider.TL(), amount); changed {
-				before.List = append(before.List, newTechLevelAdjuster(provider))
+				before.List = append(before.List, newTechLevelAdjuster[T](provider))
 				provider.SetTL(tl)
-				after.List = append(after.List, newTechLevelAdjuster(provider))
+				after.List = append(after.List, newTechLevelAdjuster[T](provider))
 			}
 		}
 	}
@@ -89,11 +87,11 @@ func adjustTechLevel(owner widget.Rebuildable, table *unison.Table, amount fxp.I
 			} else {
 				name = i18n.Text("Increase Tech Level")
 			}
-			mgr.Add(&unison.UndoEdit[*adjustTechLevelList]{
+			mgr.Add(&unison.UndoEdit[*adjustTechLevelList[T]]{
 				ID:         unison.NextUndoID(),
 				EditName:   name,
-				UndoFunc:   func(edit adjustTechLevelListUndoEdit) { edit.BeforeData.Apply() },
-				RedoFunc:   func(edit adjustTechLevelListUndoEdit) { edit.AfterData.Apply() },
+				UndoFunc:   func(edit *unison.UndoEdit[*adjustTechLevelList[T]]) { edit.BeforeData.Apply() },
+				RedoFunc:   func(edit *unison.UndoEdit[*adjustTechLevelList[T]]) { edit.AfterData.Apply() },
 				BeforeData: before,
 				AfterData:  after,
 			})

@@ -14,6 +14,7 @@ package editors
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/theme"
+	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/unison"
 )
 
@@ -21,8 +22,8 @@ type equipmentModifiersPanel struct {
 	unison.Panel
 	entity    *gurps.Entity
 	modifiers *[]*gurps.EquipmentModifier
-	provider  TableProvider
-	table     *unison.Table
+	provider  widget.TableProvider[*Node[*gurps.EquipmentModifier]]
+	table     *unison.Table[*Node[*gurps.EquipmentModifier]]
 }
 
 func newEquipmentModifiersPanel(entity *gurps.Entity, modifiers *[]*gurps.EquipmentModifier) *equipmentModifiersPanel {
@@ -57,6 +58,6 @@ func (p *equipmentModifiersPanel) EquipmentModifierList() []*gurps.EquipmentModi
 func (p *equipmentModifiersPanel) SetEquipmentModifierList(list []*gurps.EquipmentModifier) {
 	*p.modifiers = list
 	sel := RecordTableSelection(p.table)
-	p.table.SetTopLevelRows(p.provider.RowData(p.table))
+	p.table.SyncToModel()
 	ApplyTableSelection(p.table, sel)
 }

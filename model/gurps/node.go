@@ -16,15 +16,25 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 )
 
+// NodeConstraint is the constraint for a Node.
+type NodeConstraint[T Node[T]] interface {
+	comparable
+	Node[T]
+}
+
 // Node defines the methods required of nodes in our tables.
-type Node interface {
+type Node[T any] interface {
 	UUID() uuid.UUID
+	Clone(newEntity *Entity, newParent T, preserveID bool) T
 	OwningEntity() *Entity
 	SetOwningEntity(entity *Entity)
 	Kind() string
 	Container() bool
+	Parent() T
+	SetParent(parent T)
 	HasChildren() bool
-	NodeChildren() []Node
+	NodeChildren() []T
+	SetChildren(children []T)
 	Enabled() bool
 	Open() bool
 	SetOpen(open bool)
@@ -32,21 +42,21 @@ type Node interface {
 }
 
 // RawPointsAdjuster defines methods for nodes that can have their raw points adjusted must implement.
-type RawPointsAdjuster interface {
-	Node
+type RawPointsAdjuster[T Node[T]] interface {
+	Node[T]
 	RawPoints() fxp.Int
 	SetRawPoints(points fxp.Int) bool
 }
 
 // SkillAdjustmentProvider defines methods for nodes that can have their skill level adjusted must implement.
-type SkillAdjustmentProvider interface {
-	RawPointsAdjuster
+type SkillAdjustmentProvider[T Node[T]] interface {
+	RawPointsAdjuster[T]
 	IncrementSkillLevel()
 	DecrementSkillLevel()
 }
 
 // EditorData defines the methods required of editor data.
-type EditorData[T Node] interface {
+type EditorData[T Node[T]] interface {
 	// CopyFrom copies the corresponding data from the node into this editor data.
 	CopyFrom(T)
 	// ApplyTo copes he editor data into the provided node.

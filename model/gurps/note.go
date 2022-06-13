@@ -21,7 +21,7 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 )
 
-var _ Node = &Note{}
+var _ Node[*Note] = &Note{}
 
 // Columns that can be used with the note method .CellData()
 const (
@@ -38,7 +38,6 @@ const (
 type Note struct {
 	NoteData
 	Entity *Entity
-	Parent *Note
 }
 
 type noteListData struct {
@@ -78,10 +77,27 @@ func NewNote(entity *Entity, parent *Note, container bool) *Note {
 			ContainerBase: newContainerBase[*Note](noteTypeKey, container),
 		},
 		Entity: entity,
-		Parent: parent,
 	}
 	n.Text = n.Kind()
+	n.parent = parent
 	return n
+}
+
+// Clone implements Node.
+func (n *Note) Clone(entity *Entity, parent *Note, preserveID bool) *Note {
+	other := NewNote(entity, parent, n.Container())
+	if preserveID {
+		other.ID = n.ID
+	}
+	other.IsOpen = n.IsOpen
+	other.NoteEditData.CopyFrom(n)
+	if n.HasChildren() {
+		other.Children = make([]*Note, 0, len(n.Children))
+		for _, child := range n.Children {
+			other.Children = append(other.Children, child.Clone(entity, other, preserveID))
+		}
+	}
+	return other
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -99,7 +115,7 @@ func (n *Note) UnmarshalJSON(data []byte) error {
 	n.ClearUnusedFieldsForType()
 	if n.Container() {
 		for _, one := range n.Children {
-			one.Parent = n
+			one.parent = n
 		}
 	}
 	return nil
@@ -121,10 +137,10 @@ func (n *Note) CellData(column int, data *CellData) {
 // Depth returns the number of parents this node has.
 func (n *Note) Depth() int {
 	count := 0
-	p := n.Parent
+	p := n.parent
 	for p != nil {
 		count++
-		p = p.Parent
+		p = p.parent
 	}
 	return count
 }

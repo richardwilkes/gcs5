@@ -43,15 +43,15 @@ type SkillEditData struct {
 
 // CopyFrom implements node.EditorData.
 func (d *SkillEditData) CopyFrom(s *Skill) {
-	d.copyFrom(&s.SkillEditData, s.Container(), false)
+	d.copyFrom(s.Entity, &s.SkillEditData, s.Container(), false)
 }
 
 // ApplyTo implements node.EditorData.
 func (d *SkillEditData) ApplyTo(s *Skill) {
-	s.SkillEditData.copyFrom(d, s.Container(), true)
+	s.SkillEditData.copyFrom(s.Entity, d, s.Container(), true)
 }
 
-func (d *SkillEditData) copyFrom(other *SkillEditData, isContainer, isApply bool) {
+func (d *SkillEditData) copyFrom(entity *Entity, other *SkillEditData, isContainer, isApply bool) {
 	*d = *other
 	d.Tags = txt.CloneStringSlice(d.Tags)
 	if other.TechLevel != nil {
@@ -87,7 +87,7 @@ func (d *SkillEditData) copyFrom(other *SkillEditData, isContainer, isApply bool
 	if len(other.Weapons) != 0 {
 		d.Weapons = make([]*Weapon, 0, len(other.Weapons))
 		for _, one := range other.Weapons {
-			d.Weapons = append(d.Weapons, one.Clone())
+			d.Weapons = append(d.Weapons, one.Clone(entity, nil, true))
 		}
 	}
 	d.Features = other.Features.Clone()

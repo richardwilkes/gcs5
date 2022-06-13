@@ -44,15 +44,15 @@ type SpellEditData struct {
 
 // CopyFrom implements node.EditorData.
 func (d *SpellEditData) CopyFrom(s *Spell) {
-	d.copyFrom(&s.SpellEditData, s.Container(), false)
+	d.copyFrom(s.Entity, &s.SpellEditData, s.Container(), false)
 }
 
 // ApplyTo implements node.EditorData.
 func (d *SpellEditData) ApplyTo(s *Spell) {
-	s.SpellEditData.copyFrom(d, s.Container(), true)
+	s.SpellEditData.copyFrom(s.Entity, d, s.Container(), true)
 }
 
-func (d *SpellEditData) copyFrom(other *SpellEditData, isContainer, isApply bool) {
+func (d *SpellEditData) copyFrom(entity *Entity, other *SpellEditData, isContainer, isApply bool) {
 	*d = *other
 	d.Tags = txt.CloneStringSlice(d.Tags)
 	if other.TechLevel != nil {
@@ -65,7 +65,7 @@ func (d *SpellEditData) copyFrom(other *SpellEditData, isContainer, isApply bool
 	if len(other.Weapons) != 0 {
 		d.Weapons = make([]*Weapon, 0, len(other.Weapons))
 		for _, one := range other.Weapons {
-			d.Weapons = append(d.Weapons, one.Clone())
+			d.Weapons = append(d.Weapons, one.Clone(entity, nil, true))
 		}
 	}
 }

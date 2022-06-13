@@ -266,7 +266,7 @@ func (d *ImageDockable) MayAttemptClose() bool {
 
 // AttemptClose implements unison.TabCloser
 func (d *ImageDockable) AttemptClose() bool {
-	if dc := unison.DockContainerFor(d); dc != nil {
+	if dc := unison.Ancestor[*unison.DockContainer](d); dc != nil {
 		dc.Close(d)
 	}
 	return true

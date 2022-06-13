@@ -12,11 +12,16 @@
 package editors
 
 import (
+	"bytes"
+	"compress/gzip"
+
 	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/json"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -43,12 +48,13 @@ var (
 )
 
 type eqpModProvider struct {
+	table    *unison.Table[*Node[*gurps.EquipmentModifier]]
 	colMap   map[int]int
 	provider gurps.EquipmentModifierListProvider
 }
 
 // NewEquipmentModifiersProvider creates a new table provider for equipment modifiers.
-func NewEquipmentModifiersProvider(provider gurps.EquipmentModifierListProvider, forEditor bool) TableProvider {
+func NewEquipmentModifiersProvider(provider gurps.EquipmentModifierListProvider, forEditor bool) widget.TableProvider[*Node[*gurps.EquipmentModifier]] {
 	p := &eqpModProvider{
 		provider: provider,
 	}
@@ -58,6 +64,27 @@ func NewEquipmentModifiersProvider(provider gurps.EquipmentModifierListProvider,
 		p.colMap = equipmentModifierColMap
 	}
 	return p
+}
+
+func (p *eqpModProvider) SetTable(table *unison.Table[*Node[*gurps.EquipmentModifier]]) {
+	p.table = table
+}
+
+func (p *eqpModProvider) RootRowCount() int {
+	return len(p.provider.EquipmentModifierList())
+}
+
+func (p *eqpModProvider) RootRows() []*Node[*gurps.EquipmentModifier] {
+	data := p.provider.EquipmentModifierList()
+	rows := make([]*Node[*gurps.EquipmentModifier], 0, len(data))
+	for _, one := range data {
+		rows = append(rows, NewNode[*gurps.EquipmentModifier](p.table, nil, p.colMap, one, false))
+	}
+	return rows
+}
+
+func (p *eqpModProvider) SetRootRows(rows []*Node[*gurps.EquipmentModifier]) {
+	p.provider.SetEquipmentModifierList(ExtractNodeDataFromList(rows))
 }
 
 func (p *eqpModProvider) Entity() *gurps.Entity {
@@ -72,28 +99,32 @@ func (p *eqpModProvider) DragSVG() *unison.SVG {
 	return res.GCSEquipmentModifiersSVG
 }
 
+func (p *eqpModProvider) DropShouldMoveData(from, to *unison.Table[*Node[*gurps.EquipmentModifier]]) bool {
+	return from == to
+}
+
 func (p *eqpModProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Equipment Modifier"), i18n.Text("Equipment Modifiers")
 }
 
-func (p *eqpModProvider) Headers() []unison.TableColumnHeader {
-	var headers []unison.TableColumnHeader
+func (p *eqpModProvider) Headers() []unison.TableColumnHeader[*Node[*gurps.EquipmentModifier]] {
+	var headers []unison.TableColumnHeader[*Node[*gurps.EquipmentModifier]]
 	for i := 0; i < len(p.colMap); i++ {
 		switch p.colMap[i] {
 		case gurps.EquipmentModifierEnabledColumn:
-			headers = append(headers, NewEnabledHeader(false))
+			headers = append(headers, NewEnabledHeader[*gurps.EquipmentModifier](false))
 		case gurps.EquipmentModifierDescriptionColumn:
-			headers = append(headers, NewHeader(i18n.Text("Equipment Modifier"), "", false))
+			headers = append(headers, NewHeader[*gurps.EquipmentModifier](i18n.Text("Equipment Modifier"), "", false))
 		case gurps.EquipmentModifierTechLevelColumn:
-			headers = append(headers, NewHeader(i18n.Text("TL"), i18n.Text("Tech Level"), false))
+			headers = append(headers, NewHeader[*gurps.EquipmentModifier](i18n.Text("TL"), i18n.Text("Tech Level"), false))
 		case gurps.EquipmentModifierCostColumn:
-			headers = append(headers, NewHeader(i18n.Text("Cost Adjustment"), "", false))
+			headers = append(headers, NewHeader[*gurps.EquipmentModifier](i18n.Text("Cost Adjustment"), "", false))
 		case gurps.EquipmentModifierWeightColumn:
-			headers = append(headers, NewHeader(i18n.Text("Weight Adjustment"), "", false))
+			headers = append(headers, NewHeader[*gurps.EquipmentModifier](i18n.Text("Weight Adjustment"), "", false))
 		case gurps.EquipmentModifierTagsColumn:
-			headers = append(headers, NewHeader(i18n.Text("Tags"), "", false))
+			headers = append(headers, NewHeader[*gurps.EquipmentModifier](i18n.Text("Tags"), "", false))
 		case gurps.EquipmentModifierReferenceColumn:
-			headers = append(headers, NewPageRefHeader(false))
+			headers = append(headers, NewPageRefHeader[*gurps.EquipmentModifier](false))
 		default:
 			jot.Fatalf(1, "invalid equipment modifier column: %d", p.colMap[i])
 		}
@@ -101,16 +132,7 @@ func (p *eqpModProvider) Headers() []unison.TableColumnHeader {
 	return headers
 }
 
-func (p *eqpModProvider) RowData(table *unison.Table) []unison.TableRowData {
-	data := p.provider.EquipmentModifierList()
-	rows := make([]unison.TableRowData, 0, len(data))
-	for _, one := range data {
-		rows = append(rows, NewNode(table, nil, p.colMap, one, false))
-	}
-	return rows
-}
-
-func (p *eqpModProvider) SyncHeader(_ []unison.TableColumnHeader) {
+func (p *eqpModProvider) SyncHeader(_ []unison.TableColumnHeader[*Node[*gurps.EquipmentModifier]]) {
 }
 
 func (p *eqpModProvider) HierarchyColumnIndex() int {
@@ -126,26 +148,52 @@ func (p *eqpModProvider) ExcessWidthColumnIndex() int {
 	return p.HierarchyColumnIndex()
 }
 
-func (p *eqpModProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table) {
+func (p *eqpModProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.EquipmentModifier]]) {
 	OpenEditor[*gurps.EquipmentModifier](table, func(item *gurps.EquipmentModifier) {
 		EditEquipmentModifier(owner, item)
 	})
 }
 
-func (p *eqpModProvider) CreateItem(owner widget.Rebuildable, table *unison.Table, variant ItemVariant) {
-	item := gurps.NewEquipmentModifier(p.Entity(), nil, variant == ContainerItemVariant)
+func (p *eqpModProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.EquipmentModifier]], variant widget.ItemVariant) {
+	item := gurps.NewEquipmentModifier(p.Entity(), nil, variant == widget.ContainerItemVariant)
 	InsertItem[*gurps.EquipmentModifier](owner, table, item,
-		func(target, parent *gurps.EquipmentModifier) { target.Parent = parent },
 		func(target *gurps.EquipmentModifier) []*gurps.EquipmentModifier { return target.Children },
 		func(target *gurps.EquipmentModifier, children []*gurps.EquipmentModifier) { target.Children = children },
-		p.provider.EquipmentModifierList, p.provider.SetEquipmentModifierList, p.RowData,
+		p.provider.EquipmentModifierList, p.provider.SetEquipmentModifierList,
+		func(_ *unison.Table[*Node[*gurps.EquipmentModifier]]) []*Node[*gurps.EquipmentModifier] {
+			return p.RootRows()
+		},
 		func(target *gurps.EquipmentModifier) uuid.UUID { return target.ID })
 	EditEquipmentModifier(owner, item)
 }
 
-func (p *eqpModProvider) DeleteSelection(table *unison.Table) {
+func (p *eqpModProvider) DeleteSelection(table *unison.Table[*Node[*gurps.EquipmentModifier]]) {
 	deleteTableSelection(table, p.provider.EquipmentModifierList(),
 		func(nodes []*gurps.EquipmentModifier) { p.provider.SetEquipmentModifierList(nodes) },
-		func(node *gurps.EquipmentModifier) **gurps.EquipmentModifier { return &node.Parent },
 		func(node *gurps.EquipmentModifier) *[]*gurps.EquipmentModifier { return &node.Children })
+}
+
+func (p *eqpModProvider) Serialize() ([]byte, error) {
+	var buffer bytes.Buffer
+	gz := gzip.NewWriter(&buffer)
+	if err := json.NewEncoder(gz).Encode(p.provider.EquipmentModifierList()); err != nil {
+		return nil, errs.Wrap(err)
+	}
+	if err := gz.Close(); err != nil {
+		return nil, errs.Wrap(err)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (p *eqpModProvider) Deserialize(data []byte) error {
+	gz, err := gzip.NewReader(bytes.NewReader(data))
+	if err != nil {
+		return errs.Wrap(err)
+	}
+	var rows []*gurps.EquipmentModifier
+	if err = json.NewDecoder(gz).Decode(&rows); err != nil {
+		return errs.Wrap(err)
+	}
+	p.provider.SetEquipmentModifierList(rows)
+	return nil
 }

@@ -21,17 +21,17 @@ import (
 )
 
 // NewHeader creates a new list header.
-func NewHeader(title, tooltip string, forPage bool) unison.TableColumnHeader {
+func NewHeader[T gurps.NodeConstraint[T]](title, tooltip string, forPage bool) unison.TableColumnHeader[*Node[T]] {
 	if forPage {
-		return NewPageTableColumnHeader(title, tooltip)
+		return NewPageTableColumnHeader[T](title, tooltip)
 	}
-	return unison.NewTableColumnHeader(title, tooltip)
+	return unison.NewTableColumnHeader[*Node[T]](title, tooltip)
 }
 
 // NewSVGHeader creates a new list header with an SVG image as its content rather than text.
-func NewSVGHeader(svg *unison.SVG, tooltip string, forPage bool) unison.TableColumnHeader {
+func NewSVGHeader[T gurps.NodeConstraint[T]](svg *unison.SVG, tooltip string, forPage bool) unison.TableColumnHeader[*Node[T]] {
 	if forPage {
-		header := NewPageTableColumnHeader("", tooltip)
+		header := NewPageTableColumnHeader[T]("", tooltip)
 		baseline := header.Font.Baseline()
 		header.Drawable = &unison.DrawableSVG{
 			SVG:  svg,
@@ -39,7 +39,7 @@ func NewSVGHeader(svg *unison.SVG, tooltip string, forPage bool) unison.TableCol
 		}
 		return header
 	}
-	header := unison.NewTableColumnHeader("", tooltip)
+	header := unison.NewTableColumnHeader[*Node[T]]("", tooltip)
 	baseline := header.Font.Baseline()
 	header.Drawable = &unison.DrawableSVG{
 		SVG:  svg,
@@ -49,9 +49,9 @@ func NewSVGHeader(svg *unison.SVG, tooltip string, forPage bool) unison.TableCol
 }
 
 // NewSVGPairHeader creates a new list header with a pair of SVG images as its content rather than text.
-func NewSVGPairHeader(leftSVG, rightSVG *unison.SVG, tooltip string, forPage bool) unison.TableColumnHeader {
+func NewSVGPairHeader[T gurps.NodeConstraint[T]](leftSVG, rightSVG *unison.SVG, tooltip string, forPage bool) unison.TableColumnHeader[*Node[T]] {
 	if forPage {
-		header := NewPageTableColumnHeader("", tooltip)
+		header := NewPageTableColumnHeader[T]("", tooltip)
 		baseline := header.Font.Baseline()
 		header.Drawable = &widget.DrawableSVGPair{
 			Left:  leftSVG,
@@ -60,7 +60,7 @@ func NewSVGPairHeader(leftSVG, rightSVG *unison.SVG, tooltip string, forPage boo
 		}
 		return header
 	}
-	header := unison.NewTableColumnHeader("", tooltip)
+	header := unison.NewTableColumnHeader[*Node[T]]("", tooltip)
 	baseline := header.Font.Baseline()
 	header.Drawable = &widget.DrawableSVGPair{
 		Left:  leftSVG,
@@ -71,47 +71,47 @@ func NewSVGPairHeader(leftSVG, rightSVG *unison.SVG, tooltip string, forPage boo
 }
 
 // NewPageRefHeader creates a new page reference header.
-func NewPageRefHeader(forPage bool) unison.TableColumnHeader {
-	return NewSVGHeader(res.BookmarkSVG, gurps.PageRefTooltipText, forPage)
+func NewPageRefHeader[T gurps.NodeConstraint[T]](forPage bool) unison.TableColumnHeader[*Node[T]] {
+	return NewSVGHeader[T](res.BookmarkSVG, gurps.PageRefTooltipText, forPage)
 }
 
 // NewEquippedHeader creates a new equipped header.
-func NewEquippedHeader(forPage bool) unison.TableColumnHeader {
-	return NewSVGHeader(res.CheckmarkSVG,
+func NewEquippedHeader[T gurps.NodeConstraint[T]](forPage bool) unison.TableColumnHeader[*Node[T]] {
+	return NewSVGHeader[T](res.CheckmarkSVG,
 		i18n.Text(`Whether this piece of equipment is equipped or just carried. Items that are not equipped do not apply any features they may normally contribute to the character.`),
 		forPage)
 }
 
 // NewEnabledHeader creates a new enabled header.
-func NewEnabledHeader(forPage bool) unison.TableColumnHeader {
-	return NewSVGHeader(res.CheckmarkSVG,
+func NewEnabledHeader[T gurps.NodeConstraint[T]](forPage bool) unison.TableColumnHeader[*Node[T]] {
+	return NewSVGHeader[T](res.CheckmarkSVG,
 		i18n.Text(`Whether this item is enabled. Items that are not enabled do not apply any features they may normally contribute to the character.`),
 		forPage)
 }
 
 // NewMoneyHeader creates a new money header.
-func NewMoneyHeader(forPage bool) unison.TableColumnHeader {
-	return NewSVGHeader(res.CoinsSVG,
+func NewMoneyHeader[T gurps.NodeConstraint[T]](forPage bool) unison.TableColumnHeader[*Node[T]] {
+	return NewSVGHeader[T](res.CoinsSVG,
 		i18n.Text(`The value of one of these pieces of equipment`),
 		forPage)
 }
 
 // NewExtendedMoneyHeader creates a new extended money page header.
-func NewExtendedMoneyHeader(forPage bool) unison.TableColumnHeader {
-	return NewSVGPairHeader(res.StackSVG, res.CoinsSVG,
+func NewExtendedMoneyHeader[T gurps.NodeConstraint[T]](forPage bool) unison.TableColumnHeader[*Node[T]] {
+	return NewSVGPairHeader[T](res.StackSVG, res.CoinsSVG,
 		i18n.Text(`The value of all of these pieces of equipment, plus the value of any contained equipment`), forPage)
 }
 
 // NewWeightHeader creates a new weight page header.
-func NewWeightHeader(forPage bool) unison.TableColumnHeader {
-	return NewSVGHeader(res.WeightSVG,
+func NewWeightHeader[T gurps.NodeConstraint[T]](forPage bool) unison.TableColumnHeader[*Node[T]] {
+	return NewSVGHeader[T](res.WeightSVG,
 		i18n.Text(`The weight of one of these pieces of equipment`),
 		forPage)
 }
 
 // NewExtendedWeightHeader creates a new extended weight page header.
-func NewExtendedWeightHeader(forPage bool) unison.TableColumnHeader {
-	return NewSVGPairHeader(res.StackSVG, res.WeightSVG,
+func NewExtendedWeightHeader[T gurps.NodeConstraint[T]](forPage bool) unison.TableColumnHeader[*Node[T]] {
+	return NewSVGPairHeader[T](res.StackSVG, res.WeightSVG,
 		i18n.Text(`The weight of all of these pieces of equipment, plus the weight of any contained equipment`), forPage)
 }
 
@@ -126,17 +126,17 @@ var PageTableColumnHeaderTheme = unison.LabelTheme{
 	Side:            unison.LeftSide,
 }
 
-var _ unison.TableColumnHeader = &PageTableColumnHeader{}
+var _ unison.TableColumnHeader[*Node[*gurps.Trait]] = &PageTableColumnHeader[*gurps.Trait]{}
 
 // PageTableColumnHeader provides a default page table column header panel.
-type PageTableColumnHeader struct {
+type PageTableColumnHeader[T gurps.NodeConstraint[T]] struct {
 	unison.Label
 	sortState unison.SortState
 }
 
 // NewPageTableColumnHeader creates a new page table column header panel with the given title.
-func NewPageTableColumnHeader(title, tooltip string) *PageTableColumnHeader {
-	h := &PageTableColumnHeader{
+func NewPageTableColumnHeader[T gurps.NodeConstraint[T]](title, tooltip string) *PageTableColumnHeader[T] {
+	h := &PageTableColumnHeader[T]{
 		Label: unison.Label{
 			LabelTheme: PageTableColumnHeaderTheme,
 			Text:       title,
@@ -159,7 +159,7 @@ func NewPageTableColumnHeader(title, tooltip string) *PageTableColumnHeader {
 }
 
 // DefaultSizes provides the default sizing.
-func (h *PageTableColumnHeader) DefaultSizes(hint unison.Size) (min, pref, max unison.Size) {
+func (h *PageTableColumnHeader[T]) DefaultSizes(hint unison.Size) (min, pref, max unison.Size) {
 	_, pref, _ = h.Label.DefaultSizes(hint)
 	if b := h.Border(); b != nil {
 		pref.AddInsets(b.Insets())
@@ -170,7 +170,7 @@ func (h *PageTableColumnHeader) DefaultSizes(hint unison.Size) (min, pref, max u
 }
 
 // DefaultDraw provides the default drawing.
-func (h *PageTableColumnHeader) DefaultDraw(canvas *unison.Canvas, dirty unison.Rect) {
+func (h *PageTableColumnHeader[T]) DefaultDraw(canvas *unison.Canvas, dirty unison.Rect) {
 	if h.sortState.Order == 0 {
 		canvas.DrawRect(dirty, theme.MarkerColor.Paint(canvas, dirty, unison.Fill))
 		save := h.OnBackgroundInk
@@ -183,12 +183,12 @@ func (h *PageTableColumnHeader) DefaultDraw(canvas *unison.Canvas, dirty unison.
 }
 
 // SortState returns the current SortState.
-func (h *PageTableColumnHeader) SortState() unison.SortState {
+func (h *PageTableColumnHeader[T]) SortState() unison.SortState {
 	return h.sortState
 }
 
 // SetSortState sets the SortState.
-func (h *PageTableColumnHeader) SetSortState(state unison.SortState) {
+func (h *PageTableColumnHeader[T]) SetSortState(state unison.SortState) {
 	if h.sortState != state {
 		h.sortState = state
 		h.MarkForRedraw()
@@ -196,9 +196,9 @@ func (h *PageTableColumnHeader) SetSortState(state unison.SortState) {
 }
 
 // DefaultMouseUp provides the default mouse up handling.
-func (h *PageTableColumnHeader) DefaultMouseUp(where unison.Point, _ int, _ unison.Modifiers) bool {
+func (h *PageTableColumnHeader[T]) DefaultMouseUp(where unison.Point, _ int, _ unison.Modifiers) bool {
 	if h.sortState.Sortable && h.ContentRect(false).ContainsPoint(where) {
-		if header, ok := h.Parent().Self.(*unison.TableHeader); ok {
+		if header, ok := h.Parent().Self.(*unison.TableHeader[*Node[T]]); ok {
 			header.SortOn(h)
 			header.ApplySort()
 		}

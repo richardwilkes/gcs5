@@ -24,13 +24,9 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type comparableNode interface {
-	comparable
-	gurps.Node
-}
-
-func newTable(parent *unison.Panel, provider TableProvider) *unison.Table {
-	table := unison.NewTable()
+func newTable[T gurps.NodeConstraint[T]](parent *unison.Panel, provider widget.TableProvider[*Node[T]]) *unison.Table[*Node[T]] {
+	table := unison.NewTable[*Node[T]](provider)
+	provider.SetTable(table)
 	table.DividerInk = theme.HeaderColor
 	table.Padding.Top = 0
 	table.Padding.Bottom = 0
@@ -60,9 +56,9 @@ func newTable(parent *unison.Panel, provider TableProvider) *unison.Table {
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
-	table.SetTopLevelRows(provider.RowData(table))
+	table.SyncToModel()
 	table.InstallCmdHandlers(constants.OpenEditorItemID, func(_ any) bool { return table.HasSelection() },
-		func(_ any) { provider.OpenEditor(widget.FindRebuildable(table), table) })
+		func(_ any) { provider.OpenEditor(unison.AncestorOrSelf[widget.Rebuildable](table), table) })
 	table.InstallCmdHandlers(constants.OpenOnePageReferenceItemID,
 		func(_ any) bool { return CanOpenPageRef(table) },
 		func(_ any) { OpenPageRef(table) })
@@ -76,34 +72,35 @@ func newTable(parent *unison.Panel, provider TableProvider) *unison.Table {
 	parent.AddChild(table)
 	singular, plural := provider.ItemNames()
 	table.InstallDragSupport(provider.DragSVG(), provider.DragKey(), singular, plural)
-	table.InstallDropSupport(provider.DragKey(), widget.StdDropCallback)
+	widget.InstallTableDropSupport(table, provider)
 	return table
 }
 
-func collectUUIDs(node gurps.Node, m map[uuid.UUID]bool) {
+func collectUUIDs[T gurps.NodeConstraint[T]](node T, m map[uuid.UUID]bool) {
 	m[node.UUID()] = true
 	for _, child := range node.NodeChildren() {
 		collectUUIDs(child, m)
 	}
 }
 
-func deleteTableSelection[T comparableNode](table *unison.Table, topLevelRows []T, setTopLevelRows func(nodes []T), parentPtrFunc func(node T) *T, childrenPtrFunc func(node T) *[]T) {
+func deleteTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], topLevelRows []T, setTopLevelRows func(nodes []T), childrenPtrFunc func(node T) *[]T) {
 	if sel := table.SelectedRows(true); len(sel) > 0 {
 		ids := make(map[uuid.UUID]bool, len(sel))
 		list := make([]T, 0, len(sel))
 		for _, row := range sel {
 			if target := ExtractFromRowData[T](row); !toolbox.IsNil(target) {
 				list = append(list, target)
-				collectUUIDs(target, ids)
+				collectUUIDs[T](target, ids)
 			}
 		}
 		if !workspace.CloseUUID(ids) {
 			return
 		}
+		var zero T
 		needSet := false
 		for _, target := range list {
-			parentPtr := parentPtrFunc(target)
-			if toolbox.IsNil(*parentPtr) {
+			parent := target.Parent()
+			if parent == zero {
 				for i, one := range topLevelRows {
 					if one == target {
 						topLevelRows = slices.Delete(topLevelRows, i, i+1)
@@ -112,7 +109,7 @@ func deleteTableSelection[T comparableNode](table *unison.Table, topLevelRows []
 					}
 				}
 			} else {
-				childrenPtr := childrenPtrFunc(*parentPtr)
+				childrenPtr := childrenPtrFunc(parent)
 				for i, one := range *childrenPtr {
 					if one == target {
 						*childrenPtr = slices.Delete(*childrenPtr, i, i+1)
@@ -124,18 +121,19 @@ func deleteTableSelection[T comparableNode](table *unison.Table, topLevelRows []
 		if needSet {
 			setTopLevelRows(topLevelRows)
 		}
-		if rebuilder := widget.FindRebuildable(table); rebuilder != nil {
+		if rebuilder := unison.AncestorOrSelf[widget.Rebuildable](table); rebuilder != nil {
 			rebuilder.Rebuild(true)
 		}
 	}
 }
 
 // RecordTableSelection collects the currently selected row UUIDs.
-func RecordTableSelection(table *unison.Table) map[uuid.UUID]bool {
+func RecordTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]]) map[uuid.UUID]bool {
+	var zero T
 	rows := table.SelectedRows(false)
 	selection := make(map[uuid.UUID]bool, len(rows))
 	for _, row := range rows {
-		if node := ExtractFromRowData[gurps.Node](row); node != nil {
+		if node := ExtractFromRowData[T](row); node != zero {
 			selection[node.UUID()] = true
 		}
 	}
@@ -143,26 +141,27 @@ func RecordTableSelection(table *unison.Table) map[uuid.UUID]bool {
 }
 
 // ApplyTableSelection locates the rows with the given UUIDs and selects them, replacing any existing selection.
-func ApplyTableSelection(table *unison.Table, selection map[uuid.UUID]bool) {
+func ApplyTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], selection map[uuid.UUID]bool) {
 	table.ClearSelection()
 	if len(selection) != 0 {
-		_, indexes := collectRowMappings(0, make([]int, 0, len(selection)), selection, table.TopLevelRows())
+		_, indexes := collectRowMappings(0, make([]int, 0, len(selection)), selection, table.RootRows())
 		if len(indexes) != 0 {
 			table.SelectByIndex(indexes...)
 		}
 	}
 }
 
-func collectRowMappings(index int, indexes []int, selection map[uuid.UUID]bool, rows []unison.TableRowData) (updatedIndex int, updatedIndexes []int) {
+func collectRowMappings[T gurps.NodeConstraint[T]](index int, indexes []int, selection map[uuid.UUID]bool, rows []*Node[T]) (updatedIndex int, updatedIndexes []int) {
+	var zero T
 	for _, row := range rows {
-		if node := ExtractFromRowData[gurps.Node](row); node != nil {
+		if node := ExtractFromRowData[T](row); node != zero {
 			if selection[node.UUID()] {
 				indexes = append(indexes, index)
 			}
 		}
 		index++
 		if row.IsOpen() {
-			index, indexes = collectRowMappings(index, indexes, selection, row.ChildRows())
+			index, indexes = collectRowMappings(index, indexes, selection, row.Children())
 		}
 	}
 	return index, indexes

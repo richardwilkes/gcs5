@@ -12,7 +12,6 @@
 package workspace
 
 import (
-	"path"
 	"path/filepath"
 
 	"github.com/richardwilkes/gcs/model/library"
@@ -24,11 +23,6 @@ import (
 
 var _ unison.Dockable = &Navigator{}
 
-// Pather defines the method for returning a path from an object.
-type Pather interface {
-	Path() string
-}
-
 // FileBackedDockable defines methods a Dockable that is based on a file should implement.
 type FileBackedDockable interface {
 	unison.Dockable
@@ -39,7 +33,7 @@ type FileBackedDockable interface {
 type Navigator struct {
 	unison.Panel
 	scroll *unison.ScrollPanel
-	table  *unison.Table
+	table  *unison.Table[*NavigatorNode]
 }
 
 // RegisterFileTypes registers special navigator file types.
@@ -60,18 +54,18 @@ func registerSpecialFileInfo(key string, svg *unison.SVG) {
 func newNavigator() *Navigator {
 	n := &Navigator{
 		scroll: unison.NewScrollPanel(),
-		table:  unison.NewTable(),
+		table:  unison.NewTable[*NavigatorNode](&unison.SimpleTableModel[*NavigatorNode]{}),
 	}
 	n.Self = n
 
 	n.table.ColumnSizes = make([]unison.ColumnSize, 1)
 	globalSettings := settings.Global()
 	libs := globalSettings.LibrarySet.List()
-	rows := make([]unison.TableRowData, 0, len(libs))
+	rows := make([]*NavigatorNode, 0, len(libs))
 	for _, one := range libs {
 		rows = append(rows, NewLibraryNode(n, one))
 	}
-	n.table.SetTopLevelRows(rows)
+	n.table.SetRootRows(rows)
 	n.ApplyDisclosedPaths(globalSettings.LibraryExplorer.OpenRowKeys)
 	n.table.SizeColumnsToFit(true)
 
@@ -123,30 +117,23 @@ func (n *Navigator) Modified() bool {
 }
 
 func (n *Navigator) handleSelectionDoubleClick() {
+	window := n.Window()
 	for _, row := range n.table.SelectedRows(false) {
-		n.openRow(row)
-	}
-}
-
-func (n *Navigator) openRow(row unison.TableRowData) {
-	if node, ok := row.(*FileNode); ok {
-		OpenFile(n.Window(), path.Join(node.library.Path(), node.path))
+		row.Open(window)
 	}
 }
 
 // DisclosedPaths returns a list of paths that are currently disclosed.
 func (n *Navigator) DisclosedPaths() []string {
-	return n.accumulateDisclosedPaths(n.table.TopLevelRows(), nil)
+	return n.accumulateDisclosedPaths(n.table.RootRows(), nil)
 }
 
-func (n *Navigator) accumulateDisclosedPaths(rows []unison.TableRowData, disclosedPaths []string) []string {
+func (n *Navigator) accumulateDisclosedPaths(rows []*NavigatorNode, disclosedPaths []string) []string {
 	for _, row := range rows {
 		if row.IsOpen() {
-			if p, ok := row.(Pather); ok {
-				disclosedPaths = append(disclosedPaths, p.Path())
-			}
+			disclosedPaths = append(disclosedPaths, row.Path())
 		}
-		disclosedPaths = n.accumulateDisclosedPaths(row.ChildRows(), disclosedPaths)
+		disclosedPaths = n.accumulateDisclosedPaths(row.Children(), disclosedPaths)
 	}
 	return disclosedPaths
 }
@@ -157,18 +144,16 @@ func (n *Navigator) ApplyDisclosedPaths(paths []string) {
 	for _, one := range paths {
 		m[one] = true
 	}
-	n.applyDisclosedPaths(n.table.TopLevelRows(), m)
+	n.applyDisclosedPaths(n.table.RootRows(), m)
 }
 
-func (n *Navigator) applyDisclosedPaths(rows []unison.TableRowData, paths map[string]bool) {
+func (n *Navigator) applyDisclosedPaths(rows []*NavigatorNode, paths map[string]bool) {
 	for _, row := range rows {
-		if p, ok := row.(Pather); ok {
-			open := paths[p.Path()]
-			if row.IsOpen() != open {
-				row.SetOpen(open)
-			}
+		open := paths[row.Path()]
+		if row.IsOpen() != open {
+			row.SetOpen(open)
 		}
-		n.applyDisclosedPaths(row.ChildRows(), paths)
+		n.applyDisclosedPaths(row.Children(), paths)
 	}
 }
 
@@ -222,7 +207,7 @@ func OpenFile(wnd *unison.Window, filePath string) (dockable unison.Dockable, wa
 		return nil, false
 	}
 	if d := ws.LocateFileBackedDockable(filePath); d != nil {
-		dc := unison.DockContainerFor(d)
+		dc := unison.Ancestor[*unison.DockContainer](d)
 		dc.SetCurrentDockable(d)
 		dc.AcquireFocus()
 		return d, true

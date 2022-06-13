@@ -24,12 +24,11 @@ import (
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/unison"
 	"golang.org/x/exp/slices"
 )
 
-var _ Node = &EquipmentModifier{}
+var _ Node[*EquipmentModifier] = &EquipmentModifier{}
 
 // Columns that can be used with the equipment modifier method .CellData()
 const (
@@ -51,7 +50,6 @@ const (
 type EquipmentModifier struct {
 	EquipmentModifierData
 	Entity *Entity
-	Parent *EquipmentModifier
 }
 
 type equipmentModifierListData struct {
@@ -91,26 +89,27 @@ func NewEquipmentModifier(entity *Entity, parent *EquipmentModifier, container b
 			ContainerBase: newContainerBase[*EquipmentModifier](equipmentModifierTypeKey, container),
 		},
 		Entity: entity,
-		Parent: parent,
 	}
 	a.Name = a.Kind()
+	a.parent = parent
 	return a
 }
 
-// Clone creates a copy of this data.
-func (e *EquipmentModifier) Clone(newParent *EquipmentModifier) *EquipmentModifier {
-	other := *e
-	other.Parent = newParent
-	other.Tags = txt.CloneStringSlice(e.Tags)
-	other.Features = e.Features.Clone()
-	other.Children = nil
-	if len(e.Children) != 0 {
+// Clone implements Node.
+func (e *EquipmentModifier) Clone(entity *Entity, parent *EquipmentModifier, preserveID bool) *EquipmentModifier {
+	other := NewEquipmentModifier(entity, parent, e.Container())
+	if preserveID {
+		other.ID = e.ID
+	}
+	other.IsOpen = e.IsOpen
+	other.EquipmentModifierEditData.CopyFrom(e)
+	if e.HasChildren() {
 		other.Children = make([]*EquipmentModifier, 0, len(e.Children))
-		for _, one := range e.Children {
-			other.Children = append(other.Children, one.Clone(&other))
+		for _, child := range e.Children {
+			other.Children = append(other.Children, child.Clone(entity, other, preserveID))
 		}
 	}
-	return &other
+	return other
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -135,7 +134,7 @@ func (e *EquipmentModifier) UnmarshalJSON(data []byte) error {
 	slices.Sort(e.Tags)
 	if e.Container() {
 		for _, one := range e.Children {
-			one.Parent = e
+			one.parent = e
 		}
 	}
 	return nil
@@ -182,10 +181,10 @@ func (e *EquipmentModifier) CellData(column int, data *CellData) {
 // Depth returns the number of parents this node has.
 func (e *EquipmentModifier) Depth() int {
 	count := 0
-	p := e.Parent
+	p := e.parent
 	for p != nil {
 		count++
-		p = p.Parent
+		p = p.parent
 	}
 	return count
 }

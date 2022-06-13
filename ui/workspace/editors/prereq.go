@@ -139,7 +139,7 @@ func (p *prereqPanel) createButtonsPanel(parent *unison.Panel, depth int, data g
 				prereqList.Prereqs = slices.Insert(prereqList.Prereqs, 0, created)
 				p.addToList(parent, depth+1, 0, created)
 				p.adjustAndOrForList(prereqList)
-				unison.DockContainerFor(p).MarkForLayoutRecursively()
+				unison.Ancestor[*unison.DockContainer](p).MarkForLayoutRecursively()
 				widget.MarkModified(p)
 			}
 		}
@@ -152,7 +152,7 @@ func (p *prereqPanel) createButtonsPanel(parent *unison.Panel, depth int, data g
 			prereqList.Prereqs = slices.Insert(prereqList.Prereqs, 0, gurps.Prereq(newList))
 			p.addToList(parent, depth+1, 0, newList)
 			p.adjustAndOrForList(prereqList)
-			unison.DockContainerFor(p).MarkForLayoutRecursively()
+			unison.Ancestor[*unison.DockContainer](p).MarkForLayoutRecursively()
 			widget.MarkModified(p)
 		}
 		buttons.AddChild(addPrereqListButton)
@@ -167,7 +167,7 @@ func (p *prereqPanel) createButtonsPanel(parent *unison.Panel, depth int, data g
 			}
 			parent.RemoveFromParent()
 			p.adjustAndOrForList(parentList)
-			unison.DockContainerFor(p).MarkForLayoutRecursively()
+			unison.Ancestor[*unison.DockContainer](p).MarkForLayoutRecursively()
 			widget.MarkModified(p)
 		}
 		buttons.AddChild(deleteButton)
@@ -229,7 +229,7 @@ func (p *prereqPanel) addPrereqTypeSwitcher(parent *unison.Panel, depth int, pr 
 			i := slices.IndexFunc(list, func(one gurps.Prereq) bool { return one == pr })
 			list[i] = newPrereq
 			p.addToList(parentOfParent, depth, i, newPrereq)
-			unison.DockContainerFor(p).MarkForLayoutRecursively()
+			unison.Ancestor[*unison.DockContainer](p).MarkForLayoutRecursively()
 			widget.MarkModified(p)
 		}
 	}

@@ -32,9 +32,9 @@ import (
 )
 
 var (
-	_ Node                    = &Skill{}
-	_ TechLevelProvider       = &Skill{}
-	_ SkillAdjustmentProvider = &Skill{}
+	_ Node[*Skill]                    = &Skill{}
+	_ TechLevelProvider[*Skill]       = &Skill{}
+	_ SkillAdjustmentProvider[*Skill] = &Skill{}
 )
 
 // Columns that can be used with the skill method .CellData()
@@ -54,7 +54,6 @@ const skillListTypeKey = "skill_list"
 type Skill struct {
 	SkillData
 	Entity            *Entity
-	Parent            *Skill
 	LevelData         skill.Level
 	UnsatisfiedReason string
 }
@@ -113,8 +112,8 @@ func newSkill(entity *Entity, parent *Skill, typeKey string, container bool) *Sk
 			ContainerBase: newContainerBase[*Skill](typeKey, container),
 		},
 		Entity: entity,
-		Parent: parent,
 	}
+	s.parent = parent
 	if !container {
 		s.Difficulty.Attribute = AttributeIDFor(entity, gid.Dexterity)
 		s.Difficulty.Difficulty = skill.Average
@@ -122,6 +121,23 @@ func newSkill(entity *Entity, parent *Skill, typeKey string, container bool) *Sk
 	}
 	s.Name = s.Kind()
 	return &s
+}
+
+// Clone implements Node.
+func (s *Skill) Clone(entity *Entity, parent *Skill, preserveID bool) *Skill {
+	other := NewSkill(entity, parent, s.Container())
+	if preserveID {
+		other.ID = s.ID
+	}
+	other.IsOpen = s.IsOpen
+	other.SkillEditData.CopyFrom(s)
+	if s.HasChildren() {
+		other.Children = make([]*Skill, 0, len(s.Children))
+		for _, child := range s.Children {
+			other.Children = append(other.Children, child.Clone(entity, other, preserveID))
+		}
+	}
+	return other
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -162,7 +178,7 @@ func (s *Skill) UnmarshalJSON(data []byte) error {
 	slices.Sort(s.Tags)
 	if s.Container() {
 		for _, one := range s.Children {
-			one.Parent = s
+			one.parent = s
 		}
 	}
 	return nil
@@ -233,10 +249,10 @@ func FormatRelativeSkill(entity *Entity, typ string, difficulty AttributeDifficu
 // Depth returns the number of parents this node has.
 func (s *Skill) Depth() int {
 	count := 0
-	p := s.Parent
+	p := s.parent
 	for p != nil {
 		count++
-		p = p.Parent
+		p = p.parent
 	}
 	return count
 }

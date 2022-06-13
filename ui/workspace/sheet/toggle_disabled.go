@@ -57,7 +57,7 @@ func (a *disabledAdjuster) Apply() {
 	a.Target.Disabled = a.Disabled
 }
 
-func canToggleDisabled(table *unison.Table) bool {
+func canToggleDisabled(table *unison.Table[*editors.Node[*gurps.Trait]]) bool {
 	for _, row := range table.SelectedRows(false) {
 		if t := editors.ExtractFromRowData[*gurps.Trait](row); t != nil {
 			return true
@@ -66,7 +66,7 @@ func canToggleDisabled(table *unison.Table) bool {
 	return false
 }
 
-func toggleDisabled(owner widget.Rebuildable, table *unison.Table) {
+func toggleDisabled(owner widget.Rebuildable, table *unison.Table[*editors.Node[*gurps.Trait]]) {
 	before := &toggleDisabledList{Owner: owner}
 	after := &toggleDisabledList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {

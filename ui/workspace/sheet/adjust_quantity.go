@@ -58,7 +58,7 @@ func (a *quantityAdjuster) Apply() {
 	a.Target.Quantity = a.Quantity
 }
 
-func canAdjustQuantity(table *unison.Table, increment bool) bool {
+func canAdjustQuantity(table *unison.Table[*editors.Node[*gurps.Equipment]], increment bool) bool {
 	for _, row := range table.SelectedRows(false) {
 		if eqp := editors.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
 			if increment || eqp.Quantity > 0 {
@@ -69,7 +69,7 @@ func canAdjustQuantity(table *unison.Table, increment bool) bool {
 	return false
 }
 
-func adjustQuantity(owner widget.Rebuildable, table *unison.Table, increment bool) {
+func adjustQuantity(owner widget.Rebuildable, table *unison.Table[*editors.Node[*gurps.Equipment]], increment bool) {
 	before := &adjustQuantityList{Owner: owner}
 	after := &adjustQuantityList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {

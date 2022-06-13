@@ -17,9 +17,10 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/unison"
+	"golang.org/x/exp/slices"
 )
 
-var _ Node = &ConditionalModifier{}
+var _ Node[*ConditionalModifier] = &ConditionalModifier{}
 
 // Columns that can be used with the conditional modifier method .CellData()
 const (
@@ -29,6 +30,7 @@ const (
 
 // ConditionalModifier holds data for a reaction or conditional modifier.
 type ConditionalModifier struct {
+	ID      uuid.UUID
 	From    string
 	Amounts []fxp.Int
 	Sources []string
@@ -37,6 +39,7 @@ type ConditionalModifier struct {
 // NewReaction creates a new ConditionalModifier.
 func NewReaction(source, from string, amt fxp.Int) *ConditionalModifier {
 	return &ConditionalModifier{
+		ID:      uuid.New(),
 		From:    from,
 		Amounts: []fxp.Int{amt},
 		Sources: []string{source},
@@ -74,7 +77,22 @@ func (m *ConditionalModifier) Less(other *ConditionalModifier) bool {
 
 // UUID returns the UUID of this data.
 func (m *ConditionalModifier) UUID() uuid.UUID {
-	return uuid.UUID{}
+	return m.ID
+}
+
+// Clone implements Node.
+func (m *ConditionalModifier) Clone(_ *Entity, _ *ConditionalModifier, preserveID bool) *ConditionalModifier {
+	clone := &ConditionalModifier{
+		From:    m.From,
+		Amounts: slices.Clone(m.Amounts),
+		Sources: slices.Clone(m.Sources),
+	}
+	if preserveID {
+		clone.ID = m.ID
+	} else {
+		clone.ID = uuid.New()
+	}
+	return clone
 }
 
 // Kind returns the kind of data.
@@ -101,14 +119,27 @@ func (m *ConditionalModifier) Enabled() bool {
 	return true
 }
 
+// Parent returns the parent.
+func (m *ConditionalModifier) Parent() *ConditionalModifier {
+	return nil
+}
+
+// SetParent sets the parent.
+func (m *ConditionalModifier) SetParent(_ *ConditionalModifier) {
+}
+
 // HasChildren returns true if this node has children.
 func (m *ConditionalModifier) HasChildren() bool {
 	return false
 }
 
 // NodeChildren returns the children of this node, if any.
-func (m *ConditionalModifier) NodeChildren() []Node {
+func (m *ConditionalModifier) NodeChildren() []*ConditionalModifier {
 	return nil
+}
+
+// SetChildren sets the children of this node.
+func (m *ConditionalModifier) SetChildren(_ []*ConditionalModifier) {
 }
 
 // CellData returns the cell data information for the given column.

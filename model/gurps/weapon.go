@@ -34,7 +34,7 @@ import (
 	"github.com/richardwilkes/toolbox/xio"
 )
 
-var _ Node = &Weapon{}
+var _ Node[*Weapon] = &Weapon{}
 
 // Columns that can be used with the weapon method .CellData()
 const (
@@ -122,9 +122,14 @@ func NewWeapon(owner WeaponOwner, weaponType weapon.Type) *Weapon {
 	}
 }
 
-// Clone creates a copy of this data.
-func (w *Weapon) Clone() *Weapon {
+// Clone implements Node.
+func (w *Weapon) Clone(_ *Entity, _ *Weapon, preserveID bool) *Weapon {
 	other := *w
+	if preserveID {
+		other.id = w.id
+	} else {
+		other.id = uuid.New()
+	}
 	other.Damage = *other.Damage.Clone(&other)
 	if other.Defaults != nil {
 		other.Defaults = make([]*SkillDefault, 0, len(w.Defaults))
@@ -623,14 +628,27 @@ func (w *Weapon) Enabled() bool {
 	return true
 }
 
+// Parent returns the parent.
+func (w *Weapon) Parent() *Weapon {
+	return nil
+}
+
+// SetParent sets the parent.
+func (w *Weapon) SetParent(_ *Weapon) {
+}
+
 // HasChildren returns true if this node has children.
 func (w *Weapon) HasChildren() bool {
 	return false
 }
 
 // NodeChildren returns the children of this node, if any.
-func (w *Weapon) NodeChildren() []Node {
+func (w *Weapon) NodeChildren() []*Weapon {
 	return nil
+}
+
+// SetChildren sets the children of this node.
+func (w *Weapon) SetChildren(_ []*Weapon) {
 }
 
 // CellData returns the cell data information for the given column.
@@ -684,10 +702,10 @@ func (w *Weapon) SetOwningEntity(_ *Entity) {
 
 // CopyFrom implements node.EditorData.
 func (w *Weapon) CopyFrom(t *Weapon) {
-	*w = *t.Clone()
+	*w = *t.Clone(t.Entity(), nil, true)
 }
 
 // ApplyTo implements node.EditorData.
 func (w *Weapon) ApplyTo(t *Weapon) {
-	*t = *w.Clone()
+	*t = *w.Clone(t.Entity(), nil, true)
 }
