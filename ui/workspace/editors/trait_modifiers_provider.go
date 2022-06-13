@@ -15,7 +15,6 @@ import (
 	"bytes"
 	"compress/gzip"
 
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/res"
@@ -148,12 +147,8 @@ func (p *traitModifierProvider) OpenEditor(owner widget.Rebuildable, table *unis
 
 func (p *traitModifierProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.TraitModifier]], variant widget.ItemVariant) {
 	item := gurps.NewTraitModifier(p.Entity(), nil, variant == widget.ContainerItemVariant)
-	InsertItem[*gurps.TraitModifier](owner, table, item,
-		func(target *gurps.TraitModifier) []*gurps.TraitModifier { return target.Children },
-		func(target *gurps.TraitModifier, children []*gurps.TraitModifier) { target.Children = children },
-		p.provider.TraitModifierList, p.provider.SetTraitModifierList,
-		func(_ *unison.Table[*Node[*gurps.TraitModifier]]) []*Node[*gurps.TraitModifier] { return p.RootRows() },
-		func(target *gurps.TraitModifier) uuid.UUID { return target.ID })
+	InsertItem[*gurps.TraitModifier](owner, table, item, p.provider.TraitModifierList, p.provider.SetTraitModifierList,
+		func(_ *unison.Table[*Node[*gurps.TraitModifier]]) []*Node[*gurps.TraitModifier] { return p.RootRows() })
 	EditTraitModifier(owner, item)
 }
 

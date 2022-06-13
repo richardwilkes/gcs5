@@ -16,7 +16,6 @@ import (
 	"compress/gzip"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/res"
@@ -239,12 +238,8 @@ func (p *equipmentProvider) CreateItem(owner widget.Rebuildable, table *unison.T
 		setTopListFunc = p.provider.SetCarriedEquipmentList
 	}
 	item := gurps.NewEquipment(p.Entity(), nil, variant == widget.ContainerItemVariant)
-	InsertItem[*gurps.Equipment](owner, table, item,
-		func(target *gurps.Equipment) []*gurps.Equipment { return target.Children },
-		func(target *gurps.Equipment, children []*gurps.Equipment) { target.Children = children },
-		topListFunc, setTopListFunc,
-		func(_ *unison.Table[*Node[*gurps.Equipment]]) []*Node[*gurps.Equipment] { return p.RootRows() },
-		func(target *gurps.Equipment) uuid.UUID { return target.ID })
+	InsertItem[*gurps.Equipment](owner, table, item, topListFunc, setTopListFunc,
+		func(_ *unison.Table[*Node[*gurps.Equipment]]) []*Node[*gurps.Equipment] { return p.RootRows() })
 	EditEquipment(owner, item, p.carried)
 }
 

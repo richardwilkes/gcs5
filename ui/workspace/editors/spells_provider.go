@@ -15,7 +15,6 @@ import (
 	"bytes"
 	"compress/gzip"
 
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/res"
@@ -198,12 +197,8 @@ func (p *spellsProvider) CreateItem(owner widget.Rebuildable, table *unison.Tabl
 	default:
 		jot.Fatal(1, "unhandled variant")
 	}
-	InsertItem[*gurps.Spell](owner, table, item,
-		func(target *gurps.Spell) []*gurps.Spell { return target.Children },
-		func(target *gurps.Spell, children []*gurps.Spell) { target.Children = children },
-		p.provider.SpellList, p.provider.SetSpellList,
-		func(_ *unison.Table[*Node[*gurps.Spell]]) []*Node[*gurps.Spell] { return p.RootRows() },
-		func(target *gurps.Spell) uuid.UUID { return target.ID })
+	InsertItem[*gurps.Spell](owner, table, item, p.provider.SpellList, p.provider.SetSpellList,
+		func(_ *unison.Table[*Node[*gurps.Spell]]) []*Node[*gurps.Spell] { return p.RootRows() })
 	EditSpell(owner, item)
 }
 

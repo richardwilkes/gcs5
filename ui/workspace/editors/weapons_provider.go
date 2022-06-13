@@ -12,7 +12,6 @@
 package editors
 
 import (
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/ui/widget"
@@ -205,12 +204,9 @@ func (p *weaponsProvider) CreateItem(owner widget.Rebuildable, table *unison.Tab
 	if !p.forPage {
 		wpn := gurps.NewWeapon(p.provider.WeaponOwner(), p.weaponType)
 		InsertItem[*gurps.Weapon](owner, table, wpn,
-			func(target *gurps.Weapon) []*gurps.Weapon { return nil },
-			func(target *gurps.Weapon, children []*gurps.Weapon) {},
 			func() []*gurps.Weapon { return p.provider.Weapons(p.weaponType) },
 			func(list []*gurps.Weapon) { p.provider.SetWeapons(p.weaponType, list) },
-			func(_ *unison.Table[*Node[*gurps.Weapon]]) []*Node[*gurps.Weapon] { return p.RootRows() },
-			func(target *gurps.Weapon) uuid.UUID { return target.UUID() })
+			func(_ *unison.Table[*Node[*gurps.Weapon]]) []*Node[*gurps.Weapon] { return p.RootRows() })
 		EditWeapon(owner, wpn)
 	}
 }

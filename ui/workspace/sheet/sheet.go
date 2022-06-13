@@ -17,7 +17,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/gurps"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
@@ -189,13 +188,10 @@ func NewSheet(filePath string, entity *gurps.Entity) *Sheet {
 	s.installNewItemCmdHandlers(constants.NewNoteItemID, constants.NewNoteContainerItemID, s.Notes)
 	s.InstallCmdHandlers(constants.AddNaturalAttacksItemID, unison.AlwaysEnabled, func(_ any) {
 		editors.InsertItem[*gurps.Trait](s, s.Traits.table, gurps.NewNaturalAttacks(s.entity, nil),
-			func(target *gurps.Trait) []*gurps.Trait { return target.Children },
-			func(target *gurps.Trait, children []*gurps.Trait) { target.Children = children },
 			s.entity.TraitList, s.entity.SetTraitList,
 			func(_ *unison.Table[*editors.Node[*gurps.Trait]]) []*editors.Node[*gurps.Trait] {
 				return s.Traits.provider.RootRows()
-			},
-			func(target *gurps.Trait) uuid.UUID { return target.ID })
+			})
 	})
 
 	return s

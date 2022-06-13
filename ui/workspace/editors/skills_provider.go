@@ -15,7 +15,6 @@ import (
 	"bytes"
 	"compress/gzip"
 
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/res"
@@ -171,12 +170,8 @@ func (p *skillsProvider) CreateItem(owner widget.Rebuildable, table *unison.Tabl
 	default:
 		jot.Fatal(1, "unhandled variant")
 	}
-	InsertItem[*gurps.Skill](owner, table, item,
-		func(target *gurps.Skill) []*gurps.Skill { return target.Children },
-		func(target *gurps.Skill, children []*gurps.Skill) { target.Children = children },
-		p.provider.SkillList, p.provider.SetSkillList,
-		func(_ *unison.Table[*Node[*gurps.Skill]]) []*Node[*gurps.Skill] { return p.RootRows() },
-		func(target *gurps.Skill) uuid.UUID { return target.ID })
+	InsertItem[*gurps.Skill](owner, table, item, p.provider.SkillList, p.provider.SetSkillList,
+		func(_ *unison.Table[*Node[*gurps.Skill]]) []*Node[*gurps.Skill] { return p.RootRows() })
 	EditSkill(owner, item)
 }
 

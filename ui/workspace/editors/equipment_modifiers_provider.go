@@ -15,7 +15,6 @@ import (
 	"bytes"
 	"compress/gzip"
 
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/res"
@@ -156,14 +155,11 @@ func (p *eqpModProvider) OpenEditor(owner widget.Rebuildable, table *unison.Tabl
 
 func (p *eqpModProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.EquipmentModifier]], variant widget.ItemVariant) {
 	item := gurps.NewEquipmentModifier(p.Entity(), nil, variant == widget.ContainerItemVariant)
-	InsertItem[*gurps.EquipmentModifier](owner, table, item,
-		func(target *gurps.EquipmentModifier) []*gurps.EquipmentModifier { return target.Children },
-		func(target *gurps.EquipmentModifier, children []*gurps.EquipmentModifier) { target.Children = children },
-		p.provider.EquipmentModifierList, p.provider.SetEquipmentModifierList,
+	InsertItem[*gurps.EquipmentModifier](owner, table, item, p.provider.EquipmentModifierList,
+		p.provider.SetEquipmentModifierList,
 		func(_ *unison.Table[*Node[*gurps.EquipmentModifier]]) []*Node[*gurps.EquipmentModifier] {
 			return p.RootRows()
-		},
-		func(target *gurps.EquipmentModifier) uuid.UUID { return target.ID })
+		})
 	EditEquipmentModifier(owner, item)
 }
 

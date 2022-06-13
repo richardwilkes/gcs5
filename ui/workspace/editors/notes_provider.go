@@ -15,7 +15,6 @@ import (
 	"bytes"
 	"compress/gzip"
 
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/res"
@@ -124,12 +123,8 @@ func (p *notesProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table
 
 func (p *notesProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.Note]], variant widget.ItemVariant) {
 	item := gurps.NewNote(p.Entity(), nil, variant == widget.ContainerItemVariant)
-	InsertItem[*gurps.Note](owner, table, item,
-		func(target *gurps.Note) []*gurps.Note { return target.Children },
-		func(target *gurps.Note, children []*gurps.Note) { target.Children = children },
-		p.provider.NoteList, p.provider.SetNoteList,
-		func(_ *unison.Table[*Node[*gurps.Note]]) []*Node[*gurps.Note] { return p.RootRows() },
-		func(target *gurps.Note) uuid.UUID { return target.ID })
+	InsertItem[*gurps.Note](owner, table, item, p.provider.NoteList, p.provider.SetNoteList,
+		func(_ *unison.Table[*Node[*gurps.Note]]) []*Node[*gurps.Note] { return p.RootRows() })
 	EditNote(owner, item)
 }
 

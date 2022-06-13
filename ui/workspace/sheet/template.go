@@ -16,7 +16,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/gurps"
 	gsettings "github.com/richardwilkes/gcs/model/gurps/settings"
@@ -138,13 +137,10 @@ func NewTemplate(filePath string, template *gurps.Template) *Template {
 	d.installNewItemCmdHandlers(constants.NewNoteItemID, constants.NewNoteContainerItemID, d.Notes)
 	d.InstallCmdHandlers(constants.AddNaturalAttacksItemID, unison.AlwaysEnabled, func(_ any) {
 		editors.InsertItem[*gurps.Trait](d, d.Traits.table, gurps.NewNaturalAttacks(nil, nil),
-			func(target *gurps.Trait) []*gurps.Trait { return target.Children },
-			func(target *gurps.Trait, children []*gurps.Trait) { target.Children = children },
 			d.template.TraitList, d.template.SetTraitList,
 			func(_ *unison.Table[*editors.Node[*gurps.Trait]]) []*editors.Node[*gurps.Trait] {
 				return d.Traits.provider.RootRows()
-			},
-			func(target *gurps.Trait) uuid.UUID { return target.ID })
+			})
 	})
 
 	return d

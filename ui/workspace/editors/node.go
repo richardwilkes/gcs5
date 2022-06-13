@@ -497,7 +497,7 @@ func rowIndex[T gurps.NodeConstraint[T]](id uuid.UUID, startIndex int, rows []*N
 }
 
 // InsertItem inserts an item into a table.
-func InsertItem[T gurps.NodeConstraint[T]](owner widget.Rebuildable, table *unison.Table[*Node[T]], item T, childrenOf func(target T) []T, setChildren func(target T, children []T), topList func() []T, setTopList func([]T), rowData func(table *unison.Table[*Node[T]]) []*Node[T], id func(T) uuid.UUID) {
+func InsertItem[T gurps.NodeConstraint[T]](owner widget.Rebuildable, table *unison.Table[*Node[T]], item T, topList func() []T, setTopList func([]T), rowData func(table *unison.Table[*Node[T]]) []*Node[T]) {
 	var target, zero T
 	i := table.FirstSelectedRowIndex()
 	if i != -1 {
@@ -506,13 +506,13 @@ func InsertItem[T gurps.NodeConstraint[T]](owner widget.Rebuildable, table *unis
 			if row.CanHaveChildren() {
 				// Target is container, append to end of that container
 				item.SetParent(target)
-				setChildren(target, append(childrenOf(target), item))
+				target.SetChildren(append(target.NodeChildren(), item))
 			} else {
 				// Target isn't a container. If it has a parent, insert after the target within that parent.
 				if parent := ExtractFromRowData[T](row.Parent()); parent != zero {
 					item.SetParent(parent)
-					children := childrenOf(parent)
-					setChildren(parent, slices.Insert(children, slices.Index(children, target)+1, item))
+					children := parent.NodeChildren()
+					parent.SetChildren(slices.Insert(children, slices.Index(children, target)+1, item))
 				} else {
 					// Otherwise, insert after the target within the top-level list.
 					item.SetParent(zero)
@@ -531,7 +531,7 @@ func InsertItem[T gurps.NodeConstraint[T]](owner widget.Rebuildable, table *unis
 	table.SetRootRows(rowData(table))
 	table.ValidateScrollRoot()
 	table.RequestFocus()
-	index := FindRowIndexByID(table, id(item))
+	index := FindRowIndexByID(table, item.UUID())
 	table.SelectByIndex(index)
 	table.ScrollRowCellIntoView(index, 0)
 	owner.Rebuild(true)
