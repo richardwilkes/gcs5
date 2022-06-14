@@ -42,10 +42,9 @@ type Page struct {
 
 // Link holds a single link on a page. If PageNumber if >= 0, then this is an internal link and the URI will be empty.
 type Link struct {
-	Bounds       unison.Rect
-	PageNumber   int
-	PageLocation unison.Point
-	URI          string
+	Bounds     unison.Rect
+	PageNumber int
+	URI        string
 }
 
 type params struct {
@@ -261,10 +260,9 @@ func convertLinks(pageLinks []*pdf.PageLink, displayScaleAdjust float32) []*Link
 	links := make([]*Link, len(pageLinks))
 	for i, link := range pageLinks {
 		links[i] = &Link{
-			Bounds:       rectFromPageRect(link.Bounds, displayScaleAdjust),
-			PageNumber:   link.PageNumber,
-			PageLocation: pointFromPagePoint(link.PageX, link.PageY, displayScaleAdjust),
-			URI:          link.URI,
+			Bounds:     rectFromPageRect(link.Bounds, displayScaleAdjust),
+			PageNumber: link.PageNumber,
+			URI:        link.URI,
 		}
 	}
 	return links
