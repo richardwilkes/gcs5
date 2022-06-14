@@ -84,7 +84,7 @@ func newNavigator() *Navigator {
 	})
 	n.AddChild(n.scroll)
 
-	n.table.SelectionDoubleClickCallback = n.handleSelectionDoubleClick
+	n.table.DoubleClickCallback = n.handleSelectionDoubleClick
 	return n
 }
 

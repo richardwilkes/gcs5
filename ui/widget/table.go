@@ -73,13 +73,14 @@ func TableInstallStdCallbacks[T unison.TableRowConstraint[T]](table *unison.Tabl
 		table.RequestFocus()
 		return mouseDownCallback(where, button, clickCount, mod)
 	}
-	table.SelectionDoubleClickCallback = func() { table.PerformCmd(nil, constants.OpenEditorItemID) }
-	table.KeyDownCallback = func(keyCode unison.KeyCode, mod unison.Modifiers, _ bool) bool {
+	table.DoubleClickCallback = func() { table.PerformCmd(nil, constants.OpenEditorItemID) }
+	keydownCallback := table.KeyDownCallback
+	table.KeyDownCallback = func(keyCode unison.KeyCode, mod unison.Modifiers, repeat bool) bool {
 		if mod == 0 && (keyCode == unison.KeyBackspace || keyCode == unison.KeyDelete) {
 			table.PerformCmd(table, unison.DeleteItemID)
 			return true
 		}
-		return false
+		return keydownCallback(keyCode, mod, repeat)
 	}
 }
 
