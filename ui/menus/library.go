@@ -17,6 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
+	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -68,10 +69,13 @@ func newUpdateLibraryAction(id int, lib *library.Library) *unison.Action {
 
 func newShowLibraryFolderAction(id int, lib *library.Library) *unison.Action {
 	return &unison.Action{
-		ID:              id,
-		Title:           fmt.Sprintf(i18n.Text("Show %s on Disk"), lib.Title),
-		EnabledCallback: notEnabled,
-		ExecuteCallback: unimplemented,
+		ID:    id,
+		Title: fmt.Sprintf(i18n.Text("Show %s on Disk"), lib.Title),
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			if err := desktop.Open(lib.PathOnDisk); err != nil {
+				unison.ErrorDialogWithError(i18n.Text("Unable to show location on disk"), err)
+			}
+		},
 	}
 }
 

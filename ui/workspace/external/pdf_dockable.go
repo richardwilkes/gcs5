@@ -344,8 +344,7 @@ func (d *PDFDockable) mouseUp(where unison.Point, button int, _ unison.Modifiers
 	if button == unison.ButtonLeft && d.link != nil {
 		if d.link.PageNumber >= 0 {
 			d.LoadPage(d.link.PageNumber)
-			// TODO: Use d.link.PageX & PageY to ensure location is scrolled into place
-		} else if err := desktop.OpenBrowser(d.link.URI); err != nil {
+		} else if err := desktop.Open(d.link.URI); err != nil {
 			unison.ErrorDialogWithError(i18n.Text("Unable to open link"), err)
 		}
 	}

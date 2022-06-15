@@ -13,7 +13,6 @@
     - Copy to Template
     - Apply Template to Character Sheet
   - Library
-    - Show <library> on Disk
     - Update <library> to <version>
     - Change Library Locations
   - Settings

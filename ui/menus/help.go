@@ -95,7 +95,7 @@ var MailingList = &unison.Action{
 }
 
 func showWebPage(uri string) {
-	if err := desktop.OpenBrowser(uri); err != nil {
+	if err := desktop.Open(uri); err != nil {
 		unison.ErrorDialogWithError(i18n.Text("Unable to open link"), err)
 	}
 }

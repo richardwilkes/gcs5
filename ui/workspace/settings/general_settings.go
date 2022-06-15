@@ -201,7 +201,7 @@ func (d *generalSettingsDockable) createGCalcKeyField(content *unison.Panel) {
 }
 
 func (d *generalSettingsDockable) findGCalcKey() {
-	if err := desktop.OpenBrowser("http://www.gurpscalculator.com/Character/ImportGCS"); err != nil {
+	if err := desktop.Open("http://www.gurpscalculator.com/Character/ImportGCS"); err != nil {
 		unison.ErrorDialogWithError(i18n.Text("Unable to open browser to determine GURPS Calculator Key"), err)
 	}
 }
