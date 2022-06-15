@@ -190,6 +190,9 @@ func newPageList[T gurps.NodeConstraint[T]](owner widget.Rebuildable, provider w
 		p.InstallCmdHandlers(unison.DeleteItemID,
 			func(_ any) bool { return p.table.HasSelection() },
 			func(_ any) { p.provider.DeleteSelection(p.table) })
+		p.InstallCmdHandlers(constants.DuplicateItemID,
+			func(_ any) bool { return p.table.HasSelection() },
+			func(_ any) { p.provider.DuplicateSelection(p.table) })
 	}
 	p.installOpenPageReferenceHandlers()
 	_, pref, _ := p.tableHeader.Sizes(geom.Size[float32]{})

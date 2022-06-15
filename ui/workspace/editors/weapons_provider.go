@@ -211,6 +211,17 @@ func (p *weaponsProvider) CreateItem(owner widget.Rebuildable, table *unison.Tab
 	}
 }
 
+func (p *weaponsProvider) DuplicateSelection(table *unison.Table[*Node[*gurps.Weapon]]) {
+	if !p.forPage {
+		duplicateTableSelection(table, p.provider.Weapons(p.weaponType),
+			func(nodes []*gurps.Weapon) { p.provider.SetWeapons(p.weaponType, nodes) },
+			func(node *gurps.Weapon) *[]*gurps.Weapon {
+				var dummy []*gurps.Weapon
+				return &dummy
+			})
+	}
+}
+
 func (p *weaponsProvider) DeleteSelection(table *unison.Table[*Node[*gurps.Weapon]]) {
 	if !p.forPage {
 		deleteTableSelection(table, p.provider.Weapons(p.weaponType),

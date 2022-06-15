@@ -202,6 +202,12 @@ func (p *spellsProvider) CreateItem(owner widget.Rebuildable, table *unison.Tabl
 	EditSpell(owner, item)
 }
 
+func (p *spellsProvider) DuplicateSelection(table *unison.Table[*Node[*gurps.Spell]]) {
+	duplicateTableSelection(table, p.provider.SpellList(),
+		func(nodes []*gurps.Spell) { p.provider.SetSpellList(nodes) },
+		func(node *gurps.Spell) *[]*gurps.Spell { return &node.Children })
+}
+
 func (p *spellsProvider) DeleteSelection(table *unison.Table[*Node[*gurps.Spell]]) {
 	deleteTableSelection(table, p.provider.SpellList(),
 		func(nodes []*gurps.Spell) { p.provider.SetSpellList(nodes) },

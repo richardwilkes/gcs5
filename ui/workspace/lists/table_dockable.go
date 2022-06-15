@@ -461,6 +461,9 @@ func NewTableDockable[T gurps.NodeConstraint[T]](filePath, extension string, pro
 	d.InstallCmdHandlers(unison.DeleteItemID,
 		func(_ any) bool { return d.table.HasSelection() },
 		func(_ any) { d.provider.DeleteSelection(d.table) })
+	d.InstallCmdHandlers(constants.DuplicateItemID,
+		func(_ any) bool { return d.table.HasSelection() },
+		func(_ any) { d.provider.DuplicateSelection(d.table) })
 	for _, id := range canCreateIDs {
 		variant := widget.ItemVariant(-1)
 		switch {

@@ -163,6 +163,12 @@ func (p *eqpModProvider) CreateItem(owner widget.Rebuildable, table *unison.Tabl
 	EditEquipmentModifier(owner, item)
 }
 
+func (p *eqpModProvider) DuplicateSelection(table *unison.Table[*Node[*gurps.EquipmentModifier]]) {
+	duplicateTableSelection(table, p.provider.EquipmentModifierList(),
+		func(nodes []*gurps.EquipmentModifier) { p.provider.SetEquipmentModifierList(nodes) },
+		func(node *gurps.EquipmentModifier) *[]*gurps.EquipmentModifier { return &node.Children })
+}
+
 func (p *eqpModProvider) DeleteSelection(table *unison.Table[*Node[*gurps.EquipmentModifier]]) {
 	deleteTableSelection(table, p.provider.EquipmentModifierList(),
 		func(nodes []*gurps.EquipmentModifier) { p.provider.SetEquipmentModifierList(nodes) },

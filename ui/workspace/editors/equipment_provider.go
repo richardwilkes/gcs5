@@ -243,6 +243,12 @@ func (p *equipmentProvider) CreateItem(owner widget.Rebuildable, table *unison.T
 	EditEquipment(owner, item, p.carried)
 }
 
+func (p *equipmentProvider) DuplicateSelection(table *unison.Table[*Node[*gurps.Equipment]]) {
+	duplicateTableSelection(table, p.equipmentList(),
+		func(nodes []*gurps.Equipment) { p.setEquipmentList(nodes) },
+		func(node *gurps.Equipment) *[]*gurps.Equipment { return &node.Children })
+}
+
 func (p *equipmentProvider) DeleteSelection(table *unison.Table[*Node[*gurps.Equipment]]) {
 	deleteTableSelection(table, p.equipmentList(),
 		func(nodes []*gurps.Equipment) { p.setEquipmentList(nodes) },

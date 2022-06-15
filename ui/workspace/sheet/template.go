@@ -266,17 +266,20 @@ func (d *Template) createLists() {
 	var refocusOn unison.Paneler
 	if wnd := d.Window(); wnd != nil {
 		if focus := wnd.Focus(); focus != nil {
-			switch focus.Self {
-			case d.Traits:
-				refocusOnKey = gurps.BlockLayoutTraitsKey
-			case d.Skills:
-				refocusOnKey = gurps.BlockLayoutSkillsKey
-			case d.Spells:
-				refocusOnKey = gurps.BlockLayoutSpellsKey
-			case d.Equipment:
-				refocusOnKey = gurps.BlockLayoutEquipmentKey
-			case d.Notes:
-				refocusOnKey = gurps.BlockLayoutNotesKey
+			// For page lists, the focus will be the table, so we need to look up a level
+			if focus = focus.Parent(); focus != nil {
+				switch focus.Self {
+				case d.Traits:
+					refocusOnKey = gurps.BlockLayoutTraitsKey
+				case d.Skills:
+					refocusOnKey = gurps.BlockLayoutSkillsKey
+				case d.Spells:
+					refocusOnKey = gurps.BlockLayoutSpellsKey
+				case d.Equipment:
+					refocusOnKey = gurps.BlockLayoutEquipmentKey
+				case d.Notes:
+					refocusOnKey = gurps.BlockLayoutNotesKey
+				}
 			}
 		}
 	}

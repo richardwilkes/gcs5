@@ -116,6 +116,9 @@ func (p *condModProvider) OpenEditor(_ widget.Rebuildable, _ *unison.Table[*Node
 func (p *condModProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table[*Node[*gurps.ConditionalModifier]], _ widget.ItemVariant) {
 }
 
+func (p *condModProvider) DuplicateSelection(_ *unison.Table[*Node[*gurps.ConditionalModifier]]) {
+}
+
 func (p *condModProvider) DeleteSelection(_ *unison.Table[*Node[*gurps.ConditionalModifier]]) {
 }
 

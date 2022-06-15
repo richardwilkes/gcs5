@@ -8,8 +8,6 @@
   - Body Type
 - Library configuration dialogs
 - Completion of menu item actions
-  - Edit
-    - Duplicate
   - Item
     - Copy to Character Sheet
     - Copy to Template

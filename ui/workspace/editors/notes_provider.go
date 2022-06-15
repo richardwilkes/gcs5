@@ -128,6 +128,12 @@ func (p *notesProvider) CreateItem(owner widget.Rebuildable, table *unison.Table
 	EditNote(owner, item)
 }
 
+func (p *notesProvider) DuplicateSelection(table *unison.Table[*Node[*gurps.Note]]) {
+	duplicateTableSelection(table, p.provider.NoteList(),
+		func(nodes []*gurps.Note) { p.provider.SetNoteList(nodes) },
+		func(node *gurps.Note) *[]*gurps.Note { return &node.Children })
+}
+
 func (p *notesProvider) DeleteSelection(table *unison.Table[*Node[*gurps.Note]]) {
 	deleteTableSelection(table, p.provider.NoteList(),
 		func(nodes []*gurps.Note) { p.provider.SetNoteList(nodes) },

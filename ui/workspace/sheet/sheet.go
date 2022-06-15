@@ -413,6 +413,7 @@ func (s *Sheet) createSecondRow() *unison.Panel {
 }
 
 func (s *Sheet) createLists() {
+	const tableKey = "table"
 	children := s.pages.Children()
 	if len(children) == 0 {
 		return
@@ -430,27 +431,30 @@ func (s *Sheet) createLists() {
 	var refocusOn unison.Paneler
 	if wnd := s.Window(); wnd != nil {
 		if focus := wnd.Focus(); focus != nil {
-			switch focus.Self {
-			case s.Reactions:
-				refocusOnKey = gurps.BlockLayoutReactionsKey
-			case s.ConditionalModifiers:
-				refocusOnKey = gurps.BlockLayoutConditionalModifiersKey
-			case s.MeleeWeapons:
-				refocusOnKey = gurps.BlockLayoutMeleeKey
-			case s.RangedWeapons:
-				refocusOnKey = gurps.BlockLayoutRangedKey
-			case s.Traits:
-				refocusOnKey = gurps.BlockLayoutTraitsKey
-			case s.Skills:
-				refocusOnKey = gurps.BlockLayoutSkillsKey
-			case s.Spells:
-				refocusOnKey = gurps.BlockLayoutSpellsKey
-			case s.CarriedEquipment:
-				refocusOnKey = gurps.BlockLayoutEquipmentKey
-			case s.OtherEquipment:
-				refocusOnKey = gurps.BlockLayoutOtherEquipmentKey
-			case s.Notes:
-				refocusOnKey = gurps.BlockLayoutNotesKey
+			// For page lists, the focus will be the table, so we need to look up a level
+			if focus = focus.Parent(); focus != nil {
+				switch focus.Self {
+				case s.Reactions:
+					refocusOnKey = gurps.BlockLayoutReactionsKey
+				case s.ConditionalModifiers:
+					refocusOnKey = gurps.BlockLayoutConditionalModifiersKey
+				case s.MeleeWeapons:
+					refocusOnKey = gurps.BlockLayoutMeleeKey
+				case s.RangedWeapons:
+					refocusOnKey = gurps.BlockLayoutRangedKey
+				case s.Traits:
+					refocusOnKey = gurps.BlockLayoutTraitsKey
+				case s.Skills:
+					refocusOnKey = gurps.BlockLayoutSkillsKey
+				case s.Spells:
+					refocusOnKey = gurps.BlockLayoutSpellsKey
+				case s.CarriedEquipment:
+					refocusOnKey = gurps.BlockLayoutEquipmentKey
+				case s.OtherEquipment:
+					refocusOnKey = gurps.BlockLayoutOtherEquipmentKey
+				case s.Notes:
+					refocusOnKey = gurps.BlockLayoutNotesKey
+				}
 			}
 		}
 	}

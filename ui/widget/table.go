@@ -48,6 +48,7 @@ type TableProvider[T unison.TableRowConstraint[T]] interface {
 	ExcessWidthColumnIndex() int
 	OpenEditor(owner Rebuildable, table *unison.Table[T])
 	CreateItem(owner Rebuildable, table *unison.Table[T], variant ItemVariant)
+	DuplicateSelection(table *unison.Table[T])
 	DeleteSelection(table *unison.Table[T])
 	Serialize() ([]byte, error)
 	Deserialize(data []byte) error

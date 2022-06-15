@@ -148,6 +148,12 @@ func (p *traitsProvider) CreateItem(owner widget.Rebuildable, table *unison.Tabl
 	EditTrait(owner, item)
 }
 
+func (p *traitsProvider) DuplicateSelection(table *unison.Table[*Node[*gurps.Trait]]) {
+	duplicateTableSelection(table, p.provider.TraitList(),
+		func(nodes []*gurps.Trait) { p.provider.SetTraitList(nodes) },
+		func(node *gurps.Trait) *[]*gurps.Trait { return &node.Children })
+}
+
 func (p *traitsProvider) DeleteSelection(table *unison.Table[*Node[*gurps.Trait]]) {
 	deleteTableSelection(table, p.provider.TraitList(),
 		func(nodes []*gurps.Trait) { p.provider.SetTraitList(nodes) },

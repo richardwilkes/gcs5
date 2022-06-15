@@ -68,6 +68,9 @@ func newTable[T gurps.NodeConstraint[T]](parent *unison.Panel, provider widget.T
 	table.InstallCmdHandlers(unison.DeleteItemID,
 		func(_ any) bool { return table.HasSelection() },
 		func(_ any) { provider.DeleteSelection(table) })
+	table.InstallCmdHandlers(constants.DuplicateItemID,
+		func(_ any) bool { return table.HasSelection() },
+		func(_ any) { provider.DuplicateSelection(table) })
 	parent.AddChild(tableHeader)
 	parent.AddChild(table)
 	singular, plural := provider.ItemNames()
@@ -83,8 +86,50 @@ func collectUUIDs[T gurps.NodeConstraint[T]](node T, m map[uuid.UUID]bool) {
 	}
 }
 
+func duplicateTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], topLevelRows []T, setTopLevelRows func(nodes []T), childrenPtrFunc func(node T) *[]T) {
+	if table.HasSelection() {
+		var zero T
+		needSet := false
+		sel := table.SelectedRows(true)
+		selMap := make(map[uuid.UUID]bool, len(sel))
+		for _, row := range sel {
+			if target := ExtractFromRowData[T](row); !toolbox.IsNil(target) {
+				parent := target.Parent()
+				clone := target.Clone(target.OwningEntity(), parent, false)
+				selMap[clone.UUID()] = true
+				if parent == zero {
+					for i, child := range topLevelRows {
+						if child == target {
+							topLevelRows = slices.Insert(topLevelRows, i+1, clone)
+							needSet = true
+							break
+						}
+					}
+				} else {
+					childrenPtr := childrenPtrFunc(parent)
+					for i, child := range *childrenPtr {
+						if child == target {
+							*childrenPtr = slices.Insert(*childrenPtr, i+1, clone)
+							break
+						}
+					}
+				}
+			}
+		}
+		if needSet {
+			setTopLevelRows(topLevelRows)
+		}
+		table.SyncToModel()
+		table.SetSelectionMap(selMap)
+		if rebuilder := unison.AncestorOrSelf[widget.Rebuildable](table); rebuilder != nil {
+			rebuilder.Rebuild(true)
+		}
+	}
+}
+
 func deleteTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], topLevelRows []T, setTopLevelRows func(nodes []T), childrenPtrFunc func(node T) *[]T) {
-	if sel := table.SelectedRows(true); len(sel) > 0 {
+	if table.HasSelection() {
+		sel := table.SelectedRows(true)
 		ids := make(map[uuid.UUID]bool, len(sel))
 		list := make([]T, 0, len(sel))
 		for _, row := range sel {

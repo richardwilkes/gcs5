@@ -152,6 +152,12 @@ func (p *traitModifierProvider) CreateItem(owner widget.Rebuildable, table *unis
 	EditTraitModifier(owner, item)
 }
 
+func (p *traitModifierProvider) DuplicateSelection(table *unison.Table[*Node[*gurps.TraitModifier]]) {
+	duplicateTableSelection(table, p.provider.TraitModifierList(),
+		func(nodes []*gurps.TraitModifier) { p.provider.SetTraitModifierList(nodes) },
+		func(node *gurps.TraitModifier) *[]*gurps.TraitModifier { return &node.Children })
+}
+
 func (p *traitModifierProvider) DeleteSelection(table *unison.Table[*Node[*gurps.TraitModifier]]) {
 	deleteTableSelection(table, p.provider.TraitModifierList(),
 		func(nodes []*gurps.TraitModifier) { p.provider.SetTraitModifierList(nodes) },
