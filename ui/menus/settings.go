@@ -20,7 +20,99 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+var (
+	// PerSheetSettings opens the settings for the front character sheet.
+	PerSheetSettings *unison.Action
+	// DefaultSheetSettings opens the default settings for the character sheet.
+	DefaultSheetSettings *unison.Action
+	// PerSheetAttributeSettings opens the attributes settings for the foremost character sheet.
+	PerSheetAttributeSettings *unison.Action
+	// DefaultAttributeSettings opens the default attributes settings.
+	DefaultAttributeSettings *unison.Action
+	// PerSheetBodyTypeSettings opens the body type settings for the foremost character sheet.
+	PerSheetBodyTypeSettings *unison.Action
+	// DefaultBodyTypeSettings opens the default body type settings.
+	DefaultBodyTypeSettings *unison.Action
+	// GeneralSettings opens the general settings.
+	GeneralSettings *unison.Action
+	// PageRefMappings opens the page reference mappings.
+	PageRefMappings *unison.Action
+	// ColorSettings opens the color settings.
+	ColorSettings *unison.Action
+	// FontSettings opens the font settings.
+	FontSettings *unison.Action
+	// MenuKeySettings opens the menu key settings.
+	MenuKeySettings *unison.Action
+)
+
 func registerSettingsMenuActions() {
+	PerSheetSettings = &unison.Action{
+		ID:              constants.PerSheetSettingsItemID,
+		Title:           i18n.Text("Sheet Settings…"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyComma, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: func(_ *unison.Action, _ any) bool { return sheet.ActiveSheet() != nil },
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			if s := sheet.ActiveSheet(); s != nil {
+				uisettings.ShowSheetSettings(s)
+			}
+		},
+	}
+	DefaultSheetSettings = &unison.Action{
+		ID:              constants.DefaultSheetSettingsItemID,
+		Title:           i18n.Text("Default Sheet Settings…"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyComma, Modifiers: unison.OSMenuCmdModifier()},
+		ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowSheetSettings(nil) },
+	}
+	PerSheetAttributeSettings = &unison.Action{
+		ID:              constants.PerSheetAttributeSettingsItemID,
+		Title:           i18n.Text("Attributes…"),
+		EnabledCallback: notEnabled,
+		ExecuteCallback: unimplemented,
+	}
+	DefaultAttributeSettings = &unison.Action{
+		ID:              constants.DefaultAttributeSettingsItemID,
+		Title:           i18n.Text("Default Attributes…"),
+		EnabledCallback: notEnabled,
+		ExecuteCallback: unimplemented,
+	}
+	PerSheetBodyTypeSettings = &unison.Action{
+		ID:              constants.PerSheetBodyTypeSettingsItemID,
+		Title:           i18n.Text("Body Type…"),
+		EnabledCallback: notEnabled,
+		ExecuteCallback: unimplemented,
+	}
+	DefaultBodyTypeSettings = &unison.Action{
+		ID:              constants.DefaultBodyTypeSettingsItemID,
+		Title:           i18n.Text("Default Body Type…"),
+		EnabledCallback: notEnabled,
+		ExecuteCallback: unimplemented,
+	}
+	GeneralSettings = &unison.Action{
+		ID:              constants.GeneralSettingsItemID,
+		Title:           i18n.Text("General Settings…"),
+		ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowGeneralSettings() },
+	}
+	PageRefMappings = &unison.Action{
+		ID:              constants.PageRefMappingsItemID,
+		Title:           i18n.Text("Page Reference Mappings…"),
+		ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowPageRefMappings() },
+	}
+	ColorSettings = &unison.Action{
+		ID:              constants.ColorSettingsItemID,
+		Title:           i18n.Text("Colors…"),
+		ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowColorSettings() },
+	}
+	FontSettings = &unison.Action{
+		ID:              constants.FontSettingsItemID,
+		Title:           i18n.Text("Fonts…"),
+		ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowFontSettings() },
+	}
+	MenuKeySettings = &unison.Action{
+		ID:              constants.MenuKeySettingsItemID,
+		Title:           i18n.Text("Menu Keys…"),
+		ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowMenuKeySettings() },
+	}
+
 	settings.RegisterKeyBinding("settings.sheet.per_sheet", PerSheetSettings)
 	settings.RegisterKeyBinding("settings.attributes.per_sheet", PerSheetAttributeSettings)
 	settings.RegisterKeyBinding("settings.body_type.per_sheet", PerSheetBodyTypeSettings)
@@ -50,92 +142,4 @@ func createSettingsMenu(f unison.MenuFactory) unison.Menu {
 	m.InsertItem(-1, FontSettings.NewMenuItem(f))
 	m.InsertItem(-1, MenuKeySettings.NewMenuItem(f))
 	return m
-}
-
-// PerSheetSettings opens the settings for the front character sheet.
-var PerSheetSettings = &unison.Action{
-	ID:              constants.PerSheetSettingsItemID,
-	Title:           i18n.Text("Sheet Settings…"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyComma, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: func(_ *unison.Action, _ any) bool { return sheet.ActiveSheet() != nil },
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		if s := sheet.ActiveSheet(); s != nil {
-			uisettings.ShowSheetSettings(s)
-		}
-	},
-}
-
-// DefaultSheetSettings opens the default settings for the character sheet.
-var DefaultSheetSettings = &unison.Action{
-	ID:              constants.DefaultSheetSettingsItemID,
-	Title:           i18n.Text("Default Sheet Settings…"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyComma, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowSheetSettings(nil) },
-}
-
-// PerSheetAttributeSettings opens the attributes settings for the foremost character sheet.
-var PerSheetAttributeSettings = &unison.Action{
-	ID:              constants.PerSheetAttributeSettingsItemID,
-	Title:           i18n.Text("Attributes…"),
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
-}
-
-// DefaultAttributeSettings opens the default attributes settings.
-var DefaultAttributeSettings = &unison.Action{
-	ID:              constants.DefaultAttributeSettingsItemID,
-	Title:           i18n.Text("Default Attributes…"),
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
-}
-
-// PerSheetBodyTypeSettings opens the body type settings for the foremost character sheet.
-var PerSheetBodyTypeSettings = &unison.Action{
-	ID:              constants.PerSheetBodyTypeSettingsItemID,
-	Title:           i18n.Text("Body Type…"),
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
-}
-
-// DefaultBodyTypeSettings opens the default body type settings.
-var DefaultBodyTypeSettings = &unison.Action{
-	ID:              constants.DefaultBodyTypeSettingsItemID,
-	Title:           i18n.Text("Default Body Type…"),
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
-}
-
-// GeneralSettings opens the general settings.
-var GeneralSettings = &unison.Action{
-	ID:              constants.GeneralSettingsItemID,
-	Title:           i18n.Text("General Settings…"),
-	ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowGeneralSettings() },
-}
-
-// PageRefMappings opens the page reference mappings.
-var PageRefMappings = &unison.Action{
-	ID:              constants.PageRefMappingsItemID,
-	Title:           i18n.Text("Page Reference Mappings…"),
-	ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowPageRefMappings() },
-}
-
-// ColorSettings opens the color settings.
-var ColorSettings = &unison.Action{
-	ID:              constants.ColorSettingsItemID,
-	Title:           i18n.Text("Colors…"),
-	ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowColorSettings() },
-}
-
-// FontSettings opens the font settings.
-var FontSettings = &unison.Action{
-	ID:              constants.FontSettingsItemID,
-	Title:           i18n.Text("Fonts…"),
-	ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowFontSettings() },
-}
-
-// MenuKeySettings opens the menu key settings.
-var MenuKeySettings = &unison.Action{
-	ID:              constants.MenuKeySettingsItemID,
-	Title:           i18n.Text("Menu Keys…"),
-	ExecuteCallback: func(_ *unison.Action, _ any) { uisettings.ShowMenuKeySettings() },
 }

@@ -22,7 +22,17 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+// ChangeLibraryLocations brings up the dialog that allows the user to edit the library locations.
+var ChangeLibraryLocations *unison.Action
+
 func registerLibraryMenuActions() {
+	ChangeLibraryLocations = &unison.Action{
+		ID:              constants.ChangeLibraryLocationsItemID,
+		Title:           i18n.Text("Change Library Locations"),
+		EnabledCallback: notEnabled,
+		ExecuteCallback: unimplemented,
+	}
+
 	settings.RegisterKeyBinding("change_library_locations", ChangeLibraryLocations)
 }
 
@@ -77,12 +87,4 @@ func newShowLibraryFolderAction(id int, lib *library.Library) *unison.Action {
 			}
 		},
 	}
-}
-
-// ChangeLibraryLocations brings up the dialog that allows the user to edit the library locations.
-var ChangeLibraryLocations = &unison.Action{
-	ID:              constants.ChangeLibraryLocationsItemID,
-	Title:           i18n.Text("Change Library Locations"),
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
 }

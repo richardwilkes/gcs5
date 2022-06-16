@@ -31,6 +31,7 @@ func Setup(wnd *unison.Window) {
 		registerItemMenuActions()
 		registerLibraryMenuActions()
 		registerSettingsMenuActions()
+		registerHelpMenuActions()
 	})
 	settings.Global().KeyBindings.MakeCurrent()
 	unison.DefaultMenuFactory().BarForWindow(wnd, func(bar unison.Menu) {

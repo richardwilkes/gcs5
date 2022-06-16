@@ -37,7 +37,175 @@ import (
 
 const outputTemplatesDirName = "Output Templates"
 
+var (
+	// NewCharacterSheet creates a new character sheet.
+	NewCharacterSheet *unison.Action
+	// NewCharacterTemplate creates a new character template.
+	NewCharacterTemplate *unison.Action
+	// NewTraitsLibrary creates a new traits library.
+	NewTraitsLibrary *unison.Action
+	// NewTraitModifiersLibrary creates a new trait modifiers library.
+	NewTraitModifiersLibrary *unison.Action
+	// NewEquipmentLibrary creates a new equipment library.
+	NewEquipmentLibrary *unison.Action
+	// NewEquipmentModifiersLibrary creates a new equipment modifiers library.
+	NewEquipmentModifiersLibrary *unison.Action
+	// NewNotesLibrary creates a new notes library.
+	NewNotesLibrary *unison.Action
+	// NewSkillsLibrary creates a new skills library.
+	NewSkillsLibrary *unison.Action
+	// NewSpellsLibrary creates a new spells library.
+	NewSpellsLibrary *unison.Action
+	// Open a file.
+	Open *unison.Action
+	// CloseTab closes a workspace tab if the workspace is foremost, or the current window if not.
+	CloseTab *unison.Action
+	// Save a file.
+	Save *unison.Action
+	// SaveAs saves to a new file.
+	SaveAs *unison.Action
+	// Print the content.
+	Print *unison.Action
+)
+
 func registerFileMenuActions() {
+	NewCharacterSheet = &unison.Action{
+		ID:         constants.NewSheetItemID,
+		Title:      i18n.Text("New Character Sheet"),
+		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.OSMenuCmdModifier()},
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			entity := gurps.NewEntity(datafile.PC)
+			workspace.DisplayNewDockable(nil, sheet.NewSheet(entity.Profile.Name+library.SheetExt, entity))
+		},
+	}
+	NewCharacterTemplate = &unison.Action{
+		ID:    constants.NewTemplateItemID,
+		Title: i18n.Text("New Character Template"),
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			workspace.DisplayNewDockable(nil, sheet.NewTemplate("untitled"+library.TemplatesExt, gurps.NewTemplate()))
+		},
+	}
+	NewTraitsLibrary = &unison.Action{
+		ID:    constants.NewTraitsLibraryItemID,
+		Title: i18n.Text("New Traits Library"),
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			workspace.DisplayNewDockable(nil, lists.NewTraitTableDockable("Traits"+library.TraitsExt, nil))
+		},
+	}
+	NewTraitModifiersLibrary = &unison.Action{
+		ID:    constants.NewTraitModifiersLibraryItemID,
+		Title: i18n.Text("New Trait Modifiers Library"),
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			workspace.DisplayNewDockable(nil,
+				lists.NewTraitModifierTableDockable("Trait Modifiers"+library.TraitModifiersExt, nil))
+		},
+	}
+	NewEquipmentLibrary = &unison.Action{
+		ID:    constants.NewEquipmentLibraryItemID,
+		Title: i18n.Text("New Equipment Library"),
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			workspace.DisplayNewDockable(nil, lists.NewEquipmentTableDockable("Equipment"+library.EquipmentExt, nil))
+		},
+	}
+	NewEquipmentModifiersLibrary = &unison.Action{
+		ID:    constants.NewEquipmentModifiersLibraryItemID,
+		Title: i18n.Text("New Equipment Modifiers Library"),
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			workspace.DisplayNewDockable(nil,
+				lists.NewEquipmentModifierTableDockable("Equipment Modifiers"+library.EquipmentModifiersExt, nil))
+		},
+	}
+	NewNotesLibrary = &unison.Action{
+		ID:    constants.NewNotesLibraryItemID,
+		Title: i18n.Text("New Notes Library"),
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			workspace.DisplayNewDockable(nil, lists.NewNoteTableDockable("Notes"+library.NotesExt, nil))
+		},
+	}
+	NewSkillsLibrary = &unison.Action{
+		ID:    constants.NewSkillsLibraryItemID,
+		Title: i18n.Text("New Skills Library"),
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			workspace.DisplayNewDockable(nil, lists.NewSkillTableDockable("Skills"+library.SkillsExt, nil))
+		},
+	}
+	NewSpellsLibrary = &unison.Action{
+		ID:    constants.NewSpellsLibraryItemID,
+		Title: i18n.Text("New Spells Library"),
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			workspace.DisplayNewDockable(nil, lists.NewSpellTableDockable("Spells"+library.SpellsExt, nil))
+		},
+	}
+	Open = &unison.Action{
+		ID:         constants.OpenItemID,
+		Title:      i18n.Text("Open…"),
+		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyO, Modifiers: unison.OSMenuCmdModifier()},
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			dialog := unison.NewOpenDialog()
+			dialog.SetAllowsMultipleSelection(true)
+			dialog.SetResolvesAliases(true)
+			dialog.SetAllowedExtensions(library.AcceptableExtensions()...)
+			if dialog.RunModal() {
+				workspace.OpenFiles(dialog.Paths())
+			}
+		},
+	}
+	CloseTab = &unison.Action{
+		ID:         constants.CloseTabID,
+		Title:      i18n.Text("Close"),
+		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyW, Modifiers: unison.OSMenuCmdModifier()},
+		EnabledCallback: func(_ *unison.Action, _ any) bool {
+			if wnd := unison.ActiveWindow(); wnd != nil {
+				if workspace.FromWindow(wnd) == nil {
+					return true // not the workspace, so allow regular window close
+				}
+				if dc := unison.Ancestor[*unison.DockContainer](wnd.Focus()); dc != nil {
+					if current := dc.CurrentDockable(); current != nil {
+						if _, ok := current.(unison.TabCloser); ok {
+							return true
+						}
+					}
+				}
+			}
+			return false
+		},
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			if wnd := unison.ActiveWindow(); wnd != nil {
+				if workspace.FromWindow(wnd) == nil {
+					// not the workspace, so allow regular window close
+					wnd.AttemptClose()
+				} else if dc := unison.Ancestor[*unison.DockContainer](wnd.Focus()); dc != nil {
+					if current := dc.CurrentDockable(); current != nil {
+						if closer, ok := current.(unison.TabCloser); ok {
+							closer.AttemptClose()
+						}
+					}
+				}
+			}
+		},
+	}
+	Save = &unison.Action{
+		ID:              constants.SaveItemID,
+		Title:           i18n.Text("Save"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyS, Modifiers: unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	SaveAs = &unison.Action{
+		ID:              constants.SaveAsItemID,
+		Title:           i18n.Text("Save As…"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyS, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	Print = &unison.Action{
+		ID:              constants.PrintItemID,
+		Title:           i18n.Text("Print…"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyP, Modifiers: unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+
 	settings.RegisterKeyBinding("new.char.sheet", NewCharacterSheet)
 	settings.RegisterKeyBinding("new.char.template", NewCharacterTemplate)
 	settings.RegisterKeyBinding("new.adq.lib", NewTraitsLibrary)
@@ -172,166 +340,4 @@ func createExportToTextAction(index int, path string) *unison.Action {
 func appendDisabledMenuItem(menu unison.Menu, title string) {
 	item := menu.Factory().NewItem(0, title, unison.KeyBinding{}, func(_ unison.MenuItem) bool { return false }, nil)
 	menu.InsertItem(-1, item)
-}
-
-// NewCharacterSheet creates a new character sheet.
-var NewCharacterSheet = &unison.Action{
-	ID:         constants.NewSheetItemID,
-	Title:      i18n.Text("New Character Sheet"),
-	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		entity := gurps.NewEntity(datafile.PC)
-		workspace.DisplayNewDockable(nil, sheet.NewSheet(entity.Profile.Name+library.SheetExt, entity))
-	},
-}
-
-// NewCharacterTemplate creates a new character template.
-var NewCharacterTemplate = &unison.Action{
-	ID:    constants.NewTemplateItemID,
-	Title: i18n.Text("New Character Template"),
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		workspace.DisplayNewDockable(nil, sheet.NewTemplate("untitled"+library.TemplatesExt, gurps.NewTemplate()))
-	},
-}
-
-// NewTraitsLibrary creates a new traits library.
-var NewTraitsLibrary = &unison.Action{
-	ID:    constants.NewTraitsLibraryItemID,
-	Title: i18n.Text("New Traits Library"),
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		workspace.DisplayNewDockable(nil, lists.NewTraitTableDockable("Traits"+library.TraitsExt, nil))
-	},
-}
-
-// NewTraitModifiersLibrary creates a new trait modifiers library.
-var NewTraitModifiersLibrary = &unison.Action{
-	ID:    constants.NewTraitModifiersLibraryItemID,
-	Title: i18n.Text("New Trait Modifiers Library"),
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		workspace.DisplayNewDockable(nil, lists.NewTraitModifierTableDockable("Trait Modifiers"+library.TraitModifiersExt, nil))
-	},
-}
-
-// NewEquipmentLibrary creates a new equipment library.
-var NewEquipmentLibrary = &unison.Action{
-	ID:    constants.NewEquipmentLibraryItemID,
-	Title: i18n.Text("New Equipment Library"),
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		workspace.DisplayNewDockable(nil, lists.NewEquipmentTableDockable("Equipment"+library.EquipmentExt, nil))
-	},
-}
-
-// NewEquipmentModifiersLibrary creates a new equipment modifiers library.
-var NewEquipmentModifiersLibrary = &unison.Action{
-	ID:    constants.NewEquipmentModifiersLibraryItemID,
-	Title: i18n.Text("New Equipment Modifiers Library"),
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		workspace.DisplayNewDockable(nil, lists.NewEquipmentModifierTableDockable("Equipment Modifiers"+library.EquipmentModifiersExt, nil))
-	},
-}
-
-// NewNotesLibrary creates a new notes library.
-var NewNotesLibrary = &unison.Action{
-	ID:    constants.NewNotesLibraryItemID,
-	Title: i18n.Text("New Notes Library"),
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		workspace.DisplayNewDockable(nil, lists.NewNoteTableDockable("Notes"+library.NotesExt, nil))
-	},
-}
-
-// NewSkillsLibrary creates a new skills library.
-var NewSkillsLibrary = &unison.Action{
-	ID:    constants.NewSkillsLibraryItemID,
-	Title: i18n.Text("New Skills Library"),
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		workspace.DisplayNewDockable(nil, lists.NewSkillTableDockable("Skills"+library.SkillsExt, nil))
-	},
-}
-
-// NewSpellsLibrary creates a new spells library.
-var NewSpellsLibrary = &unison.Action{
-	ID:    constants.NewSpellsLibraryItemID,
-	Title: i18n.Text("New Spells Library"),
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		workspace.DisplayNewDockable(nil, lists.NewSpellTableDockable("Spells"+library.SpellsExt, nil))
-	},
-}
-
-// Open a file.
-var Open = &unison.Action{
-	ID:         constants.OpenItemID,
-	Title:      i18n.Text("Open…"),
-	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyO, Modifiers: unison.OSMenuCmdModifier()},
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		dialog := unison.NewOpenDialog()
-		dialog.SetAllowsMultipleSelection(true)
-		dialog.SetResolvesAliases(true)
-		dialog.SetAllowedExtensions(library.AcceptableExtensions()...)
-		if dialog.RunModal() {
-			workspace.OpenFiles(dialog.Paths())
-		}
-	},
-}
-
-// CloseTab closes a workspace tab if the workspace is foremost, or the current window if not.
-var CloseTab = &unison.Action{
-	ID:         constants.CloseTabID,
-	Title:      i18n.Text("Close"),
-	KeyBinding: unison.KeyBinding{KeyCode: unison.KeyW, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: func(_ *unison.Action, _ any) bool {
-		if wnd := unison.ActiveWindow(); wnd != nil {
-			if workspace.FromWindow(wnd) == nil {
-				return true // not the workspace, so allow regular window close
-			}
-			if dc := unison.Ancestor[*unison.DockContainer](wnd.Focus()); dc != nil {
-				if current := dc.CurrentDockable(); current != nil {
-					if _, ok := current.(unison.TabCloser); ok {
-						return true
-					}
-				}
-			}
-		}
-		return false
-	},
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		if wnd := unison.ActiveWindow(); wnd != nil {
-			if workspace.FromWindow(wnd) == nil {
-				// not the workspace, so allow regular window close
-				wnd.AttemptClose()
-			} else if dc := unison.Ancestor[*unison.DockContainer](wnd.Focus()); dc != nil {
-				if current := dc.CurrentDockable(); current != nil {
-					if closer, ok := current.(unison.TabCloser); ok {
-						closer.AttemptClose()
-					}
-				}
-			}
-		}
-	},
-}
-
-// Save a file.
-var Save = &unison.Action{
-	ID:              constants.SaveItemID,
-	Title:           i18n.Text("Save"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyS, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// SaveAs saves to a new file.
-var SaveAs = &unison.Action{
-	ID:              constants.SaveAsItemID,
-	Title:           i18n.Text("Save As…"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyS, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// Print the content.
-var Print = &unison.Action{
-	ID:              constants.PrintItemID,
-	Title:           i18n.Text("Print…"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyP, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }

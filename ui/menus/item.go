@@ -18,7 +18,239 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+var (
+	// NewTrait creates a new trait.
+	NewTrait *unison.Action
+	// NewTraitContainer creates a new trait container.
+	NewTraitContainer *unison.Action
+	// NewTraitModifier creates a new trait modifier.
+	NewTraitModifier *unison.Action
+	// NewTraitContainerModifier creates a new trait container modifier.
+	NewTraitContainerModifier *unison.Action
+	// AddNaturalAttacks creates the natural attacks.
+	AddNaturalAttacks *unison.Action
+	// NewSkill creates a new skill.
+	NewSkill *unison.Action
+	// NewSkillContainer creates a new skill container.
+	NewSkillContainer *unison.Action
+	// NewTechnique creates a new technique.
+	NewTechnique *unison.Action
+	// NewSpell creates a new spell.
+	NewSpell *unison.Action
+	// NewSpellContainer creates a new spell container.
+	NewSpellContainer *unison.Action
+	// NewRitualMagicSpell creates a new ritual magic spell.
+	NewRitualMagicSpell *unison.Action
+	// NewCarriedEquipment creates a new equipment item.
+	NewCarriedEquipment *unison.Action
+	// NewCarriedEquipmentContainer creates a new equipment container.
+	NewCarriedEquipmentContainer *unison.Action
+	// NewOtherEquipment creates a new equipment item.
+	NewOtherEquipment *unison.Action
+	// NewOtherEquipmentContainer creates a new equipment container.
+	NewOtherEquipmentContainer *unison.Action
+	// NewEquipmentModifier creates a new equipment modifier.
+	NewEquipmentModifier *unison.Action
+	// NewEquipmentContainerModifier creates a new equipment container modifier.
+	NewEquipmentContainerModifier *unison.Action
+	// NewNote creates a new note.
+	NewNote *unison.Action
+	// NewNoteContainer creates a new note container.
+	NewNoteContainer *unison.Action
+	// NewMeleeWeapon creates a new melee weapon.
+	NewMeleeWeapon *unison.Action
+	// NewRangedWeapon creates a new ranged weapon.
+	NewRangedWeapon *unison.Action
+	// OpenOnePageReference opens the first page reference for each selected item.
+	OpenOnePageReference *unison.Action
+	// OpenEachPageReference opens each page reference associated with the selected items.
+	OpenEachPageReference *unison.Action
+)
+
 func registerItemMenuActions() {
+	NewTrait = &unison.Action{
+		ID:              constants.NewTraitItemID,
+		Title:           i18n.Text("New Trait"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewTraitContainer creates a new trait container.
+	NewTraitContainer = &unison.Action{
+		ID:              constants.NewTraitContainerItemID,
+		Title:           i18n.Text("New Trait Container"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewTraitModifier creates a new trait modifier.
+	NewTraitModifier = &unison.Action{
+		ID:              constants.NewTraitModifierItemID,
+		Title:           i18n.Text("New Trait Modifier"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.OptionModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewTraitContainerModifier creates a new trait container modifier.
+	NewTraitContainerModifier = &unison.Action{
+		ID:              constants.NewTraitContainerModifierItemID,
+		Title:           i18n.Text("New Trait Modifier Container"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// AddNaturalAttacks creates the natural attacks.
+	AddNaturalAttacks = &unison.Action{
+		ID:              constants.AddNaturalAttacksItemID,
+		Title:           i18n.Text("Add Natural Attacks"),
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewSkill creates a new skill.
+	NewSkill = &unison.Action{
+		ID:              constants.NewSkillItemID,
+		Title:           i18n.Text("New Skill"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewSkillContainer creates a new skill container.
+	NewSkillContainer = &unison.Action{
+		ID:              constants.NewSkillContainerItemID,
+		Title:           i18n.Text("New Skill Container"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewTechnique creates a new technique.
+	NewTechnique = &unison.Action{
+		ID:              constants.NewTechniqueItemID,
+		Title:           i18n.Text("New Technique"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyT, Modifiers: unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewSpell creates a new spell.
+	NewSpell = &unison.Action{
+		ID:              constants.NewSpellItemID,
+		Title:           i18n.Text("New Spell"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyB, Modifiers: unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewSpellContainer creates a new spell container.
+	NewSpellContainer = &unison.Action{
+		ID:              constants.NewSpellContainerItemID,
+		Title:           i18n.Text("New Spell Container"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyB, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewRitualMagicSpell creates a new ritual magic spell.
+	NewRitualMagicSpell = &unison.Action{
+		ID:              constants.NewRitualMagicSpellItemID,
+		Title:           i18n.Text("New Ritual Magic Spell"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyB, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewCarriedEquipment creates a new equipment item.
+	NewCarriedEquipment = &unison.Action{
+		ID:              constants.NewCarriedEquipmentItemID,
+		Title:           i18n.Text("New Carried Equipment"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewCarriedEquipmentContainer creates a new equipment container.
+	NewCarriedEquipmentContainer = &unison.Action{
+		ID:              constants.NewCarriedEquipmentContainerItemID,
+		Title:           i18n.Text("New Carried Equipment Container"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewOtherEquipment creates a new equipment item.
+	NewOtherEquipment = &unison.Action{
+		ID:              constants.NewOtherEquipmentItemID,
+		Title:           i18n.Text("New Other Equipment"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.OptionModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewOtherEquipmentContainer creates a new equipment container.
+	NewOtherEquipmentContainer = &unison.Action{
+		ID:              constants.NewOtherEquipmentContainerItemID,
+		Title:           i18n.Text("New Other Equipment Container"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewEquipmentModifier creates a new equipment modifier.
+	NewEquipmentModifier = &unison.Action{
+		ID:              constants.NewEquipmentModifierItemID,
+		Title:           i18n.Text("New Equipment Modifier"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyF, Modifiers: unison.OptionModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewEquipmentContainerModifier creates a new equipment container modifier.
+	NewEquipmentContainerModifier = &unison.Action{
+		ID:              constants.NewEquipmentContainerModifierItemID,
+		Title:           i18n.Text("New Equipment Modifier Container"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyF, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewNote creates a new note.
+	NewNote = &unison.Action{
+		ID:              constants.NewNoteItemID,
+		Title:           i18n.Text("New Note"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewNoteContainer creates a new note container.
+	NewNoteContainer = &unison.Action{
+		ID:              constants.NewNoteContainerItemID,
+		Title:           i18n.Text("New Note Container"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewMeleeWeapon creates a new melee weapon.
+	NewMeleeWeapon = &unison.Action{
+		ID:              constants.NewMeleeWeaponItemID,
+		Title:           i18n.Text("New Melee Weapon"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// NewRangedWeapon creates a new ranged weapon.
+	NewRangedWeapon = &unison.Action{
+		ID:              constants.NewRangedWeaponItemID,
+		Title:           i18n.Text("New Ranged Weapon"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyR, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// OpenOnePageReference opens the first page reference for each selected item.
+	OpenOnePageReference = &unison.Action{
+		ID:              constants.OpenOnePageReferenceItemID,
+		Title:           i18n.Text("Open Page Reference"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyG, Modifiers: unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+	// OpenEachPageReference opens each page reference associated with the selected items.
+	OpenEachPageReference = &unison.Action{
+		ID:              constants.OpenEachPageReferenceItemID,
+		Title:           i18n.Text("Open Each Page Reference"),
+		KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyG, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
+		EnabledCallback: unison.RouteActionToFocusEnabledFunc,
+		ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
+	}
+
 	settings.RegisterKeyBinding("new.adq", NewTrait)
 	settings.RegisterKeyBinding("new.adq.container", NewTraitContainer)
 	settings.RegisterKeyBinding("new.adm", NewTraitModifier)
@@ -83,210 +315,4 @@ func createItemMenu(f unison.MenuFactory) unison.Menu {
 	m.InsertItem(-1, OpenOnePageReference.NewMenuItem(f))
 	m.InsertItem(-1, OpenEachPageReference.NewMenuItem(f))
 	return m
-}
-
-// NewTrait creates a new trait.
-var NewTrait = &unison.Action{
-	ID:              constants.NewTraitItemID,
-	Title:           i18n.Text("New Trait"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewTraitContainer creates a new trait container.
-var NewTraitContainer = &unison.Action{
-	ID:              constants.NewTraitContainerItemID,
-	Title:           i18n.Text("New Trait Container"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewTraitModifier creates a new trait modifier.
-var NewTraitModifier = &unison.Action{
-	ID:              constants.NewTraitModifierItemID,
-	Title:           i18n.Text("New Trait Modifier"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.OptionModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewTraitContainerModifier creates a new trait container modifier.
-var NewTraitContainerModifier = &unison.Action{
-	ID:              constants.NewTraitContainerModifierItemID,
-	Title:           i18n.Text("New Trait Modifier Container"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// AddNaturalAttacks creates the natural attacks.
-var AddNaturalAttacks = &unison.Action{
-	ID:              constants.AddNaturalAttacksItemID,
-	Title:           i18n.Text("Add Natural Attacks"),
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewSkill creates a new skill.
-var NewSkill = &unison.Action{
-	ID:              constants.NewSkillItemID,
-	Title:           i18n.Text("New Skill"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewSkillContainer creates a new skill container.
-var NewSkillContainer = &unison.Action{
-	ID:              constants.NewSkillContainerItemID,
-	Title:           i18n.Text("New Skill Container"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewTechnique creates a new technique.
-var NewTechnique = &unison.Action{
-	ID:              constants.NewTechniqueItemID,
-	Title:           i18n.Text("New Technique"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyT, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewSpell creates a new spell.
-var NewSpell = &unison.Action{
-	ID:              constants.NewSpellItemID,
-	Title:           i18n.Text("New Spell"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyB, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewSpellContainer creates a new spell container.
-var NewSpellContainer = &unison.Action{
-	ID:              constants.NewSpellContainerItemID,
-	Title:           i18n.Text("New Spell Container"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyB, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewRitualMagicSpell creates a new ritual magic spell.
-var NewRitualMagicSpell = &unison.Action{
-	ID:              constants.NewRitualMagicSpellItemID,
-	Title:           i18n.Text("New Ritual Magic Spell"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyB, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewCarriedEquipment creates a new equipment item.
-var NewCarriedEquipment = &unison.Action{
-	ID:              constants.NewCarriedEquipmentItemID,
-	Title:           i18n.Text("New Carried Equipment"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewCarriedEquipmentContainer creates a new equipment container.
-var NewCarriedEquipmentContainer = &unison.Action{
-	ID:              constants.NewCarriedEquipmentContainerItemID,
-	Title:           i18n.Text("New Carried Equipment Container"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewOtherEquipment creates a new equipment item.
-var NewOtherEquipment = &unison.Action{
-	ID:              constants.NewOtherEquipmentItemID,
-	Title:           i18n.Text("New Other Equipment"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.OptionModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewOtherEquipmentContainer creates a new equipment container.
-var NewOtherEquipmentContainer = &unison.Action{
-	ID:              constants.NewOtherEquipmentContainerItemID,
-	Title:           i18n.Text("New Other Equipment Container"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyE, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewEquipmentModifier creates a new equipment modifier.
-var NewEquipmentModifier = &unison.Action{
-	ID:              constants.NewEquipmentModifierItemID,
-	Title:           i18n.Text("New Equipment Modifier"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyF, Modifiers: unison.OptionModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewEquipmentContainerModifier creates a new equipment container modifier.
-var NewEquipmentContainerModifier = &unison.Action{
-	ID:              constants.NewEquipmentContainerModifierItemID,
-	Title:           i18n.Text("New Equipment Modifier Container"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyF, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewNote creates a new note.
-var NewNote = &unison.Action{
-	ID:              constants.NewNoteItemID,
-	Title:           i18n.Text("New Note"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewNoteContainer creates a new note container.
-var NewNoteContainer = &unison.Action{
-	ID:              constants.NewNoteContainerItemID,
-	Title:           i18n.Text("New Note Container"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.ShiftModifier | unison.OptionModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewMeleeWeapon creates a new melee weapon.
-var NewMeleeWeapon = &unison.Action{
-	ID:              constants.NewMeleeWeaponItemID,
-	Title:           i18n.Text("New Melee Weapon"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyM, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// NewRangedWeapon creates a new ranged weapon.
-var NewRangedWeapon = &unison.Action{
-	ID:              constants.NewRangedWeaponItemID,
-	Title:           i18n.Text("New Ranged Weapon"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyR, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// OpenOnePageReference opens the first page reference for each selected item.
-var OpenOnePageReference = &unison.Action{
-	ID:              constants.OpenOnePageReferenceItemID,
-	Title:           i18n.Text("Open Page Reference"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyG, Modifiers: unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
-}
-
-// OpenEachPageReference opens each page reference associated with the selected items.
-var OpenEachPageReference = &unison.Action{
-	ID:              constants.OpenEachPageReferenceItemID,
-	Title:           i18n.Text("Open Each Page Reference"),
-	KeyBinding:      unison.KeyBinding{KeyCode: unison.KeyG, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-	EnabledCallback: unison.RouteActionToFocusEnabledFunc,
-	ExecuteCallback: unison.RouteActionToFocusExecuteFunc,
 }

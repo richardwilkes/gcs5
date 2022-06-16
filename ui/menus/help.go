@@ -22,6 +22,80 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+var (
+	// SponsorGCSDevelopment opens the web site for sponsoring GCS development.
+	SponsorGCSDevelopment *unison.Action
+	// MakeDonation opens the web site for make a donation.
+	MakeDonation *unison.Action
+	// UpdateApp opens the web site for GCS updates.
+	UpdateApp *unison.Action
+	// ReleaseNotes opens the release notes.
+	ReleaseNotes *unison.Action
+	// License opens the license.
+	License *unison.Action
+	// WebSite opens the GCS web site.
+	WebSite *unison.Action
+	// MailingList opens the GCS mailing list site.
+	MailingList *unison.Action
+)
+
+func registerHelpMenuActions() {
+	SponsorGCSDevelopment = &unison.Action{
+		ID:    constants.SponsorGCSDevelopmentItemID,
+		Title: fmt.Sprintf(i18n.Text("Sponsor %s Development"), cmdline.AppName),
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			showWebPage("https://github.com/sponsors/richardwilkes")
+		},
+	}
+	MakeDonation = &unison.Action{
+		ID:    constants.MakeDonationItemID,
+		Title: fmt.Sprintf(i18n.Text("Make a One-time Donation for %s Development"), cmdline.AppName),
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			showWebPage("https://paypal.me/GURPSCharacterSheet")
+		},
+	}
+	UpdateApp = &unison.Action{
+		ID: constants.UpdateAppItemID,
+		EnabledCallback: func(action *unison.Action, mi any) bool {
+			var releases []library.Release
+			action.Title, releases = library.AppUpdateResult()
+			if menuItem, ok := mi.(unison.MenuItem); ok {
+				menuItem.SetTitle(action.Title)
+			}
+			return releases != nil
+		},
+		ExecuteCallback: func(_ *unison.Action, _ any) { library.AppUpdate() },
+	}
+	ReleaseNotes = &unison.Action{
+		ID:    constants.ReleaseNotesItemID,
+		Title: i18n.Text("Release Notes"),
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			showWebPage("https://github.com/richardwilkes/gcs/releases")
+		},
+	}
+	License = &unison.Action{
+		ID:    constants.ReleaseNotesItemID,
+		Title: i18n.Text("License"),
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			showWebPage("https://github.com/richardwilkes/gcs/blob/master/LICENSE")
+		},
+	}
+	WebSite = &unison.Action{
+		ID:    constants.WebSiteItemID,
+		Title: i18n.Text("Web Site"),
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			showWebPage("https://" + constants.WebSiteDomain)
+		},
+	}
+	MailingList = &unison.Action{
+		ID:    constants.MailingListItemID,
+		Title: i18n.Text("Mailing Lists"),
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			showWebPage("https://groups.io/g/gcs")
+		},
+	}
+}
+
 func setupHelpMenu(bar unison.Menu) {
 	f := bar.Factory()
 	m := bar.Menu(unison.HelpMenuID)
@@ -34,74 +108,6 @@ func setupHelpMenu(bar unison.Menu) {
 	m.InsertSeparator(-1, false)
 	m.InsertItem(-1, WebSite.NewMenuItem(f))
 	m.InsertItem(-1, MailingList.NewMenuItem(f))
-}
-
-// SponsorGCSDevelopment opens the web site for sponsoring GCS development.
-var SponsorGCSDevelopment = &unison.Action{
-	ID:    constants.SponsorGCSDevelopmentItemID,
-	Title: fmt.Sprintf(i18n.Text("Sponsor %s Development"), cmdline.AppName),
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		showWebPage("https://github.com/sponsors/richardwilkes")
-	},
-}
-
-// MakeDonation opens the web site for make a donation.
-var MakeDonation = &unison.Action{
-	ID:    constants.MakeDonationItemID,
-	Title: fmt.Sprintf(i18n.Text("Make a One-time Donation for %s Development"), cmdline.AppName),
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		showWebPage("https://paypal.me/GURPSCharacterSheet")
-	},
-}
-
-// UpdateApp opens the web site for GCS updates.
-var UpdateApp = &unison.Action{
-	ID: constants.UpdateAppItemID,
-	EnabledCallback: func(action *unison.Action, mi any) bool {
-		var release *library.Release
-		action.Title, release = library.AppUpdateResult()
-		if menuItem, ok := mi.(unison.MenuItem); ok {
-			menuItem.SetTitle(action.Title)
-		}
-		return release != nil
-	},
-	ExecuteCallback: func(_ *unison.Action, _ any) { library.AppUpdate() },
-}
-
-// ReleaseNotes opens the release notes.
-var ReleaseNotes = &unison.Action{
-	ID:    constants.ReleaseNotesItemID,
-	Title: i18n.Text("Release Notes"),
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		showWebPage("https://github.com/richardwilkes/gcs/releases")
-	},
-}
-
-// License opens the license.
-var License = &unison.Action{
-	ID:    constants.ReleaseNotesItemID,
-	Title: i18n.Text("License"),
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		showWebPage("https://github.com/richardwilkes/gcs/blob/master/LICENSE")
-	},
-}
-
-// WebSite opens the GCS web site.
-var WebSite = &unison.Action{
-	ID:    constants.WebSiteItemID,
-	Title: i18n.Text("Web Site"),
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		showWebPage("https://" + constants.WebSiteDomain)
-	},
-}
-
-// MailingList opens the GCS mailing list site.
-var MailingList = &unison.Action{
-	ID:    constants.MailingListItemID,
-	Title: i18n.Text("Mailing Lists"),
-	ExecuteCallback: func(_ *unison.Action, _ any) {
-		showWebPage("https://groups.io/g/gcs")
-	},
 }
 
 func showWebPage(uri string) {
