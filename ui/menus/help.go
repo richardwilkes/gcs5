@@ -13,6 +13,7 @@ package menus
 
 import (
 	"github.com/richardwilkes/gcs/constants"
+	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -52,10 +53,12 @@ var MakeDonation = &unison.Action{
 
 // UpdateApp opens the web site for GCS updates.
 var UpdateApp = &unison.Action{
-	ID:              constants.UpdateAppItemID,
-	Title:           i18n.Text("Checking for GCS updates…"),
-	EnabledCallback: notEnabled,
-	ExecuteCallback: unimplemented,
+	ID: constants.UpdateAppItemID,
+	EnabledCallback: func(action *unison.Action, _ any) bool {
+		action.Title = library.AppUpdateResult()
+		return library.AppUpdateAvailable()
+	},
+	ExecuteCallback: func(_ *unison.Action, _ any) { library.AppUpdate() },
 }
 
 // ReleaseNotes opens the release notes.
