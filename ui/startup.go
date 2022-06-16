@@ -12,9 +12,11 @@
 package ui
 
 import (
+	"github.com/richardwilkes/gcs/model/library"
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/ui/menus"
 	"github.com/richardwilkes/gcs/ui/workspace"
+	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
 )
@@ -25,7 +27,8 @@ func Start(files []string) {
 	go libs.PerformUpdateChecks()
 	unison.Start(
 		unison.StartupFinishedCallback(func() {
-			wnd, err := unison.NewWindow("GCS")
+			library.CheckForAppUpdates()
+			wnd, err := unison.NewWindow(cmdline.AppName)
 			jot.FatalIfErr(err)
 			menus.Setup(wnd)
 			workspace.NewWorkspace(wnd)

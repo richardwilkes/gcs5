@@ -60,7 +60,6 @@ func main() {
 			cl.FatalMsg(err.Error())
 		}
 	} else {
-		library.CheckForAppUpdates()
 		ui.Start(fileList) // Never returns
 	}
 	atexit.Exit(0)

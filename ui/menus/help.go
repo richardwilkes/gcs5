@@ -12,8 +12,11 @@
 package menus
 
 import (
+	"fmt"
+
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/library"
+	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
@@ -36,7 +39,7 @@ func setupHelpMenu(bar unison.Menu) {
 // SponsorGCSDevelopment opens the web site for sponsoring GCS development.
 var SponsorGCSDevelopment = &unison.Action{
 	ID:    constants.SponsorGCSDevelopmentItemID,
-	Title: i18n.Text("Sponsor GCS Development"),
+	Title: fmt.Sprintf(i18n.Text("Sponsor %s Development"), cmdline.AppName),
 	ExecuteCallback: func(_ *unison.Action, _ any) {
 		showWebPage("https://github.com/sponsors/richardwilkes")
 	},
@@ -45,7 +48,7 @@ var SponsorGCSDevelopment = &unison.Action{
 // MakeDonation opens the web site for make a donation.
 var MakeDonation = &unison.Action{
 	ID:    constants.MakeDonationItemID,
-	Title: i18n.Text("Make a One-time Donation for GCS Development"),
+	Title: fmt.Sprintf(i18n.Text("Make a One-time Donation for %s Development"), cmdline.AppName),
 	ExecuteCallback: func(_ *unison.Action, _ any) {
 		showWebPage("https://paypal.me/GURPSCharacterSheet")
 	},
@@ -54,9 +57,13 @@ var MakeDonation = &unison.Action{
 // UpdateApp opens the web site for GCS updates.
 var UpdateApp = &unison.Action{
 	ID: constants.UpdateAppItemID,
-	EnabledCallback: func(action *unison.Action, _ any) bool {
-		action.Title = library.AppUpdateResult()
-		return library.AppUpdateAvailable()
+	EnabledCallback: func(action *unison.Action, mi any) bool {
+		var release *library.Release
+		action.Title, release = library.AppUpdateResult()
+		if menuItem, ok := mi.(unison.MenuItem); ok {
+			menuItem.SetTitle(action.Title)
+		}
+		return release != nil
 	},
 	ExecuteCallback: func(_ *unison.Action, _ any) { library.AppUpdate() },
 }

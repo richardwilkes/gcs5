@@ -13,6 +13,7 @@ package about
 
 import (
 	_ "embed"
+	"fmt"
 
 	"github.com/richardwilkes/gcs/setup/trampolines"
 	"github.com/richardwilkes/toolbox/cmdline"
@@ -52,7 +53,8 @@ func (w *aboutWindow) prepare() error {
 			return errs.NewWithCause("unable to load about image", err)
 		}
 	}
-	if w.Window, err = unison.NewWindow(i18n.Text("About GCS"), unison.NotResizableWindowOption()); err != nil {
+	if w.Window, err = unison.NewWindow(fmt.Sprintf(i18n.Text("About %s"), cmdline.AppName),
+		unison.NotResizableWindowOption()); err != nil {
 		return errs.NewWithCause("unable to create about window", err)
 	}
 	trampolines.MenuSetup(w.Window)
