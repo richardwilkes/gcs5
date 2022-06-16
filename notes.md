@@ -3,6 +3,7 @@
 #### GCS-specific work that needs to be done
 
 - Add undo records for edit operations that don't already have them
+- Implement prompting for substitution text when moving items onto a sheet
 - Settings editors
   - Attributes
   - Body Type
@@ -20,8 +21,6 @@
     - Default Attributes...
     - Body Type...
     - Default Body Type...
-  - Help
-    - Check for GCS updates...
 - Printing support for sheets (requires support in unison first)
 
 #### Unison-specific work that needs to be done

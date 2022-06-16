@@ -68,7 +68,8 @@ const (
 	MenuKeySettingsItemID
 	SponsorGCSDevelopmentItemID
 	MakeDonationItemID
-	UpdateAppItemID
+	UpdateAppStatusItemID
+	CheckForAppUpdatesItemID
 	ReleaseNotesItemID
 	WebSiteItemID
 	MailingListItemID

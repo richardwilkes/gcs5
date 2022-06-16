@@ -15,7 +15,8 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/gcs/constants"
-	"github.com/richardwilkes/gcs/model/library"
+	"github.com/richardwilkes/gcs/model/settings"
+	"github.com/richardwilkes/gcs/ui/updates"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -27,8 +28,10 @@ var (
 	SponsorGCSDevelopment *unison.Action
 	// MakeDonation opens the web site for make a donation.
 	MakeDonation *unison.Action
-	// UpdateApp opens the web site for GCS updates.
-	UpdateApp *unison.Action
+	// UpdateAppStatus shows the status of the last app update check.
+	UpdateAppStatus *unison.Action
+	// CheckForAppUpdates requests another check for app updates.
+	CheckForAppUpdates *unison.Action
 	// ReleaseNotes opens the release notes.
 	ReleaseNotes *unison.Action
 	// License opens the license.
@@ -54,17 +57,33 @@ func registerHelpMenuActions() {
 			showWebPage("https://paypal.me/GURPSCharacterSheet")
 		},
 	}
-	UpdateApp = &unison.Action{
-		ID: constants.UpdateAppItemID,
+	UpdateAppStatus = &unison.Action{
+		ID: constants.UpdateAppStatusItemID,
 		EnabledCallback: func(action *unison.Action, mi any) bool {
-			var releases []library.Release
-			action.Title, releases = library.AppUpdateResult()
+			title, releases, updating := updates.AppUpdateResult()
+			action.Title = title
 			if menuItem, ok := mi.(unison.MenuItem); ok {
-				menuItem.SetTitle(action.Title)
+				menuItem.SetTitle(title)
 			}
-			return releases != nil
+			return !updating && releases != nil
 		},
-		ExecuteCallback: func(_ *unison.Action, _ any) { library.AppUpdate() },
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			if _, releases, updating := updates.AppUpdateResult(); !updating && releases != nil {
+				updates.NotifyOfAppUpdate()
+			}
+		},
+	}
+	CheckForAppUpdates = &unison.Action{
+		ID:    constants.CheckForAppUpdatesItemID,
+		Title: fmt.Sprintf(i18n.Text("Check for %s updates"), cmdline.AppName),
+		EnabledCallback: func(action *unison.Action, mi any) bool {
+			_, releases, updating := updates.AppUpdateResult()
+			return !updating && releases == nil
+		},
+		ExecuteCallback: func(_ *unison.Action, _ any) {
+			settings.Global().LastSeenGCSVersion = ""
+			updates.CheckForAppUpdates()
+		},
 	}
 	ReleaseNotes = &unison.Action{
 		ID:    constants.ReleaseNotesItemID,
@@ -102,7 +121,8 @@ func setupHelpMenu(bar unison.Menu) {
 	m.InsertItem(-1, SponsorGCSDevelopment.NewMenuItem(f))
 	m.InsertItem(-1, MakeDonation.NewMenuItem(f))
 	m.InsertSeparator(-1, false)
-	m.InsertItem(-1, UpdateApp.NewMenuItem(f))
+	m.InsertItem(-1, UpdateAppStatus.NewMenuItem(f))
+	m.InsertItem(-1, CheckForAppUpdates.NewMenuItem(f))
 	m.InsertItem(-1, ReleaseNotes.NewMenuItem(f))
 	m.InsertItem(-1, License.NewMenuItem(f))
 	m.InsertSeparator(-1, false)
