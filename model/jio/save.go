@@ -12,6 +12,8 @@
 package jio
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"io"
 	"os"
@@ -42,4 +44,17 @@ func Save(ctx context.Context, w io.Writer, data any) error {
 	encoder.SetEscapeHTML(false)
 	encoder.SetIndent("", "\t")
 	return errs.Wrap(encoder.Encode(data))
+}
+
+// SerializeAndCompress writes the data as JSON into a buffer, then compresses it.
+func SerializeAndCompress(data any) ([]byte, error) {
+	var buffer bytes.Buffer
+	gz := gzip.NewWriter(&buffer)
+	if err := json.NewEncoder(gz).Encode(data); err != nil {
+		return nil, errs.Wrap(err)
+	}
+	if err := gz.Close(); err != nil {
+		return nil, errs.Wrap(err)
+	}
+	return buffer.Bytes(), nil
 }

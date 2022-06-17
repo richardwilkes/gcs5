@@ -13,6 +13,8 @@ package jio
 
 import (
 	"bufio"
+	"bytes"
+	"compress/gzip"
 	"context"
 	"io"
 	"io/fs"
@@ -49,6 +51,18 @@ func Load(ctx context.Context, r io.Reader, data any) error {
 	decoder.SetContext(ctx)
 	decoder.UseNumber()
 	if err := decoder.Decode(data); err != nil {
+		return errs.Wrap(err)
+	}
+	return nil
+}
+
+// DecompressAndDeserialize decompresses the buffer, then loads JSON data from it.
+func DecompressAndDeserialize(data []byte, result any) error {
+	gz, err := gzip.NewReader(bytes.NewReader(data))
+	if err != nil {
+		return errs.Wrap(err)
+	}
+	if err = json.NewDecoder(gz).Decode(result); err != nil {
 		return errs.Wrap(err)
 	}
 	return nil

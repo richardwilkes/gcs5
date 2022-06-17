@@ -12,16 +12,13 @@
 package editors
 
 import (
-	"bytes"
-	"compress/gzip"
 	"fmt"
 
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
+	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/json"
-	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -271,25 +268,13 @@ func (p *equipmentProvider) setEquipmentList(list []*gurps.Equipment) {
 }
 
 func (p *equipmentProvider) Serialize() ([]byte, error) {
-	var buffer bytes.Buffer
-	gz := gzip.NewWriter(&buffer)
-	if err := json.NewEncoder(gz).Encode(p.equipmentList()); err != nil {
-		return nil, errs.Wrap(err)
-	}
-	if err := gz.Close(); err != nil {
-		return nil, errs.Wrap(err)
-	}
-	return buffer.Bytes(), nil
+	return jio.SerializeAndCompress(p.equipmentList())
 }
 
 func (p *equipmentProvider) Deserialize(data []byte) error {
-	gz, err := gzip.NewReader(bytes.NewReader(data))
-	if err != nil {
-		return errs.Wrap(err)
-	}
 	var rows []*gurps.Equipment
-	if err = json.NewDecoder(gz).Decode(&rows); err != nil {
-		return errs.Wrap(err)
+	if err := jio.DecompressAndDeserialize(data, &rows); err != nil {
+		return err
 	}
 	p.setEquipmentList(rows)
 	return nil
