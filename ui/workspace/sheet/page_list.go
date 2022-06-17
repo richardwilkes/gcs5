@@ -21,7 +21,6 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/gcs/ui/workspace/editors"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 )
 
@@ -196,9 +195,9 @@ func newPageList[T gurps.NodeConstraint[T]](owner widget.Rebuildable, provider n
 			func(_ any) { p.provider.DuplicateSelection(p.table) })
 	}
 	p.installOpenPageReferenceHandlers()
-	_, pref, _ := p.tableHeader.Sizes(geom.Size[float32]{})
+	_, pref, _ := p.tableHeader.Sizes(unison.Size{})
 	p.SetLayoutData(&unison.FlexLayoutData{
-		MinSize: geom.NewSize(0, pref.Height*2),
+		MinSize: unison.NewSize(0, pref.Height*2),
 		HAlign:  unison.FillAlignment,
 		VAlign:  unison.FillAlignment,
 		HGrab:   true,

@@ -22,7 +22,6 @@ import (
 	"github.com/richardwilkes/gcs/ui/workspace/settings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 	"golang.org/x/exp/slices"
 )
@@ -210,7 +209,7 @@ func (n *Node[T]) createLabelCell(c *gurps.CellData, width float32, foreground u
 		baseline := label.Font.Baseline()
 		label.Drawable = &unison.DrawableSVG{
 			SVG:  unison.TriangleExclamationSVG(),
-			Size: geom.NewSize(baseline, baseline),
+			Size: unison.NewSize(baseline, baseline),
 		}
 		label.Text = i18n.Text("Unsatisfied prerequisite(s)")
 		label.HAlign = c.Alignment

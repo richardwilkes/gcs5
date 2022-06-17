@@ -20,7 +20,6 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox"
-	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
 	"golang.org/x/exp/slices"
 )
@@ -37,7 +36,7 @@ func newTable[T gurps.NodeConstraint[T]](parent *unison.Panel, provider ntable.T
 	headers := provider.Headers()
 	ntable.TableSetupColumnSizes(table, headers)
 	table.SetLayoutData(&unison.FlexLayoutData{
-		MinSize: geom.Size[float32]{Height: unison.FieldFont.LineHeight()},
+		MinSize: unison.Size{Height: unison.FieldFont.LineHeight()},
 		HAlign:  unison.FillAlignment,
 		VAlign:  unison.FillAlignment,
 		HGrab:   true,
