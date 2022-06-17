@@ -4,6 +4,8 @@
 
 - Add undo records for edit operations that don't already have them
 - Implement prompting for substitution text when moving items onto a sheet
+- Add monitoring of the library directories for file changes
+  - Perhaps also add manual refresh option, for those platforms where disk monitoring is less than optimal
 - Settings editors
   - Attributes
   - Body Type
