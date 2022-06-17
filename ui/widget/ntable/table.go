@@ -15,6 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/unison"
@@ -51,8 +52,29 @@ type TableProvider[T gurps.NodeConstraint[T]] interface {
 	Deserialize(data []byte) error
 }
 
-// TableSetupColumnSizes sets the standard column sizing.
-func TableSetupColumnSizes[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], headers []unison.TableColumnHeader[*Node[T]]) {
+// NewNodeTable creates a new node table of the specified type, returning the header and table. Pass nil for 'font' if
+// this should be a standalone top-level table for a dockable. Otherwise, pass in the typical font used for a cell.
+func NewNodeTable[T gurps.NodeConstraint[T]](provider TableProvider[T], font unison.Font) (header *unison.TableHeader[*Node[T]], table *unison.Table[*Node[T]]) {
+	table = unison.NewTable[*Node[T]](provider)
+	provider.SetTable(table)
+	table.HierarchyColumnIndex = provider.HierarchyColumnIndex()
+	table.DividerInk = theme.HeaderColor
+	layoutData := &unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.FillAlignment,
+		HGrab:  true,
+		VGrab:  true,
+	}
+	if font != nil {
+		table.Padding.Top = 0
+		table.Padding.Bottom = 0
+		table.HierarchyIndent = font.LineHeight()
+		table.MinimumRowHeight = font.LineHeight()
+		layoutData.MinSize = unison.Size{Height: 4 + theme.PageFieldPrimaryFont.LineHeight()}
+	}
+	table.SetLayoutData(layoutData)
+
+	headers := provider.Headers()
 	table.ColumnSizes = make([]unison.ColumnSize, len(headers))
 	for i := range table.ColumnSizes {
 		_, pref, _ := headers[i].AsPanel().Sizes(unison.Size{})
@@ -62,10 +84,20 @@ func TableSetupColumnSizes[T gurps.NodeConstraint[T]](table *unison.Table[*Node[
 		table.ColumnSizes[i].Minimum = pref.Width
 		table.ColumnSizes[i].Maximum = 10000
 	}
-}
+	header = unison.NewTableHeader(table, headers...)
+	header.Less = flexibleLess
+	if font != nil {
+		header.BackgroundInk = theme.HeaderColor
+		header.DividerInk = theme.HeaderColor
+		header.HeaderBorder = unison.NewLineBorder(theme.HeaderColor, 0, unison.Insets{Bottom: 1}, false)
+		header.SetBorder(header.HeaderBorder)
+	}
+	header.SetLayoutData(&unison.FlexLayoutData{
+		HAlign: unison.FillAlignment,
+		VAlign: unison.FillAlignment,
+		HGrab:  true,
+	})
 
-// TableInstallStdCallbacks installs the standard callbacks.
-func TableInstallStdCallbacks[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]]) {
 	mouseDownCallback := table.MouseDownCallback
 	table.MouseDownCallback = func(where unison.Point, button, clickCount int, mod unison.Modifiers) bool {
 		table.RequestFocus()
@@ -80,19 +112,22 @@ func TableInstallStdCallbacks[T gurps.NodeConstraint[T]](table *unison.Table[*No
 		}
 		return keydownCallback(keyCode, mod, repeat)
 	}
+	singular, plural := provider.ItemNames()
+	table.InstallDragSupport(provider.DragSVG(), provider.DragKey(), singular, plural)
+	if font != nil {
+		table.FrameChangeCallback = func() {
+			table.SizeColumnsToFitWithExcessIn(provider.ExcessWidthColumnIndex())
+		}
+	}
+	return header, table
 }
 
-// TableCreateHeader creates the standard table header with a flexible sorting mechanism.
-func TableCreateHeader[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], headers []unison.TableColumnHeader[*Node[T]]) *unison.TableHeader[*Node[T]] {
-	tableHeader := unison.NewTableHeader(table, headers...)
-	tableHeader.Less = func(s1, s2 string) bool {
-		if n1, err := fxp.FromString(s1); err == nil {
-			var n2 fxp.Int
-			if n2, err = fxp.FromString(s2); err == nil {
-				return n1 < n2
-			}
+func flexibleLess(s1, s2 string) bool {
+	if n1, err := fxp.FromString(s1); err == nil {
+		var n2 fxp.Int
+		if n2, err = fxp.FromString(s2); err == nil {
+			return n1 < n2
 		}
-		return txt.NaturalLess(s1, s2, true)
 	}
-	return tableHeader
+	return txt.NaturalLess(s1, s2, true)
 }

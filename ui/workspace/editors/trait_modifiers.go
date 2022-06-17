@@ -57,7 +57,7 @@ func (p *traitModifiersPanel) TraitModifierList() []*gurps.TraitModifier {
 
 func (p *traitModifiersPanel) SetTraitModifierList(list []*gurps.TraitModifier) {
 	*p.modifiers = list
-	sel := RecordTableSelection(p.table)
+	sel := p.table.CopySelectionMap()
 	p.table.SyncToModel()
-	ApplyTableSelection(p.table, sel)
+	p.table.SetSelectionMap(sel)
 }

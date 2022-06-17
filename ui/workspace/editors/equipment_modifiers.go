@@ -57,7 +57,7 @@ func (p *equipmentModifiersPanel) EquipmentModifierList() []*gurps.EquipmentModi
 
 func (p *equipmentModifiersPanel) SetEquipmentModifierList(list []*gurps.EquipmentModifier) {
 	*p.modifiers = list
-	sel := RecordTableSelection(p.table)
+	sel := p.table.CopySelectionMap()
 	p.table.SyncToModel()
-	ApplyTableSelection(p.table, sel)
+	p.table.SetSelectionMap(sel)
 }

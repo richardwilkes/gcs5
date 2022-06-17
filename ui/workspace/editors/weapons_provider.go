@@ -147,7 +147,16 @@ func (p *weaponsProvider) Headers() []unison.TableColumnHeader[*ntable.Node[*gur
 		case gurps.WeaponDescriptionColumn:
 			headers = append(headers, NewHeader[*gurps.Weapon](p.weaponType.String(), "", p.forPage))
 		case gurps.WeaponUsageColumn:
-			headers = append(headers, NewHeader[*gurps.Weapon](i18n.Text("Usage"), "", p.forPage))
+			var title string
+			switch {
+			case p.forPage:
+				title = i18n.Text("Usage")
+			case p.weaponType == weapon.Melee:
+				title = i18n.Text("Melee Weapon Usage")
+			default:
+				title = i18n.Text("Ranged Weapon Usage")
+			}
+			headers = append(headers, NewHeader[*gurps.Weapon](title, "", p.forPage))
 		case gurps.WeaponSLColumn:
 			headers = append(headers, NewHeader[*gurps.Weapon](i18n.Text("SL"), i18n.Text("Skill Level"), p.forPage))
 		case gurps.WeaponParryColumn:

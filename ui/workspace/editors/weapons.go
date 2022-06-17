@@ -87,7 +87,7 @@ func (p *weaponsPanel) SetWeapons(weaponType weapon.Type, list []*gurps.Weapon) 
 		ranged = list
 	}
 	*p.allWeapons = append(append(make([]*gurps.Weapon, 0, len(melee)+len(ranged)), melee...), ranged...)
-	sel := RecordTableSelection(p.table)
+	sel := p.table.CopySelectionMap()
 	p.table.SyncToModel()
-	ApplyTableSelection(p.table, sel)
+	p.table.SetSelectionMap(sel)
 }

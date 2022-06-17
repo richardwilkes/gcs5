@@ -118,43 +118,17 @@ func NewRangedWeaponsPageList(entity *gurps.Entity) *PageList[*gurps.Weapon] {
 }
 
 func newPageList[T gurps.NodeConstraint[T]](owner widget.Rebuildable, provider ntable.TableProvider[T]) *PageList[T] {
+	header, table := ntable.NewNodeTable[T](provider, theme.PageFieldPrimaryFont)
 	p := &PageList[T]{
-		table:    unison.NewTable[*ntable.Node[T]](provider),
-		provider: provider,
+		tableHeader: header,
+		table:       table,
+		provider:    provider,
 	}
 	p.Self = p
 	p.SetLayout(&unison.FlexLayout{Columns: 1})
 	p.SetBorder(unison.NewLineBorder(theme.HeaderColor, 0, unison.NewUniformInsets(1), false))
-	provider.SetTable(p.table)
-	p.table.DividerInk = theme.HeaderColor
-	p.table.MinimumRowHeight = theme.PageFieldPrimaryFont.LineHeight()
-	p.table.Padding.Top = 0
-	p.table.Padding.Bottom = 0
-	p.table.HierarchyColumnIndex = provider.HierarchyColumnIndex()
-	p.table.HierarchyIndent = theme.PageFieldPrimaryFont.LineHeight()
+
 	p.table.PreventUserColumnResize = true
-	headers := provider.Headers()
-	ntable.TableSetupColumnSizes(p.table, headers)
-	p.table.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		VAlign: unison.FillAlignment,
-		HGrab:  true,
-		VGrab:  true,
-	})
-	ntable.TableInstallStdCallbacks(p.table)
-	p.table.FrameChangeCallback = func() {
-		p.table.SizeColumnsToFitWithExcessIn(p.provider.ExcessWidthColumnIndex())
-	}
-	p.tableHeader = ntable.TableCreateHeader(p.table, headers)
-	p.tableHeader.BackgroundInk = theme.HeaderColor
-	p.tableHeader.DividerInk = theme.HeaderColor
-	p.tableHeader.HeaderBorder = unison.NewLineBorder(theme.HeaderColor, 0, unison.Insets{Bottom: 1}, false)
-	p.tableHeader.SetBorder(p.tableHeader.HeaderBorder)
-	p.tableHeader.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		VAlign: unison.FillAlignment,
-		HGrab:  true,
-	})
 	p.tableHeader.DrawCallback = func(gc *unison.Canvas, dirty unison.Rect) {
 		sortedOn := -1
 		for i, hdr := range p.tableHeader.ColumnHeaders {
@@ -180,8 +154,6 @@ func newPageList[T gurps.NodeConstraint[T]](owner widget.Rebuildable, provider n
 	p.table.SyncToModel()
 	p.AddChild(p.tableHeader)
 	p.AddChild(p.table)
-	singular, plural := p.provider.ItemNames()
-	p.table.InstallDragSupport(p.provider.DragSVG(), p.provider.DragKey(), singular, plural)
 	if owner != nil {
 		ntable.InstallTableDropSupport(p.table, p.provider)
 		p.InstallCmdHandlers(constants.OpenEditorItemID,
@@ -195,13 +167,11 @@ func newPageList[T gurps.NodeConstraint[T]](owner widget.Rebuildable, provider n
 			func(_ any) { p.provider.DuplicateSelection(p.table) })
 	}
 	p.installOpenPageReferenceHandlers()
-	_, pref, _ := p.tableHeader.Sizes(unison.Size{})
 	p.SetLayoutData(&unison.FlexLayoutData{
-		MinSize: unison.NewSize(0, pref.Height*2),
-		HAlign:  unison.FillAlignment,
-		VAlign:  unison.FillAlignment,
-		HGrab:   true,
-		VGrab:   true,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.FillAlignment,
+		HGrab:  true,
+		VGrab:  true,
 	})
 	return p
 }
@@ -337,13 +307,13 @@ func (p *PageList[T]) RecordSelection() map[uuid.UUID]bool {
 	if p == nil {
 		return nil
 	}
-	return editors.RecordTableSelection(p.table)
+	return p.table.CopySelectionMap()
 }
 
 // ApplySelection locates the rows with the given UUIDs and selects them, replacing any existing selection.
 func (p *PageList[T]) ApplySelection(selection map[uuid.UUID]bool) {
 	if p != nil {
-		editors.ApplyTableSelection(p.table, selection)
+		p.table.SetSelectionMap(selection)
 	}
 }
 

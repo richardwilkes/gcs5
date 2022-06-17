@@ -332,6 +332,7 @@ func NewNoteTableDockable(filePath string, notes []*gurps.Note) *TableDockable[*
 
 // NewTableDockable creates a new TableDockable for list data files.
 func NewTableDockable[T gurps.NodeConstraint[T]](filePath, extension string, provider ntable.TableProvider[T], saver func(path string) error, canCreateIDs ...int) *TableDockable[T] {
+	header, table := ntable.NewNodeTable[T](provider, nil)
 	d := &TableDockable[T]{
 		path:              filePath,
 		extension:         extension,
@@ -340,7 +341,8 @@ func NewTableDockable[T gurps.NodeConstraint[T]](filePath, extension string, pro
 		saver:             saver,
 		canCreateIDs:      make(map[int]bool),
 		scroll:            unison.NewScrollPanel(),
-		table:             unison.NewTable[*ntable.Node[T]](provider),
+		tableHeader:       header,
+		table:             table,
 		scale:             settings.Global().General.InitialListUIScale,
 		needsSaveAsPrompt: true,
 	}
@@ -351,17 +353,10 @@ func NewTableDockable[T gurps.NodeConstraint[T]](filePath, extension string, pro
 		d.canCreateIDs[id] = true
 	}
 
-	provider.SetTable(d.table)
-	headers := provider.Headers()
-	ntable.TableSetupColumnSizes(d.table, headers)
-	d.table.HierarchyColumnIndex = provider.HierarchyColumnIndex()
 	d.table.SyncToModel()
 	d.table.SizeColumnsToFit(true)
-	ntable.TableInstallStdCallbacks(d.table)
-	singular, plural := provider.ItemNames()
-	d.table.InstallDragSupport(provider.DragSVG(), provider.DragKey(), singular, plural)
 	ntable.InstallTableDropSupport(d.table, d.provider)
-	d.tableHeader = ntable.TableCreateHeader(d.table, headers)
+
 	d.scroll.SetColumnHeader(d.tableHeader)
 	d.scroll.SetContent(d.table, unison.FillBehavior, unison.FillBehavior)
 	d.scroll.SetLayoutData(&unison.FlexLayoutData{
@@ -668,9 +663,9 @@ func (d *TableDockable[T]) adjustForMatch() {
 // Rebuild implements widget.Rebuildable.
 func (d *TableDockable[T]) Rebuild(_ bool) {
 	h, v := d.scroll.Position()
-	sel := editors.RecordTableSelection(d.table)
+	sel := d.table.CopySelectionMap()
 	d.table.SyncToModel()
-	editors.ApplyTableSelection(d.table, sel)
+	d.table.SetSelectionMap(sel)
 	if dc := unison.Ancestor[*unison.DockContainer](d); dc != nil {
 		dc.UpdateTitle(d)
 	}
