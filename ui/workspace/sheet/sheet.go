@@ -25,8 +25,8 @@ import (
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/gcs/ui/workspace"
-	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	wsettings "github.com/richardwilkes/gcs/ui/workspace/settings"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -44,7 +44,7 @@ var (
 )
 
 type itemCreator interface {
-	CreateItem(widget.Rebuildable, widget.ItemVariant)
+	CreateItem(widget.Rebuildable, ntable.ItemVariant)
 }
 
 // Sheet holds the view for a GURPS character sheet.
@@ -187,9 +187,9 @@ func NewSheet(filePath string, entity *gurps.Entity) *Sheet {
 		s.OtherEquipment)
 	s.installNewItemCmdHandlers(constants.NewNoteItemID, constants.NewNoteContainerItemID, s.Notes)
 	s.InstallCmdHandlers(constants.AddNaturalAttacksItemID, unison.AlwaysEnabled, func(_ any) {
-		editors.InsertItem[*gurps.Trait](s, s.Traits.table, gurps.NewNaturalAttacks(s.entity, nil),
+		ntable.InsertItem[*gurps.Trait](s, s.Traits.table, gurps.NewNaturalAttacks(s.entity, nil),
 			s.entity.TraitList, s.entity.SetTraitList,
-			func(_ *unison.Table[*editors.Node[*gurps.Trait]]) []*editors.Node[*gurps.Trait] {
+			func(_ *unison.Table[*ntable.Node[*gurps.Trait]]) []*ntable.Node[*gurps.Trait] {
 				return s.Traits.provider.RootRows()
 			})
 	})
@@ -198,12 +198,12 @@ func NewSheet(filePath string, entity *gurps.Entity) *Sheet {
 }
 
 func (s *Sheet) installNewItemCmdHandlers(itemID, containerID int, creator itemCreator) {
-	variant := widget.NoItemVariant
+	variant := ntable.NoItemVariant
 	if containerID == -1 {
-		variant = widget.AlternateItemVariant
+		variant = ntable.AlternateItemVariant
 	} else {
 		s.InstallCmdHandlers(containerID, unison.AlwaysEnabled,
-			func(_ any) { creator.CreateItem(s, widget.ContainerItemVariant) })
+			func(_ any) { creator.CreateItem(s, ntable.ContainerItemVariant) })
 	}
 	s.InstallCmdHandlers(itemID, unison.AlwaysEnabled, func(_ any) { creator.CreateItem(s, variant) })
 }

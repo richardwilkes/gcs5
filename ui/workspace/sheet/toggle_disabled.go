@@ -14,7 +14,7 @@ package sheet
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/editors"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -57,20 +57,20 @@ func (a *disabledAdjuster) Apply() {
 	a.Target.Disabled = a.Disabled
 }
 
-func canToggleDisabled(table *unison.Table[*editors.Node[*gurps.Trait]]) bool {
+func canToggleDisabled(table *unison.Table[*ntable.Node[*gurps.Trait]]) bool {
 	for _, row := range table.SelectedRows(false) {
-		if t := editors.ExtractFromRowData[*gurps.Trait](row); t != nil {
+		if t := ntable.ExtractFromRowData[*gurps.Trait](row); t != nil {
 			return true
 		}
 	}
 	return false
 }
 
-func toggleDisabled(owner widget.Rebuildable, table *unison.Table[*editors.Node[*gurps.Trait]]) {
+func toggleDisabled(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurps.Trait]]) {
 	before := &toggleDisabledList{Owner: owner}
 	after := &toggleDisabledList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if t := editors.ExtractFromRowData[*gurps.Trait](row); t != nil {
+		if t := ntable.ExtractFromRowData[*gurps.Trait](row); t != nil {
 			before.List = append(before.List, newDisabledAdjuster(t))
 			t.Disabled = !t.Disabled
 			after.List = append(after.List, newDisabledAdjuster(t))

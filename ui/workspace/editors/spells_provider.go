@@ -17,6 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -54,14 +55,14 @@ var (
 )
 
 type spellsProvider struct {
-	table    *unison.Table[*Node[*gurps.Spell]]
+	table    *unison.Table[*ntable.Node[*gurps.Spell]]
 	colMap   map[int]int
 	provider gurps.SpellListProvider
 	forPage  bool
 }
 
 // NewSpellsProvider creates a new table provider for spells.
-func NewSpellsProvider(provider gurps.SpellListProvider, forPage bool) widget.TableProvider[*Node[*gurps.Spell]] {
+func NewSpellsProvider(provider gurps.SpellListProvider, forPage bool) ntable.TableProvider[*gurps.Spell] {
 	p := &spellsProvider{
 		provider: provider,
 		forPage:  forPage,
@@ -78,7 +79,7 @@ func NewSpellsProvider(provider gurps.SpellListProvider, forPage bool) widget.Ta
 	return p
 }
 
-func (p *spellsProvider) SetTable(table *unison.Table[*Node[*gurps.Spell]]) {
+func (p *spellsProvider) SetTable(table *unison.Table[*ntable.Node[*gurps.Spell]]) {
 	p.table = table
 }
 
@@ -86,17 +87,17 @@ func (p *spellsProvider) RootRowCount() int {
 	return len(p.provider.SpellList())
 }
 
-func (p *spellsProvider) RootRows() []*Node[*gurps.Spell] {
+func (p *spellsProvider) RootRows() []*ntable.Node[*gurps.Spell] {
 	data := p.provider.SpellList()
-	rows := make([]*Node[*gurps.Spell], 0, len(data))
+	rows := make([]*ntable.Node[*gurps.Spell], 0, len(data))
 	for _, one := range data {
-		rows = append(rows, NewNode[*gurps.Spell](p.table, nil, p.colMap, one, p.forPage))
+		rows = append(rows, ntable.NewNode[*gurps.Spell](p.table, nil, p.colMap, one, p.forPage))
 	}
 	return rows
 }
 
-func (p *spellsProvider) SetRootRows(rows []*Node[*gurps.Spell]) {
-	p.provider.SetSpellList(ExtractNodeDataFromList(rows))
+func (p *spellsProvider) SetRootRows(rows []*ntable.Node[*gurps.Spell]) {
+	p.provider.SetSpellList(ntable.ExtractNodeDataFromList(rows))
 }
 
 func (p *spellsProvider) Entity() *gurps.Entity {
@@ -111,7 +112,7 @@ func (p *spellsProvider) DragSVG() *unison.SVG {
 	return res.GCSSpellsSVG
 }
 
-func (p *spellsProvider) DropShouldMoveData(from, to *unison.Table[*Node[*gurps.Spell]]) bool {
+func (p *spellsProvider) DropShouldMoveData(from, to *unison.Table[*ntable.Node[*gurps.Spell]]) bool {
 	return from == to
 }
 
@@ -119,8 +120,8 @@ func (p *spellsProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Spell"), i18n.Text("Spells")
 }
 
-func (p *spellsProvider) Headers() []unison.TableColumnHeader[*Node[*gurps.Spell]] {
-	var headers []unison.TableColumnHeader[*Node[*gurps.Spell]]
+func (p *spellsProvider) Headers() []unison.TableColumnHeader[*ntable.Node[*gurps.Spell]] {
+	var headers []unison.TableColumnHeader[*ntable.Node[*gurps.Spell]]
 	for i := 0; i < len(p.colMap); i++ {
 		switch p.colMap[i] {
 		case gurps.SpellDescriptionColumn, gurps.SpellDescriptionForPageColumn:
@@ -161,7 +162,7 @@ func (p *spellsProvider) Headers() []unison.TableColumnHeader[*Node[*gurps.Spell
 	return headers
 }
 
-func (p *spellsProvider) SyncHeader(_ []unison.TableColumnHeader[*Node[*gurps.Spell]]) {
+func (p *spellsProvider) SyncHeader(_ []unison.TableColumnHeader[*ntable.Node[*gurps.Spell]]) {
 }
 
 func (p *spellsProvider) HierarchyColumnIndex() int {
@@ -177,34 +178,34 @@ func (p *spellsProvider) ExcessWidthColumnIndex() int {
 	return p.HierarchyColumnIndex()
 }
 
-func (p *spellsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.Spell]]) {
-	OpenEditor[*gurps.Spell](table, func(item *gurps.Spell) { EditSpell(owner, item) })
+func (p *spellsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurps.Spell]]) {
+	ntable.OpenEditor[*gurps.Spell](table, func(item *gurps.Spell) { EditSpell(owner, item) })
 }
 
-func (p *spellsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.Spell]], variant widget.ItemVariant) {
+func (p *spellsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurps.Spell]], variant ntable.ItemVariant) {
 	var item *gurps.Spell
 	switch variant {
-	case widget.NoItemVariant:
+	case ntable.NoItemVariant:
 		item = gurps.NewSpell(p.Entity(), nil, false)
-	case widget.ContainerItemVariant:
+	case ntable.ContainerItemVariant:
 		item = gurps.NewSpell(p.Entity(), nil, true)
-	case widget.AlternateItemVariant:
+	case ntable.AlternateItemVariant:
 		item = gurps.NewRitualMagicSpell(p.Entity(), nil, false)
 	default:
 		jot.Fatal(1, "unhandled variant")
 	}
-	InsertItem[*gurps.Spell](owner, table, item, p.provider.SpellList, p.provider.SetSpellList,
-		func(_ *unison.Table[*Node[*gurps.Spell]]) []*Node[*gurps.Spell] { return p.RootRows() })
+	ntable.InsertItem[*gurps.Spell](owner, table, item, p.provider.SpellList, p.provider.SetSpellList,
+		func(_ *unison.Table[*ntable.Node[*gurps.Spell]]) []*ntable.Node[*gurps.Spell] { return p.RootRows() })
 	EditSpell(owner, item)
 }
 
-func (p *spellsProvider) DuplicateSelection(table *unison.Table[*Node[*gurps.Spell]]) {
+func (p *spellsProvider) DuplicateSelection(table *unison.Table[*ntable.Node[*gurps.Spell]]) {
 	duplicateTableSelection(table, p.provider.SpellList(),
 		func(nodes []*gurps.Spell) { p.provider.SetSpellList(nodes) },
 		func(node *gurps.Spell) *[]*gurps.Spell { return &node.Children })
 }
 
-func (p *spellsProvider) DeleteSelection(table *unison.Table[*Node[*gurps.Spell]]) {
+func (p *spellsProvider) DeleteSelection(table *unison.Table[*ntable.Node[*gurps.Spell]]) {
 	deleteTableSelection(table, p.provider.SpellList(),
 		func(nodes []*gurps.Spell) { p.provider.SetSpellList(nodes) },
 		func(node *gurps.Spell) *[]*gurps.Spell { return &node.Children })

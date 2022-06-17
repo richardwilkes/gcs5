@@ -23,8 +23,8 @@ import (
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/gcs/ui/workspace"
-	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/xio/fs"
@@ -136,9 +136,9 @@ func NewTemplate(filePath string, template *gurps.Template) *Template {
 		constants.NewCarriedEquipmentContainerItemID, d.Equipment)
 	d.installNewItemCmdHandlers(constants.NewNoteItemID, constants.NewNoteContainerItemID, d.Notes)
 	d.InstallCmdHandlers(constants.AddNaturalAttacksItemID, unison.AlwaysEnabled, func(_ any) {
-		editors.InsertItem[*gurps.Trait](d, d.Traits.table, gurps.NewNaturalAttacks(nil, nil),
+		ntable.InsertItem[*gurps.Trait](d, d.Traits.table, gurps.NewNaturalAttacks(nil, nil),
 			d.template.TraitList, d.template.SetTraitList,
-			func(_ *unison.Table[*editors.Node[*gurps.Trait]]) []*editors.Node[*gurps.Trait] {
+			func(_ *unison.Table[*ntable.Node[*gurps.Trait]]) []*ntable.Node[*gurps.Trait] {
 				return d.Traits.provider.RootRows()
 			})
 	})
@@ -147,12 +147,12 @@ func NewTemplate(filePath string, template *gurps.Template) *Template {
 }
 
 func (d *Template) installNewItemCmdHandlers(itemID, containerID int, creator itemCreator) {
-	variant := widget.NoItemVariant
+	variant := ntable.NoItemVariant
 	if containerID == -1 {
-		variant = widget.AlternateItemVariant
+		variant = ntable.AlternateItemVariant
 	} else {
 		d.InstallCmdHandlers(containerID, unison.AlwaysEnabled,
-			func(_ any) { creator.CreateItem(d, widget.ContainerItemVariant) })
+			func(_ any) { creator.CreateItem(d, ntable.ContainerItemVariant) })
 	}
 	d.InstallCmdHandlers(itemID, unison.AlwaysEnabled, func(_ any) { creator.CreateItem(d, variant) })
 }

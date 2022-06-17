@@ -17,6 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/unison"
 )
 
@@ -27,8 +28,8 @@ type weaponsPanel struct {
 	weaponType  weapon.Type
 	allWeapons  *[]*gurps.Weapon
 	weapons     []*gurps.Weapon
-	provider    widget.TableProvider[*Node[*gurps.Weapon]]
-	table       *unison.Table[*Node[*gurps.Weapon]]
+	provider    ntable.TableProvider[*gurps.Weapon]
+	table       *unison.Table[*ntable.Node[*gurps.Weapon]]
 }
 
 func newWeaponsPanel(cmdRoot widget.Rebuildable, weaponOwner gurps.WeaponOwner, weaponType weapon.Type, weapons *[]*gurps.Weapon) *weaponsPanel {
@@ -61,7 +62,7 @@ func newWeaponsPanel(cmdRoot widget.Rebuildable, weaponOwner gurps.WeaponOwner, 
 		return p
 	}
 	cmdRoot.AsPanel().InstallCmdHandlers(id, unison.AlwaysEnabled,
-		func(_ any) { p.provider.CreateItem(cmdRoot, p.table, widget.NoItemVariant) })
+		func(_ any) { p.provider.CreateItem(cmdRoot, p.table, ntable.NoItemVariant) })
 	return p
 }
 

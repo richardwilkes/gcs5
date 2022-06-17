@@ -8,7 +8,7 @@ require (
 	github.com/richardwilkes/pdf v0.0.0-20220615155114-1bb7b941867c
 	github.com/richardwilkes/rpgtools v1.4.2
 	github.com/richardwilkes/toolbox v1.72.0
-	github.com/richardwilkes/unison v0.21.3
+	github.com/richardwilkes/unison v0.21.4
 	github.com/stretchr/testify v1.7.2
 	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d
 	golang.org/x/text v0.3.7

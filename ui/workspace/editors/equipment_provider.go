@@ -19,6 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -63,7 +64,7 @@ var (
 )
 
 type equipmentProvider struct {
-	table    *unison.Table[*Node[*gurps.Equipment]]
+	table    *unison.Table[*ntable.Node[*gurps.Equipment]]
 	colMap   map[int]int
 	provider gurps.EquipmentListProvider
 	forPage  bool
@@ -71,7 +72,7 @@ type equipmentProvider struct {
 }
 
 // NewEquipmentProvider creates a new table provider for equipment. 'carried' is only relevant if 'forPage' is true.
-func NewEquipmentProvider(provider gurps.EquipmentListProvider, forPage, carried bool) widget.TableProvider[*Node[*gurps.Equipment]] {
+func NewEquipmentProvider(provider gurps.EquipmentListProvider, forPage, carried bool) ntable.TableProvider[*gurps.Equipment] {
 	p := &equipmentProvider{
 		provider: provider,
 		forPage:  forPage,
@@ -89,7 +90,7 @@ func NewEquipmentProvider(provider gurps.EquipmentListProvider, forPage, carried
 	return p
 }
 
-func (p *equipmentProvider) SetTable(table *unison.Table[*Node[*gurps.Equipment]]) {
+func (p *equipmentProvider) SetTable(table *unison.Table[*ntable.Node[*gurps.Equipment]]) {
 	p.table = table
 }
 
@@ -97,17 +98,17 @@ func (p *equipmentProvider) RootRowCount() int {
 	return len(p.equipmentList())
 }
 
-func (p *equipmentProvider) RootRows() []*Node[*gurps.Equipment] {
+func (p *equipmentProvider) RootRows() []*ntable.Node[*gurps.Equipment] {
 	data := p.equipmentList()
-	rows := make([]*Node[*gurps.Equipment], 0, len(data))
+	rows := make([]*ntable.Node[*gurps.Equipment], 0, len(data))
 	for _, one := range data {
-		rows = append(rows, NewNode[*gurps.Equipment](p.table, nil, p.colMap, one, p.forPage))
+		rows = append(rows, ntable.NewNode[*gurps.Equipment](p.table, nil, p.colMap, one, p.forPage))
 	}
 	return rows
 }
 
-func (p *equipmentProvider) SetRootRows(rows []*Node[*gurps.Equipment]) {
-	p.setEquipmentList(ExtractNodeDataFromList(rows))
+func (p *equipmentProvider) SetRootRows(rows []*ntable.Node[*gurps.Equipment]) {
+	p.setEquipmentList(ntable.ExtractNodeDataFromList(rows))
 }
 
 func (p *equipmentProvider) Entity() *gurps.Entity {
@@ -122,7 +123,7 @@ func (p *equipmentProvider) DragSVG() *unison.SVG {
 	return res.GCSEquipmentSVG
 }
 
-func (p *equipmentProvider) DropShouldMoveData(from, to *unison.Table[*Node[*gurps.Equipment]]) bool {
+func (p *equipmentProvider) DropShouldMoveData(from, to *unison.Table[*ntable.Node[*gurps.Equipment]]) bool {
 	// Within same table?
 	if from == to {
 		return true
@@ -139,8 +140,8 @@ func (p *equipmentProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Equipment Item"), i18n.Text("Equipment Items")
 }
 
-func (p *equipmentProvider) Headers() []unison.TableColumnHeader[*Node[*gurps.Equipment]] {
-	var headers []unison.TableColumnHeader[*Node[*gurps.Equipment]]
+func (p *equipmentProvider) Headers() []unison.TableColumnHeader[*ntable.Node[*gurps.Equipment]] {
+	var headers []unison.TableColumnHeader[*ntable.Node[*gurps.Equipment]]
 	for i := 0; i < len(p.colMap); i++ {
 		switch p.colMap[i] {
 		case gurps.EquipmentEquippedColumn:
@@ -176,7 +177,7 @@ func (p *equipmentProvider) Headers() []unison.TableColumnHeader[*Node[*gurps.Eq
 	return headers
 }
 
-func (p *equipmentProvider) SyncHeader(headers []unison.TableColumnHeader[*Node[*gurps.Equipment]]) {
+func (p *equipmentProvider) SyncHeader(headers []unison.TableColumnHeader[*ntable.Node[*gurps.Equipment]]) {
 	if p.forPage {
 		for i := 0; i < len(carriedEquipmentPageColMap); i++ {
 			if carriedEquipmentPageColMap[i] == gurps.EquipmentDescriptionColumn {
@@ -223,30 +224,32 @@ func (p *equipmentProvider) descriptionText() string {
 	return title
 }
 
-func (p *equipmentProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.Equipment]]) {
-	OpenEditor[*gurps.Equipment](table, func(item *gurps.Equipment) { EditEquipment(owner, item, p.carried) })
+func (p *equipmentProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurps.Equipment]]) {
+	ntable.OpenEditor[*gurps.Equipment](table, func(item *gurps.Equipment) { EditEquipment(owner, item, p.carried) })
 }
 
-func (p *equipmentProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.Equipment]], variant widget.ItemVariant) {
+func (p *equipmentProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurps.Equipment]], variant ntable.ItemVariant) {
 	topListFunc := p.provider.OtherEquipmentList
 	setTopListFunc := p.provider.SetOtherEquipmentList
 	if p.carried {
 		topListFunc = p.provider.CarriedEquipmentList
 		setTopListFunc = p.provider.SetCarriedEquipmentList
 	}
-	item := gurps.NewEquipment(p.Entity(), nil, variant == widget.ContainerItemVariant)
-	InsertItem[*gurps.Equipment](owner, table, item, topListFunc, setTopListFunc,
-		func(_ *unison.Table[*Node[*gurps.Equipment]]) []*Node[*gurps.Equipment] { return p.RootRows() })
+	item := gurps.NewEquipment(p.Entity(), nil, variant == ntable.ContainerItemVariant)
+	ntable.InsertItem[*gurps.Equipment](owner, table, item, topListFunc, setTopListFunc,
+		func(_ *unison.Table[*ntable.Node[*gurps.Equipment]]) []*ntable.Node[*gurps.Equipment] {
+			return p.RootRows()
+		})
 	EditEquipment(owner, item, p.carried)
 }
 
-func (p *equipmentProvider) DuplicateSelection(table *unison.Table[*Node[*gurps.Equipment]]) {
+func (p *equipmentProvider) DuplicateSelection(table *unison.Table[*ntable.Node[*gurps.Equipment]]) {
 	duplicateTableSelection(table, p.equipmentList(),
 		func(nodes []*gurps.Equipment) { p.setEquipmentList(nodes) },
 		func(node *gurps.Equipment) *[]*gurps.Equipment { return &node.Children })
 }
 
-func (p *equipmentProvider) DeleteSelection(table *unison.Table[*Node[*gurps.Equipment]]) {
+func (p *equipmentProvider) DeleteSelection(table *unison.Table[*ntable.Node[*gurps.Equipment]]) {
 	deleteTableSelection(table, p.equipmentList(),
 		func(nodes []*gurps.Equipment) { p.setEquipmentList(nodes) },
 		func(node *gurps.Equipment) *[]*gurps.Equipment { return &node.Children })

@@ -14,12 +14,12 @@ package sheet
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/editors"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
 
-func canAdjustSkillLevel[T gurps.NodeConstraint[T]](table *unison.Table[*editors.Node[T]], increment bool) bool {
+func canAdjustSkillLevel[T gurps.NodeConstraint[T]](table *unison.Table[*ntable.Node[T]], increment bool) bool {
 	for _, row := range table.SelectedRows(false) {
 		if provider, ok := row.Data().(gurps.SkillAdjustmentProvider[T]); ok && !provider.Container() {
 			if increment || provider.RawPoints() > 0 {
@@ -30,7 +30,7 @@ func canAdjustSkillLevel[T gurps.NodeConstraint[T]](table *unison.Table[*editors
 	return false
 }
 
-func adjustSkillLevel[T gurps.NodeConstraint[T]](owner widget.Rebuildable, table *unison.Table[*editors.Node[T]], increment bool) {
+func adjustSkillLevel[T gurps.NodeConstraint[T]](owner widget.Rebuildable, table *unison.Table[*ntable.Node[T]], increment bool) {
 	before := &adjustRawPointsList[T]{Owner: owner}
 	after := &adjustRawPointsList[T]{Owner: owner}
 	for _, row := range table.SelectedRows(false) {

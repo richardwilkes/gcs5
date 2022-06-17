@@ -28,6 +28,7 @@ import (
 	"github.com/richardwilkes/gcs/model/settings"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -51,7 +52,7 @@ type TableDockable[T gurps.NodeConstraint[T]] struct {
 	path              string
 	extension         string
 	undoMgr           *unison.UndoManager
-	provider          widget.TableProvider[*editors.Node[T]]
+	provider          ntable.TableProvider[T]
 	saver             func(path string) error
 	canCreateIDs      map[int]bool
 	hierarchyButton   *unison.Button
@@ -63,10 +64,10 @@ type TableDockable[T gurps.NodeConstraint[T]] struct {
 	searchField       *unison.Field
 	matchesLabel      *unison.Label
 	scroll            *unison.ScrollPanel
-	tableHeader       *unison.TableHeader[*editors.Node[T]]
-	table             *unison.Table[*editors.Node[T]]
+	tableHeader       *unison.TableHeader[*ntable.Node[T]]
+	table             *unison.Table[*ntable.Node[T]]
 	crc               uint64
-	searchResult      []*editors.Node[T]
+	searchResult      []*ntable.Node[T]
 	searchIndex       int
 	needsSaveAsPrompt bool
 }
@@ -330,7 +331,7 @@ func NewNoteTableDockable(filePath string, notes []*gurps.Note) *TableDockable[*
 }
 
 // NewTableDockable creates a new TableDockable for list data files.
-func NewTableDockable[T gurps.NodeConstraint[T]](filePath, extension string, provider widget.TableProvider[*editors.Node[T]], saver func(path string) error, canCreateIDs ...int) *TableDockable[T] {
+func NewTableDockable[T gurps.NodeConstraint[T]](filePath, extension string, provider ntable.TableProvider[T], saver func(path string) error, canCreateIDs ...int) *TableDockable[T] {
 	d := &TableDockable[T]{
 		path:              filePath,
 		extension:         extension,
@@ -339,7 +340,7 @@ func NewTableDockable[T gurps.NodeConstraint[T]](filePath, extension string, pro
 		saver:             saver,
 		canCreateIDs:      make(map[int]bool),
 		scroll:            unison.NewScrollPanel(),
-		table:             unison.NewTable[*editors.Node[T]](provider),
+		table:             unison.NewTable[*ntable.Node[T]](provider),
 		scale:             settings.Global().General.InitialListUIScale,
 		needsSaveAsPrompt: true,
 	}
@@ -352,15 +353,15 @@ func NewTableDockable[T gurps.NodeConstraint[T]](filePath, extension string, pro
 
 	provider.SetTable(d.table)
 	headers := provider.Headers()
-	widget.TableSetupColumnSizes(d.table, headers)
+	ntable.TableSetupColumnSizes(d.table, headers)
 	d.table.HierarchyColumnIndex = provider.HierarchyColumnIndex()
 	d.table.SyncToModel()
 	d.table.SizeColumnsToFit(true)
-	widget.TableInstallStdCallbacks(d.table)
+	ntable.TableInstallStdCallbacks(d.table)
 	singular, plural := provider.ItemNames()
 	d.table.InstallDragSupport(provider.DragSVG(), provider.DragKey(), singular, plural)
-	widget.InstallTableDropSupport(d.table, d.provider)
-	d.tableHeader = widget.TableCreateHeader(d.table, headers)
+	ntable.InstallTableDropSupport(d.table, d.provider)
+	d.tableHeader = ntable.TableCreateHeader(d.table, headers)
 	d.scroll.SetColumnHeader(d.tableHeader)
 	d.scroll.SetContent(d.table, unison.FillBehavior, unison.FillBehavior)
 	d.scroll.SetLayoutData(&unison.FlexLayoutData{
@@ -465,14 +466,14 @@ func NewTableDockable[T gurps.NodeConstraint[T]](filePath, extension string, pro
 		func(_ any) bool { return d.table.HasSelection() },
 		func(_ any) { d.provider.DuplicateSelection(d.table) })
 	for _, id := range canCreateIDs {
-		variant := widget.ItemVariant(-1)
+		variant := ntable.ItemVariant(-1)
 		switch {
 		case id > constants.FirstNonContainerMarker && id < constants.LastNonContainerMarker:
-			variant = widget.NoItemVariant
+			variant = ntable.NoItemVariant
 		case id > constants.FirstContainerMarker && id < constants.LastContainerMarker:
-			variant = widget.ContainerItemVariant
+			variant = ntable.ContainerItemVariant
 		case id > constants.FirstAlternateNonContainerMarker && id < constants.LastAlternateNonContainerMarker:
-			variant = widget.AlternateItemVariant
+			variant = ntable.AlternateItemVariant
 		}
 		if variant != -1 {
 			d.InstallCmdHandlers(id, unison.AlwaysEnabled,
@@ -598,7 +599,7 @@ func (d *TableDockable[T]) toggleHierarchy() {
 	d.table.SyncToModel()
 }
 
-func setRowOpen[T gurps.NodeConstraint[T]](row *editors.Node[T], open bool) {
+func setRowOpen[T gurps.NodeConstraint[T]](row *ntable.Node[T], open bool) {
 	row.SetOpen(open)
 	for _, child := range row.Children() {
 		if child.CanHaveChildren() {
@@ -622,7 +623,7 @@ func (d *TableDockable[T]) searchModified() {
 	d.adjustForMatch()
 }
 
-func (d *TableDockable[T]) search(text string, row *editors.Node[T]) {
+func (d *TableDockable[T]) search(text string, row *ntable.Node[T]) {
 	if row.Match(text) {
 		d.searchResult = append(d.searchResult, row)
 	}

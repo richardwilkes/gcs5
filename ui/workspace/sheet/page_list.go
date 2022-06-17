@@ -19,6 +19,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/gcs/ui/workspace/editors"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/unison"
@@ -29,9 +30,9 @@ var _ widget.Syncer = &PageList[*gurps.Trait]{}
 // PageList holds a list for a sheet page.
 type PageList[T gurps.NodeConstraint[T]] struct {
 	unison.Panel
-	tableHeader *unison.TableHeader[*editors.Node[T]]
-	table       *unison.Table[*editors.Node[T]]
-	provider    widget.TableProvider[*editors.Node[T]]
+	tableHeader *unison.TableHeader[*ntable.Node[T]]
+	table       *unison.Table[*ntable.Node[T]]
+	provider    ntable.TableProvider[T]
 }
 
 // NewTraitsPageList creates the traits page list.
@@ -117,9 +118,9 @@ func NewRangedWeaponsPageList(entity *gurps.Entity) *PageList[*gurps.Weapon] {
 	return newPageList(nil, editors.NewWeaponsProvider(entity, weapon.Ranged, true))
 }
 
-func newPageList[T gurps.NodeConstraint[T]](owner widget.Rebuildable, provider widget.TableProvider[*editors.Node[T]]) *PageList[T] {
+func newPageList[T gurps.NodeConstraint[T]](owner widget.Rebuildable, provider ntable.TableProvider[T]) *PageList[T] {
 	p := &PageList[T]{
-		table:    unison.NewTable[*editors.Node[T]](provider),
+		table:    unison.NewTable[*ntable.Node[T]](provider),
 		provider: provider,
 	}
 	p.Self = p
@@ -134,18 +135,18 @@ func newPageList[T gurps.NodeConstraint[T]](owner widget.Rebuildable, provider w
 	p.table.HierarchyIndent = theme.PageFieldPrimaryFont.LineHeight()
 	p.table.PreventUserColumnResize = true
 	headers := provider.Headers()
-	widget.TableSetupColumnSizes(p.table, headers)
+	ntable.TableSetupColumnSizes(p.table, headers)
 	p.table.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: unison.FillAlignment,
 		VAlign: unison.FillAlignment,
 		HGrab:  true,
 		VGrab:  true,
 	})
-	widget.TableInstallStdCallbacks(p.table)
+	ntable.TableInstallStdCallbacks(p.table)
 	p.table.FrameChangeCallback = func() {
 		p.table.SizeColumnsToFitWithExcessIn(p.provider.ExcessWidthColumnIndex())
 	}
-	p.tableHeader = widget.TableCreateHeader(p.table, headers)
+	p.tableHeader = ntable.TableCreateHeader(p.table, headers)
 	p.tableHeader.BackgroundInk = theme.HeaderColor
 	p.tableHeader.DividerInk = theme.HeaderColor
 	p.tableHeader.HeaderBorder = unison.NewLineBorder(theme.HeaderColor, 0, unison.Insets{Bottom: 1}, false)
@@ -183,7 +184,7 @@ func newPageList[T gurps.NodeConstraint[T]](owner widget.Rebuildable, provider w
 	singular, plural := p.provider.ItemNames()
 	p.table.InstallDragSupport(p.provider.DragSVG(), p.provider.DragKey(), singular, plural)
 	if owner != nil {
-		widget.InstallTableDropSupport(p.table, p.provider)
+		ntable.InstallTableDropSupport(p.table, p.provider)
 		p.InstallCmdHandlers(constants.OpenEditorItemID,
 			func(_ any) bool { return p.table.HasSelection() },
 			func(_ any) { p.provider.OpenEditor(owner, p.table) })
@@ -216,7 +217,7 @@ func (p *PageList[T]) installOpenPageReferenceHandlers() {
 }
 
 func (p *PageList[T]) installToggleDisabledHandler(owner widget.Rebuildable) {
-	if t, ok := (interface{}(p.table)).(*unison.Table[*editors.Node[*gurps.Trait]]); ok {
+	if t, ok := (interface{}(p.table)).(*unison.Table[*ntable.Node[*gurps.Trait]]); ok {
 		p.InstallCmdHandlers(constants.ToggleStateItemID,
 			func(_ any) bool { return canToggleDisabled(t) },
 			func(_ any) { toggleDisabled(owner, t) })
@@ -224,7 +225,7 @@ func (p *PageList[T]) installToggleDisabledHandler(owner widget.Rebuildable) {
 }
 
 func (p *PageList[T]) installToggleEquippedHandler(owner widget.Rebuildable) {
-	if t, ok := (interface{}(p.table)).(*unison.Table[*editors.Node[*gurps.Equipment]]); ok {
+	if t, ok := (interface{}(p.table)).(*unison.Table[*ntable.Node[*gurps.Equipment]]); ok {
 		p.InstallCmdHandlers(constants.ToggleStateItemID,
 			func(_ any) bool { return canToggleEquipped(t) },
 			func(_ any) { toggleEquipped(owner, t) })
@@ -244,7 +245,7 @@ func (p *PageList[T]) installDecrementPointsHandler(owner widget.Rebuildable) {
 }
 
 func (p *PageList[T]) installIncrementLevelHandler(owner widget.Rebuildable) {
-	if t, ok := (interface{}(p.table)).(*unison.Table[*editors.Node[*gurps.Trait]]); ok {
+	if t, ok := (interface{}(p.table)).(*unison.Table[*ntable.Node[*gurps.Trait]]); ok {
 		p.InstallCmdHandlers(constants.IncrementItemID,
 			func(_ any) bool { return canAdjustTraitLevel(t, true) },
 			func(_ any) { adjustTraitLevel(owner, t, true) })
@@ -252,7 +253,7 @@ func (p *PageList[T]) installIncrementLevelHandler(owner widget.Rebuildable) {
 }
 
 func (p *PageList[T]) installDecrementLevelHandler(owner widget.Rebuildable) {
-	if t, ok := (interface{}(p.table)).(*unison.Table[*editors.Node[*gurps.Trait]]); ok {
+	if t, ok := (interface{}(p.table)).(*unison.Table[*ntable.Node[*gurps.Trait]]); ok {
 		p.InstallCmdHandlers(constants.DecrementItemID,
 			func(_ any) bool { return canAdjustTraitLevel(t, false) },
 			func(_ any) { adjustTraitLevel(owner, t, false) })
@@ -260,7 +261,7 @@ func (p *PageList[T]) installDecrementLevelHandler(owner widget.Rebuildable) {
 }
 
 func (p *PageList[T]) installIncrementQuantityHandler(owner widget.Rebuildable) {
-	if t, ok := (interface{}(p.table)).(*unison.Table[*editors.Node[*gurps.Equipment]]); ok {
+	if t, ok := (interface{}(p.table)).(*unison.Table[*ntable.Node[*gurps.Equipment]]); ok {
 		p.InstallCmdHandlers(constants.IncrementItemID,
 			func(_ any) bool { return canAdjustQuantity(t, true) },
 			func(_ any) { adjustQuantity(owner, t, true) })
@@ -268,7 +269,7 @@ func (p *PageList[T]) installIncrementQuantityHandler(owner widget.Rebuildable) 
 }
 
 func (p *PageList[T]) installDecrementQuantityHandler(owner widget.Rebuildable) {
-	if t, ok := (interface{}(p.table)).(*unison.Table[*editors.Node[*gurps.Equipment]]); ok {
+	if t, ok := (interface{}(p.table)).(*unison.Table[*ntable.Node[*gurps.Equipment]]); ok {
 		p.InstallCmdHandlers(constants.DecrementItemID,
 			func(_ any) bool { return canAdjustQuantity(t, false) },
 			func(_ any) { adjustQuantity(owner, t, false) })
@@ -276,7 +277,7 @@ func (p *PageList[T]) installDecrementQuantityHandler(owner widget.Rebuildable) 
 }
 
 func (p *PageList[T]) installIncrementUsesHandler(owner widget.Rebuildable) {
-	if t, ok := (interface{}(p.table)).(*unison.Table[*editors.Node[*gurps.Equipment]]); ok {
+	if t, ok := (interface{}(p.table)).(*unison.Table[*ntable.Node[*gurps.Equipment]]); ok {
 		p.InstallCmdHandlers(constants.IncrementUsesItemID,
 			func(_ any) bool { return canAdjustUses(t, 1) },
 			func(_ any) { adjustUses(owner, t, 1) })
@@ -284,7 +285,7 @@ func (p *PageList[T]) installIncrementUsesHandler(owner widget.Rebuildable) {
 }
 
 func (p *PageList[T]) installDecrementUsesHandler(owner widget.Rebuildable) {
-	if t, ok := (interface{}(p.table)).(*unison.Table[*editors.Node[*gurps.Equipment]]); ok {
+	if t, ok := (interface{}(p.table)).(*unison.Table[*ntable.Node[*gurps.Equipment]]); ok {
 		p.InstallCmdHandlers(constants.DecrementUsesItemID,
 			func(_ any) bool { return canAdjustUses(t, -1) },
 			func(_ any) { adjustUses(owner, t, -1) })
@@ -316,7 +317,7 @@ func (p *PageList[T]) installDecrementTechLevelHandler(owner widget.Rebuildable)
 }
 
 func (p *PageList[T]) installConvertToContainerHandler(owner widget.Rebuildable) {
-	if t, ok := (interface{}(p.table)).(*unison.Table[*editors.Node[*gurps.Equipment]]); ok {
+	if t, ok := (interface{}(p.table)).(*unison.Table[*ntable.Node[*gurps.Equipment]]); ok {
 		p.InstallCmdHandlers(constants.ConvertToContainerItemID,
 			func(_ any) bool { return canConvertToContainer(t) },
 			func(_ any) { convertToContainer(owner, t) })
@@ -325,7 +326,7 @@ func (p *PageList[T]) installConvertToContainerHandler(owner widget.Rebuildable)
 
 // SelectedNodes returns the set of selected nodes. If 'minimal' is true, then children of selected rows that may also
 // be selected are not returned, just the topmost row that is selected in any given hierarchy.
-func (p *PageList[T]) SelectedNodes(minimal bool) []*editors.Node[T] {
+func (p *PageList[T]) SelectedNodes(minimal bool) []*ntable.Node[T] {
 	if p == nil {
 		return nil
 	}
@@ -361,6 +362,6 @@ func (p *PageList[T]) Sync() {
 }
 
 // CreateItem calls CreateItem on the contained TableProvider.
-func (p *PageList[T]) CreateItem(owner widget.Rebuildable, variant widget.ItemVariant) {
+func (p *PageList[T]) CreateItem(owner widget.Rebuildable, variant ntable.ItemVariant) {
 	p.provider.CreateItem(owner, p.table, variant)
 }

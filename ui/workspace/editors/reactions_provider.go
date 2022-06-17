@@ -15,6 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/gid"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -27,18 +28,18 @@ var reactionsColMap = map[int]int{
 }
 
 type reactionModProvider struct {
-	table    *unison.Table[*Node[*gurps.ConditionalModifier]]
+	table    *unison.Table[*ntable.Node[*gurps.ConditionalModifier]]
 	provider gurps.ReactionModifierListProvider
 }
 
 // NewReactionModifiersProvider creates a new table provider for reaction modifiers.
-func NewReactionModifiersProvider(provider gurps.ReactionModifierListProvider) widget.TableProvider[*Node[*gurps.ConditionalModifier]] {
+func NewReactionModifiersProvider(provider gurps.ReactionModifierListProvider) ntable.TableProvider[*gurps.ConditionalModifier] {
 	return &reactionModProvider{
 		provider: provider,
 	}
 }
 
-func (p *reactionModProvider) SetTable(table *unison.Table[*Node[*gurps.ConditionalModifier]]) {
+func (p *reactionModProvider) SetTable(table *unison.Table[*ntable.Node[*gurps.ConditionalModifier]]) {
 	p.table = table
 }
 
@@ -46,16 +47,16 @@ func (p *reactionModProvider) RootRowCount() int {
 	return len(p.provider.Reactions())
 }
 
-func (p *reactionModProvider) RootRows() []*Node[*gurps.ConditionalModifier] {
+func (p *reactionModProvider) RootRows() []*ntable.Node[*gurps.ConditionalModifier] {
 	data := p.provider.Reactions()
-	rows := make([]*Node[*gurps.ConditionalModifier], 0, len(data))
+	rows := make([]*ntable.Node[*gurps.ConditionalModifier], 0, len(data))
 	for _, one := range data {
-		rows = append(rows, NewNode[*gurps.ConditionalModifier](p.table, nil, conditionalModifierColMap, one, true))
+		rows = append(rows, ntable.NewNode[*gurps.ConditionalModifier](p.table, nil, conditionalModifierColMap, one, true))
 	}
 	return rows
 }
 
-func (p *reactionModProvider) SetRootRows(_ []*Node[*gurps.ConditionalModifier]) {
+func (p *reactionModProvider) SetRootRows(_ []*ntable.Node[*gurps.ConditionalModifier]) {
 }
 
 func (p *reactionModProvider) Entity() *gurps.Entity {
@@ -70,7 +71,7 @@ func (p *reactionModProvider) DragSVG() *unison.SVG {
 	return nil
 }
 
-func (p *reactionModProvider) DropShouldMoveData(_, _ *unison.Table[*Node[*gurps.ConditionalModifier]]) bool {
+func (p *reactionModProvider) DropShouldMoveData(_, _ *unison.Table[*ntable.Node[*gurps.ConditionalModifier]]) bool {
 	// Not used
 	return false
 }
@@ -79,8 +80,8 @@ func (p *reactionModProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Reaction Modifier"), i18n.Text("Reaction Modifiers")
 }
 
-func (p *reactionModProvider) Headers() []unison.TableColumnHeader[*Node[*gurps.ConditionalModifier]] {
-	var headers []unison.TableColumnHeader[*Node[*gurps.ConditionalModifier]]
+func (p *reactionModProvider) Headers() []unison.TableColumnHeader[*ntable.Node[*gurps.ConditionalModifier]] {
+	var headers []unison.TableColumnHeader[*ntable.Node[*gurps.ConditionalModifier]]
 	for i := 0; i < len(reactionsColMap); i++ {
 		switch conditionalModifierColMap[i] {
 		case gurps.ConditionalModifierValueColumn:
@@ -94,7 +95,7 @@ func (p *reactionModProvider) Headers() []unison.TableColumnHeader[*Node[*gurps.
 	return headers
 }
 
-func (p *reactionModProvider) SyncHeader(_ []unison.TableColumnHeader[*Node[*gurps.ConditionalModifier]]) {
+func (p *reactionModProvider) SyncHeader(_ []unison.TableColumnHeader[*ntable.Node[*gurps.ConditionalModifier]]) {
 }
 
 func (p *reactionModProvider) HierarchyColumnIndex() int {
@@ -110,16 +111,16 @@ func (p *reactionModProvider) ExcessWidthColumnIndex() int {
 	return 0
 }
 
-func (p *reactionModProvider) OpenEditor(_ widget.Rebuildable, _ *unison.Table[*Node[*gurps.ConditionalModifier]]) {
+func (p *reactionModProvider) OpenEditor(_ widget.Rebuildable, _ *unison.Table[*ntable.Node[*gurps.ConditionalModifier]]) {
 }
 
-func (p *reactionModProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table[*Node[*gurps.ConditionalModifier]], _ widget.ItemVariant) {
+func (p *reactionModProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table[*ntable.Node[*gurps.ConditionalModifier]], _ ntable.ItemVariant) {
 }
 
-func (p *reactionModProvider) DuplicateSelection(_ *unison.Table[*Node[*gurps.ConditionalModifier]]) {
+func (p *reactionModProvider) DuplicateSelection(_ *unison.Table[*ntable.Node[*gurps.ConditionalModifier]]) {
 }
 
-func (p *reactionModProvider) DeleteSelection(_ *unison.Table[*Node[*gurps.ConditionalModifier]]) {
+func (p *reactionModProvider) DeleteSelection(_ *unison.Table[*ntable.Node[*gurps.ConditionalModifier]]) {
 }
 
 func (p *reactionModProvider) Serialize() ([]byte, error) {

@@ -17,6 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -39,13 +40,13 @@ var (
 )
 
 type traitModifierProvider struct {
-	table    *unison.Table[*Node[*gurps.TraitModifier]]
+	table    *unison.Table[*ntable.Node[*gurps.TraitModifier]]
 	colMap   map[int]int
 	provider gurps.TraitModifierListProvider
 }
 
 // NewTraitModifiersProvider creates a new table provider for trait modifiers.
-func NewTraitModifiersProvider(provider gurps.TraitModifierListProvider, forEditor bool) widget.TableProvider[*Node[*gurps.TraitModifier]] {
+func NewTraitModifiersProvider(provider gurps.TraitModifierListProvider, forEditor bool) ntable.TableProvider[*gurps.TraitModifier] {
 	p := &traitModifierProvider{
 		provider: provider,
 	}
@@ -57,7 +58,7 @@ func NewTraitModifiersProvider(provider gurps.TraitModifierListProvider, forEdit
 	return p
 }
 
-func (p *traitModifierProvider) SetTable(table *unison.Table[*Node[*gurps.TraitModifier]]) {
+func (p *traitModifierProvider) SetTable(table *unison.Table[*ntable.Node[*gurps.TraitModifier]]) {
 	p.table = table
 }
 
@@ -65,17 +66,17 @@ func (p *traitModifierProvider) RootRowCount() int {
 	return len(p.provider.TraitModifierList())
 }
 
-func (p *traitModifierProvider) RootRows() []*Node[*gurps.TraitModifier] {
+func (p *traitModifierProvider) RootRows() []*ntable.Node[*gurps.TraitModifier] {
 	data := p.provider.TraitModifierList()
-	rows := make([]*Node[*gurps.TraitModifier], 0, len(data))
+	rows := make([]*ntable.Node[*gurps.TraitModifier], 0, len(data))
 	for _, one := range data {
-		rows = append(rows, NewNode[*gurps.TraitModifier](p.table, nil, p.colMap, one, false))
+		rows = append(rows, ntable.NewNode[*gurps.TraitModifier](p.table, nil, p.colMap, one, false))
 	}
 	return rows
 }
 
-func (p *traitModifierProvider) SetRootRows(rows []*Node[*gurps.TraitModifier]) {
-	p.provider.SetTraitModifierList(ExtractNodeDataFromList(rows))
+func (p *traitModifierProvider) SetRootRows(rows []*ntable.Node[*gurps.TraitModifier]) {
+	p.provider.SetTraitModifierList(ntable.ExtractNodeDataFromList(rows))
 }
 
 func (p *traitModifierProvider) Entity() *gurps.Entity {
@@ -90,7 +91,7 @@ func (p *traitModifierProvider) DragSVG() *unison.SVG {
 	return res.GCSTraitModifiersSVG
 }
 
-func (p *traitModifierProvider) DropShouldMoveData(from, to *unison.Table[*Node[*gurps.TraitModifier]]) bool {
+func (p *traitModifierProvider) DropShouldMoveData(from, to *unison.Table[*ntable.Node[*gurps.TraitModifier]]) bool {
 	return from == to
 }
 
@@ -98,8 +99,8 @@ func (p *traitModifierProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Trait Modifier"), i18n.Text("Trait Modifiers")
 }
 
-func (p *traitModifierProvider) Headers() []unison.TableColumnHeader[*Node[*gurps.TraitModifier]] {
-	var headers []unison.TableColumnHeader[*Node[*gurps.TraitModifier]]
+func (p *traitModifierProvider) Headers() []unison.TableColumnHeader[*ntable.Node[*gurps.TraitModifier]] {
+	var headers []unison.TableColumnHeader[*ntable.Node[*gurps.TraitModifier]]
 	for i := 0; i < len(p.colMap); i++ {
 		switch p.colMap[i] {
 		case gurps.TraitModifierEnabledColumn:
@@ -119,7 +120,7 @@ func (p *traitModifierProvider) Headers() []unison.TableColumnHeader[*Node[*gurp
 	return headers
 }
 
-func (p *traitModifierProvider) SyncHeader(_ []unison.TableColumnHeader[*Node[*gurps.TraitModifier]]) {
+func (p *traitModifierProvider) SyncHeader(_ []unison.TableColumnHeader[*ntable.Node[*gurps.TraitModifier]]) {
 }
 
 func (p *traitModifierProvider) HierarchyColumnIndex() int {
@@ -135,26 +136,28 @@ func (p *traitModifierProvider) ExcessWidthColumnIndex() int {
 	return p.HierarchyColumnIndex()
 }
 
-func (p *traitModifierProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.TraitModifier]]) {
-	OpenEditor[*gurps.TraitModifier](table, func(item *gurps.TraitModifier) {
+func (p *traitModifierProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurps.TraitModifier]]) {
+	ntable.OpenEditor[*gurps.TraitModifier](table, func(item *gurps.TraitModifier) {
 		EditTraitModifier(owner, item)
 	})
 }
 
-func (p *traitModifierProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.TraitModifier]], variant widget.ItemVariant) {
-	item := gurps.NewTraitModifier(p.Entity(), nil, variant == widget.ContainerItemVariant)
-	InsertItem[*gurps.TraitModifier](owner, table, item, p.provider.TraitModifierList, p.provider.SetTraitModifierList,
-		func(_ *unison.Table[*Node[*gurps.TraitModifier]]) []*Node[*gurps.TraitModifier] { return p.RootRows() })
+func (p *traitModifierProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurps.TraitModifier]], variant ntable.ItemVariant) {
+	item := gurps.NewTraitModifier(p.Entity(), nil, variant == ntable.ContainerItemVariant)
+	ntable.InsertItem[*gurps.TraitModifier](owner, table, item, p.provider.TraitModifierList, p.provider.SetTraitModifierList,
+		func(_ *unison.Table[*ntable.Node[*gurps.TraitModifier]]) []*ntable.Node[*gurps.TraitModifier] {
+			return p.RootRows()
+		})
 	EditTraitModifier(owner, item)
 }
 
-func (p *traitModifierProvider) DuplicateSelection(table *unison.Table[*Node[*gurps.TraitModifier]]) {
+func (p *traitModifierProvider) DuplicateSelection(table *unison.Table[*ntable.Node[*gurps.TraitModifier]]) {
 	duplicateTableSelection(table, p.provider.TraitModifierList(),
 		func(nodes []*gurps.TraitModifier) { p.provider.SetTraitModifierList(nodes) },
 		func(node *gurps.TraitModifier) *[]*gurps.TraitModifier { return &node.Children })
 }
 
-func (p *traitModifierProvider) DeleteSelection(table *unison.Table[*Node[*gurps.TraitModifier]]) {
+func (p *traitModifierProvider) DeleteSelection(table *unison.Table[*ntable.Node[*gurps.TraitModifier]]) {
 	deleteTableSelection(table, p.provider.TraitModifierList(),
 		func(nodes []*gurps.TraitModifier) { p.provider.SetTraitModifierList(nodes) },
 		func(node *gurps.TraitModifier) *[]*gurps.TraitModifier { return &node.Children })

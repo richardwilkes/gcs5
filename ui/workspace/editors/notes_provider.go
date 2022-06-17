@@ -17,6 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/model/jio"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/unison"
@@ -28,20 +29,20 @@ var noteColMap = map[int]int{
 }
 
 type notesProvider struct {
-	table    *unison.Table[*Node[*gurps.Note]]
+	table    *unison.Table[*ntable.Node[*gurps.Note]]
 	provider gurps.NoteListProvider
 	forPage  bool
 }
 
 // NewNotesProvider creates a new table provider for notes.
-func NewNotesProvider(provider gurps.NoteListProvider, forPage bool) widget.TableProvider[*Node[*gurps.Note]] {
+func NewNotesProvider(provider gurps.NoteListProvider, forPage bool) ntable.TableProvider[*gurps.Note] {
 	return &notesProvider{
 		provider: provider,
 		forPage:  forPage,
 	}
 }
 
-func (p *notesProvider) SetTable(table *unison.Table[*Node[*gurps.Note]]) {
+func (p *notesProvider) SetTable(table *unison.Table[*ntable.Node[*gurps.Note]]) {
 	p.table = table
 }
 
@@ -49,17 +50,17 @@ func (p *notesProvider) RootRowCount() int {
 	return len(p.provider.NoteList())
 }
 
-func (p *notesProvider) RootRows() []*Node[*gurps.Note] {
+func (p *notesProvider) RootRows() []*ntable.Node[*gurps.Note] {
 	data := p.provider.NoteList()
-	rows := make([]*Node[*gurps.Note], 0, len(data))
+	rows := make([]*ntable.Node[*gurps.Note], 0, len(data))
 	for _, one := range data {
-		rows = append(rows, NewNode[*gurps.Note](p.table, nil, noteColMap, one, p.forPage))
+		rows = append(rows, ntable.NewNode[*gurps.Note](p.table, nil, noteColMap, one, p.forPage))
 	}
 	return rows
 }
 
-func (p *notesProvider) SetRootRows(rows []*Node[*gurps.Note]) {
-	p.provider.SetNoteList(ExtractNodeDataFromList(rows))
+func (p *notesProvider) SetRootRows(rows []*ntable.Node[*gurps.Note]) {
+	p.provider.SetNoteList(ntable.ExtractNodeDataFromList(rows))
 }
 
 func (p *notesProvider) Entity() *gurps.Entity {
@@ -74,7 +75,7 @@ func (p *notesProvider) DragSVG() *unison.SVG {
 	return res.GCSNotesSVG
 }
 
-func (p *notesProvider) DropShouldMoveData(from, to *unison.Table[*Node[*gurps.Note]]) bool {
+func (p *notesProvider) DropShouldMoveData(from, to *unison.Table[*ntable.Node[*gurps.Note]]) bool {
 	return from == to
 }
 
@@ -82,8 +83,8 @@ func (p *notesProvider) ItemNames() (singular, plural string) {
 	return i18n.Text("Note"), i18n.Text("Notes")
 }
 
-func (p *notesProvider) Headers() []unison.TableColumnHeader[*Node[*gurps.Note]] {
-	var headers []unison.TableColumnHeader[*Node[*gurps.Note]]
+func (p *notesProvider) Headers() []unison.TableColumnHeader[*ntable.Node[*gurps.Note]] {
+	var headers []unison.TableColumnHeader[*ntable.Node[*gurps.Note]]
 	for i := 0; i < len(noteColMap); i++ {
 		switch noteColMap[i] {
 		case gurps.NoteTextColumn:
@@ -97,7 +98,7 @@ func (p *notesProvider) Headers() []unison.TableColumnHeader[*Node[*gurps.Note]]
 	return headers
 }
 
-func (p *notesProvider) SyncHeader(_ []unison.TableColumnHeader[*Node[*gurps.Note]]) {
+func (p *notesProvider) SyncHeader(_ []unison.TableColumnHeader[*ntable.Node[*gurps.Note]]) {
 }
 
 func (p *notesProvider) HierarchyColumnIndex() int {
@@ -113,24 +114,24 @@ func (p *notesProvider) ExcessWidthColumnIndex() int {
 	return p.HierarchyColumnIndex()
 }
 
-func (p *notesProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.Note]]) {
-	OpenEditor[*gurps.Note](table, func(item *gurps.Note) { EditNote(owner, item) })
+func (p *notesProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurps.Note]]) {
+	ntable.OpenEditor[*gurps.Note](table, func(item *gurps.Note) { EditNote(owner, item) })
 }
 
-func (p *notesProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.Note]], variant widget.ItemVariant) {
-	item := gurps.NewNote(p.Entity(), nil, variant == widget.ContainerItemVariant)
-	InsertItem[*gurps.Note](owner, table, item, p.provider.NoteList, p.provider.SetNoteList,
-		func(_ *unison.Table[*Node[*gurps.Note]]) []*Node[*gurps.Note] { return p.RootRows() })
+func (p *notesProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurps.Note]], variant ntable.ItemVariant) {
+	item := gurps.NewNote(p.Entity(), nil, variant == ntable.ContainerItemVariant)
+	ntable.InsertItem[*gurps.Note](owner, table, item, p.provider.NoteList, p.provider.SetNoteList,
+		func(_ *unison.Table[*ntable.Node[*gurps.Note]]) []*ntable.Node[*gurps.Note] { return p.RootRows() })
 	EditNote(owner, item)
 }
 
-func (p *notesProvider) DuplicateSelection(table *unison.Table[*Node[*gurps.Note]]) {
+func (p *notesProvider) DuplicateSelection(table *unison.Table[*ntable.Node[*gurps.Note]]) {
 	duplicateTableSelection(table, p.provider.NoteList(),
 		func(nodes []*gurps.Note) { p.provider.SetNoteList(nodes) },
 		func(node *gurps.Note) *[]*gurps.Note { return &node.Children })
 }
 
-func (p *notesProvider) DeleteSelection(table *unison.Table[*Node[*gurps.Note]]) {
+func (p *notesProvider) DeleteSelection(table *unison.Table[*ntable.Node[*gurps.Note]]) {
 	deleteTableSelection(table, p.provider.NoteList(),
 		func(nodes []*gurps.Note) { p.provider.SetNoteList(nodes) },
 		func(node *gurps.Note) *[]*gurps.Note { return &node.Children })

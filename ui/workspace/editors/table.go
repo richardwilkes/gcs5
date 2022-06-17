@@ -17,6 +17,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/gcs/ui/workspace"
 	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/xmath/geom"
@@ -24,8 +25,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func newTable[T gurps.NodeConstraint[T]](parent *unison.Panel, provider widget.TableProvider[*Node[T]]) *unison.Table[*Node[T]] {
-	table := unison.NewTable[*Node[T]](provider)
+func newTable[T gurps.NodeConstraint[T]](parent *unison.Panel, provider ntable.TableProvider[T]) *unison.Table[*ntable.Node[T]] {
+	table := unison.NewTable[*ntable.Node[T]](provider)
 	provider.SetTable(table)
 	table.DividerInk = theme.HeaderColor
 	table.Padding.Top = 0
@@ -34,7 +35,7 @@ func newTable[T gurps.NodeConstraint[T]](parent *unison.Panel, provider widget.T
 	table.HierarchyIndent = unison.FieldFont.LineHeight()
 	table.MinimumRowHeight = unison.FieldFont.LineHeight()
 	headers := provider.Headers()
-	widget.TableSetupColumnSizes(table, headers)
+	ntable.TableSetupColumnSizes(table, headers)
 	table.SetLayoutData(&unison.FlexLayoutData{
 		MinSize: geom.Size[float32]{Height: unison.FieldFont.LineHeight()},
 		HAlign:  unison.FillAlignment,
@@ -42,11 +43,11 @@ func newTable[T gurps.NodeConstraint[T]](parent *unison.Panel, provider widget.T
 		HGrab:   true,
 		VGrab:   true,
 	})
-	widget.TableInstallStdCallbacks(table)
+	ntable.TableInstallStdCallbacks(table)
 	table.FrameChangeCallback = func() {
 		table.SizeColumnsToFitWithExcessIn(provider.ExcessWidthColumnIndex())
 	}
-	tableHeader := widget.TableCreateHeader(table, headers)
+	tableHeader := ntable.TableCreateHeader(table, headers)
 	tableHeader.BackgroundInk = theme.HeaderColor
 	tableHeader.DividerInk = theme.HeaderColor
 	tableHeader.HeaderBorder = unison.NewLineBorder(theme.HeaderColor, 0, unison.Insets{Bottom: 1}, false)
@@ -75,7 +76,7 @@ func newTable[T gurps.NodeConstraint[T]](parent *unison.Panel, provider widget.T
 	parent.AddChild(table)
 	singular, plural := provider.ItemNames()
 	table.InstallDragSupport(provider.DragSVG(), provider.DragKey(), singular, plural)
-	widget.InstallTableDropSupport(table, provider)
+	ntable.InstallTableDropSupport(table, provider)
 	return table
 }
 
@@ -86,14 +87,14 @@ func collectUUIDs[T gurps.NodeConstraint[T]](node T, m map[uuid.UUID]bool) {
 	}
 }
 
-func duplicateTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], topLevelRows []T, setTopLevelRows func(nodes []T), childrenPtrFunc func(node T) *[]T) {
+func duplicateTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*ntable.Node[T]], topLevelRows []T, setTopLevelRows func(nodes []T), childrenPtrFunc func(node T) *[]T) {
 	if table.HasSelection() {
 		var zero T
 		needSet := false
 		sel := table.SelectedRows(true)
 		selMap := make(map[uuid.UUID]bool, len(sel))
 		for _, row := range sel {
-			if target := ExtractFromRowData[T](row); !toolbox.IsNil(target) {
+			if target := ntable.ExtractFromRowData[T](row); !toolbox.IsNil(target) {
 				parent := target.Parent()
 				clone := target.Clone(target.OwningEntity(), parent, false)
 				selMap[clone.UUID()] = true
@@ -127,13 +128,13 @@ func duplicateTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*Nod
 	}
 }
 
-func deleteTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], topLevelRows []T, setTopLevelRows func(nodes []T), childrenPtrFunc func(node T) *[]T) {
+func deleteTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*ntable.Node[T]], topLevelRows []T, setTopLevelRows func(nodes []T), childrenPtrFunc func(node T) *[]T) {
 	if table.HasSelection() {
 		sel := table.SelectedRows(true)
 		ids := make(map[uuid.UUID]bool, len(sel))
 		list := make([]T, 0, len(sel))
 		for _, row := range sel {
-			if target := ExtractFromRowData[T](row); !toolbox.IsNil(target) {
+			if target := ntable.ExtractFromRowData[T](row); !toolbox.IsNil(target) {
 				list = append(list, target)
 				collectUUIDs[T](target, ids)
 			}
@@ -173,12 +174,12 @@ func deleteTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T
 }
 
 // RecordTableSelection collects the currently selected row UUIDs.
-func RecordTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]]) map[uuid.UUID]bool {
+func RecordTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*ntable.Node[T]]) map[uuid.UUID]bool {
 	var zero T
 	rows := table.SelectedRows(false)
 	selection := make(map[uuid.UUID]bool, len(rows))
 	for _, row := range rows {
-		if node := ExtractFromRowData[T](row); node != zero {
+		if node := ntable.ExtractFromRowData[T](row); node != zero {
 			selection[node.UUID()] = true
 		}
 	}
@@ -186,7 +187,7 @@ func RecordTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T
 }
 
 // ApplyTableSelection locates the rows with the given UUIDs and selects them, replacing any existing selection.
-func ApplyTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], selection map[uuid.UUID]bool) {
+func ApplyTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*ntable.Node[T]], selection map[uuid.UUID]bool) {
 	table.ClearSelection()
 	if len(selection) != 0 {
 		_, indexes := collectRowMappings(0, make([]int, 0, len(selection)), selection, table.RootRows())
@@ -196,10 +197,10 @@ func ApplyTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]
 	}
 }
 
-func collectRowMappings[T gurps.NodeConstraint[T]](index int, indexes []int, selection map[uuid.UUID]bool, rows []*Node[T]) (updatedIndex int, updatedIndexes []int) {
+func collectRowMappings[T gurps.NodeConstraint[T]](index int, indexes []int, selection map[uuid.UUID]bool, rows []*ntable.Node[T]) (updatedIndex int, updatedIndexes []int) {
 	var zero T
 	for _, row := range rows {
-		if node := ExtractFromRowData[T](row); node != zero {
+		if node := ntable.ExtractFromRowData[T](row); node != zero {
 			if selection[node.UUID()] {
 				indexes = append(indexes, index)
 			}

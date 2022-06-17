@@ -15,7 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/editors"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -58,9 +58,9 @@ func (a *quantityAdjuster) Apply() {
 	a.Target.Quantity = a.Quantity
 }
 
-func canAdjustQuantity(table *unison.Table[*editors.Node[*gurps.Equipment]], increment bool) bool {
+func canAdjustQuantity(table *unison.Table[*ntable.Node[*gurps.Equipment]], increment bool) bool {
 	for _, row := range table.SelectedRows(false) {
-		if eqp := editors.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
+		if eqp := ntable.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
 			if increment || eqp.Quantity > 0 {
 				return true
 			}
@@ -69,11 +69,11 @@ func canAdjustQuantity(table *unison.Table[*editors.Node[*gurps.Equipment]], inc
 	return false
 }
 
-func adjustQuantity(owner widget.Rebuildable, table *unison.Table[*editors.Node[*gurps.Equipment]], increment bool) {
+func adjustQuantity(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurps.Equipment]], increment bool) {
 	before := &adjustQuantityList{Owner: owner}
 	after := &adjustQuantityList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if eqp := editors.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
+		if eqp := ntable.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
 			if increment || eqp.Quantity > 0 {
 				before.List = append(before.List, newQuantityAdjuster(eqp))
 				original := eqp.Quantity

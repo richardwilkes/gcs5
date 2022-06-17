@@ -14,7 +14,7 @@ package editors
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/theme"
-	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/unison"
 )
 
@@ -22,8 +22,8 @@ type traitModifiersPanel struct {
 	unison.Panel
 	entity    *gurps.Entity
 	modifiers *[]*gurps.TraitModifier
-	provider  widget.TableProvider[*Node[*gurps.TraitModifier]]
-	table     *unison.Table[*Node[*gurps.TraitModifier]]
+	provider  ntable.TableProvider[*gurps.TraitModifier]
+	table     *unison.Table[*ntable.Node[*gurps.TraitModifier]]
 }
 
 func newTraitModifiersPanel(entity *gurps.Entity, modifiers *[]*gurps.TraitModifier) *traitModifiersPanel {

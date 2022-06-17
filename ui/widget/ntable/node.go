@@ -9,7 +9,7 @@
  * defined by the Mozilla Public License, version 2.0.
  */
 
-package editors
+package ntable
 
 import (
 	"strings"
@@ -138,6 +138,17 @@ func (n *Node[T]) ColumnCell(row, col int, foreground, _ unison.Ink, _, _, _ boo
 	return cell
 }
 
+func applyForegroundInkRecursively(panel *unison.Panel, foreground unison.Ink) {
+	if label, ok := panel.Self.(*unison.Label); ok {
+		if _, exists := label.ClientData()[excludeMarker]; !exists {
+			label.OnBackgroundInk = foreground
+		}
+	}
+	for _, child := range panel.Children() {
+		applyForegroundInkRecursively(child, foreground)
+	}
+}
+
 // IsOpen implements unison.TableRowData.
 func (n *Node[T]) IsOpen() bool {
 	return n.data.Container() && n.data.Open()
@@ -154,17 +165,6 @@ func (n *Node[T]) SetOpen(open bool) {
 // Data returns the underlying data object.
 func (n *Node[T]) Data() gurps.Node[T] {
 	return n.data
-}
-
-func applyForegroundInkRecursively(panel *unison.Panel, foreground unison.Ink) {
-	if label, ok := panel.Self.(*unison.Label); ok {
-		if _, exists := label.ClientData()[excludeMarker]; !exists {
-			label.OnBackgroundInk = foreground
-		}
-	}
-	for _, child := range panel.Children() {
-		applyForegroundInkRecursively(child, foreground)
-	}
 }
 
 // Match looks for the text in the node and return true if it is present. Note that calls to this method should always

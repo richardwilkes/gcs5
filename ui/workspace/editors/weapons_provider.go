@@ -15,6 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -69,7 +70,7 @@ var (
 )
 
 type weaponsProvider struct {
-	table      *unison.Table[*Node[*gurps.Weapon]]
+	table      *unison.Table[*ntable.Node[*gurps.Weapon]]
 	colMap     map[int]int
 	provider   gurps.WeaponListProvider
 	weaponType weapon.Type
@@ -77,7 +78,7 @@ type weaponsProvider struct {
 }
 
 // NewWeaponsProvider creates a new table provider for weapons.
-func NewWeaponsProvider(provider gurps.WeaponListProvider, weaponType weapon.Type, forPage bool) widget.TableProvider[*Node[*gurps.Weapon]] {
+func NewWeaponsProvider(provider gurps.WeaponListProvider, weaponType weapon.Type, forPage bool) ntable.TableProvider[*gurps.Weapon] {
 	p := &weaponsProvider{
 		provider:   provider,
 		weaponType: weaponType,
@@ -98,7 +99,7 @@ func NewWeaponsProvider(provider gurps.WeaponListProvider, weaponType weapon.Typ
 	return p
 }
 
-func (p *weaponsProvider) SetTable(table *unison.Table[*Node[*gurps.Weapon]]) {
+func (p *weaponsProvider) SetTable(table *unison.Table[*ntable.Node[*gurps.Weapon]]) {
 	p.table = table
 }
 
@@ -106,16 +107,16 @@ func (p *weaponsProvider) RootRowCount() int {
 	return len(p.provider.Weapons(p.weaponType))
 }
 
-func (p *weaponsProvider) RootRows() []*Node[*gurps.Weapon] {
+func (p *weaponsProvider) RootRows() []*ntable.Node[*gurps.Weapon] {
 	data := p.provider.Weapons(p.weaponType)
-	rows := make([]*Node[*gurps.Weapon], 0, len(data))
+	rows := make([]*ntable.Node[*gurps.Weapon], 0, len(data))
 	for _, one := range data {
-		rows = append(rows, NewNode[*gurps.Weapon](p.table, nil, p.colMap, one, p.forPage))
+		rows = append(rows, ntable.NewNode[*gurps.Weapon](p.table, nil, p.colMap, one, p.forPage))
 	}
 	return rows
 }
 
-func (p *weaponsProvider) SetRootRows(_ []*Node[*gurps.Weapon]) {
+func (p *weaponsProvider) SetRootRows(_ []*ntable.Node[*gurps.Weapon]) {
 }
 
 func (p *weaponsProvider) Entity() *gurps.Entity {
@@ -130,7 +131,7 @@ func (p *weaponsProvider) DragSVG() *unison.SVG {
 	return p.weaponType.SVG()
 }
 
-func (p *weaponsProvider) DropShouldMoveData(_, _ *unison.Table[*Node[*gurps.Weapon]]) bool {
+func (p *weaponsProvider) DropShouldMoveData(_, _ *unison.Table[*ntable.Node[*gurps.Weapon]]) bool {
 	// Not used
 	return false
 }
@@ -139,8 +140,8 @@ func (p *weaponsProvider) ItemNames() (singular, plural string) {
 	return p.weaponType.String(), p.weaponType.AltString()
 }
 
-func (p *weaponsProvider) Headers() []unison.TableColumnHeader[*Node[*gurps.Weapon]] {
-	var headers []unison.TableColumnHeader[*Node[*gurps.Weapon]]
+func (p *weaponsProvider) Headers() []unison.TableColumnHeader[*ntable.Node[*gurps.Weapon]] {
+	var headers []unison.TableColumnHeader[*ntable.Node[*gurps.Weapon]]
 	for i := 0; i < len(p.colMap); i++ {
 		switch p.colMap[i] {
 		case gurps.WeaponDescriptionColumn:
@@ -178,7 +179,7 @@ func (p *weaponsProvider) Headers() []unison.TableColumnHeader[*Node[*gurps.Weap
 	return headers
 }
 
-func (p *weaponsProvider) SyncHeader(_ []unison.TableColumnHeader[*Node[*gurps.Weapon]]) {
+func (p *weaponsProvider) SyncHeader(_ []unison.TableColumnHeader[*ntable.Node[*gurps.Weapon]]) {
 }
 
 func (p *weaponsProvider) HierarchyColumnIndex() int {
@@ -194,24 +195,24 @@ func (p *weaponsProvider) ExcessWidthColumnIndex() int {
 	return 0
 }
 
-func (p *weaponsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.Weapon]]) {
+func (p *weaponsProvider) OpenEditor(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurps.Weapon]]) {
 	if !p.forPage {
-		OpenEditor[*gurps.Weapon](table, func(item *gurps.Weapon) { EditWeapon(owner, item) })
+		ntable.OpenEditor[*gurps.Weapon](table, func(item *gurps.Weapon) { EditWeapon(owner, item) })
 	}
 }
 
-func (p *weaponsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*Node[*gurps.Weapon]], _ widget.ItemVariant) {
+func (p *weaponsProvider) CreateItem(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurps.Weapon]], _ ntable.ItemVariant) {
 	if !p.forPage {
 		wpn := gurps.NewWeapon(p.provider.WeaponOwner(), p.weaponType)
-		InsertItem[*gurps.Weapon](owner, table, wpn,
+		ntable.InsertItem[*gurps.Weapon](owner, table, wpn,
 			func() []*gurps.Weapon { return p.provider.Weapons(p.weaponType) },
 			func(list []*gurps.Weapon) { p.provider.SetWeapons(p.weaponType, list) },
-			func(_ *unison.Table[*Node[*gurps.Weapon]]) []*Node[*gurps.Weapon] { return p.RootRows() })
+			func(_ *unison.Table[*ntable.Node[*gurps.Weapon]]) []*ntable.Node[*gurps.Weapon] { return p.RootRows() })
 		EditWeapon(owner, wpn)
 	}
 }
 
-func (p *weaponsProvider) DuplicateSelection(table *unison.Table[*Node[*gurps.Weapon]]) {
+func (p *weaponsProvider) DuplicateSelection(table *unison.Table[*ntable.Node[*gurps.Weapon]]) {
 	if !p.forPage {
 		duplicateTableSelection(table, p.provider.Weapons(p.weaponType),
 			func(nodes []*gurps.Weapon) { p.provider.SetWeapons(p.weaponType, nodes) },
@@ -222,7 +223,7 @@ func (p *weaponsProvider) DuplicateSelection(table *unison.Table[*Node[*gurps.We
 	}
 }
 
-func (p *weaponsProvider) DeleteSelection(table *unison.Table[*Node[*gurps.Weapon]]) {
+func (p *weaponsProvider) DeleteSelection(table *unison.Table[*ntable.Node[*gurps.Weapon]]) {
 	if !p.forPage {
 		deleteTableSelection(table, p.provider.Weapons(p.weaponType),
 			func(nodes []*gurps.Weapon) { p.provider.SetWeapons(p.weaponType, nodes) },

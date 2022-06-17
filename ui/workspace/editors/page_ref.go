@@ -13,12 +13,13 @@ package editors
 
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/gcs/ui/workspace/settings"
 	"github.com/richardwilkes/unison"
 )
 
 // CanOpenPageRef returns true if the current selection on the table has a page reference.
-func CanOpenPageRef[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]]) bool {
+func CanOpenPageRef[T gurps.NodeConstraint[T]](table *unison.Table[*ntable.Node[T]]) bool {
 	for _, row := range table.SelectedRows(false) {
 		var data gurps.CellData
 		row.Data().CellData(gurps.PageRefCellAlias, &data)
@@ -30,7 +31,7 @@ func CanOpenPageRef[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]]) bo
 }
 
 // OpenPageRef opens the first page reference on each selected item in the table.
-func OpenPageRef[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]]) {
+func OpenPageRef[T gurps.NodeConstraint[T]](table *unison.Table[*ntable.Node[T]]) {
 	promptCtx := make(map[string]bool)
 	for _, row := range table.SelectedRows(false) {
 		var data gurps.CellData
@@ -44,7 +45,7 @@ func OpenPageRef[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]]) {
 }
 
 // OpenEachPageRef opens the all page references on each selected item in the table.
-func OpenEachPageRef[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]]) {
+func OpenEachPageRef[T gurps.NodeConstraint[T]](table *unison.Table[*ntable.Node[T]]) {
 	promptCtx := make(map[string]bool)
 	for _, row := range table.SelectedRows(false) {
 		var data gurps.CellData

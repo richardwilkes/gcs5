@@ -14,7 +14,7 @@ package sheet
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/editors"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -49,20 +49,20 @@ func (c *containerConversion) Apply() {
 	c.Target.Type = c.Type
 }
 
-func canConvertToContainer(table *unison.Table[*editors.Node[*gurps.Equipment]]) bool {
+func canConvertToContainer(table *unison.Table[*ntable.Node[*gurps.Equipment]]) bool {
 	for _, row := range table.SelectedRows(false) {
-		if eqp := editors.ExtractFromRowData[*gurps.Equipment](row); eqp != nil && !eqp.Container() {
+		if eqp := ntable.ExtractFromRowData[*gurps.Equipment](row); eqp != nil && !eqp.Container() {
 			return true
 		}
 	}
 	return false
 }
 
-func convertToContainer(owner widget.Rebuildable, table *unison.Table[*editors.Node[*gurps.Equipment]]) {
+func convertToContainer(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurps.Equipment]]) {
 	before := &containerConversionList{Owner: owner}
 	after := &containerConversionList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if eqp := editors.ExtractFromRowData[*gurps.Equipment](row); eqp != nil && !eqp.Container() {
+		if eqp := ntable.ExtractFromRowData[*gurps.Equipment](row); eqp != nil && !eqp.Container() {
 			before.List = append(before.List, newContainerConversion(eqp))
 			eqp.Type += gurps.ContainerKeyPostfix
 			after.List = append(after.List, newContainerConversion(eqp))

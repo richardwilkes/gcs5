@@ -15,7 +15,7 @@ import (
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/editors"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -56,7 +56,7 @@ func (a *techLevelAdjuster[T]) Apply() {
 	a.Target.SetTL(a.TechLevel)
 }
 
-func canAdjustTechLevel[T gurps.NodeConstraint[T]](table *unison.Table[*editors.Node[T]], amount fxp.Int) bool {
+func canAdjustTechLevel[T gurps.NodeConstraint[T]](table *unison.Table[*ntable.Node[T]], amount fxp.Int) bool {
 	for _, row := range table.SelectedRows(false) {
 		if provider, ok := row.Data().(gurps.TechLevelProvider[T]); ok {
 			if _, changed := gurps.AdjustTechLevel(provider.TL(), amount); changed {
@@ -67,7 +67,7 @@ func canAdjustTechLevel[T gurps.NodeConstraint[T]](table *unison.Table[*editors.
 	return false
 }
 
-func adjustTechLevel[T gurps.NodeConstraint[T]](owner widget.Rebuildable, table *unison.Table[*editors.Node[T]], amount fxp.Int) {
+func adjustTechLevel[T gurps.NodeConstraint[T]](owner widget.Rebuildable, table *unison.Table[*ntable.Node[T]], amount fxp.Int) {
 	before := &adjustTechLevelList[T]{Owner: owner}
 	after := &adjustTechLevelList[T]{Owner: owner}
 	for _, row := range table.SelectedRows(false) {

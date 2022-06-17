@@ -21,6 +21,7 @@ import (
 	"github.com/richardwilkes/gcs/model/gurps/weapon"
 	"github.com/richardwilkes/gcs/res"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -93,9 +94,9 @@ func EditEquipment(owner widget.Rebuildable, equipment *gurps.Equipment, carried
 				content.AddChild(newWeaponsPanel(e, e.target, wt, &e.editorData.Weapons))
 			}
 			e.InstallCmdHandlers(constants.NewEquipmentModifierItemID, unison.AlwaysEnabled,
-				func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, widget.NoItemVariant) })
+				func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, ntable.NoItemVariant) })
 			e.InstallCmdHandlers(constants.NewEquipmentContainerModifierItemID, unison.AlwaysEnabled,
-				func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, widget.ContainerItemVariant) })
+				func(_ any) { modifiersPanel.provider.CreateItem(e, modifiersPanel.table, ntable.ContainerItemVariant) })
 			return func() {
 				if e.editorData.Uses > e.editorData.MaxUses {
 					usesField.SetText(strconv.Itoa(e.editorData.MaxUses))

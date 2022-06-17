@@ -14,7 +14,7 @@ package sheet
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/editors"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -49,9 +49,9 @@ func (a *usesAdjuster) Apply() {
 	a.Target.Uses = a.Uses
 }
 
-func canAdjustUses(table *unison.Table[*editors.Node[*gurps.Equipment]], amount int) bool {
+func canAdjustUses(table *unison.Table[*ntable.Node[*gurps.Equipment]], amount int) bool {
 	for _, row := range table.SelectedRows(false) {
-		if eqp := editors.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
+		if eqp := ntable.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
 			if eqp.Uses+amount <= eqp.MaxUses {
 				return true
 			}
@@ -60,11 +60,11 @@ func canAdjustUses(table *unison.Table[*editors.Node[*gurps.Equipment]], amount 
 	return false
 }
 
-func adjustUses(owner widget.Rebuildable, table *unison.Table[*editors.Node[*gurps.Equipment]], amount int) {
+func adjustUses(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurps.Equipment]], amount int) {
 	before := &adjustUsesList{Owner: owner}
 	after := &adjustUsesList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if eqp := editors.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
+		if eqp := ntable.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
 			if eqp.Uses+amount <= eqp.MaxUses {
 				before.List = append(before.List, newUsesAdjuster(eqp))
 				eqp.Uses += amount

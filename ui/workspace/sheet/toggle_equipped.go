@@ -14,7 +14,7 @@ package sheet
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/ui/widget"
-	"github.com/richardwilkes/gcs/ui/workspace/editors"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison"
 )
@@ -57,20 +57,20 @@ func (a *equippedAdjuster) Apply() {
 	a.Target.Equipped = a.Equipped
 }
 
-func canToggleEquipped(table *unison.Table[*editors.Node[*gurps.Equipment]]) bool {
+func canToggleEquipped(table *unison.Table[*ntable.Node[*gurps.Equipment]]) bool {
 	for _, row := range table.SelectedRows(false) {
-		if eqp := editors.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
+		if eqp := ntable.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
 			return true
 		}
 	}
 	return false
 }
 
-func toggleEquipped(owner widget.Rebuildable, table *unison.Table[*editors.Node[*gurps.Equipment]]) {
+func toggleEquipped(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurps.Equipment]]) {
 	before := &toggleEquippedList{Owner: owner}
 	after := &toggleEquippedList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if eqp := editors.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
+		if eqp := ntable.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
 			before.List = append(before.List, newEquippedAdjuster(eqp))
 			eqp.Equipped = !eqp.Equipped
 			after.List = append(after.List, newEquippedAdjuster(eqp))

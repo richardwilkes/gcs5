@@ -14,7 +14,7 @@ package editors
 import (
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/theme"
-	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/unison"
 )
 
@@ -22,8 +22,8 @@ type equipmentModifiersPanel struct {
 	unison.Panel
 	entity    *gurps.Entity
 	modifiers *[]*gurps.EquipmentModifier
-	provider  widget.TableProvider[*Node[*gurps.EquipmentModifier]]
-	table     *unison.Table[*Node[*gurps.EquipmentModifier]]
+	provider  ntable.TableProvider[*gurps.EquipmentModifier]
+	table     *unison.Table[*ntable.Node[*gurps.EquipmentModifier]]
 }
 
 func newEquipmentModifiersPanel(entity *gurps.Entity, modifiers *[]*gurps.EquipmentModifier) *equipmentModifiersPanel {
