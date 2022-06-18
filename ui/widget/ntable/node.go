@@ -12,7 +12,6 @@
 package ntable
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/google/uuid"
@@ -547,21 +546,4 @@ func ExtractNodeDataFromList[T gurps.NodeConstraint[T]](list []*Node[T]) []T {
 		dataList = append(dataList, child.data)
 	}
 	return dataList
-}
-
-// OpenEditor opens an editor for each selected row in the table.
-func OpenEditor[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], edit func(item T)) {
-	var zero T
-	selection := table.SelectedRows(false)
-	if len(selection) > 4 {
-		if unison.QuestionDialog(i18n.Text("Are you sure you want to open all of these?"),
-			fmt.Sprintf(i18n.Text("%d editors will be opened."), len(selection))) != unison.ModalResponseOK {
-			return
-		}
-	}
-	for _, row := range selection {
-		if data := row.Data(); data != zero {
-			edit(data)
-		}
-	}
 }

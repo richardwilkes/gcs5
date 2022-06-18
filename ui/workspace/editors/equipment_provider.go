@@ -61,6 +61,7 @@ var (
 		8: gurps.EquipmentExtendedWeightColumn,
 		9: gurps.EquipmentReferenceColumn,
 	}
+	_ ntable.TableProvider[*gurps.Equipment] = &equipmentProvider{}
 )
 
 type equipmentProvider struct {
@@ -109,6 +110,14 @@ func (p *equipmentProvider) RootRows() []*ntable.Node[*gurps.Equipment] {
 
 func (p *equipmentProvider) SetRootRows(rows []*ntable.Node[*gurps.Equipment]) {
 	p.setEquipmentList(ntable.ExtractNodeDataFromList(rows))
+}
+
+func (p *equipmentProvider) RootData() []*gurps.Equipment {
+	return p.equipmentList()
+}
+
+func (p *equipmentProvider) SetRootData(data []*gurps.Equipment) {
+	p.setEquipmentList(data)
 }
 
 func (p *equipmentProvider) Entity() *gurps.Entity {
@@ -241,18 +250,6 @@ func (p *equipmentProvider) CreateItem(owner widget.Rebuildable, table *unison.T
 			return p.RootRows()
 		})
 	EditEquipment(owner, item, p.carried)
-}
-
-func (p *equipmentProvider) DuplicateSelection(table *unison.Table[*ntable.Node[*gurps.Equipment]]) {
-	duplicateTableSelection(table, p.equipmentList(),
-		func(nodes []*gurps.Equipment) { p.setEquipmentList(nodes) },
-		func(node *gurps.Equipment) *[]*gurps.Equipment { return &node.Children })
-}
-
-func (p *equipmentProvider) DeleteSelection(table *unison.Table[*ntable.Node[*gurps.Equipment]]) {
-	deleteTableSelection(table, p.equipmentList(),
-		func(nodes []*gurps.Equipment) { p.setEquipmentList(nodes) },
-		func(node *gurps.Equipment) *[]*gurps.Equipment { return &node.Children })
 }
 
 func (p *equipmentProvider) equipmentList() []*gurps.Equipment {

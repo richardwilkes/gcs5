@@ -23,10 +23,13 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-var noteColMap = map[int]int{
-	0: gurps.NoteTextColumn,
-	1: gurps.NoteReferenceColumn,
-}
+var (
+	noteColMap = map[int]int{
+		0: gurps.NoteTextColumn,
+		1: gurps.NoteReferenceColumn,
+	}
+	_ ntable.TableProvider[*gurps.Note] = &notesProvider{}
+)
 
 type notesProvider struct {
 	table    *unison.Table[*ntable.Node[*gurps.Note]]
@@ -61,6 +64,14 @@ func (p *notesProvider) RootRows() []*ntable.Node[*gurps.Note] {
 
 func (p *notesProvider) SetRootRows(rows []*ntable.Node[*gurps.Note]) {
 	p.provider.SetNoteList(ntable.ExtractNodeDataFromList(rows))
+}
+
+func (p *notesProvider) RootData() []*gurps.Note {
+	return p.provider.NoteList()
+}
+
+func (p *notesProvider) SetRootData(data []*gurps.Note) {
+	p.provider.SetNoteList(data)
 }
 
 func (p *notesProvider) Entity() *gurps.Entity {
@@ -123,18 +134,6 @@ func (p *notesProvider) CreateItem(owner widget.Rebuildable, table *unison.Table
 	ntable.InsertItem[*gurps.Note](owner, table, item, p.provider.NoteList, p.provider.SetNoteList,
 		func(_ *unison.Table[*ntable.Node[*gurps.Note]]) []*ntable.Node[*gurps.Note] { return p.RootRows() })
 	EditNote(owner, item)
-}
-
-func (p *notesProvider) DuplicateSelection(table *unison.Table[*ntable.Node[*gurps.Note]]) {
-	duplicateTableSelection(table, p.provider.NoteList(),
-		func(nodes []*gurps.Note) { p.provider.SetNoteList(nodes) },
-		func(node *gurps.Note) *[]*gurps.Note { return &node.Children })
-}
-
-func (p *notesProvider) DeleteSelection(table *unison.Table[*ntable.Node[*gurps.Note]]) {
-	deleteTableSelection(table, p.provider.NoteList(),
-		func(nodes []*gurps.Note) { p.provider.SetNoteList(nodes) },
-		func(node *gurps.Note) *[]*gurps.Note { return &node.Children })
 }
 
 func (p *notesProvider) Serialize() ([]byte, error) {

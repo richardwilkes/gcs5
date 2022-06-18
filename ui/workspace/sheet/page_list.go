@@ -161,10 +161,10 @@ func newPageList[T gurps.NodeConstraint[T]](owner widget.Rebuildable, provider n
 			func(_ any) { p.provider.OpenEditor(owner, p.table) })
 		p.InstallCmdHandlers(unison.DeleteItemID,
 			func(_ any) bool { return p.table.HasSelection() },
-			func(_ any) { p.provider.DeleteSelection(p.table) })
+			func(_ any) { ntable.DeleteSelection(p.table) })
 		p.InstallCmdHandlers(constants.DuplicateItemID,
 			func(_ any) bool { return p.table.HasSelection() },
-			func(_ any) { p.provider.DuplicateSelection(p.table) })
+			func(_ any) { ntable.DuplicateSelection(p.table) })
 	}
 	p.installOpenPageReferenceHandlers()
 	p.SetLayoutData(&unison.FlexLayoutData{

@@ -37,6 +37,7 @@ var (
 		3: gurps.TraitModifierTagsColumn,
 		4: gurps.TraitModifierReferenceColumn,
 	}
+	_ ntable.TableProvider[*gurps.TraitModifier] = &traitModifierProvider{}
 )
 
 type traitModifierProvider struct {
@@ -77,6 +78,14 @@ func (p *traitModifierProvider) RootRows() []*ntable.Node[*gurps.TraitModifier] 
 
 func (p *traitModifierProvider) SetRootRows(rows []*ntable.Node[*gurps.TraitModifier]) {
 	p.provider.SetTraitModifierList(ntable.ExtractNodeDataFromList(rows))
+}
+
+func (p *traitModifierProvider) RootData() []*gurps.TraitModifier {
+	return p.provider.TraitModifierList()
+}
+
+func (p *traitModifierProvider) SetRootData(data []*gurps.TraitModifier) {
+	p.provider.SetTraitModifierList(data)
 }
 
 func (p *traitModifierProvider) Entity() *gurps.Entity {
@@ -149,18 +158,6 @@ func (p *traitModifierProvider) CreateItem(owner widget.Rebuildable, table *unis
 			return p.RootRows()
 		})
 	EditTraitModifier(owner, item)
-}
-
-func (p *traitModifierProvider) DuplicateSelection(table *unison.Table[*ntable.Node[*gurps.TraitModifier]]) {
-	duplicateTableSelection(table, p.provider.TraitModifierList(),
-		func(nodes []*gurps.TraitModifier) { p.provider.SetTraitModifierList(nodes) },
-		func(node *gurps.TraitModifier) *[]*gurps.TraitModifier { return &node.Children })
-}
-
-func (p *traitModifierProvider) DeleteSelection(table *unison.Table[*ntable.Node[*gurps.TraitModifier]]) {
-	deleteTableSelection(table, p.provider.TraitModifierList(),
-		func(nodes []*gurps.TraitModifier) { p.provider.SetTraitModifierList(nodes) },
-		func(node *gurps.TraitModifier) *[]*gurps.TraitModifier { return &node.Children })
 }
 
 func (p *traitModifierProvider) Serialize() ([]byte, error) {

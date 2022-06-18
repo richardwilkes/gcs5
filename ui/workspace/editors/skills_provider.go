@@ -42,6 +42,7 @@ var (
 		1: gurps.SkillPointsColumn,
 		2: gurps.SkillReferenceColumn,
 	}
+	_ ntable.TableProvider[*gurps.Skill] = &skillsProvider{}
 )
 
 type skillsProvider struct {
@@ -88,6 +89,14 @@ func (p *skillsProvider) RootRows() []*ntable.Node[*gurps.Skill] {
 
 func (p *skillsProvider) SetRootRows(rows []*ntable.Node[*gurps.Skill]) {
 	p.provider.SetSkillList(ntable.ExtractNodeDataFromList(rows))
+}
+
+func (p *skillsProvider) RootData() []*gurps.Skill {
+	return p.provider.SkillList()
+}
+
+func (p *skillsProvider) SetRootData(data []*gurps.Skill) {
+	p.provider.SetSkillList(data)
 }
 
 func (p *skillsProvider) Entity() *gurps.Entity {
@@ -170,18 +179,6 @@ func (p *skillsProvider) CreateItem(owner widget.Rebuildable, table *unison.Tabl
 	ntable.InsertItem[*gurps.Skill](owner, table, item, p.provider.SkillList, p.provider.SetSkillList,
 		func(_ *unison.Table[*ntable.Node[*gurps.Skill]]) []*ntable.Node[*gurps.Skill] { return p.RootRows() })
 	EditSkill(owner, item)
-}
-
-func (p *skillsProvider) DuplicateSelection(table *unison.Table[*ntable.Node[*gurps.Skill]]) {
-	duplicateTableSelection(table, p.provider.SkillList(),
-		func(nodes []*gurps.Skill) { p.provider.SetSkillList(nodes) },
-		func(node *gurps.Skill) *[]*gurps.Skill { return &node.Children })
-}
-
-func (p *skillsProvider) DeleteSelection(table *unison.Table[*ntable.Node[*gurps.Skill]]) {
-	deleteTableSelection(table, p.provider.SkillList(),
-		func(nodes []*gurps.Skill) { p.provider.SetSkillList(nodes) },
-		func(node *gurps.Skill) *[]*gurps.Skill { return &node.Children })
 }
 
 func (p *skillsProvider) Serialize() ([]byte, error) {

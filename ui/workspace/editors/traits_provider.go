@@ -35,6 +35,7 @@ var (
 		1: gurps.TraitPointsColumn,
 		2: gurps.TraitReferenceColumn,
 	}
+	_ ntable.TableProvider[*gurps.Trait] = &traitsProvider{}
 )
 
 type traitsProvider struct {
@@ -77,6 +78,14 @@ func (p *traitsProvider) RootRows() []*ntable.Node[*gurps.Trait] {
 
 func (p *traitsProvider) SetRootRows(rows []*ntable.Node[*gurps.Trait]) {
 	p.provider.SetTraitList(ntable.ExtractNodeDataFromList(rows))
+}
+
+func (p *traitsProvider) RootData() []*gurps.Trait {
+	return p.provider.TraitList()
+}
+
+func (p *traitsProvider) SetRootData(data []*gurps.Trait) {
+	p.provider.SetTraitList(data)
 }
 
 func (p *traitsProvider) Entity() *gurps.Entity {
@@ -143,18 +152,6 @@ func (p *traitsProvider) CreateItem(owner widget.Rebuildable, table *unison.Tabl
 	ntable.InsertItem[*gurps.Trait](owner, table, item, p.provider.TraitList, p.provider.SetTraitList,
 		func(_ *unison.Table[*ntable.Node[*gurps.Trait]]) []*ntable.Node[*gurps.Trait] { return p.RootRows() })
 	EditTrait(owner, item)
-}
-
-func (p *traitsProvider) DuplicateSelection(table *unison.Table[*ntable.Node[*gurps.Trait]]) {
-	duplicateTableSelection(table, p.provider.TraitList(),
-		func(nodes []*gurps.Trait) { p.provider.SetTraitList(nodes) },
-		func(node *gurps.Trait) *[]*gurps.Trait { return &node.Children })
-}
-
-func (p *traitsProvider) DeleteSelection(table *unison.Table[*ntable.Node[*gurps.Trait]]) {
-	deleteTableSelection(table, p.provider.TraitList(),
-		func(nodes []*gurps.Trait) { p.provider.SetTraitList(nodes) },
-		func(node *gurps.Trait) *[]*gurps.Trait { return &node.Children })
 }
 
 func (p *traitsProvider) Serialize() ([]byte, error) {

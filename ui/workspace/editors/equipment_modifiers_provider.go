@@ -41,6 +41,7 @@ var (
 		5: gurps.EquipmentModifierTagsColumn,
 		6: gurps.EquipmentModifierReferenceColumn,
 	}
+	_ ntable.TableProvider[*gurps.EquipmentModifier] = &eqpModProvider{}
 )
 
 type eqpModProvider struct {
@@ -81,6 +82,14 @@ func (p *eqpModProvider) RootRows() []*ntable.Node[*gurps.EquipmentModifier] {
 
 func (p *eqpModProvider) SetRootRows(rows []*ntable.Node[*gurps.EquipmentModifier]) {
 	p.provider.SetEquipmentModifierList(ntable.ExtractNodeDataFromList(rows))
+}
+
+func (p *eqpModProvider) RootData() []*gurps.EquipmentModifier {
+	return p.provider.EquipmentModifierList()
+}
+
+func (p *eqpModProvider) SetRootData(data []*gurps.EquipmentModifier) {
+	p.provider.SetEquipmentModifierList(data)
 }
 
 func (p *eqpModProvider) Entity() *gurps.Entity {
@@ -158,18 +167,6 @@ func (p *eqpModProvider) CreateItem(owner widget.Rebuildable, table *unison.Tabl
 			return p.RootRows()
 		})
 	EditEquipmentModifier(owner, item)
-}
-
-func (p *eqpModProvider) DuplicateSelection(table *unison.Table[*ntable.Node[*gurps.EquipmentModifier]]) {
-	duplicateTableSelection(table, p.provider.EquipmentModifierList(),
-		func(nodes []*gurps.EquipmentModifier) { p.provider.SetEquipmentModifierList(nodes) },
-		func(node *gurps.EquipmentModifier) *[]*gurps.EquipmentModifier { return &node.Children })
-}
-
-func (p *eqpModProvider) DeleteSelection(table *unison.Table[*ntable.Node[*gurps.EquipmentModifier]]) {
-	deleteTableSelection(table, p.provider.EquipmentModifierList(),
-		func(nodes []*gurps.EquipmentModifier) { p.provider.SetEquipmentModifierList(nodes) },
-		func(node *gurps.EquipmentModifier) *[]*gurps.EquipmentModifier { return &node.Children })
 }
 
 func (p *eqpModProvider) Serialize() ([]byte, error) {

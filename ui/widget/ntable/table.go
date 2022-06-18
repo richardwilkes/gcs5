@@ -12,13 +12,19 @@
 package ntable
 
 import (
+	"fmt"
+
+	"github.com/google/uuid"
 	"github.com/richardwilkes/gcs/constants"
 	"github.com/richardwilkes/gcs/model/fxp"
 	"github.com/richardwilkes/gcs/model/gurps"
 	"github.com/richardwilkes/gcs/model/theme"
 	"github.com/richardwilkes/gcs/ui/widget"
+	"github.com/richardwilkes/gcs/ui/workspace"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/unison"
+	"golang.org/x/exp/slices"
 )
 
 // ItemVariant holds the type of item variant to create.
@@ -36,6 +42,8 @@ type TableProvider[T gurps.NodeConstraint[T]] interface {
 	unison.TableModel[*Node[T]]
 	gurps.EntityProvider
 	SetTable(table *unison.Table[*Node[T]])
+	RootData() []T
+	SetRootData(data []T)
 	DragKey() string
 	DragSVG() *unison.SVG
 	DropShouldMoveData(from, to *unison.Table[*Node[T]]) bool
@@ -46,8 +54,6 @@ type TableProvider[T gurps.NodeConstraint[T]] interface {
 	ExcessWidthColumnIndex() int
 	OpenEditor(owner widget.Rebuildable, table *unison.Table[*Node[T]])
 	CreateItem(owner widget.Rebuildable, table *unison.Table[*Node[T]], variant ItemVariant)
-	DuplicateSelection(table *unison.Table[*Node[T]])
-	DeleteSelection(table *unison.Table[*Node[T]])
 	Serialize() ([]byte, error)
 	Deserialize(data []byte) error
 }
@@ -130,4 +136,111 @@ func flexibleLess(s1, s2 string) bool {
 		}
 	}
 	return txt.NaturalLess(s1, s2, true)
+}
+
+// OpenEditor opens an editor for each selected row in the table.
+func OpenEditor[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], edit func(item T)) {
+	var zero T
+	selection := table.SelectedRows(false)
+	if len(selection) > 4 {
+		if unison.QuestionDialog(i18n.Text("Are you sure you want to open all of these?"),
+			fmt.Sprintf(i18n.Text("%d editors will be opened."), len(selection))) != unison.ModalResponseOK {
+			return
+		}
+	}
+	for _, row := range selection {
+		if data := row.Data(); data != zero {
+			edit(data)
+		}
+	}
+}
+
+// DeleteSelection removes the selected nodes from the table.
+func DeleteSelection[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]]) {
+	if provider, ok := table.Model.(TableProvider[T]); ok && table.HasSelection() {
+		sel := table.SelectedRows(true)
+		ids := make(map[uuid.UUID]bool, len(sel))
+		list := make([]T, 0, len(sel))
+		var zero T
+		for _, row := range sel {
+			unison.CollectUUIDsFromRow(row, ids)
+			if target := row.Data(); target != zero {
+				list = append(list, target)
+			}
+		}
+		if !workspace.CloseUUID(ids) {
+			return
+		}
+		needSet := false
+		topLevelData := provider.RootData()
+		for _, target := range list {
+			parent := target.Parent()
+			if parent == zero {
+				for i, one := range topLevelData {
+					if one == target {
+						topLevelData = slices.Delete(topLevelData, i, i+1)
+						needSet = true
+						break
+					}
+				}
+			} else {
+				children := parent.NodeChildren()
+				for i, one := range children {
+					if one == target {
+						parent.SetChildren(slices.Delete(children, i, i+1))
+						break
+					}
+				}
+			}
+		}
+		if needSet {
+			provider.SetRootData(topLevelData)
+		}
+		if builder := unison.AncestorOrSelf[widget.Rebuildable](table); builder != nil {
+			builder.Rebuild(true)
+		}
+	}
+}
+
+// DuplicateSelection duplicates the selected nodes in the table.
+func DuplicateSelection[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]]) {
+	if provider, ok := table.Model.(TableProvider[T]); ok && table.HasSelection() {
+		var zero T
+		needSet := false
+		topLevelData := provider.RootData()
+		sel := table.SelectedRows(true)
+		selMap := make(map[uuid.UUID]bool, len(sel))
+		for _, row := range sel {
+			if target := row.Data(); target != zero {
+				parent := target.Parent()
+				clone := target.Clone(target.OwningEntity(), parent, false)
+				selMap[clone.UUID()] = true
+				if parent == zero {
+					for i, child := range topLevelData {
+						if child == target {
+							topLevelData = slices.Insert(topLevelData, i+1, clone)
+							needSet = true
+							break
+						}
+					}
+				} else {
+					children := parent.NodeChildren()
+					for i, child := range children {
+						if child == target {
+							parent.SetChildren(slices.Insert(children, i+1, clone))
+							break
+						}
+					}
+				}
+			}
+		}
+		if needSet {
+			provider.SetRootData(topLevelData)
+		}
+		table.SyncToModel()
+		table.SetSelectionMap(selMap)
+		if builder := unison.AncestorOrSelf[widget.Rebuildable](table); builder != nil {
+			builder.Rebuild(true)
+		}
+	}
 }

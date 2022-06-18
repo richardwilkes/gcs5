@@ -52,6 +52,7 @@ var (
 		3: gurps.SpellPointsColumn,
 		4: gurps.SpellReferenceColumn,
 	}
+	_ ntable.TableProvider[*gurps.Spell] = &spellsProvider{}
 )
 
 type spellsProvider struct {
@@ -98,6 +99,14 @@ func (p *spellsProvider) RootRows() []*ntable.Node[*gurps.Spell] {
 
 func (p *spellsProvider) SetRootRows(rows []*ntable.Node[*gurps.Spell]) {
 	p.provider.SetSpellList(ntable.ExtractNodeDataFromList(rows))
+}
+
+func (p *spellsProvider) RootData() []*gurps.Spell {
+	return p.provider.SpellList()
+}
+
+func (p *spellsProvider) SetRootData(data []*gurps.Spell) {
+	p.provider.SetSpellList(data)
 }
 
 func (p *spellsProvider) Entity() *gurps.Entity {
@@ -197,18 +206,6 @@ func (p *spellsProvider) CreateItem(owner widget.Rebuildable, table *unison.Tabl
 	ntable.InsertItem[*gurps.Spell](owner, table, item, p.provider.SpellList, p.provider.SetSpellList,
 		func(_ *unison.Table[*ntable.Node[*gurps.Spell]]) []*ntable.Node[*gurps.Spell] { return p.RootRows() })
 	EditSpell(owner, item)
-}
-
-func (p *spellsProvider) DuplicateSelection(table *unison.Table[*ntable.Node[*gurps.Spell]]) {
-	duplicateTableSelection(table, p.provider.SpellList(),
-		func(nodes []*gurps.Spell) { p.provider.SetSpellList(nodes) },
-		func(node *gurps.Spell) *[]*gurps.Spell { return &node.Children })
-}
-
-func (p *spellsProvider) DeleteSelection(table *unison.Table[*ntable.Node[*gurps.Spell]]) {
-	deleteTableSelection(table, p.provider.SpellList(),
-		func(nodes []*gurps.Spell) { p.provider.SetSpellList(nodes) },
-		func(node *gurps.Spell) *[]*gurps.Spell { return &node.Children })
 }
 
 func (p *spellsProvider) Serialize() ([]byte, error) {

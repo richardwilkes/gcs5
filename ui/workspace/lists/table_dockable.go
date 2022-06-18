@@ -456,10 +456,10 @@ func NewTableDockable[T gurps.NodeConstraint[T]](filePath, extension string, pro
 	d.InstallCmdHandlers(constants.SaveAsItemID, unison.AlwaysEnabled, func(_ any) { d.save(true) })
 	d.InstallCmdHandlers(unison.DeleteItemID,
 		func(_ any) bool { return d.table.HasSelection() },
-		func(_ any) { d.provider.DeleteSelection(d.table) })
+		func(_ any) { ntable.DeleteSelection(d.table) })
 	d.InstallCmdHandlers(constants.DuplicateItemID,
 		func(_ any) bool { return d.table.HasSelection() },
-		func(_ any) { d.provider.DuplicateSelection(d.table) })
+		func(_ any) { ntable.DuplicateSelection(d.table) })
 	for _, id := range canCreateIDs {
 		variant := ntable.ItemVariant(-1)
 		switch {

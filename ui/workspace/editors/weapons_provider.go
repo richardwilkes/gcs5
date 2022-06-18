@@ -67,6 +67,7 @@ var (
 		9:  gurps.WeaponRecoilColumn,
 		10: gurps.WeaponSTColumn,
 	}
+	_ ntable.TableProvider[*gurps.Weapon] = &weaponsProvider{}
 )
 
 type weaponsProvider struct {
@@ -116,7 +117,16 @@ func (p *weaponsProvider) RootRows() []*ntable.Node[*gurps.Weapon] {
 	return rows
 }
 
-func (p *weaponsProvider) SetRootRows(_ []*ntable.Node[*gurps.Weapon]) {
+func (p *weaponsProvider) SetRootRows(rows []*ntable.Node[*gurps.Weapon]) {
+	p.provider.SetWeapons(p.weaponType, ntable.ExtractNodeDataFromList(rows))
+}
+
+func (p *weaponsProvider) RootData() []*gurps.Weapon {
+	return p.provider.Weapons(p.weaponType)
+}
+
+func (p *weaponsProvider) SetRootData(data []*gurps.Weapon) {
+	p.provider.SetWeapons(p.weaponType, data)
 }
 
 func (p *weaponsProvider) Entity() *gurps.Entity {
@@ -218,28 +228,6 @@ func (p *weaponsProvider) CreateItem(owner widget.Rebuildable, table *unison.Tab
 			func(list []*gurps.Weapon) { p.provider.SetWeapons(p.weaponType, list) },
 			func(_ *unison.Table[*ntable.Node[*gurps.Weapon]]) []*ntable.Node[*gurps.Weapon] { return p.RootRows() })
 		EditWeapon(owner, wpn)
-	}
-}
-
-func (p *weaponsProvider) DuplicateSelection(table *unison.Table[*ntable.Node[*gurps.Weapon]]) {
-	if !p.forPage {
-		duplicateTableSelection(table, p.provider.Weapons(p.weaponType),
-			func(nodes []*gurps.Weapon) { p.provider.SetWeapons(p.weaponType, nodes) },
-			func(node *gurps.Weapon) *[]*gurps.Weapon {
-				var dummy []*gurps.Weapon
-				return &dummy
-			})
-	}
-}
-
-func (p *weaponsProvider) DeleteSelection(table *unison.Table[*ntable.Node[*gurps.Weapon]]) {
-	if !p.forPage {
-		deleteTableSelection(table, p.provider.Weapons(p.weaponType),
-			func(nodes []*gurps.Weapon) { p.provider.SetWeapons(p.weaponType, nodes) },
-			func(node *gurps.Weapon) *[]*gurps.Weapon {
-				var dummy []*gurps.Weapon
-				return &dummy
-			})
 	}
 }
 

@@ -22,10 +22,13 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-var conditionalModifierColMap = map[int]int{
-	0: gurps.ConditionalModifierValueColumn,
-	1: gurps.ConditionalModifierDescriptionColumn,
-}
+var (
+	conditionalModifierColMap = map[int]int{
+		0: gurps.ConditionalModifierValueColumn,
+		1: gurps.ConditionalModifierDescriptionColumn,
+	}
+	_ ntable.TableProvider[*gurps.ConditionalModifier] = &condModProvider{}
+)
 
 type condModProvider struct {
 	table    *unison.Table[*ntable.Node[*gurps.ConditionalModifier]]
@@ -57,6 +60,13 @@ func (p *condModProvider) RootRows() []*ntable.Node[*gurps.ConditionalModifier] 
 }
 
 func (p *condModProvider) SetRootRows(_ []*ntable.Node[*gurps.ConditionalModifier]) {
+}
+
+func (p *condModProvider) RootData() []*gurps.ConditionalModifier {
+	return p.provider.ConditionalModifiers()
+}
+
+func (p *condModProvider) SetRootData(_ []*gurps.ConditionalModifier) {
 }
 
 func (p *condModProvider) Entity() *gurps.Entity {
@@ -115,12 +125,6 @@ func (p *condModProvider) OpenEditor(_ widget.Rebuildable, _ *unison.Table[*ntab
 }
 
 func (p *condModProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table[*ntable.Node[*gurps.ConditionalModifier]], _ ntable.ItemVariant) {
-}
-
-func (p *condModProvider) DuplicateSelection(_ *unison.Table[*ntable.Node[*gurps.ConditionalModifier]]) {
-}
-
-func (p *condModProvider) DeleteSelection(_ *unison.Table[*ntable.Node[*gurps.ConditionalModifier]]) {
 }
 
 func (p *condModProvider) Serialize() ([]byte, error) {

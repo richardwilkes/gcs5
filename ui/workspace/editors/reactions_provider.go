@@ -22,10 +22,13 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
-var reactionsColMap = map[int]int{
-	0: gurps.ConditionalModifierValueColumn,
-	1: gurps.ConditionalModifierDescriptionColumn,
-}
+var (
+	reactionsColMap = map[int]int{
+		0: gurps.ConditionalModifierValueColumn,
+		1: gurps.ConditionalModifierDescriptionColumn,
+	}
+	_ ntable.TableProvider[*gurps.ConditionalModifier] = &reactionModProvider{}
+)
 
 type reactionModProvider struct {
 	table    *unison.Table[*ntable.Node[*gurps.ConditionalModifier]]
@@ -57,6 +60,13 @@ func (p *reactionModProvider) RootRows() []*ntable.Node[*gurps.ConditionalModifi
 }
 
 func (p *reactionModProvider) SetRootRows(_ []*ntable.Node[*gurps.ConditionalModifier]) {
+}
+
+func (p *reactionModProvider) RootData() []*gurps.ConditionalModifier {
+	return p.provider.Reactions()
+}
+
+func (p *reactionModProvider) SetRootData(_ []*gurps.ConditionalModifier) {
 }
 
 func (p *reactionModProvider) Entity() *gurps.Entity {
@@ -115,12 +125,6 @@ func (p *reactionModProvider) OpenEditor(_ widget.Rebuildable, _ *unison.Table[*
 }
 
 func (p *reactionModProvider) CreateItem(_ widget.Rebuildable, _ *unison.Table[*ntable.Node[*gurps.ConditionalModifier]], _ ntable.ItemVariant) {
-}
-
-func (p *reactionModProvider) DuplicateSelection(_ *unison.Table[*ntable.Node[*gurps.ConditionalModifier]]) {
-}
-
-func (p *reactionModProvider) DeleteSelection(_ *unison.Table[*ntable.Node[*gurps.ConditionalModifier]]) {
 }
 
 func (p *reactionModProvider) Serialize() ([]byte, error) {
