@@ -12,6 +12,7 @@
 package ntable
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/google/uuid"
@@ -34,7 +35,7 @@ var _ unison.TableRowData[*Node[*gurps.Trait]] = &Node[*gurps.Trait]{}
 type Node[T gurps.NodeConstraint[T]] struct {
 	table     *unison.Table[*Node[T]]
 	parent    *Node[T]
-	data      gurps.Node[T]
+	data      T
 	children  []*Node[T]
 	cellCache []*CellCache
 	colMap    map[int]int
@@ -42,7 +43,7 @@ type Node[T gurps.NodeConstraint[T]] struct {
 }
 
 // NewNode creates a new node for a table.
-func NewNode[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], parent *Node[T], colMap map[int]int, data gurps.Node[T], forPage bool) *Node[T] {
+func NewNode[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], parent *Node[T], colMap map[int]int, data T, forPage bool) *Node[T] {
 	return &Node[T]{
 		table:     table,
 		parent:    parent,
@@ -59,12 +60,11 @@ func (n *Node[T]) CloneForTarget(target unison.Paneler, newParent *Node[T]) *Nod
 	if !ok {
 		jot.Fatal(1, "unable to convert to table")
 	}
-	entityProvider := unison.AncestorOrSelf[gurps.EntityProvider](target)
-	if entityProvider == nil {
+	provider := unison.AncestorOrSelf[gurps.EntityProvider](target)
+	if provider == nil {
 		jot.Fatal(1, "unable to locate entity provider")
 	}
-	return NewNode[T](table, newParent, n.colMap, n.data.Clone(entityProvider.Entity(),
-		ExtractFromRowData[T](newParent), false), n.forPage)
+	return NewNode[T](table, newParent, n.colMap, n.data.Clone(provider.Entity(), newParent.Data(), false), n.forPage)
 }
 
 // UUID implements unison.TableRowData.
@@ -79,7 +79,7 @@ func (n *Node[T]) Parent() *Node[T] {
 
 // SetParent implements unison.TableRowData.
 func (n *Node[T]) SetParent(parent *Node[T]) {
-	ExtractFromRowData[T](n).SetParent(ExtractFromRowData[T](parent))
+	n.data.SetParent(parent.Data())
 }
 
 // CanHaveChildren implements unison.TableRowData.
@@ -162,7 +162,11 @@ func (n *Node[T]) SetOpen(open bool) {
 }
 
 // Data returns the underlying data object.
-func (n *Node[T]) Data() gurps.Node[T] {
+func (n *Node[T]) Data() T {
+	if n == nil {
+		var zero T
+		return zero
+	}
 	return n.data
 }
 
@@ -501,14 +505,14 @@ func InsertItem[T gurps.NodeConstraint[T]](owner widget.Rebuildable, table *unis
 	i := table.FirstSelectedRowIndex()
 	if i != -1 {
 		row := table.RowFromIndex(i)
-		if target = ExtractFromRowData[T](row); target != zero {
+		if target = row.Data(); target != zero {
 			if row.CanHaveChildren() {
 				// Target is container, append to end of that container
 				item.SetParent(target)
 				target.SetChildren(append(target.NodeChildren(), item))
 			} else {
 				// Target isn't a container. If it has a parent, insert after the target within that parent.
-				if parent := ExtractFromRowData[T](row.Parent()); parent != zero {
+				if parent := row.Parent().Data(); parent != zero {
 					item.SetParent(parent)
 					children := parent.NodeChildren()
 					parent.SetChildren(slices.Insert(children, slices.Index(children, target)+1, item))
@@ -536,24 +540,11 @@ func InsertItem[T gurps.NodeConstraint[T]](owner widget.Rebuildable, table *unis
 	owner.Rebuild(true)
 }
 
-// ExtractFromRowData extracts a specific type of data from the row data.
-func ExtractFromRowData[T gurps.NodeConstraint[T]](row *Node[T]) T {
-	if row != nil {
-		if target, ok := row.Data().(T); ok {
-			return target
-		}
-	}
-	var zero T
-	return zero
-}
-
 // ExtractNodeDataFromList returns the underlying node data.
 func ExtractNodeDataFromList[T gurps.NodeConstraint[T]](list []*Node[T]) []T {
 	dataList := make([]T, 0, len(list))
 	for _, child := range list {
-		if c, ok := child.data.(T); ok {
-			dataList = append(dataList, c)
-		}
+		dataList = append(dataList, child.data)
 	}
 	return dataList
 }
@@ -561,9 +552,16 @@ func ExtractNodeDataFromList[T gurps.NodeConstraint[T]](list []*Node[T]) []T {
 // OpenEditor opens an editor for each selected row in the table.
 func OpenEditor[T gurps.NodeConstraint[T]](table *unison.Table[*Node[T]], edit func(item T)) {
 	var zero T
-	for _, row := range table.SelectedRows(false) {
-		if a := ExtractFromRowData[T](row); a != zero {
-			edit(a)
+	selection := table.SelectedRows(false)
+	if len(selection) > 4 {
+		if unison.QuestionDialog(i18n.Text("Are you sure you want to open all of these?"),
+			fmt.Sprintf(i18n.Text("%d editors will be opened."), len(selection))) != unison.ModalResponseOK {
+			return
+		}
+	}
+	for _, row := range selection {
+		if data := row.Data(); data != zero {
+			edit(data)
 		}
 	}
 }

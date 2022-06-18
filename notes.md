@@ -27,6 +27,7 @@
 
 #### Unison-specific work that needs to be done
 
+- When closing a tab, focus the next tab in the same dockable area before moving the focus to another dockable area
 - Printing support
 - Carefully comb over the interface and identify areas where things aren't working well on Windows and Linux, since I
   spend nearly all of my development time on macOS and may not have noticed deficiencies on the other platforms

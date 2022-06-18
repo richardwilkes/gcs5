@@ -18,7 +18,6 @@ import (
 	"github.com/richardwilkes/gcs/ui/widget"
 	"github.com/richardwilkes/gcs/ui/widget/ntable"
 	"github.com/richardwilkes/gcs/ui/workspace"
-	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/unison"
 	"golang.org/x/exp/slices"
 )
@@ -53,7 +52,7 @@ func duplicateTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*nta
 		sel := table.SelectedRows(true)
 		selMap := make(map[uuid.UUID]bool, len(sel))
 		for _, row := range sel {
-			if target := ntable.ExtractFromRowData[T](row); !toolbox.IsNil(target) {
+			if target := row.Data(); target != zero {
 				parent := target.Parent()
 				clone := target.Clone(target.OwningEntity(), parent, false)
 				selMap[clone.UUID()] = true
@@ -92,16 +91,16 @@ func deleteTableSelection[T gurps.NodeConstraint[T]](table *unison.Table[*ntable
 		sel := table.SelectedRows(true)
 		ids := make(map[uuid.UUID]bool, len(sel))
 		list := make([]T, 0, len(sel))
+		var zero T
 		for _, row := range sel {
 			unison.CollectUUIDsFromRow(row, ids)
-			if target := ntable.ExtractFromRowData[T](row); !toolbox.IsNil(target) {
+			if target := row.Data(); target != zero {
 				list = append(list, target)
 			}
 		}
 		if !workspace.CloseUUID(ids) {
 			return
 		}
-		var zero T
 		needSet := false
 		for _, target := range list {
 			parent := target.Parent()

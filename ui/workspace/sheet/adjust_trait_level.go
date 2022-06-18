@@ -60,7 +60,7 @@ func (a *traitLevelAdjuster) Apply() {
 
 func canAdjustTraitLevel(table *unison.Table[*ntable.Node[*gurps.Trait]], increment bool) bool {
 	for _, row := range table.SelectedRows(false) {
-		if t := ntable.ExtractFromRowData[*gurps.Trait](row); t != nil && t.IsLeveled() {
+		if t := row.Data(); t != nil && t.IsLeveled() {
 			if increment || t.Levels > 0 {
 				return true
 			}
@@ -73,7 +73,7 @@ func adjustTraitLevel(owner widget.Rebuildable, table *unison.Table[*ntable.Node
 	before := &adjustTraitLevelList{Owner: owner}
 	after := &adjustTraitLevelList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if t := ntable.ExtractFromRowData[*gurps.Trait](row); t != nil && t.IsLeveled() {
+		if t := row.Data(); t != nil && t.IsLeveled() {
 			if increment || t.Levels > 0 {
 				before.List = append(before.List, newTraitLevelAdjuster(t))
 				original := t.Levels

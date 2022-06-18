@@ -12,6 +12,7 @@
 package workspace
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/richardwilkes/gcs/model/library"
@@ -118,7 +119,14 @@ func (n *Navigator) Modified() bool {
 
 func (n *Navigator) handleSelectionDoubleClick() {
 	window := n.Window()
-	for _, row := range n.table.SelectedRows(false) {
+	selection := n.table.SelectedRows(false)
+	if len(selection) > 4 {
+		if unison.QuestionDialog(i18n.Text("Are you sure you want to open all of these?"),
+			fmt.Sprintf(i18n.Text("%d files will be opened."), len(selection))) != unison.ModalResponseOK {
+			return
+		}
+	}
+	for _, row := range selection {
 		row.Open(window)
 	}
 }

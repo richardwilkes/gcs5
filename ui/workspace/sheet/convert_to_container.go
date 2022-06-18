@@ -51,7 +51,7 @@ func (c *containerConversion) Apply() {
 
 func canConvertToContainer(table *unison.Table[*ntable.Node[*gurps.Equipment]]) bool {
 	for _, row := range table.SelectedRows(false) {
-		if eqp := ntable.ExtractFromRowData[*gurps.Equipment](row); eqp != nil && !eqp.Container() {
+		if eqp := row.Data(); eqp != nil && !eqp.Container() {
 			return true
 		}
 	}
@@ -62,7 +62,7 @@ func convertToContainer(owner widget.Rebuildable, table *unison.Table[*ntable.No
 	before := &containerConversionList{Owner: owner}
 	after := &containerConversionList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if eqp := ntable.ExtractFromRowData[*gurps.Equipment](row); eqp != nil && !eqp.Container() {
+		if eqp := row.Data(); eqp != nil && !eqp.Container() {
 			before.List = append(before.List, newContainerConversion(eqp))
 			eqp.Type += gurps.ContainerKeyPostfix
 			after.List = append(after.List, newContainerConversion(eqp))

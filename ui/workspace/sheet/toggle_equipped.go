@@ -59,7 +59,7 @@ func (a *equippedAdjuster) Apply() {
 
 func canToggleEquipped(table *unison.Table[*ntable.Node[*gurps.Equipment]]) bool {
 	for _, row := range table.SelectedRows(false) {
-		if eqp := ntable.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
+		if eqp := row.Data(); eqp != nil {
 			return true
 		}
 	}
@@ -70,7 +70,7 @@ func toggleEquipped(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*
 	before := &toggleEquippedList{Owner: owner}
 	after := &toggleEquippedList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if eqp := ntable.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
+		if eqp := row.Data(); eqp != nil {
 			before.List = append(before.List, newEquippedAdjuster(eqp))
 			eqp.Equipped = !eqp.Equipped
 			after.List = append(after.List, newEquippedAdjuster(eqp))

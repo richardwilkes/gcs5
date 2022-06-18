@@ -51,7 +51,7 @@ func (a *usesAdjuster) Apply() {
 
 func canAdjustUses(table *unison.Table[*ntable.Node[*gurps.Equipment]], amount int) bool {
 	for _, row := range table.SelectedRows(false) {
-		if eqp := ntable.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
+		if eqp := row.Data(); eqp != nil {
 			if eqp.Uses+amount <= eqp.MaxUses {
 				return true
 			}
@@ -64,7 +64,7 @@ func adjustUses(owner widget.Rebuildable, table *unison.Table[*ntable.Node[*gurp
 	before := &adjustUsesList{Owner: owner}
 	after := &adjustUsesList{Owner: owner}
 	for _, row := range table.SelectedRows(false) {
-		if eqp := ntable.ExtractFromRowData[*gurps.Equipment](row); eqp != nil {
+		if eqp := row.Data(); eqp != nil {
 			if eqp.Uses+amount <= eqp.MaxUses {
 				before.List = append(before.List, newUsesAdjuster(eqp))
 				eqp.Uses += amount
