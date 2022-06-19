@@ -119,7 +119,7 @@ func (p *Page) drawSelf(gc *unison.Canvas, _ unison.Rect) {
 	}
 	center := unison.NewText(title, primaryDecorations)
 	left := unison.NewText(fmt.Sprintf(i18n.Text("%s is copyrighted ©%s by %s"), cmdline.AppName,
-		cmdline.CopyrightYears, cmdline.CopyrightHolder), secondaryDecorations)
+		cmdline.ResolveCopyrightYears(), cmdline.CopyrightHolder), secondaryDecorations)
 	right := unison.NewText(fmt.Sprintf(i18n.Text("Modified %s"), p.entity.ModifiedOn), secondaryDecorations)
 	if pageNumber&1 == 0 {
 		left, right = right, left
