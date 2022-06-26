@@ -4,6 +4,7 @@ set -eo pipefail
 trap 'echo -e "\033[33;5mBuild failed on build.sh:$LINENO\033[0m"' ERR
 
 # Process args
+IS_DEV="1"
 for arg in "$@"; do
   case "$arg" in
   --all | -a)
@@ -13,6 +14,7 @@ for arg in "$@"; do
     ;;
   --dist|-d)
     EXTRA_BUILD_FLAGS="-a"
+    IS_DEV="0"
     ;;
   --lint | -l) LINT=1 ;;
   --race | -r)
@@ -38,6 +40,7 @@ for arg in "$@"; do
 done
 
 echo -e "\033[33mBuilding...\033[0m"
+LDFLAGS_ALL="-X main.dev=$IS_DEV"
 
 case $(uname -s) in
 Darwin*)
@@ -59,17 +62,17 @@ Darwin*)
   mkdir -p "$CONTENTS/MacOS"
   mkdir -p "$CONTENTS/Resources"
   cp bundle/*.icns "$CONTENTS/Resources/"
-  go build $EXTRA_BUILD_FLAGS -o "$CONTENTS/MacOS/" -v .
+  go build -v -ldflags all="$LDFLAGS_ALL" -o "$CONTENTS/MacOS/" $EXTRA_BUILD_FLAGS .
   sed -e "s/SHORT_APP_VERSION/$($CONTENTS/MacOS/gcs -v | tr -d "\n")/" \
     -e "s/LONG_APP_VERSION/$($CONTENTS/MacOS/gcs -V | tr -d "\n")/" \
     -e "s/COPYRIGHT_YEARS/$($CONTENTS/MacOS/gcs --copyright-date | tr -d "\n")/" \
     bundle/Info.plist >"$CONTENTS/Info.plist"
   ;;
 Linux*)
-  go build $EXTRA_BUILD_FLAGS -v .
+  go build -v -ldflags all="$LDFLAGS_ALL" $EXTRA_BUILD_FLAGS .
   ;;
 MINGW*)
-  go build $EXTRA_BUILD_FLAGS -v -ldflags all="-H windowsgui" .
+  go build -v -ldflags all="$LDFLAGS_ALL -H windowsgui" $EXTRA_BUILD_FLAGS .
   ;;
 *)
   echo "Unsupported OS"

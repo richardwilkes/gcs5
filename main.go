@@ -26,6 +26,8 @@ import (
 	"github.com/richardwilkes/unison"
 )
 
+var dev = "1"
+
 func main() {
 	cmdline.AppName = "GCS"
 	cmdline.AppCmdName = "gcs"
@@ -33,6 +35,11 @@ func main() {
 	cmdline.CopyrightStartYear = "1998"
 	cmdline.CopyrightHolder = "Richard A. Wilkes"
 	cmdline.AppIdentifier = "com.trollworks.gcs"
+	if dev == "1" {
+		cmdline.AppVersion = "0.0"
+	} else {
+		cmdline.AppVersion = "5.0.0"
+	}
 	unison.AttachConsole()
 	cl := cmdline.New(true)
 	var textTmplPath string
