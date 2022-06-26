@@ -41,6 +41,7 @@ done
 
 echo -e "\033[33mBuilding...\033[0m"
 LDFLAGS_ALL="-X main.dev=$IS_DEV"
+STD_FLAGS="-v -buildvcs -trimpath $EXTRA_BUILD_FLAGS"
 
 case $(uname -s) in
 Darwin*)
@@ -62,17 +63,17 @@ Darwin*)
   mkdir -p "$CONTENTS/MacOS"
   mkdir -p "$CONTENTS/Resources"
   cp bundle/*.icns "$CONTENTS/Resources/"
-  go build -v -ldflags all="$LDFLAGS_ALL" -o "$CONTENTS/MacOS/" $EXTRA_BUILD_FLAGS .
+  go build $STD_FLAGS -ldflags all="$LDFLAGS_ALL" -o "$CONTENTS/MacOS/" .
   sed -e "s/SHORT_APP_VERSION/$($CONTENTS/MacOS/gcs -v | tr -d "\n")/" \
     -e "s/LONG_APP_VERSION/$($CONTENTS/MacOS/gcs -V | tr -d "\n")/" \
     -e "s/COPYRIGHT_YEARS/$($CONTENTS/MacOS/gcs --copyright-date | tr -d "\n")/" \
     bundle/Info.plist >"$CONTENTS/Info.plist"
   ;;
 Linux*)
-  go build -v -ldflags all="$LDFLAGS_ALL" $EXTRA_BUILD_FLAGS .
+  go build $STD_FLAGS -ldflags all="$LDFLAGS_ALL" .
   ;;
 MINGW*)
-  go build -v -ldflags all="$LDFLAGS_ALL -H windowsgui" $EXTRA_BUILD_FLAGS .
+  go build $STD_FLAGS -ldflags all="$LDFLAGS_ALL -H windowsgui" .
   ;;
 *)
   echo "Unsupported OS"
